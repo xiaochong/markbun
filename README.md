@@ -10,7 +10,24 @@ PingWrite is an open-source, cross-platform markdown editor designed for seamles
 
 ![PingWrite Preview](doc/assets/preview.png)
 
-## ✨ Features
+## 🚧 Development Status
+
+> **⚠️ Early Development Stage**
+> 
+> PingWrite is currently in active development. The project structure is set up with Electrobun + React + Tailwind CSS, but most features are not yet implemented.
+> 
+> **Current Status:**
+> - ✅ Electrobun desktop framework configured
+> - ✅ React + Vite + Tailwind CSS setup
+> - ✅ Development environment with HMR
+> - 🚧 Milkdown WYSIWYG editor integration (in progress)
+> - ⏳ File explorer sidebar (planned)
+> - ⏳ Toolbar and status bar (planned)
+> - ⏳ Dark mode support (planned)
+> 
+> See [ROADMAP.md](./ROADMAP.md) for detailed development phases.
+
+## ✨ Features (Planned)
 
 - 🎯 **Seamless WYSIWYG Editing** - Write markdown naturally without distraction
 - ⚡ **Lightning Fast** - Built with Bun and native webviews for <50ms startup
