@@ -1,0 +1,5 @@
+# Default ignored files
+dist
+node_modules
+.idea
+build
