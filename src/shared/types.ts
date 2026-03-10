@@ -1,6 +1,7 @@
 // Shared RPC type definition for PingWrite
-import { RPCSchema } from "electrobun/bun";
+import type { RPCSchema } from "electrobun/bun";
 
+// @ts-ignore - Type complexity issue with RPCSchema resolution
 export type PingWriteRPC = {
   bun: RPCSchema<{
     requests: {

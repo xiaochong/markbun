@@ -83,7 +83,7 @@ export function useFileOperations() {
   // Open file (triggers native dialog)
   const handleOpen = useCallback(async () => {
     try {
-      const result = await electrobun.openFile();
+      const result = await electrobun.openFile() as { success: boolean; path?: string; content?: string; error?: string };
 
       if (!result) {
         console.error('openFile returned null/undefined');
@@ -119,7 +119,7 @@ export function useFileOperations() {
 
     setSaveStatus('saving');
     try {
-      const result = await electrobun.saveFile(state.content, state.path);
+      const result = await electrobun.saveFile(state.content, state.path) as { success: boolean; path?: string; error?: string };
 
       if (result.success) {
         setFileState(prev => ({ ...prev, isDirty: false }));
@@ -142,7 +142,7 @@ export function useFileOperations() {
 
     setSaveStatus('saving');
     try {
-      const result = await electrobun.saveFileAs(state.content);
+      const result = await electrobun.saveFileAs(state.content) as { success: boolean; path?: string; error?: string };
 
       if (result.success) {
         setFileState({

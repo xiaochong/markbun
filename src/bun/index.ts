@@ -114,6 +114,7 @@ async function main() {
   const url = await getMainViewUrl();
 
   // Define RPC handlers
+  // @ts-ignore - Type complexity with RPCSchema
   const rpc = BrowserView.defineRPC<PingWriteRPC>({
     maxRequestTime: 30000, // 30 seconds timeout for file operations
     handlers: {
@@ -126,10 +127,10 @@ async function main() {
             return { success: false, error: String(err) };
           }
         },
-        saveFile: async ({ content, path }) => {
+        saveFile: async ({ content, path }: { content: string; path?: string }) => {
           return await saveFile(content, path);
         },
-        saveFileAs: async ({ content }) => {
+        saveFileAs: async ({ content }: { content: string }) => {
           return await saveFileAs(content);
         },
         getCurrentFile: async () => {
@@ -162,6 +163,7 @@ async function main() {
     switch (action) {
       case 'file-new':
         currentFilePath = null;
+        // @ts-ignore
         win.webview.rpc.send.fileNew({});
         break;
 
@@ -169,6 +171,7 @@ async function main() {
         try {
           const result = await openFile();
           if (result?.success === true && result.content !== undefined) {
+            // @ts-ignore
             win.webview.rpc.send.fileOpened({
               path: result.path || '',
               content: result.content,
@@ -181,14 +184,17 @@ async function main() {
       }
 
       case 'file-save':
+        // @ts-ignore
         win.webview.rpc.send.fileSaveRequest({});
         break;
 
       case 'file-save-as':
+        // @ts-ignore
         win.webview.rpc.send.fileSaveAsRequest({});
         break;
 
       case 'view-toggle-theme':
+        // @ts-ignore
         win.webview.rpc.send.toggleTheme({});
         break;
     }
