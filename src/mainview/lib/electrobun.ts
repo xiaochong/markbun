@@ -2,8 +2,9 @@
 import { Electroview } from 'electrobun/view';
 import type { PingWriteRPC } from '../../shared/types';
 
-// Define RPC for the view side
+// Define RPC for the view side with increased timeout
 const rpc = Electroview.defineRPC<PingWriteRPC>({
+  maxRequestTime: 30000, // 30 seconds timeout for file operations
   handlers: {
     requests: {},
     messages: {
@@ -38,19 +39,19 @@ const electroview = new Electroview({ rpc });
 export const electrobun = {
   // File operations (call Bun process)
   async openFile() {
-    return electroview.rpc.request.openFile({});
+    return await electroview.rpc.request.openFile({});
   },
 
   async saveFile(content: string, path?: string) {
-    return electroview.rpc.request.saveFile({ content, path });
+    return await electroview.rpc.request.saveFile({ content, path });
   },
 
   async saveFileAs(content: string) {
-    return electroview.rpc.request.saveFileAs({ content });
+    return await electroview.rpc.request.saveFileAs({ content });
   },
 
   async getCurrentFile() {
-    return electroview.rpc.request.getCurrentFile({});
+    return await electroview.rpc.request.getCurrentFile({});
   },
 
   // Subscribe to messages from main process

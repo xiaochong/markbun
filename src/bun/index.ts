@@ -31,9 +31,17 @@ async function openFile(): Promise<{ success: boolean; path?: string; content?: 
     const content = await readFile(filePath, 'utf-8');
     currentFilePath = filePath;
 
-    return { success: true, path: filePath, content };
+    return {
+      success: true,
+      path: filePath,
+      content: content
+    };
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    console.error('Failed to open file:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }
 
@@ -48,20 +56,13 @@ async function saveFile(content: string, path?: string): Promise<{ success: bool
     currentFilePath = filePath;
     return { success: true, path: filePath };
   } catch (error) {
+    console.error('Failed to save file:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
 
 async function saveFileAs(content: string): Promise<{ success: boolean; path?: string; error?: string }> {
   try {
-    // @ts-ignore
-    await Utils.showMessageBox({
-      type: 'info',
-      title: 'Save File',
-      message: 'Please select a location to save the file.',
-      buttons: ['OK'],
-    });
-
     // @ts-ignore
     const chosenPaths = await Utils.openFileDialog({
       startingFolder: currentFilePath || join(homedir(), 'Desktop'),
@@ -87,6 +88,7 @@ async function saveFileAs(content: string): Promise<{ success: boolean; path?: s
     currentFilePath = filePath;
     return { success: true, path: filePath };
   } catch (error) {
+    console.error('Failed to save file as:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
@@ -98,10 +100,9 @@ async function getMainViewUrl(): Promise<string> {
     if (channel === 'dev') {
       try {
         await fetch(DEV_SERVER_URL, { method: 'HEAD' });
-        console.log(`HMR enabled: Using Vite dev server at ${DEV_SERVER_URL}`);
         return DEV_SERVER_URL;
       } catch {
-        console.log('Vite dev server not running. Run `bun run dev:hmr` for HMR support.');
+        console.log('[Bun Main] Vite dev server not running. Run `bun run dev:hmr` for HMR support.');
       }
     }
   } catch {}
@@ -114,12 +115,26 @@ async function main() {
 
   // Define RPC handlers
   const rpc = BrowserView.defineRPC<PingWriteRPC>({
+    maxRequestTime: 30000, // 30 seconds timeout for file operations
     handlers: {
       requests: {
-        openFile: async () => openFile(),
-        saveFile: async ({ content, path }) => saveFile(content, path),
-        saveFileAs: async ({ content }) => saveFileAs(content),
-        getCurrentFile: async () => currentFilePath,
+        openFile: async () => {
+          try {
+            return await openFile();
+          } catch (err) {
+            console.error('RPC openFile error:', err);
+            return { success: false, error: String(err) };
+          }
+        },
+        saveFile: async ({ content, path }) => {
+          return await saveFile(content, path);
+        },
+        saveFileAs: async ({ content }) => {
+          return await saveFileAs(content);
+        },
+        getCurrentFile: async () => {
+          return currentFilePath;
+        },
       },
       messages: {},
     },
@@ -143,7 +158,6 @@ async function main() {
   // Handle menu actions
   win.on('menu-action', async (event: unknown) => {
     const action = String(event);
-    console.log('Menu action:', action);
 
     switch (action) {
       case 'file-new':
@@ -152,12 +166,16 @@ async function main() {
         break;
 
       case 'file-open': {
-        const result = await openFile();
-        if (result.success && result.content !== undefined) {
-          win.webview.rpc.send.fileOpened({
-            path: result.path || '',
-            content: result.content,
-          });
+        try {
+          const result = await openFile();
+          if (result?.success === true && result.content !== undefined) {
+            win.webview.rpc.send.fileOpened({
+              path: result.path || '',
+              content: result.content,
+            });
+          }
+        } catch (err) {
+          console.error('Error in file-open handler:', err);
         }
         break;
       }
@@ -176,7 +194,7 @@ async function main() {
     }
   });
 
-  console.log('PingWrite started!');
+  console.log('[Bun Main] PingWrite started!');
 }
 
 main().catch(console.error);

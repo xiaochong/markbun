@@ -21,18 +21,6 @@ function App() {
     handleSaveAs,
   } = useFileOperations();
 
-  // Track previous path to detect file switches
-  const prevPathRef = useRef<string | null>(null);
-
-  // Update editor ONLY when file path changes (new file opened), not on every content change
-  useEffect(() => {
-    if (editorRef.current?.isReady && path !== prevPathRef.current) {
-      editorRef.current.setMarkdown(content);
-      setEditorContent(content);
-      prevPathRef.current = path;
-    }
-  }, [content, path]);
-
   // Handle editor content changes
   const handleEditorChange = useCallback((markdown: string) => {
     updateContent(markdown);
@@ -46,13 +34,69 @@ function App() {
     });
   }, [toggleTheme]);
 
-  // Keyboard shortcuts
+  // Listen for file-opened event to set editor content directly
+  useEffect(() => {
+    return electrobun.on('file-opened', (data) => {
+      const { content: fileContent } = data as { path: string; content: string };
+
+      // Directly set content to editor when file is opened
+      if (editorRef.current?.isReady) {
+        editorRef.current.setMarkdown(fileContent);
+        setEditorContent(fileContent);
+      } else {
+        // If editor not ready, wait and try again
+        const checkAndSet = () => {
+          if (editorRef.current?.isReady) {
+            editorRef.current.setMarkdown(fileContent);
+            setEditorContent(fileContent);
+          } else {
+            setTimeout(checkAndSet, 50);
+          }
+        };
+        checkAndSet();
+      }
+    });
+  }, []);
+
+  // Listen for file-new event to clear editor
+  useEffect(() => {
+    return electrobun.on('file-new', () => {
+      if (editorRef.current?.isReady) {
+        editorRef.current.setMarkdown('');
+        setEditorContent('');
+      }
+    });
+  }, []);
+
+  // Store callbacks in ref to avoid stale closures in keyboard shortcuts
+  const callbacksRef = useRef({
+    handleSave,
+    handleSaveAs,
+    handleOpen,
+    updateContent,
+    setEditorContent,
+  });
+
+  // Keep callbacksRef up to date
+  useEffect(() => {
+    callbacksRef.current = {
+      handleSave,
+      handleSaveAs,
+      handleOpen,
+      updateContent,
+      setEditorContent,
+    };
+  }, [handleSave, handleSaveAs, handleOpen, updateContent]);
+
+  // Keyboard shortcuts - stable listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
       const cmdKey = isMac ? e.metaKey : e.ctrlKey;
 
       if (cmdKey) {
+        const { handleSave, handleSaveAs, handleOpen, updateContent, setEditorContent } = callbacksRef.current;
+
         switch (e.key.toLowerCase()) {
           case 's':
             e.preventDefault();
@@ -79,13 +123,15 @@ function App() {
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleSave, handleSaveAs, handleOpen, updateContent]);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []); // Empty deps - listener never changes
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
       {/* Title Bar */}
-      <TitleBar 
+      <TitleBar
         title={path ? path.split('/').pop() : 'Untitled'}
         isDirty={isDirty}
       />

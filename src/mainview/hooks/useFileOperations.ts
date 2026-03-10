@@ -13,7 +13,7 @@ export function useFileOperations() {
     content: '',
     isDirty: false,
   });
-  
+
   const [saveStatus, setSaveStatus] = useState<'saving' | 'saved' | 'error' | null>(null);
   const fileStateRef = useRef(fileState);
   fileStateRef.current = fileState;
@@ -84,11 +84,23 @@ export function useFileOperations() {
   const handleOpen = useCallback(async () => {
     try {
       const result = await electrobun.openFile();
+
+      if (!result) {
+        console.error('openFile returned null/undefined');
+        return;
+      }
+
       if (result.success && result.content !== undefined) {
         setFileState({
           path: result.path || null,
           content: result.content,
           isDirty: false,
+        });
+
+        // Emit event for App.tsx to update editor
+        const listeners = (window as any).__electrobunListeners?.['file-opened'] || [];
+        listeners.forEach((cb: (data: unknown) => void) => {
+          cb({ path: result.path, content: result.content });
         });
       }
     } catch (error) {
@@ -99,7 +111,7 @@ export function useFileOperations() {
   // Save file
   const handleSave = useCallback(async () => {
     const state = fileStateRef.current;
-    
+
     if (!state.path) {
       await handleSaveAs();
       return;
@@ -108,6 +120,7 @@ export function useFileOperations() {
     setSaveStatus('saving');
     try {
       const result = await electrobun.saveFile(state.content, state.path);
+
       if (result.success) {
         setFileState(prev => ({ ...prev, isDirty: false }));
         setSaveStatus('saved');
@@ -126,10 +139,11 @@ export function useFileOperations() {
   // Save file as (with native dialog)
   const handleSaveAs = useCallback(async () => {
     const state = fileStateRef.current;
-    
+
     setSaveStatus('saving');
     try {
       const result = await electrobun.saveFileAs(state.content);
+
       if (result.success) {
         setFileState({
           path: result.path || null,
