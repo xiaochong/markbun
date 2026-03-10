@@ -9,7 +9,7 @@ function App() {
   const editorRef = useRef<MilkdownEditorRef>(null);
   const { toggleTheme } = useTheme();
   const [editorContent, setEditorContent] = useState('');
-  
+
   const {
     path,
     content,
@@ -21,16 +21,17 @@ function App() {
     handleSaveAs,
   } = useFileOperations();
 
-  // Update editor when content changes from file operations
+  // Track previous path to detect file switches
+  const prevPathRef = useRef<string | null>(null);
+
+  // Update editor ONLY when file path changes (new file opened), not on every content change
   useEffect(() => {
-    if (editorRef.current?.isReady) {
-      const currentContent = editorRef.current.getMarkdown();
-      if (currentContent !== content) {
-        editorRef.current.setMarkdown(content);
-        setEditorContent(content);
-      }
+    if (editorRef.current?.isReady && path !== prevPathRef.current) {
+      editorRef.current.setMarkdown(content);
+      setEditorContent(content);
+      prevPathRef.current = path;
     }
-  }, [content]);
+  }, [content, path]);
 
   // Handle editor content changes
   const handleEditorChange = useCallback((markdown: string) => {

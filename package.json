@@ -10,9 +10,11 @@
 		"build:canary": "vite build && electrobun build --env=canary"
 	},
 	"dependencies": {
+		"@milkdown/crepe": "^7.19.0",
 		"@milkdown/kit": "^7.19.0",
 		"@milkdown/plugin-clipboard": "^7.19.0",
 		"@milkdown/plugin-history": "^7.19.0",
+		"@milkdown/react": "^7.19.0",
 		"@milkdown/theme-nord": "^7.19.0",
 		"clsx": "^2.1.1",
 		"electrobun": "1.15.1",

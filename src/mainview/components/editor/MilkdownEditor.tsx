@@ -1,10 +1,9 @@
-import { useEffect, useRef, useCallback, forwardRef, useImperativeHandle, useState } from 'react';
-import { Editor, rootCtx, editorViewCtx, parserCtx, serializerCtx } from '@milkdown/kit/core';
-import { commonmark } from '@milkdown/kit/preset/commonmark';
-import { gfm } from '@milkdown/kit/preset/gfm';
-import { history } from '@milkdown/kit/plugin/history';
-import { clipboard } from '@milkdown/kit/plugin/clipboard';
-import './editor.css';
+import { forwardRef, useImperativeHandle, useEffect, useRef, useState } from 'react';
+import { Crepe } from '@milkdown/crepe';
+import { Milkdown, useEditor } from '@milkdown/react';
+import { editorViewCtx, parserCtx } from '@milkdown/kit/core';
+import '@milkdown/crepe/theme/common/style.css';
+import '@milkdown/crepe/theme/frame.css';
 
 export interface MilkdownEditorProps {
   defaultValue?: string;
@@ -20,129 +19,91 @@ export interface MilkdownEditorRef {
 }
 
 export const MilkdownEditor = forwardRef<MilkdownEditorRef, MilkdownEditorProps>(
-  ({ defaultValue = '', className = '' }, ref) => {
+  ({ defaultValue = '', onChange, className = '' }, ref) => {
+    const crepeRef = useRef<Crepe | null>(null);
+    const onChangeRef = useRef(onChange);
     const containerRef = useRef<HTMLDivElement>(null);
-    const editorDOMRef = useRef<HTMLDivElement>(null);
-    const editorRef = useRef<Editor | null>(null);
     const [isReady, setIsReady] = useState(false);
-    const pendingContentRef = useRef<string | null>(null);
 
-    // Initialize editor
+    // Keep onChange callback up to date
     useEffect(() => {
-      const domElement = editorDOMRef.current;
-      if (!domElement) return;
+      onChangeRef.current = onChange;
+    }, [onChange]);
 
-      let editor: Editor | null = null;
-      let destroyed = false;
+    // Store initial value in a ref so it doesn't change on re-renders
+    const initialValueRef = useRef(defaultValue);
 
-      const init = async () => {
-        try {
-          editor = Editor.make()
-            .config((ctx) => {
-              ctx.set(rootCtx, domElement);
-            })
-            .use(commonmark)
-            .use(gfm)
-            .use(history)
-            .use(clipboard);
+    const { loading } = useEditor((root) => {
+      const crepe = new Crepe({
+        root,
+        defaultValue: initialValueRef.current,
+      });
 
-          await editor.create();
+      crepeRef.current = crepe;
 
-          if (destroyed) {
-            await editor.destroy();
-            return;
+      // Listen for content changes
+      crepe.on((listener) => {
+        listener.markdownUpdated((_ctx, markdown, prevMarkdown) => {
+          if (markdown !== prevMarkdown) {
+            onChangeRef.current?.(markdown);
           }
+        });
+      });
 
-          editorRef.current = editor;
-          setIsReady(true);
+      // Mark as ready after creation
+      requestAnimationFrame(() => setIsReady(true));
 
-          // Set pending content or default value
-          const contentToSet = pendingContentRef.current || defaultValue;
-          if (contentToSet) {
-            setEditorContent(contentToSet);
-            pendingContentRef.current = null;
-          }
+      return crepe;
+    }, []); // Empty deps - only create once
 
-          console.log('Milkdown editor ready');
-        } catch (error) {
-          console.error('Failed to create editor:', error);
-        }
-      };
-
-      init();
-
-      return () => {
-        destroyed = true;
-        if (editorRef.current) {
-          editorRef.current.destroy().catch(console.error);
-          editorRef.current = null;
-          setIsReady(false);
-        }
-      };
-    }, []);
-
-    // Get content
-    const getEditorContent = useCallback((): string => {
-      const editor = editorRef.current;
-      if (!editor?.ctx) return '';
-
-      try {
-        const view = editor.ctx.get(editorViewCtx);
-        const serializer = editor.ctx.get(serializerCtx);
-        return serializer(view.state.doc);
-      } catch (e) {
-        console.error('Get content error:', e);
-        return '';
-      }
-    }, []);
-
-    // Set content
-    const setEditorContent = useCallback((markdown: string) => {
-      const editor = editorRef.current;
-      if (!editor?.ctx) {
-        pendingContentRef.current = markdown;
-        return;
-      }
-
-      try {
-        const view = editor.ctx.get(editorViewCtx);
-        const parser = editor.ctx.get(parserCtx);
-        const doc = parser(markdown);
-
-        if (!doc) return;
-
-        const state = view.state;
-        view.dispatch(
-          state.tr.replaceWith(0, state.doc.content.size, doc.content)
-        );
-      } catch (e) {
-        console.error('Set content error:', e);
-      }
-    }, []);
-
-    // Focus
-    const focusEditor = useCallback(() => {
-      const editor = editorRef.current;
-      if (!editor?.ctx) return;
-
-      try {
-        const view = editor.ctx.get(editorViewCtx);
-        view.focus();
-      } catch (e) {
-        console.error('Focus error:', e);
-      }
-    }, []);
-
+    // Expose imperative methods
     useImperativeHandle(ref, () => ({
-      getMarkdown: getEditorContent,
-      setMarkdown: setEditorContent,
-      focus: focusEditor,
-      isReady,
-    }), [getEditorContent, setEditorContent, focusEditor, isReady]);
+      getMarkdown: () => {
+        const crepe = crepeRef.current;
+        if (!crepe) return '';
+        return crepe.getMarkdown();
+      },
+      setMarkdown: (markdown: string) => {
+        const crepe = crepeRef.current;
+        if (!crepe) return;
+
+        // Use the underlying editor's action to set content
+        const editor = crepe.editor;
+        if (!editor?.ctx) return;
+
+        try {
+          const view = editor.ctx.get(editorViewCtx);
+          const parser = editor.ctx.get(parserCtx);
+          const doc = parser(markdown);
+
+          if (!doc) return;
+
+          const state = view.state;
+          view.dispatch(
+            state.tr.replaceWith(0, state.doc.content.size, doc.content)
+          );
+        } catch (e) {
+          console.error('Set content error:', e);
+        }
+      },
+      focus: () => {
+        // Find the ProseMirror editor element and focus it
+        const container = containerRef.current;
+        if (!container) return;
+        const editorElement = container.querySelector('.ProseMirror') as HTMLElement;
+        if (editorElement) {
+          editorElement.focus();
+        }
+      },
+      isReady: isReady && !loading,
+    }), [isReady, loading]);
+
+    // NOTE: We intentionally do NOT have a useEffect to update content when defaultValue changes.
+    // The parent component should use the ref's setMarkdown method when switching files.
 
     return (
-      <div ref={containerRef} className={`milkdown-container ${className}`}>
-        <div ref={editorDOMRef} className="milkdown-editor" />
+      <div ref={containerRef} className={`milkdown-crepe-container ${className}`}>
+        <Milkdown />
       </div>
     );
   }
