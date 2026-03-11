@@ -113,7 +113,7 @@ body {
 
 /* Override Crepe's default padding for better Typora-like experience */
 .milkdown-crepe-container .ProseMirror {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -139,6 +139,11 @@ body {
 
 .milkdown-crepe-container .milkdown-code-block .tools-button-group button svg {
   fill: hsl(var(--foreground)) !important;
+}
+
+/* Hide code block line numbers */
+.milkdown-crepe-container .milkdown-code-block .cm-gutters {
+  display: none !important;
 }
 
 /* Fix table selection visibility - ensure text remains readable */
