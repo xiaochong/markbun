@@ -39,6 +39,9 @@ export const MilkdownEditor = forwardRef<MilkdownEditorRef, MilkdownEditorProps>
       const crepe = new Crepe({
         root,
         defaultValue: initialValueRef.current,
+        features: {
+          [Crepe.Feature.BlockEdit]: false,
+        },
       });
 
       crepeRef.current = crepe;
