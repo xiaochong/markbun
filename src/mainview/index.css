@@ -113,38 +113,34 @@ body {
 
 /* Override Crepe's default padding for better Typora-like experience */
 .milkdown-crepe-container .ProseMirror {
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
 }
 
 /* Fix table selection visibility - ensure text remains readable */
-/* Override Crepe's selected cell background */
-.milkdown-crepe-container .milkdown-table-block .selectedCell::after {
-  background-color: hsl(var(--primary) / 0.2) !important;
-  opacity: 1 !important;
-}
+.milkdown-crepe-container .milkdown-table-block {
+  /* Selected cell background override */
+  & .selectedCell::after {
+    background-color: hsl(var(--primary) / 0.2) !important;
+    opacity: 1 !important;
+  }
 
-/* Ensure text in selected table cells remains visible */
-.milkdown-crepe-container .milkdown-table-block .selectedCell {
-  color: inherit !important;
-}
+  /* Ensure text in selected cells remains visible */
+  & .selectedCell,
+  & .selectedCell * {
+    color: inherit !important;
+  }
 
-.milkdown-crepe-container .milkdown-table-block .selectedCell * {
-  color: inherit !important;
-}
+  /* Fix ProseMirror-selectednode in tables */
+  & :is(th, td) .ProseMirror-selectednode {
+    background-color: transparent !important;
+    color: inherit !important;
+  }
 
-/* Fix ProseMirror-selectednode in tables */
-.milkdown-crepe-container .milkdown-table-block th .ProseMirror-selectednode,
-.milkdown-crepe-container .milkdown-table-block td .ProseMirror-selectednode {
-  background-color: transparent !important;
-  color: inherit !important;
-}
-
-/* Fix selection background for table headers */
-.milkdown-crepe-container .milkdown-table-block th::selection,
-.milkdown-crepe-container .milkdown-table-block td::selection,
-.milkdown-crepe-container .milkdown-table-block th *::selection,
-.milkdown-crepe-container .milkdown-table-block td *::selection {
-  background-color: hsl(var(--primary)) !important;
-  color: hsl(var(--primary-foreground)) !important;
+  /* Fix selection background for table cells */
+  & :is(th, td)::selection,
+  & :is(th, td) *::selection {
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+  }
 }

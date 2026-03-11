@@ -60,42 +60,27 @@ export const MilkdownEditor = forwardRef<MilkdownEditorRef, MilkdownEditorProps>
 
     // Expose imperative methods
     useImperativeHandle(ref, () => ({
-      getMarkdown: () => {
-        const crepe = crepeRef.current;
-        if (!crepe) return '';
-        return crepe.getMarkdown();
-      },
+      getMarkdown: () => crepeRef.current?.getMarkdown() ?? '',
       setMarkdown: (markdown: string) => {
-        const crepe = crepeRef.current;
-        if (!crepe) return;
-
-        // Use the underlying editor's action to set content
-        const editor = crepe.editor;
+        const editor = crepeRef.current?.editor;
         if (!editor?.ctx) return;
 
         try {
           const view = editor.ctx.get(editorViewCtx);
           const parser = editor.ctx.get(parserCtx);
           const doc = parser(markdown);
-
           if (!doc) return;
 
-          const state = view.state;
           view.dispatch(
-            state.tr.replaceWith(0, state.doc.content.size, doc.content)
+            view.state.tr.replaceWith(0, view.state.doc.content.size, doc.content)
           );
         } catch (e) {
           console.error('Set content error:', e);
         }
       },
       focus: () => {
-        // Find the ProseMirror editor element and focus it
-        const container = containerRef.current;
-        if (!container) return;
-        const editorElement = container.querySelector('.ProseMirror') as HTMLElement;
-        if (editorElement) {
-          editorElement.focus();
-        }
+        const editorElement = containerRef.current?.querySelector('.ProseMirror') as HTMLElement | null;
+        editorElement?.focus();
       },
       isReady: isReady && !loading,
     }), [isReady, loading]);
