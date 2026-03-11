@@ -127,6 +127,20 @@ body {
   background-color: hsl(var(--muted) / 0.5) !important;
 }
 
+/* Fix code block copy button - lighter background */
+.milkdown-crepe-container .milkdown-code-block .tools-button-group button {
+  background: hsl(var(--muted)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.milkdown-crepe-container .milkdown-code-block .tools-button-group button:hover {
+  background: hsl(var(--muted-foreground) / 0.3) !important;
+}
+
+.milkdown-crepe-container .milkdown-code-block .tools-button-group button svg {
+  fill: hsl(var(--foreground)) !important;
+}
+
 /* Fix table selection visibility - ensure text remains readable */
 .milkdown-crepe-container .milkdown-table-block {
   /* Selected cell background override */
