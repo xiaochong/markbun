@@ -117,6 +117,16 @@ body {
   margin: 0 auto;
 }
 
+/* Fix CodeMirror line number active state - use theme-aware color instead of hardcoded dark */
+.milkdown-crepe-container .cm-activeLineGutter {
+  background-color: hsl(var(--muted)) !important;
+}
+
+/* Fix CodeMirror active line background */
+.milkdown-crepe-container .cm-activeLine {
+  background-color: hsl(var(--muted) / 0.5) !important;
+}
+
 /* Fix table selection visibility - ensure text remains readable */
 .milkdown-crepe-container .milkdown-table-block {
   /* Selected cell background override */
