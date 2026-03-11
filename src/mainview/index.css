@@ -96,208 +96,55 @@ body {
   color: hsl(var(--primary-foreground));
 }
 
-/* Crepe Editor Styles - Typora-like Experience */
+/* Crepe Editor Styles - Using Crepe native themes */
+/* Theme CSS is imported in MilkdownEditor.tsx */
+
+/* Container scrolling - Required for mouse wheel to work */
 .milkdown-crepe-container {
   width: 100%;
   height: 100%;
   overflow: auto;
-  background: hsl(var(--background));
 }
 
-/* Crepe root element */
+/* Ensure milkdown root takes full height */
 .milkdown-crepe-container .milkdown {
   height: 100%;
 }
 
-/* Editor content area - centered like Typora */
+/* Override Crepe's default padding for better Typora-like experience */
 .milkdown-crepe-container .ProseMirror {
   max-width: 800px;
   margin: 0 auto;
-  padding: 2rem 3rem;
-  min-height: 100%;
-  font-family: var(--font-sans);
-  font-size: 16px;
-  line-height: 1.8;
-  color: hsl(var(--foreground));
-  background: hsl(var(--background));
 }
 
-/* Focus state */
-.milkdown-crepe-container .ProseMirror-focused {
-  outline: none;
+/* Fix table selection visibility - ensure text remains readable */
+/* Override Crepe's selected cell background */
+.milkdown-crepe-container .milkdown-table-block .selectedCell::after {
+  background-color: hsl(var(--primary) / 0.2) !important;
+  opacity: 1 !important;
 }
 
-/* Paragraphs */
-.milkdown-crepe-container .ProseMirror p {
-  margin: 0 0 1em 0;
+/* Ensure text in selected table cells remains visible */
+.milkdown-crepe-container .milkdown-table-block .selectedCell {
+  color: inherit !important;
 }
 
-/* Headings */
-.milkdown-crepe-container .ProseMirror h1,
-.milkdown-crepe-container .ProseMirror h2,
-.milkdown-crepe-container .ProseMirror h3,
-.milkdown-crepe-container .ProseMirror h4,
-.milkdown-crepe-container .ProseMirror h5,
-.milkdown-crepe-container .ProseMirror h6 {
-  margin: 1.5em 0 0.5em 0;
-  font-weight: 600;
-  line-height: 1.3;
-  color: hsl(var(--foreground));
+.milkdown-crepe-container .milkdown-table-block .selectedCell * {
+  color: inherit !important;
 }
 
-.milkdown-crepe-container .ProseMirror h1 {
-  font-size: 2em;
-  border-bottom: 1px solid hsl(var(--border));
-  padding-bottom: 0.3em;
+/* Fix ProseMirror-selectednode in tables */
+.milkdown-crepe-container .milkdown-table-block th .ProseMirror-selectednode,
+.milkdown-crepe-container .milkdown-table-block td .ProseMirror-selectednode {
+  background-color: transparent !important;
+  color: inherit !important;
 }
 
-.milkdown-crepe-container .ProseMirror h2 {
-  font-size: 1.5em;
-  border-bottom: 1px solid hsl(var(--border));
-  padding-bottom: 0.3em;
-}
-
-.milkdown-crepe-container .ProseMirror h3 {
-  font-size: 1.25em;
-}
-
-.milkdown-crepe-container .ProseMirror h4 {
-  font-size: 1em;
-}
-
-/* Lists */
-.milkdown-crepe-container .ProseMirror ul,
-.milkdown-crepe-container .ProseMirror ol {
-  margin: 0 0 1em 0;
-  padding-left: 2em;
-}
-
-.milkdown-crepe-container .ProseMirror li {
-  margin: 0.25em 0;
-}
-
-.milkdown-crepe-container .ProseMirror li > ul,
-.milkdown-crepe-container .ProseMirror li > ol {
-  margin: 0;
-}
-
-/* Blockquotes */
-.milkdown-crepe-container .ProseMirror blockquote {
-  margin: 0 0 1em 0;
-  padding: 0.5em 1em;
-  border-left: 4px solid hsl(var(--primary));
-  background: hsl(var(--muted));
-  color: hsl(var(--muted-foreground));
-}
-
-.milkdown-crepe-container .ProseMirror blockquote p {
-  margin: 0;
-}
-
-/* Inline code */
-.milkdown-crepe-container .ProseMirror code {
-  padding: 0.2em 0.4em;
-  font-family: var(--font-mono);
-  font-size: 0.9em;
-  background: hsl(var(--muted));
-  border-radius: 4px;
-  color: hsl(var(--foreground));
-}
-
-/* Code blocks */
-.milkdown-crepe-container .ProseMirror pre {
-  margin: 0 0 1em 0;
-  padding: 1em;
-  background: hsl(var(--muted));
-  border-radius: 8px;
-  overflow-x: auto;
-}
-
-.milkdown-crepe-container .ProseMirror pre code {
-  padding: 0;
-  background: none;
-  font-size: 0.875em;
-  color: hsl(var(--foreground));
-}
-
-/* Links */
-.milkdown-crepe-container .ProseMirror a {
-  color: hsl(var(--primary));
-  text-decoration: none;
-}
-
-.milkdown-crepe-container .ProseMirror a:hover {
-  text-decoration: underline;
-}
-
-/* Horizontal rule */
-.milkdown-crepe-container .ProseMirror hr {
-  margin: 2em 0;
-  border: none;
-  border-top: 1px solid hsl(var(--border));
-}
-
-/* Tables */
-.milkdown-crepe-container .ProseMirror table {
-  width: 100%;
-  margin: 0 0 1em 0;
-  border-collapse: collapse;
-}
-
-.milkdown-crepe-container .ProseMirror th,
-.milkdown-crepe-container .ProseMirror td {
-  padding: 0.5em 1em;
-  border: 1px solid hsl(var(--border));
-}
-
-.milkdown-crepe-container .ProseMirror th {
-  background: hsl(var(--muted));
-  font-weight: 600;
-}
-
-/* Images */
-.milkdown-crepe-container .ProseMirror img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 4px;
-}
-
-/* Selection */
-.milkdown-crepe-container .ProseMirror ::selection {
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-}
-
-/* Placeholder */
-.milkdown-crepe-container .ProseMirror p.is-editor-empty:first-child::before {
-  content: attr(data-placeholder);
-  float: left;
-  color: hsl(var(--muted-foreground));
-  pointer-events: none;
-  height: 0;
-}
-
-/* Crepe UI Elements - adapt to theme */
-.milkdown-crepe-container .crepe-toolbar {
-  background: hsl(var(--background));
-  border-bottom: 1px solid hsl(var(--border));
-}
-
-.milkdown-crepe-container .crepe-slash-menu {
-  background: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
-  border-radius: var(--radius);
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-}
-
-.milkdown-crepe-container .crepe-link-tooltip,
-.milkdown-crepe-container .crepe-image-tooltip {
-  background: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
-  border-radius: var(--radius);
-}
-
-/* Hide milkdown placeholder since we use Crepe */
-.milkdown-crepe-container .placeholder {
-  display: none;
+/* Fix selection background for table headers */
+.milkdown-crepe-container .milkdown-table-block th::selection,
+.milkdown-crepe-container .milkdown-table-block td::selection,
+.milkdown-crepe-container .milkdown-table-block th *::selection,
+.milkdown-crepe-container .milkdown-table-block td *::selection {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
 }

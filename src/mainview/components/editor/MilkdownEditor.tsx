@@ -2,13 +2,15 @@ import { forwardRef, useImperativeHandle, useEffect, useRef, useState } from 're
 import { Crepe } from '@milkdown/crepe';
 import { Milkdown, useEditor } from '@milkdown/react';
 import { editorViewCtx, parserCtx } from '@milkdown/kit/core';
+
+// Import Crepe base styles (always needed)
 import '@milkdown/crepe/theme/common/style.css';
-import '@milkdown/crepe/theme/frame.css';
 
 export interface MilkdownEditorProps {
   defaultValue?: string;
   onChange?: (markdown: string) => void;
   className?: string;
+  darkMode?: boolean;
 }
 
 export interface MilkdownEditorRef {
@@ -19,7 +21,7 @@ export interface MilkdownEditorRef {
 }
 
 export const MilkdownEditor = forwardRef<MilkdownEditorRef, MilkdownEditorProps>(
-  ({ defaultValue = '', onChange, className = '' }, ref) => {
+  ({ defaultValue = '', onChange, className = '', darkMode = false }, ref) => {
     const crepeRef = useRef<Crepe | null>(null);
     const onChangeRef = useRef(onChange);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -97,6 +99,18 @@ export const MilkdownEditor = forwardRef<MilkdownEditorRef, MilkdownEditorProps>
       },
       isReady: isReady && !loading,
     }), [isReady, loading]);
+
+    // Dynamic theme loading
+    useEffect(() => {
+      // Load the appropriate theme CSS
+      if (darkMode) {
+        // @ts-ignore
+        import('@milkdown/crepe/theme/frame-dark.css');
+      } else {
+        // @ts-ignore
+        import('@milkdown/crepe/theme/frame.css');
+      }
+    }, [darkMode]);
 
     // NOTE: We intentionally do NOT have a useEffect to update content when defaultValue changes.
     // The parent component should use the ref's setMarkdown method when switching files.
