@@ -212,6 +212,45 @@ const [content, setContent] = useState("");
 - Use Electrobun RPC for main <-> renderer communication
 - Keep minimal state in main process
 
+### 4. Engineering Principles (Normative)
+
+These principles are mandatory. They are implementation constraints, not suggestions.
+
+#### KISS
+
+- Prefer straightforward control flow over meta-programming.
+- Prefer explicit comptime branches and typed structs over hidden dynamic behavior.
+- Keep error paths obvious and localized.
+
+#### YAGNI
+
+- Do not add config keys, vtable methods, or feature flags without a concrete caller.
+- Do not introduce speculative abstractions.
+- Keep unsupported paths explicit (`return error.NotSupported`) rather than silent no-ops.
+
+#### DRY + Rule of Three
+
+- Duplicate small local logic when it preserves clarity.
+- Extract shared helpers only after repeated, stable patterns (rule-of-three).
+- When extracting, preserve module boundaries and avoid hidden coupling.
+
+#### Fail Fast + Explicit Errors
+
+- Prefer explicit errors for unsupported or unsafe states.
+- Never silently broaden permissions or capabilities.
+
+#### Secure by Default + Least Privilege
+
+- Deny-by-default for access and exposure boundaries.
+- Never log secrets, raw tokens, or sensitive payloads.
+- All outbound URLs must be HTTPS. HTTP is rejected at the tool layer.
+- Keep network/filesystem/shell scope as narrow as possible.
+
+#### Determinism + No Flaky Tests
+
+- Tests must not spawn real network connections, open browsers, or depend on system state.
+- Tests must be reproducible across macOS and Linux.
+
 ## Common Tasks
 
 ### Add a New Menu Item
