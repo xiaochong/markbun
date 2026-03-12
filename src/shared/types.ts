@@ -9,6 +9,7 @@ export type PingWriteRPC = {
       saveFile: { params: { content: string; path?: string }; response: { success: boolean; path?: string; error?: string } };
       saveFileAs: { params: { content: string }; response: { success: boolean; path?: string; error?: string } };
       getCurrentFile: { params: {}; response: string | null };
+      readImageAsBase64: { params: { path: string }; response: { success: boolean; dataUrl?: string; error?: string } };
     };
     messages: {
       fileOpened: { path: string; content: string };

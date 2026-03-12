@@ -4,6 +4,7 @@ import { Toolbar, StatusBar, TitleBar } from './components/layout';
 import { useFileOperations } from './hooks/useFileOperations';
 import { useTheme } from './hooks/useTheme';
 import { electrobun } from './lib/electrobun';
+import { processMarkdownImages } from './lib/imageProcessor';
 
 function App() {
   const editorRef = useRef<MilkdownEditorRef>(null);
@@ -36,19 +37,22 @@ function App() {
 
   // Listen for file-opened event to set editor content directly
   useEffect(() => {
-    return electrobun.on('file-opened', (data) => {
-      const { content: fileContent } = data as { path: string; content: string };
+    return electrobun.on('file-opened', async (data) => {
+      const { path: filePath, content: fileContent } = data as { path: string; content: string };
+
+      // Process images in the markdown content
+      const processedContent = await processMarkdownImages(fileContent, filePath);
 
       // Directly set content to editor when file is opened
       if (editorRef.current?.isReady) {
-        editorRef.current.setMarkdown(fileContent);
-        setEditorContent(fileContent);
+        editorRef.current.setMarkdown(processedContent);
+        setEditorContent(processedContent);
       } else {
         // If editor not ready, wait and try again
         const checkAndSet = () => {
           if (editorRef.current?.isReady) {
-            editorRef.current.setMarkdown(fileContent);
-            setEditorContent(fileContent);
+            editorRef.current.setMarkdown(processedContent);
+            setEditorContent(processedContent);
           } else {
             setTimeout(checkAndSet, 50);
           }

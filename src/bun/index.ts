@@ -139,6 +139,33 @@ async function main() {
         getCurrentFile: async () => {
           return currentFilePath;
         },
+        readImageAsBase64: async ({ path }: { path: string }) => {
+          try {
+            const imageBuffer = await readFile(path);
+            const ext = path.split('.').pop()?.toLowerCase() || 'png';
+            const mimeTypes: Record<string, string> = {
+              'png': 'image/png',
+              'jpg': 'image/jpeg',
+              'jpeg': 'image/jpeg',
+              'gif': 'image/gif',
+              'svg': 'image/svg+xml',
+              'webp': 'image/webp',
+              'bmp': 'image/bmp',
+            };
+            const mimeType = mimeTypes[ext] || 'image/png';
+            const base64 = imageBuffer.toString('base64');
+            return {
+              success: true,
+              dataUrl: `data:${mimeType};base64,${base64}`
+            };
+          } catch (error) {
+            console.error('Failed to read image:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error'
+            };
+          }
+        },
       },
       messages: {},
     },
