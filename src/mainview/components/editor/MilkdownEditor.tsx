@@ -1,7 +1,18 @@
-import { forwardRef, useImperativeHandle, useEffect, useRef, useState } from 'react';
+import { forwardRef, useImperativeHandle, useEffect, useRef, useState, useCallback } from 'react';
 import { Crepe } from '@milkdown/crepe';
 import { Milkdown, useEditor } from '@milkdown/react';
 import { editorViewCtx, parserCtx } from '@milkdown/kit/core';
+import { callCommand } from '@milkdown/utils';
+import {
+  toggleStrongCommand,
+  toggleEmphasisCommand,
+  wrapInHeadingCommand,
+  wrapInBlockquoteCommand,
+  createCodeBlockCommand,
+  toggleLinkCommand,
+  wrapInBulletListCommand,
+  wrapInOrderedListCommand,
+} from '@milkdown/preset-commonmark';
 
 // Import Crepe base styles (always needed)
 import '@milkdown/crepe/theme/common/style.css';
@@ -18,6 +29,15 @@ export interface MilkdownEditorRef {
   setMarkdown: (markdown: string) => void;
   focus: () => void;
   isReady: boolean;
+  // Formatting commands
+  toggleBold: () => boolean;
+  toggleItalic: () => boolean;
+  toggleHeading: (level: number) => boolean;
+  toggleQuote: () => boolean;
+  toggleCode: () => boolean;
+  toggleLink: (href?: string, title?: string) => boolean;
+  toggleList: () => boolean;
+  toggleOrderedList: () => boolean;
 }
 
 export const MilkdownEditor = forwardRef<MilkdownEditorRef, MilkdownEditorProps>(
@@ -61,6 +81,13 @@ export const MilkdownEditor = forwardRef<MilkdownEditorRef, MilkdownEditorProps>
       return crepe;
     }, []); // Empty deps - only create once
 
+    // Helper to execute a command
+    const execCommand = useCallback(<T,>(command: { key: any }, payload?: T): boolean => {
+      const editor = crepeRef.current?.editor;
+      if (!editor?.ctx) return false;
+      return editor.action(ctx => callCommand(command.key, payload)(ctx));
+    }, []);
+
     // Expose imperative methods
     useImperativeHandle(ref, () => ({
       getMarkdown: () => crepeRef.current?.getMarkdown() ?? '',
@@ -86,7 +113,16 @@ export const MilkdownEditor = forwardRef<MilkdownEditorRef, MilkdownEditorProps>
         editorElement?.focus();
       },
       isReady: isReady && !loading,
-    }), [isReady, loading]);
+      // Formatting commands
+      toggleBold: () => execCommand(toggleStrongCommand),
+      toggleItalic: () => execCommand(toggleEmphasisCommand),
+      toggleHeading: (level: number) => execCommand(wrapInHeadingCommand, level),
+      toggleQuote: () => execCommand(wrapInBlockquoteCommand),
+      toggleCode: () => execCommand(createCodeBlockCommand),
+      toggleLink: (href?: string, title?: string) => execCommand(toggleLinkCommand, { href, title }),
+      toggleList: () => execCommand(wrapInBulletListCommand),
+      toggleOrderedList: () => execCommand(wrapInOrderedListCommand),
+    }), [isReady, loading, execCommand]);
 
     // Dynamic theme loading
     useEffect(() => {

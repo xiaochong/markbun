@@ -68,6 +68,39 @@ function App() {
     });
   }, []);
 
+  // Toolbar action handlers
+  const handleBold = useCallback(() => {
+    editorRef.current?.toggleBold();
+  }, []);
+
+  const handleItalic = useCallback(() => {
+    editorRef.current?.toggleItalic();
+  }, []);
+
+  const handleHeading = useCallback((level: number) => {
+    editorRef.current?.toggleHeading(level);
+  }, []);
+
+  const handleQuote = useCallback(() => {
+    editorRef.current?.toggleQuote();
+  }, []);
+
+  const handleCode = useCallback(() => {
+    editorRef.current?.toggleCode();
+  }, []);
+
+  const handleLink = useCallback(() => {
+    editorRef.current?.toggleLink();
+  }, []);
+
+  const handleList = useCallback(() => {
+    editorRef.current?.toggleList();
+  }, []);
+
+  const handleOrderedList = useCallback(() => {
+    editorRef.current?.toggleOrderedList();
+  }, []);
+
   // Store callbacks in ref to avoid stale closures in keyboard shortcuts
   const callbacksRef = useRef({
     handleSave,
@@ -137,7 +170,16 @@ function App() {
       />
 
       {/* Toolbar */}
-      <Toolbar />
+      <Toolbar
+        onBold={handleBold}
+        onItalic={handleItalic}
+        onHeading={handleHeading}
+        onQuote={handleQuote}
+        onCode={handleCode}
+        onLink={handleLink}
+        onList={handleList}
+        onOrderedList={handleOrderedList}
+      />
 
       {/* Editor */}
       <main className="flex-1 overflow-hidden">
