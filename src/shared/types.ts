@@ -16,6 +16,7 @@ export type PingWriteRPC = {
       fileSaveRequest: {};
       fileSaveAsRequest: {};
       toggleTheme: {};
+      showAbout: {};
     };
   }>;
   webview: RPCSchema<{

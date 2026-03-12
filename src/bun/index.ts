@@ -1,4 +1,4 @@
-import { BrowserWindow, BrowserView, Updater, Utils } from 'electrobun/bun';
+import { BrowserWindow, BrowserView, Updater, Utils, ApplicationMenu } from 'electrobun/bun';
 import { setupMenu } from './menu';
 import type { PingWriteRPC } from '../shared/types';
 import { readFile, writeFile, stat } from 'fs/promises';
@@ -111,6 +111,9 @@ async function getMainViewUrl(): Promise<string> {
 
 // Create the main application window
 async function main() {
+  // Setup application menu FIRST (before creating window)
+  setupMenu();
+
   const url = await getMainViewUrl();
 
   // Define RPC handlers
@@ -153,12 +156,9 @@ async function main() {
     rpc,
   });
 
-  // Setup application menu
-  setupMenu();
-
   // Handle menu actions
-  win.on('menu-action', async (event: unknown) => {
-    const action = String(event);
+  ApplicationMenu.on('application-menu-clicked', async (event: { data: { action: string } }) => {
+    const action = event.data.action;
 
     switch (action) {
       case 'file-new':
@@ -196,6 +196,11 @@ async function main() {
       case 'view-toggle-theme':
         // @ts-ignore
         win.webview.rpc.send.toggleTheme({});
+        break;
+
+      case 'app-about':
+        // @ts-ignore
+        win.webview.rpc.send.showAbout({});
         break;
     }
   });

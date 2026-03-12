@@ -68,6 +68,7 @@ function App() {
     });
   }, []);
 
+
   // Toolbar action handlers
   const handleBold = useCallback(() => {
     editorRef.current?.toggleBold();
@@ -151,6 +152,13 @@ function App() {
               editorRef.current.setMarkdown('');
             }
             break;
+          case 'c':
+          case 'v':
+          case 'x':
+          case 'a':
+          case 'z':
+            // Let these keys pass through for native/WebView handling
+            return;
         }
       }
     };

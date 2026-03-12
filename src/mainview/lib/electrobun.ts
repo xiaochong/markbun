@@ -29,6 +29,10 @@ const rpc = Electroview.defineRPC<PingWriteRPC>({
         const listeners = (window as any).__electrobunListeners?.['toggle-theme'] || [];
         listeners.forEach((cb: () => void) => cb());
       },
+      showAbout: () => {
+        const listeners = (window as any).__electrobunListeners?.['show-about'] || [];
+        listeners.forEach((cb: () => void) => cb());
+      },
     },
   },
 });

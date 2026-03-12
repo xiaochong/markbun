@@ -14,6 +14,8 @@ import {
   linkSchema,
 } from '@milkdown/preset-commonmark';
 import { linkTooltipAPI } from '@milkdown/kit/component/link-tooltip';
+import { clipboard } from '@milkdown/plugin-clipboard';
+import { history } from '@milkdown/plugin-history';
 import { TextSelection } from '@milkdown/prose/state';
 import { setBlockType } from '@milkdown/prose/commands';
 
@@ -73,6 +75,11 @@ export const MilkdownEditor = forwardRef<MilkdownEditorRef, MilkdownEditorProps>
       });
 
       crepeRef.current = crepe;
+
+      // Enable clipboard plugin for copy/paste
+      crepe.editor.use(clipboard);
+      // Enable history plugin for undo/redo
+      crepe.editor.use(history);
 
       // Listen for content changes
       crepe.on((listener) => {

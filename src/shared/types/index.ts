@@ -27,16 +27,11 @@ export interface EditorStats {
   lines: number;
 }
 
-export type MenuAction = 
+export type MenuAction =
   | 'file-new'
   | 'file-open'
   | 'file-save'
   | 'file-save-as'
-  | 'edit-undo'
-  | 'edit-redo'
-  | 'edit-cut'
-  | 'edit-copy'
-  | 'edit-paste'
   | 'view-toggle-theme';
 
 export interface IpcResponse<T = unknown> {
