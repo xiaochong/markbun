@@ -33,6 +33,18 @@ const rpc = Electroview.defineRPC<PingWriteRPC>({
         const listeners = (window as any).__electrobunListeners?.['show-about'] || [];
         listeners.forEach((cb: () => void) => cb());
       },
+      toggleTitlebar: () => {
+        const listeners = (window as any).__electrobunListeners?.['toggle-titlebar'] || [];
+        listeners.forEach((cb: () => void) => cb());
+      },
+      toggleToolbar: () => {
+        const listeners = (window as any).__electrobunListeners?.['toggle-toolbar'] || [];
+        listeners.forEach((cb: () => void) => cb());
+      },
+      toggleStatusbar: () => {
+        const listeners = (window as any).__electrobunListeners?.['toggle-statusbar'] || [];
+        listeners.forEach((cb: () => void) => cb());
+      },
     },
   },
 });

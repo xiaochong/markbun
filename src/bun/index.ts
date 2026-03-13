@@ -1,5 +1,5 @@
 import { BrowserWindow, BrowserView, Updater, Utils, ApplicationMenu } from 'electrobun/bun';
-import { setupMenu } from './menu';
+import { setupMenu, type ViewMenuState } from './menu';
 import type { PingWriteRPC } from '../shared/types';
 import { readFile, writeFile, stat } from 'fs/promises';
 import { join } from 'path';
@@ -10,6 +10,19 @@ const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`;
 
 // Current file state
 let currentFilePath: string | null = null;
+
+// Current view menu state
+let viewMenuState: ViewMenuState = {
+  showTitleBar: false,
+  showToolBar: false,
+  showStatusBar: true,
+};
+
+// Helper to update view menu state and refresh menu
+function updateViewMenuState(updates: Partial<ViewMenuState>) {
+  viewMenuState = { ...viewMenuState, ...updates };
+  setupMenu(viewMenuState);
+}
 
 // File operations
 async function openFile(): Promise<{ success: boolean; path?: string; content?: string; error?: string }> {
@@ -112,7 +125,7 @@ async function getMainViewUrl(): Promise<string> {
 // Create the main application window
 async function main() {
   // Setup application menu FIRST (before creating window)
-  setupMenu();
+  setupMenu(viewMenuState);
 
   const url = await getMainViewUrl();
 
@@ -259,6 +272,24 @@ async function main() {
       case 'app-about':
         // @ts-ignore
         win.webview.rpc.send.showAbout({});
+        break;
+
+      case 'view-toggle-titlebar':
+        updateViewMenuState({ showTitleBar: !viewMenuState.showTitleBar });
+        // @ts-ignore
+        win.webview.rpc.send.toggleTitlebar({});
+        break;
+
+      case 'view-toggle-toolbar':
+        updateViewMenuState({ showToolBar: !viewMenuState.showToolBar });
+        // @ts-ignore
+        win.webview.rpc.send.toggleToolbar({});
+        break;
+
+      case 'view-toggle-statusbar':
+        updateViewMenuState({ showStatusBar: !viewMenuState.showStatusBar });
+        // @ts-ignore
+        win.webview.rpc.send.toggleStatusbar({});
         break;
     }
   });

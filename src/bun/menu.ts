@@ -1,7 +1,21 @@
 import { ApplicationMenu } from 'electrobun/bun';
 import type { ApplicationMenuItemConfig } from 'electrobun/bun';
 
-export function setupMenu(): void {
+// Visibility state for UI components
+export interface ViewMenuState {
+  showTitleBar: boolean;
+  showToolBar: boolean;
+  showStatusBar: boolean;
+}
+
+// Default state: TitleBar hidden, ToolBar hidden, StatusBar shown
+const defaultState: ViewMenuState = {
+  showTitleBar: false,
+  showToolBar: false,
+  showStatusBar: true,
+};
+
+export function setupMenu(state: ViewMenuState = defaultState): void {
   const menu: ApplicationMenuItemConfig[] = [
     // macOS requires the app menu as the first menu
     {
@@ -43,6 +57,10 @@ export function setupMenu(): void {
       label: 'View',
       submenu: [
         { label: 'Toggle Dark Mode', action: 'view-toggle-theme', accelerator: 'CmdOrCtrl+Shift+T' },
+        { type: 'separator' },
+        { label: 'Show Title Bar', action: 'view-toggle-titlebar', type: 'checkbox', checked: state.showTitleBar },
+        { label: 'Show Tool Bar', action: 'view-toggle-toolbar', type: 'checkbox', checked: state.showToolBar },
+        { label: 'Show Status Bar', action: 'view-toggle-statusbar', type: 'checkbox', checked: state.showStatusBar },
         { type: 'separator' },
         { label: 'Toggle Developer Tools', action: 'view-toggle-devtools', accelerator: 'CmdOrCtrl+Option+I' },
       ],

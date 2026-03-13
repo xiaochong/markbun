@@ -11,6 +11,11 @@ function App() {
   const { theme, toggleTheme } = useTheme();
   const [editorContent, setEditorContent] = useState('');
 
+  // Visibility states for UI components (default: TitleBar hidden, Toolbar hidden, StatusBar shown)
+  const [showTitleBar, setShowTitleBar] = useState(false);
+  const [showToolbar, setShowToolbar] = useState(false);
+  const [showStatusBar, setShowStatusBar] = useState(true);
+
   const {
     path,
     content,
@@ -72,6 +77,24 @@ function App() {
     });
   }, []);
 
+  // Listen for visibility toggle events
+  useEffect(() => {
+    return electrobun.on('toggle-titlebar', () => {
+      setShowTitleBar(prev => !prev);
+    });
+  }, []);
+
+  useEffect(() => {
+    return electrobun.on('toggle-toolbar', () => {
+      setShowToolbar(prev => !prev);
+    });
+  }, []);
+
+  useEffect(() => {
+    return electrobun.on('toggle-statusbar', () => {
+      setShowStatusBar(prev => !prev);
+    });
+  }, []);
 
   // Toolbar action handlers
   const handleBold = useCallback(() => {
@@ -176,22 +199,26 @@ function App() {
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
       {/* Title Bar */}
-      <TitleBar
-        title={path ? path.split('/').pop() : 'Untitled'}
-        isDirty={isDirty}
-      />
+      {showTitleBar && (
+        <TitleBar
+          title={path ? path.split('/').pop() : 'Untitled'}
+          isDirty={isDirty}
+        />
+      )}
 
       {/* Toolbar */}
-      <Toolbar
-        onBold={handleBold}
-        onItalic={handleItalic}
-        onHeading={handleHeading}
-        onQuote={handleQuote}
-        onCode={handleCode}
-        onLink={handleLink}
-        onList={handleList}
-        onOrderedList={handleOrderedList}
-      />
+      {showToolbar && (
+        <Toolbar
+          onBold={handleBold}
+          onItalic={handleItalic}
+          onHeading={handleHeading}
+          onQuote={handleQuote}
+          onCode={handleCode}
+          onLink={handleLink}
+          onList={handleList}
+          onOrderedList={handleOrderedList}
+        />
+      )}
 
       {/* Editor */}
       <main className="flex-1 overflow-hidden">
@@ -205,12 +232,14 @@ function App() {
       </main>
 
       {/* Status Bar */}
-      <StatusBar
-        filePath={path || undefined}
-        isDirty={isDirty}
-        content={editorContent}
-        onSaveStatus={saveStatus || undefined}
-      />
+      {showStatusBar && (
+        <StatusBar
+          filePath={path || undefined}
+          isDirty={isDirty}
+          content={editorContent}
+          onSaveStatus={saveStatus || undefined}
+        />
+      )}
     </div>
   );
 }
