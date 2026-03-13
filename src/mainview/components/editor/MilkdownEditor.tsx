@@ -60,6 +60,36 @@ export const MilkdownEditor = forwardRef<MilkdownEditorRef, MilkdownEditorProps>
       onChangeRef.current = onChange;
     }, [onChange]);
 
+    // Scrollbar auto-hide: show only when scrolling
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      let scrollTimeout: NodeJS.Timeout | null = null;
+      const SCROLL_HIDE_DELAY = 800; // Hide scrollbar 800ms after scroll stops
+
+      const handleScroll = () => {
+        container.classList.add('is-scrolling');
+
+        if (scrollTimeout) {
+          clearTimeout(scrollTimeout);
+        }
+
+        scrollTimeout = setTimeout(() => {
+          container.classList.remove('is-scrolling');
+        }, SCROLL_HIDE_DELAY);
+      };
+
+      container.addEventListener('scroll', handleScroll, { passive: true });
+
+      return () => {
+        container.removeEventListener('scroll', handleScroll);
+        if (scrollTimeout) {
+          clearTimeout(scrollTimeout);
+        }
+      };
+    }, []);
+
     // Store initial value in a ref so it doesn't change on re-renders
     const initialValueRef = useRef(defaultValue);
 

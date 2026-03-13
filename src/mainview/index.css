@@ -63,25 +63,13 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Thin scrollbar */
+  scrollbar-width: thin;
 }
 
-/* Scrollbar styles */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--border));
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground));
+/* Firefox scrollbar support - thin scrollbar */
+* {
+  scrollbar-width: thin;
 }
 
 /* Focus ring */
@@ -104,6 +92,38 @@ body {
   width: 100%;
   height: 100%;
   overflow: auto;
+  /* Firefox scrollbar - auto-hide, only show when scrolling */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.milkdown-crepe-container.is-scrolling {
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+
+/* Editor container scrollbar - auto-hide behavior */
+/* Scrollbar only shows when scrolling (is-scrolling class is present) */
+.milkdown-crepe-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.milkdown-crepe-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.milkdown-crepe-container::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 4px;
+}
+
+/* Show scrollbar only when scrolling */
+.milkdown-crepe-container.is-scrolling::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--border));
+}
+
+.milkdown-crepe-container.is-scrolling::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--muted-foreground));
 }
 
 /* Allow dropdown to overflow from editor */
