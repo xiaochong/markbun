@@ -63,6 +63,35 @@ export const MilkdownEditor = forwardRef<MilkdownEditorRef, MilkdownEditorProps>
     // Store initial value in a ref so it doesn't change on re-renders
     const initialValueRef = useRef(defaultValue);
 
+    // Dynamic theme CSS loading - runs on initial render and when darkMode changes
+    useEffect(() => {
+      const loadTheme = async () => {
+        const styleId = 'milkdown-theme';
+        let style = document.getElementById(styleId) as HTMLStyleElement | null;
+        if (!style) {
+          style = document.createElement('style');
+          style.id = styleId;
+          document.head.appendChild(style);
+        }
+
+        try {
+          if (darkMode) {
+            // @ts-ignore
+            const module = await import('@milkdown/crepe/theme/frame-dark.css?inline');
+            style.textContent = module.default || '';
+          } else {
+            // @ts-ignore
+            const module = await import('@milkdown/crepe/theme/frame.css?inline');
+            style.textContent = module.default || '';
+          }
+        } catch (e) {
+          console.error('Failed to load theme:', e);
+        }
+      };
+
+      loadTheme();
+    }, [darkMode]);
+
     const { loading } = useEditor((root) => {
       const crepe = new Crepe({
         root,
@@ -252,18 +281,6 @@ export const MilkdownEditor = forwardRef<MilkdownEditorRef, MilkdownEditorProps>
         });
       },
     }), [isReady, loading, execCommand, toggleCodeBlock]);
-
-    // Dynamic theme loading
-    useEffect(() => {
-      // Load the appropriate theme CSS
-      if (darkMode) {
-        // @ts-ignore
-        import('@milkdown/crepe/theme/frame-dark.css');
-      } else {
-        // @ts-ignore
-        import('@milkdown/crepe/theme/frame.css');
-      }
-    }, [darkMode]);
 
     // NOTE: We intentionally do NOT have a useEffect to update content when defaultValue changes.
     // The parent component should use the ref's setMarkdown method when switching files.

@@ -43,6 +43,8 @@ export function setupMenu(): void {
       label: 'View',
       submenu: [
         { label: 'Toggle Dark Mode', action: 'view-toggle-theme', accelerator: 'CmdOrCtrl+Shift+T' },
+        { type: 'separator' },
+        { label: 'Toggle Developer Tools', action: 'view-toggle-devtools', accelerator: 'CmdOrCtrl+Option+I' },
       ],
     },
   ];

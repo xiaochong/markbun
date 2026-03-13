@@ -31,25 +31,25 @@
 }
 
 .dark {
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
-  --card: 240 10% 3.9%;
-  --card-foreground: 0 0% 98%;
-  --popover: 240 10% 3.9%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 0 0% 98%;
-  --primary-foreground: 240 5.9% 10%;
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
-  --accent: 240 3.7% 15.9%;
-  --accent-foreground: 0 0% 98%;
-  --destructive: 0 62.8% 30.6%;
+  --background: 220 13% 24%;
+  --foreground: 210 20% 96%;
+  --card: 220 13% 24%;
+  --card-foreground: 210 20% 96%;
+  --popover: 220 13% 24%;
+  --popover-foreground: 210 20% 96%;
+  --primary: 210 20% 96%;
+  --primary-foreground: 220 13% 24%;
+  --secondary: 220 10% 32%;
+  --secondary-foreground: 210 20% 96%;
+  --muted: 220 10% 32%;
+  --muted-foreground: 220 8% 65%;
+  --accent: 220 10% 32%;
+  --accent-foreground: 210 20% 96%;
+  --destructive: 0 62.8% 40%;
   --destructive-foreground: 0 0% 98%;
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
-  --ring: 240 4.9% 83.9%;
+  --border: 220 10% 32%;
+  --input: 220 10% 32%;
+  --ring: 210 20% 80%;
 }
 
 /* Base styles */
@@ -106,9 +106,20 @@ body {
   overflow: auto;
 }
 
-/* Ensure milkdown root takes full height */
+/* Ensure milkdown root takes full height and uses theme background */
 .milkdown-crepe-container .milkdown {
   height: 100%;
+  background-color: hsl(var(--background)) !important;
+}
+
+/* Override Crepe's default dark background */
+.dark .milkdown-crepe-container .milkdown {
+  background-color: hsl(220 13% 24%) !important;
+}
+
+/* ProseMirror editor background */
+.milkdown-crepe-container .ProseMirror {
+  background-color: transparent !important;
 }
 
 /* Override Crepe's default padding for better Typora-like experience */
@@ -117,33 +128,213 @@ body {
   margin: 0 auto;
 }
 
-/* Fix CodeMirror line number active state - use theme-aware color instead of hardcoded dark */
-.milkdown-crepe-container .cm-activeLineGutter {
-  background-color: hsl(var(--muted)) !important;
+/* Hide the active line gutter indicator completely */
+.milkdown-crepe-container .cm-activeLineGutter,
+.milkdown-crepe-container .milkdown-code-block .cm-activeLineGutter {
+  display: none !important;
 }
 
-/* Fix CodeMirror active line background */
-.milkdown-crepe-container .cm-activeLine {
-  background-color: hsl(var(--muted) / 0.5) !important;
+/* Hide code block left border/decoration line - comprehensive */
+.milkdown-crepe-container .milkdown-code-block,
+.milkdown-crepe-container .milkdown-code-block > *,
+.milkdown-crepe-container .milkdown-code-block .cm-editor,
+.milkdown-crepe-container .milkdown-code-block .cm-scroller,
+.milkdown-crepe-container .milkdown-code-block .cm-content {
+  border-left: none !important;
+  box-shadow: none !important;
 }
 
-/* Fix code block copy button - lighter background */
-.milkdown-crepe-container .milkdown-code-block .tools-button-group button {
-  background: hsl(var(--muted)) !important;
+/* Remove any before/after pseudo elements that might create the line */
+.milkdown-crepe-container .milkdown-code-block::before,
+.milkdown-crepe-container .milkdown-code-block::after,
+.milkdown-crepe-container .milkdown-code-block > *::before,
+.milkdown-crepe-container .milkdown-code-block > *::after {
+  display: none !important;
+  content: none !important;
+  border-left: none !important;
+}
+
+/* Hide code block drag handles but NOT the language picker */
+.milkdown-crepe-container .milkdown-code-block [class*="drag-handle"],
+.milkdown-crepe-container .milkdown-code-block [class*="dragHandle"],
+.milkdown-crepe-container .milkdown-code-block [data-drag-handle],
+.milkdown-crepe-container .milkdown-code-block [class*="fold"]:not([class*="language"]):not([class*="lang"]),
+.milkdown-crepe-container .milkdown-code-block svg:not(.crepe-code-block svg) {
+  display: none !important;
+}
+
+/* Hide only the visual line inside language-picker, not the picker itself */
+.milkdown-crepe-container .milkdown-code-block .language-picker::before,
+.milkdown-crepe-container .milkdown-code-block .language-picker::after {
+  display: none !important;
+}
+
+/* If .language-picker itself is the visual line (empty div), hide it but not its children */
+.milkdown-crepe-container .milkdown-code-block .language-picker:empty {
+  display: none !important;
+}
+
+/* Ensure cursor is visible in focused code block - simplified */
+.milkdown-crepe-container .milkdown-code-block .cm-cursor {
+  border-left-color: hsl(var(--foreground)) !important;
+  border-left-width: 2px !important;
+}
+
+.dark .milkdown-crepe-container .milkdown-code-block .cm-cursor {
+  border-left-color: hsl(210 20% 96%) !important;
+}
+
+/* Hide cursor when code block editor is not focused */
+.milkdown-crepe-container .milkdown-code-block .cm-editor:not(.cm-focused) .cm-cursor {
+  display: none !important;
+}
+
+/* Code block controls - override Milkdown's hover behavior */
+/* Hide by default (including hover), show only when focused */
+.milkdown-crepe-container .milkdown-code-block .language-button,
+.milkdown-crepe-container .milkdown-code-block .tools-button-group > button {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Show when code block is focused */
+.milkdown-crepe-container .milkdown-code-block:focus-within .language-button,
+.milkdown-crepe-container .milkdown-code-block:focus-within .tools-button-group > button {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure CodeMirror content has no left padding that might show the line */
+.milkdown-crepe-container .milkdown-code-block .cm-content {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Hide any left-side indicators in Crepe code blocks */
+.milkdown-crepe-container .milkdown-code-block [style*="border-left"],
+.milkdown-crepe-container .milkdown-code-block [style*="borderLeft"] {
+  border-left: none !important;
+}
+
+/* Hide code block line numbers and gutter elements - comprehensive */
+.milkdown-crepe-container .milkdown-code-block .cm-gutters,
+.milkdown-crepe-container .milkdown-code-block .cm-lineNumbers,
+.milkdown-crepe-container .milkdown-code-block .cm-gutter,
+.milkdown-crepe-container .milkdown-code-block .cm-gutterElement,
+.milkdown-crepe-container .milkdown-code-block [class*="gutter"],
+.milkdown-crepe-container .milkdown-code-block [class*="Gutter"] {
+  display: none !important;
+}
+
+/* Hide the left border/line in code blocks */
+.milkdown-crepe-container .milkdown-code-block .cm-editor {
+  border-left: none !important;
+}
+
+/* Remove any pseudo-element lines in code block */
+.milkdown-crepe-container .milkdown-code-block::before {
+  display: none !important;
+}
+
+/* Code block - unified style */
+.milkdown-crepe-container .milkdown-code-block {
+  background-color: hsl(220 12% 96%) !important;
+  border: 1px solid hsl(220 12% 90%) !important;
+  border-radius: var(--radius) !important;
+  /* Don't use overflow: hidden as it clips language selector dropdown */
+}
+
+/* Dark mode code block - single unified color */
+.dark .milkdown-crepe-container .milkdown-code-block {
+  background-color: hsl(220 12% 20%) !important;
+  border-color: hsl(220 10% 28%) !important;
+}
+
+/* Code block language selector - lighter in dark mode */
+.dark .milkdown-crepe-container .milkdown-code-block select,
+.dark .milkdown-crepe-container .milkdown-code-block [class*="lang"],
+.dark .milkdown-crepe-container .milkdown-code-block [class*="selector"] {
+  background-color: hsl(220 10% 30%) !important;
+  color: hsl(210 20% 90%) !important;
+  border: 1px solid hsl(220 10% 38%) !important;
+}
+
+/* Code block selection - ensure text is readable in dark mode */
+.dark .milkdown-crepe-container .milkdown-code-block .cm-content ::selection,
+.dark .milkdown-crepe-container .milkdown-code-block ::selection {
+  background-color: hsl(210 50% 50% / 0.5) !important;
+  color: hsl(0 0% 100%) !important;
+}
+
+/* CodeMirror specific selection styles */
+.dark .milkdown-crepe-container .milkdown-code-block .cm-selectionBackground,
+.dark .milkdown-crepe-container .milkdown-code-block .cm-selectionLayer .cm-selection {
+  background-color: hsl(210 50% 50% / 0.4) !important;
+}
+
+/* Remove selected line background - no highlight when not editing */
+.milkdown-crepe-container .milkdown-code-block .cm-activeLine {
+  background-color: transparent !important;
+}
+
+/* Code block editor background */
+.milkdown-crepe-container .milkdown-code-block .cm-editor {
+  background-color: transparent !important;
+}
+
+/* Code block text color */
+.milkdown-crepe-container .milkdown-code-block .cm-content {
   color: hsl(var(--foreground)) !important;
 }
 
-.milkdown-crepe-container .milkdown-code-block .tools-button-group button:hover {
-  background: hsl(var(--muted-foreground) / 0.3) !important;
+/* Code block active line - no background highlight */
+.milkdown-crepe-container .milkdown-code-block .cm-line.cm-activeLine,
+.dark .milkdown-crepe-container .milkdown-code-block .cm-line.cm-activeLine {
+  background-color: transparent !important;
+  border-left: none !important;
 }
 
-.milkdown-crepe-container .milkdown-code-block .tools-button-group button svg {
-  fill: hsl(var(--foreground)) !important;
+/* Hide any left border on all lines in code block */
+.milkdown-crepe-container .milkdown-code-block .cm-line {
+  border-left: none !important;
 }
 
-/* Hide code block line numbers */
-.milkdown-crepe-container .milkdown-code-block .cm-gutters {
-  display: none !important;
+/* Hide potential line indicators - more aggressive targeting */
+.milkdown-crepe-container .milkdown-code-block [class*="line"],
+.milkdown-crepe-container .milkdown-code-block [class*="indicator"] {
+  border-left: none !important;
+  box-shadow: none !important;
+}
+
+/* Target potential Crepe code block UI elements */
+.milkdown-crepe-container .milkdown-code-block [class*="crepe"],
+.milkdown-crepe-container .milkdown-code-block [class*="block"] {
+  border-left: none !important;
+}
+
+/* Hide any element positioned at the left edge */
+.milkdown-crepe-container .milkdown-code-block * {
+  border-left-color: transparent !important;
+}
+
+
+/* Ensure code block doesn't inherit too-dark background */
+.milkdown-crepe-container pre {
+  background-color: transparent !important;
+}
+
+/* Inline code styling */
+.milkdown-crepe-container code {
+  background-color: hsl(var(--muted)) !important;
+  color: hsl(var(--foreground)) !important;
+  padding: 0.2em 0.4em !important;
+  border-radius: calc(var(--radius) / 2) !important;
+  font-size: 0.875em !important;
+}
+
+/* Dark mode inline code - subtle background */
+.dark .milkdown-crepe-container code {
+  background-color: hsl(220 12% 28%) !important;
 }
 
 /* Fix table selection visibility - ensure text remains readable */

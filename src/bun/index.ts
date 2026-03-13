@@ -225,6 +225,37 @@ async function main() {
         win.webview.rpc.send.toggleTheme({});
         break;
 
+      case 'view-toggle-devtools':
+        // @ts-ignore
+        win.webview.toggleDevTools();
+        // Trigger window resize to fix layout issues after DevTools toggle
+        setTimeout(() => {
+          try {
+            // @ts-ignore
+            const frame = win.frame;
+            if (frame) {
+              // Resize by 1px and back to force WebView relayout
+              // @ts-ignore
+              win.frame = { ...frame, width: frame.width + 1 };
+              setTimeout(() => {
+                // @ts-ignore
+                win.frame = frame;
+              }, 50);
+            }
+            // Also trigger a resize event in the WebView
+            // @ts-ignore
+            win.webview?.evaluateJavaScript?.(`
+              window.dispatchEvent(new Event('resize'));
+              document.body.style.display = 'none';
+              document.body.offsetHeight; // force reflow
+              document.body.style.display = '';
+            `);
+          } catch (e) {
+            console.error('Failed to fix layout after DevTools toggle:', e);
+          }
+        }, 150);
+        break;
+
       case 'app-about':
         // @ts-ignore
         win.webview.rpc.send.showAbout({});

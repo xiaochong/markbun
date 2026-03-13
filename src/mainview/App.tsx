@@ -8,7 +8,7 @@ import { processMarkdownImages } from './lib/imageProcessor';
 
 function App() {
   const editorRef = useRef<MilkdownEditorRef>(null);
-  const { toggleTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const [editorContent, setEditorContent] = useState('');
 
   const {
@@ -200,6 +200,7 @@ function App() {
           defaultValue={content}
           onChange={handleEditorChange}
           className="h-full"
+          darkMode={theme === 'dark'}
         />
       </main>
 
