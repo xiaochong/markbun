@@ -106,10 +106,17 @@ body {
   overflow: auto;
 }
 
+/* Allow dropdown to overflow from editor */
+.milkdown-crepe-container .ProseMirror {
+  overflow: visible !important;
+}
+
 /* Ensure milkdown root takes full height and uses theme background */
 .milkdown-crepe-container .milkdown {
   height: 100%;
   background-color: hsl(var(--background)) !important;
+  /* Allow language picker dropdown to overflow */
+  overflow: visible !important;
 }
 
 /* Override Crepe's default dark background */
@@ -174,9 +181,9 @@ body {
   display: none !important;
 }
 
-/* Ensure cursor is visible in focused code block - simplified */
+/* Ensure cursor is visible in focused code block - light color for dark bg */
 .milkdown-crepe-container .milkdown-code-block .cm-cursor {
-  border-left-color: hsl(var(--foreground)) !important;
+  border-left-color: hsl(210 20% 90%) !important;
   border-left-width: 2px !important;
 }
 
@@ -189,19 +196,63 @@ body {
   display: none !important;
 }
 
-/* Code block controls - override Milkdown's hover behavior */
-/* Hide by default (including hover), show only when focused */
-.milkdown-crepe-container .milkdown-code-block .language-button,
-.milkdown-crepe-container .milkdown-code-block .tools-button-group > button {
-  opacity: 0 !important;
-  pointer-events: none !important;
+/* Code block controls - move language selector to bottom right */
+.milkdown-crepe-container .milkdown-code-block {
+  position: relative !important;
 }
 
-/* Show when code block is focused */
+/* Language selector - positioned at bottom right, hidden by default */
+.milkdown-crepe-container .milkdown-code-block .language-button {
+  position: absolute !important;
+  bottom: 8px !important;
+  right: 8px !important;
+  top: auto !important;
+  left: auto !important;
+  margin-bottom: 0 !important;
+  opacity: 0 !important;
+  transition: opacity 0.2s ease !important;
+  background: hsl(220 13% 94%) !important;
+  border: 1px solid hsl(220 13% 85%) !important;
+  border-radius: 4px !important;
+  color: hsl(220 13% 35%) !important;
+  font-size: 11px !important;
+  text-transform: lowercase !important;
+  padding: 4px 10px !important;
+  pointer-events: none !important;
+  cursor: pointer !important;
+  z-index: 10 !important;
+}
+
+/* Dark mode language button */
+.dark .milkdown-crepe-container .milkdown-code-block .language-button {
+  background: hsl(220 13% 30%) !important;
+  border-color: hsl(220 13% 40%) !important;
+  color: hsl(210 20% 90%) !important;
+}
+
+/* Show language selector only when code block is focused (not on hover) */
+.milkdown-crepe-container .milkdown-code-block.selected .language-button,
 .milkdown-crepe-container .milkdown-code-block:focus-within .language-button,
-.milkdown-crepe-container .milkdown-code-block:focus-within .tools-button-group > button {
+/* Also show when language picker is active (has focus within) */
+.milkdown-crepe-container .milkdown-code-block:has(.language-picker:focus-within) .language-button,
+.milkdown-crepe-container .milkdown-code-block .language-picker:focus-within ~ .language-button {
   opacity: 1 !important;
   pointer-events: auto !important;
+}
+
+/* Hide copy button and tools-button-group */
+.milkdown-crepe-container .milkdown-code-block .tools-button-group {
+  display: none !important;
+}
+
+/* Hide hover effects from default Crepe */
+.milkdown-crepe-container .milkdown-code-block:hover .language-button {
+  opacity: 0 !important;
+}
+
+.milkdown-crepe-container .milkdown-code-block.selected:hover .language-button,
+.milkdown-crepe-container .milkdown-code-block:focus-within:hover .language-button {
+  opacity: 1 !important;
 }
 
 /* Ensure CodeMirror content has no left padding that might show the line */
@@ -236,39 +287,109 @@ body {
   display: none !important;
 }
 
-/* Code block - unified style */
+/* Code block - unified style with better appearance */
 .milkdown-crepe-container .milkdown-code-block {
-  background-color: hsl(220 12% 96%) !important;
-  border: 1px solid hsl(220 12% 90%) !important;
-  border-radius: var(--radius) !important;
+  border: none !important;
+  border-radius: 8px !important;
   /* Don't use overflow: hidden as it clips language selector dropdown */
 }
 
-/* Dark mode code block - single unified color */
+/* Light mode code block - light gray background */
+.milkdown-crepe-container .milkdown-code-block {
+  background-color: hsl(220 13% 96%) !important;
+}
+
+/* Code block text color for light theme */
+.milkdown-crepe-container .milkdown-code-block .cm-content {
+  color: hsl(220 13% 20%) !important;
+}
+
+/* Dark mode code block - darker background */
 .dark .milkdown-crepe-container .milkdown-code-block {
-  background-color: hsl(220 12% 20%) !important;
-  border-color: hsl(220 10% 28%) !important;
+  background-color: hsl(220 13% 18%) !important;
 }
 
-/* Code block language selector - lighter in dark mode */
-.dark .milkdown-crepe-container .milkdown-code-block select,
-.dark .milkdown-crepe-container .milkdown-code-block [class*="lang"],
-.dark .milkdown-crepe-container .milkdown-code-block [class*="selector"] {
-  background-color: hsl(220 10% 30%) !important;
+/* Code block text color for dark theme */
+.dark .milkdown-crepe-container .milkdown-code-block .cm-content {
   color: hsl(210 20% 90%) !important;
-  border: 1px solid hsl(220 10% 38%) !important;
 }
 
-/* Code block selection - ensure text is readable in dark mode */
-.dark .milkdown-crepe-container .milkdown-code-block .cm-content ::selection,
-.dark .milkdown-crepe-container .milkdown-code-block ::selection {
+/* Language picker dropdown - align to right, positioned below the button */
+.milkdown-crepe-container .milkdown-code-block .language-picker,
+.milkdown-crepe-container .milkdown-code-block .language-picker[style] {
+  z-index: 1000 !important;
+  position: absolute !important;
+  right: 0 !important;
+  left: auto !important;
+  top: 100% !important;
+  bottom: auto !important;
+  margin-top: 2px !important;
+  padding: 0 !important;
+  width: max-content !important;
+  transform: none !important;
+}
+
+/* Light mode dropdown */
+.milkdown-crepe-container .milkdown-code-block .list-wrapper {
+  background: hsl(220 13% 96%) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  border: 1px solid hsl(220 13% 88%) !important;
+}
+
+.milkdown-crepe-container .milkdown-code-block .language-list-item {
+  color: hsl(220 13% 25%) !important;
+  font-size: 13px !important;
+}
+
+.milkdown-crepe-container .milkdown-code-block .language-list-item:hover {
+  background: hsl(220 13% 90%) !important;
+}
+
+/* Light mode search box */
+.milkdown-crepe-container .milkdown-code-block .search-box {
+  background: hsl(220 13% 100%) !important;
+  border: 1px solid hsl(220 13% 85%) !important;
+  border-radius: 4px !important;
+}
+
+.milkdown-crepe-container .milkdown-code-block .search-box input {
+  color: hsl(220 13% 25%) !important;
+}
+
+/* Dark mode dropdown */
+.dark .milkdown-crepe-container .milkdown-code-block .list-wrapper {
+  background: hsl(220 13% 24%) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  border: none !important;
+}
+
+.dark .milkdown-crepe-container .milkdown-code-block .language-list-item {
+  color: hsl(210 20% 90%) !important;
+}
+
+.dark .milkdown-crepe-container .milkdown-code-block .language-list-item:hover {
+  background: hsl(220 13% 32%) !important;
+}
+
+.dark .milkdown-crepe-container .milkdown-code-block .search-box {
+  background: hsl(220 13% 30%) !important;
+}
+
+.dark .milkdown-crepe-container .milkdown-code-block .search-box input {
+  color: hsl(210 20% 90%) !important;
+}
+
+/* Code block selection - ensure text is readable */
+.milkdown-crepe-container .milkdown-code-block .cm-content ::selection,
+.milkdown-crepe-container .milkdown-code-block ::selection {
   background-color: hsl(210 50% 50% / 0.5) !important;
   color: hsl(0 0% 100%) !important;
 }
 
 /* CodeMirror specific selection styles */
-.dark .milkdown-crepe-container .milkdown-code-block .cm-selectionBackground,
-.dark .milkdown-crepe-container .milkdown-code-block .cm-selectionLayer .cm-selection {
+.milkdown-crepe-container .milkdown-code-block .cm-selectionBackground,
+.milkdown-crepe-container .milkdown-code-block .cm-selectionLayer .cm-selection {
   background-color: hsl(210 50% 50% / 0.4) !important;
 }
 
@@ -323,13 +444,178 @@ body {
   background-color: transparent !important;
 }
 
+/* ===========================================
+   Typography Overrides - Typora-like Styling
+   =========================================== */
+
+/* Base editor font and spacing */
+.milkdown-crepe-container .milkdown .ProseMirror {
+  padding: 24px 32px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+}
+
+/* Override Milkdown's font variables */
+.milkdown-crepe-container .milkdown {
+  --crepe-font-title: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  --crepe-font-default: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+}
+
+/* All headings use system font */
+.milkdown-crepe-container .milkdown .ProseMirror h1,
+.milkdown-crepe-container .milkdown .ProseMirror h2,
+.milkdown-crepe-container .milkdown .ProseMirror h3,
+.milkdown-crepe-container .milkdown .ProseMirror h4,
+.milkdown-crepe-container .milkdown .ProseMirror h5,
+.milkdown-crepe-container .milkdown .ProseMirror h6 {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+}
+
+/* Headings - Compact sizes matching the right side */
+.milkdown-crepe-container .milkdown .ProseMirror h1,
+.milkdown-crepe-container .milkdown .ProseMirror h2,
+.milkdown-crepe-container .milkdown .ProseMirror h3,
+.milkdown-crepe-container .milkdown .ProseMirror h4,
+.milkdown-crepe-container .milkdown .ProseMirror h5,
+.milkdown-crepe-container .milkdown .ProseMirror h6 {
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  margin-top: 0.8em !important;
+  margin-bottom: 0.3em !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.milkdown-crepe-container .milkdown .ProseMirror h1 {
+  font-size: 1.6em !important;
+  margin-top: 0 !important;
+  margin-bottom: 0.5em !important;
+  font-weight: 700 !important;
+}
+
+.milkdown-crepe-container .milkdown .ProseMirror h2 {
+  font-size: 1.3em !important;
+  padding-bottom: 0.15em !important;
+  border-bottom: 1px solid hsl(var(--border)) !important;
+  margin-top: 1em !important;
+}
+
+.milkdown-crepe-container .milkdown .ProseMirror h3 {
+  font-size: 1.1em !important;
+}
+
+.milkdown-crepe-container .milkdown .ProseMirror h4 {
+  font-size: 0.95em !important;
+}
+
+.milkdown-crepe-container .milkdown .ProseMirror h5 {
+  font-size: 0.85em !important;
+}
+
+.milkdown-crepe-container .milkdown .ProseMirror h6 {
+  font-size: 0.8em !important;
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* Paragraph spacing - tighter */
+.milkdown-crepe-container .milkdown .ProseMirror p {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  font-size: 15px !important;
+  line-height: 1.65 !important;
+  margin: 0.5em 0 !important;
+  padding: 0 !important;
+}
+
+/* Lists - compact */
+.milkdown-crepe-container .milkdown .ProseMirror ul,
+.milkdown-crepe-container .milkdown .ProseMirror ol {
+  margin: 0.4em 0 !important;
+  padding-left: 1.4em !important;
+}
+
+.milkdown-crepe-container .milkdown .ProseMirror li {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  margin: 0.1em 0 !important;
+  line-height: 1.6 !important;
+  font-size: 15px !important;
+}
+
+/* Blockquote */
+.milkdown-crepe-container .milkdown .ProseMirror blockquote {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  margin: 0.6em 0 !important;
+  padding: 0 0 0 0.8em !important;
+  border-left: 3px solid hsl(var(--border)) !important;
+  color: hsl(var(--muted-foreground)) !important;
+  background: transparent !important;
+}
+
+.milkdown-crepe-container .milkdown .ProseMirror blockquote::before {
+  display: none !important;
+}
+
+.milkdown-crepe-container .milkdown .ProseMirror blockquote p {
+  margin: 0.3em 0 !important;
+  font-size: 15px !important;
+}
+
+/* Code blocks - Better spacing */
+.milkdown-crepe-container .milkdown-code-block {
+  margin: 0.8em 0 !important;
+  padding: 0 !important;
+}
+
+.milkdown-crepe-container .milkdown-code-block .cm-editor {
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.milkdown-crepe-container .milkdown-code-block .cm-content {
+  font-family: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, Monaco, 'Courier New', monospace !important;
+  font-size: 14px !important;
+  line-height: 1.65 !important;
+  padding: 16px 20px !important;
+}
+
+/* Inline code - use SF Mono */
+.milkdown-crepe-container .milkdown .ProseMirror code {
+  font-family: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, Monaco, 'Courier New', monospace !important;
+  font-size: 0.8em !important;
+  padding: 0.1em 0.3em !important;
+}
+
+/* Horizontal rule */
+.milkdown-crepe-container .milkdown .ProseMirror hr {
+  margin: 1.2em 0 !important;
+  height: 1px !important;
+  padding: 0 !important;
+  background-color: hsl(var(--border)) !important;
+}
+
+/* Links */
+.milkdown-crepe-container .milkdown .ProseMirror a {
+  color: hsl(210 100% 50%) !important;
+  text-decoration: none !important;
+}
+
+.milkdown-crepe-container .milkdown .ProseMirror a:hover {
+  text-decoration: underline !important;
+}
+
+.dark .milkdown-crepe-container .milkdown .ProseMirror a {
+  color: hsl(210 100% 65%) !important;
+}
+
+/* Selection color */
+.milkdown-crepe-container .milkdown .ProseMirror *::selection {
+  background: hsl(var(--primary) / 0.3) !important;
+}
+
 /* Inline code styling */
 .milkdown-crepe-container code {
   background-color: hsl(var(--muted)) !important;
   color: hsl(var(--foreground)) !important;
-  padding: 0.2em 0.4em !important;
-  border-radius: calc(var(--radius) / 2) !important;
-  font-size: 0.875em !important;
+  padding: 0.15em 0.35em !important;
+  border-radius: 4px !important;
+  font-size: 0.8em !important;
 }
 
 /* Dark mode inline code - subtle background */
