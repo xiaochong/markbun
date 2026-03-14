@@ -163,6 +163,42 @@ Component library with excellent TypeScript support and customization.
 
 ## Development Workflow
 
+### 0. Pre-commit Checks (MANDATORY)
+
+Before committing any code changes, you MUST run these checks:
+
+```bash
+# Quick syntax and type check
+bun run typecheck
+
+# Full check (types + tests)
+bun run lint
+```
+
+**Commands:**
+- `bun run typecheck` - TypeScript type checking (`tsc --noEmit`)
+- `bun run lint` - Full validation: type check + run tests
+- `bun test` - Run unit tests only
+
+**What to check:**
+- ✓ `bun run typecheck` - Should show "No errors in src directory"
+- ✓ `bun run lint` - All tests should pass
+- ⚠️ Node_modules type errors can be ignored (from electrobun dependency)
+
+**Failure handling:**
+- If `typecheck` shows errors in `src/` directory: Fix them before proceeding
+- If `bun test` fails: Fix errors and re-run
+- Never commit code that doesn't pass `bun run lint`
+
+**Manual verification:**
+```bash
+# Only check our code, ignore node_modules
+bun run typecheck 2>&1 | grep "src/" || echo "✓ No errors in src"
+
+# Just run tests
+bun test
+```
+
 ### 1. Adding Features
 
 1. **Main Process Feature** (e.g., file operations):
@@ -408,6 +444,13 @@ const mockCssImport = mock(() => ({
 Before committing changes to editor module:
 
 ```bash
+# Quick check - type checking only
+bun run typecheck
+
+# Full check - types + tests (REQUIRED before commit)
+bun run lint
+
+# Or run individually:
 # 1. Run type checking
 bunx tsc --noEmit
 

@@ -57,6 +57,8 @@ export const MilkdownEditor = memo(forwardRef<MilkdownEditorRef, MilkdownEditorP
       toggleLink: () => formatting.toggleLink(crepeRef),
       toggleList: () => formatting.toggleList(crepeRef),
       toggleOrderedList: () => formatting.toggleOrderedList(crepeRef),
+      // Extended formatting commands (GFM)
+      toggleStrikethrough: () => formatting.toggleStrikethrough(crepeRef),
 
       // Paragraph menu commands
       setParagraph: () => paragraph.setParagraph(crepeRef),
@@ -85,6 +87,10 @@ export const MilkdownEditor = memo(forwardRef<MilkdownEditorRef, MilkdownEditorP
 
       // Selection
       hasSelection: () => hasSelection(crepeRef),
+
+      // Insert image
+      insertImage: (src: string, alt?: string, title?: string) =>
+        formatting.insertImage(crepeRef, src, alt, title),
     }), [
       isReady,
       loading,

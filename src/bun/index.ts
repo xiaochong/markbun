@@ -295,6 +295,33 @@ async function main() {
           }
           return { success: true, items: [] };
         },
+        selectImageFile: async () => {
+          try {
+            // @ts-ignore
+            const chosenPaths = await Utils.openFileDialog({
+              startingFolder: join(homedir(), 'Desktop'),
+              allowedFileTypes: 'png,jpg,jpeg,gif,svg,webp,bmp',
+              canChooseFiles: true,
+              canChooseDirectory: false,
+              allowsMultipleSelection: false,
+            });
+
+            if (!chosenPaths || chosenPaths.length === 0) {
+              return { success: false };
+            }
+
+            return {
+              success: true,
+              path: chosenPaths[0],
+            };
+          } catch (error) {
+            console.error('Failed to select image:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error'
+            };
+          }
+        },
       },
       messages: {},
     },
@@ -451,6 +478,13 @@ async function main() {
       case 'editor-copy':
       case 'editor-paste':
       case 'editor-select-all':
+      // Format menu actions
+      case 'format-strong':
+      case 'format-emphasis':
+      case 'format-code':
+      case 'format-strikethrough':
+      case 'format-link':
+      case 'format-image':
       // Paragraph menu actions
       case 'para-heading-1':
       case 'para-heading-2':

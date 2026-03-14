@@ -4,9 +4,12 @@ export {
   toggleHeading,
   toggleQuote,
   toggleCode,
+  toggleCodeBlock,
   toggleLink,
   toggleList,
   toggleOrderedList,
+  toggleStrikethrough,
+  insertImage,
 } from './formatting';
 
 export {

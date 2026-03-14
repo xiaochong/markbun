@@ -6,17 +6,20 @@ import { Crepe } from '@milkdown/crepe';
 import {
   toggleStrongCommand,
   toggleEmphasisCommand,
+  toggleInlineCodeCommand,
+  linkSchema,
+  insertImageCommand,
   wrapInHeadingCommand,
   wrapInBlockquoteCommand,
   wrapInBulletListCommand,
   wrapInOrderedListCommand,
   codeBlockSchema,
-  linkSchema,
 } from '@milkdown/preset-commonmark';
 import { linkTooltipAPI } from '@milkdown/kit/component/link-tooltip';
+import { toggleStrikethroughCommand } from '@milkdown/preset-gfm';
 import { editorViewCtx } from '@milkdown/kit/core';
 import { setBlockType } from '@milkdown/prose/commands';
-import { execCommand } from '../utils/editorActions';
+import { execCommand, insertParsedMarkdown } from '../utils/editorActions';
 
 // ===== 简单格式化命令 =====
 
@@ -49,9 +52,15 @@ export function toggleOrderedList(
   return execCommand(crepeRef, wrapInOrderedListCommand);
 }
 
-// ===== 代码块命令（自定义实现） =====
+// ===== Inline Code - 使用 Milkdown 内置命令 =====
 
 export function toggleCode(crepeRef: React.RefObject<Crepe | null>): boolean {
+  return execCommand(crepeRef, toggleInlineCodeCommand);
+}
+
+// ===== 代码块命令（自定义实现） =====
+
+export function toggleCodeBlock(crepeRef: React.RefObject<Crepe | null>): boolean {
   const editor = crepeRef.current?.editor;
   if (!editor?.ctx) return false;
 
@@ -116,7 +125,13 @@ export function toggleCode(crepeRef: React.RefObject<Crepe | null>): boolean {
   });
 }
 
-// ===== 链接命令 =====
+// ===== 扩展格式化命令 =====
+
+export function toggleStrikethrough(crepeRef: React.RefObject<Crepe | null>): boolean {
+  return execCommand(crepeRef, toggleStrikethroughCommand);
+}
+
+// ===== 链接命令 - 使用 linkTooltipAPI =====
 
 export function toggleLink(
   crepeRef: React.RefObject<Crepe | null>,
@@ -146,4 +161,63 @@ export function toggleLink(
     }
     return true;
   });
+}
+
+// ===== 暂不支持的功能 =====
+
+export function toggleUnderline(_crepeRef: React.RefObject<Crepe | null>): boolean {
+  // Underline is not a standard Markdown feature
+  // Would require custom mark plugin
+  console.warn('Underline is not supported in standard Markdown');
+  return false;
+}
+
+export function toggleHighlight(_crepeRef: React.RefObject<Crepe | null>): boolean {
+  // Highlight is not a standard Markdown feature
+  // Would require custom mark plugin or GFM extension
+  console.warn('Highlight is not supported in standard Markdown');
+  return false;
+}
+
+export function toggleSuperscript(_crepeRef: React.RefObject<Crepe | null>): boolean {
+  // Superscript is not a standard Markdown feature
+  console.warn('Superscript is not supported in standard Markdown');
+  return false;
+}
+
+export function toggleSubscript(_crepeRef: React.RefObject<Crepe | null>): boolean {
+  // Subscript is not a standard Markdown feature
+  console.warn('Subscript is not supported in standard Markdown');
+  return false;
+}
+
+export function insertInlineMath(_crepeRef: React.RefObject<Crepe | null>): boolean {
+  // Inline math requires math plugin
+  console.warn('Inline math requires math plugin');
+  return false;
+}
+
+export function insertComment(_crepeRef: React.RefObject<Crepe | null>): boolean {
+  // HTML comments are not supported in Milkdown's default schema
+  console.warn('HTML comments are not supported');
+  return false;
+}
+
+// ===== 暂不支持的功能 =====
+
+export function insertLocalImage(_crepeRef: React.RefObject<Crepe | null>): boolean {
+  // TODO: Implement local image insertion dialog
+  console.warn('Local image insertion not implemented yet');
+  return false;
+}
+
+// ===== 插入图片 =====
+
+export function insertImage(
+  crepeRef: React.RefObject<Crepe | null>,
+  src: string,
+  alt: string = '',
+  title: string = ''
+): boolean {
+  return execCommand(crepeRef, insertImageCommand, { src, alt, title });
 }

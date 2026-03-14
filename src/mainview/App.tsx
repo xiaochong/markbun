@@ -5,6 +5,7 @@ import { Toolbar, StatusBar, TitleBar, Sidebar } from './components/layout';
 import { FileExplorer } from './components/file-explorer';
 import { Outline } from './components/outline';
 import { QuickOpen } from './components/quick-open';
+import { ImageInsertDialog } from './components/image-insert';
 import { useFileOperations } from './hooks/useFileOperations';
 import { useTheme } from './hooks/useTheme';
 import { useSidebar } from './hooks/useSidebar';
@@ -14,6 +15,7 @@ import { useQuickOpen } from './hooks/useQuickOpen';
 import { useClipboard } from './hooks/useClipboard';
 import { electrobun } from './lib/electrobun';
 import { processMarkdownImages } from './lib/imageProcessor';
+import { imageCache } from './lib/imageCache';
 import type { FileNode } from '@/shared/types';
 
 function App() {
@@ -26,6 +28,9 @@ function App() {
   const [showTitleBar, setShowTitleBar] = useState(false);
   const [showToolbar, setShowToolbar] = useState(false);
   const [showStatusBar, setShowStatusBar] = useState(false);
+
+  // Image insert dialog state
+  const [showImageDialog, setShowImageDialog] = useState(false);
 
   // Phase 2: Sidebar and file management
   const sidebar = useSidebar();
@@ -247,6 +252,21 @@ function App() {
     return electrobun.on('menuAction', async (data) => {
       const { action } = data as { action: string };
 
+      // Format menu actions
+      const formatActions: Record<string, () => void> = {
+        'format-strong': () => editorRef.current?.toggleBold(),
+        'format-emphasis': () => editorRef.current?.toggleItalic(),
+        'format-code': () => editorRef.current?.toggleCode(),
+        'format-strikethrough': () => editorRef.current?.toggleStrikethrough(),
+        'format-link': () => editorRef.current?.toggleLink(),
+        'format-image': () => setShowImageDialog(true),
+      };
+
+      if (formatActions[action]) {
+        formatActions[action]();
+        return;
+      }
+
       // Paragraph formatting
       const paragraphActions: Record<string, () => void> = {
         'para-heading-1': () => editorRef.current?.toggleHeading(1),
@@ -323,6 +343,49 @@ function App() {
   const handleLink = useCallback(() => editorRef.current?.toggleLink(), []);
   const handleList = useCallback(() => editorRef.current?.toggleList(), []);
   const handleOrderedList = useCallback(() => editorRef.current?.toggleOrderedList(), []);
+
+  // Handle image insert
+  const handleImageInsert = useCallback(async (src: string, alt: string) => {
+    // Insert image at current cursor position
+    const editor = editorRef.current;
+    if (!editor?.isReady) return;
+
+    let imageUrl = src;
+
+    // Check if it's a local file path (not URL)
+    const isLocalFile = !src.startsWith('http://') &&
+                        !src.startsWith('https://') &&
+                        !src.startsWith('data:') &&
+                        !src.startsWith('blob:') &&
+                        src.startsWith('/');
+
+    if (isLocalFile) {
+      // Check cache first
+      const cached = imageCache.get(src);
+      if (cached) {
+        imageUrl = cached;
+      } else {
+        // Read image and convert to Blob URL
+        try {
+          const response = await electrobun.readImageAsBase64(src) as {
+            success: boolean;
+            dataUrl?: string;
+            error?: string;
+          };
+          if (response.success && response.dataUrl) {
+            imageUrl = imageCache.setFromBase64(src, response.dataUrl);
+          } else {
+            console.error('Failed to read image:', response.error);
+          }
+        } catch (error) {
+          console.error('Failed to read image file:', error);
+        }
+      }
+    }
+
+    // Insert image using Milkdown's insertImageCommand
+    editor.insertImage(imageUrl, alt);
+  }, []);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -471,6 +534,13 @@ function App() {
         onClose={quickOpen.close}
         onSelectNext={quickOpen.selectNext}
         onSelectPrevious={quickOpen.selectPrevious}
+      />
+
+      {/* Image Insert Dialog */}
+      <ImageInsertDialog
+        isOpen={showImageDialog}
+        onClose={() => setShowImageDialog(false)}
+        onInsert={handleImageInsert}
       />
     </div>
   );

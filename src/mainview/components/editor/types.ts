@@ -25,6 +25,8 @@ export interface MilkdownEditorRef {
   toggleLink: (href?: string, title?: string) => boolean;
   toggleList: () => boolean;
   toggleOrderedList: () => boolean;
+  // Extended formatting commands (GFM)
+  toggleStrikethrough: () => boolean;
   // Paragraph menu commands
   setParagraph: () => boolean;
   increaseHeadingLevel: () => boolean;
@@ -50,6 +52,8 @@ export interface MilkdownEditorRef {
   deleteTable: () => boolean;
   // Selection
   hasSelection: () => boolean;
+  // Insert image
+  insertImage: (src: string, alt?: string, title?: string) => boolean;
 }
 
 // 编辑器实例引用类型

@@ -145,6 +145,7 @@ export type PingWriteRPC = {
       removeRecentFile: { params: { path: string }; response: { success: boolean; error?: string } };
       clearRecentFiles: { params: {}; response: { success: boolean; error?: string } };
       quickOpen: { params: {}; response: { success: boolean; items?: QuickOpenItem[]; error?: string } };
+      selectImageFile: { params: {}; response: { success: boolean; path?: string; error?: string } };
     };
     messages: {
       fileOpened: { path: string; content: string };

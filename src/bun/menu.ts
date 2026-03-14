@@ -58,6 +58,20 @@ export function setupMenu(state: ViewMenuState = defaultState): void {
       ],
     },
     {
+      label: 'Format',
+      submenu: [
+        // Text styles - Milkdown native support
+        { label: 'Strong', action: 'format-strong', accelerator: 'CmdOrCtrl+B' },
+        { label: 'Emphasis', action: 'format-emphasis', accelerator: 'CmdOrCtrl+I' },
+        { label: 'Strikethrough', action: 'format-strikethrough', accelerator: 'CmdOrCtrl+Shift+~' },
+        { type: 'separator' },
+        { label: 'Code', action: 'format-code', accelerator: 'CmdOrCtrl+Shift+C' },
+        { label: 'Hyperlink', action: 'format-link', accelerator: 'CmdOrCtrl+K' },
+        { type: 'separator' },
+        { label: 'Image', action: 'format-image', accelerator: 'CmdOrCtrl+Shift+I' },
+      ],
+    },
+    {
       label: 'Paragraph',
       submenu: [
         // Headings
