@@ -5,11 +5,12 @@
  * 1. Gets selected text from the editor or window selection
  * 2. Converts blob URLs back to original paths when copying
  * 3. Uses main process clipboard API for reliable clipboard access
+ * 4. Processes markdown content including local images
  */
 
 import { useCallback, useRef } from 'react';
 import { electrobun } from '@/lib/electrobun';
-import { restoreOriginalImagePaths } from '@/lib/imageProcessor';
+import { restoreOriginalImagePaths, processMarkdownImages } from '@/lib/imageProcessor';
 import type { MilkdownEditorRef } from '@/components/editor';
 
 export interface ClipboardOperations {
@@ -17,6 +18,8 @@ export interface ClipboardOperations {
   copy: () => Promise<boolean>;
   /** Cut current selection to clipboard (copy + delete) */
   cut: () => Promise<boolean>;
+  /** Paste from clipboard to editor */
+  paste: () => Promise<boolean>;
   /** Check if there's an active selection */
   hasSelection: () => boolean;
 }
@@ -48,7 +51,8 @@ function prepareTextForClipboard(text: string): string {
 }
 
 export function useClipboard(
-  editorRef: React.RefObject<MilkdownEditorRef | null>
+  editorRef: React.RefObject<MilkdownEditorRef | null>,
+  currentFilePath?: string | null
 ): ClipboardOperations {
   // Use ref to avoid stale closure issues
   const editorRefStable = useRef(editorRef);
@@ -92,7 +96,34 @@ export function useClipboard(
     return getSelectedText(editorRefStable.current) !== null;
   }, []);
 
-  return { copy, cut, hasSelection };
+  const paste = useCallback(async (): Promise<boolean> => {
+    try {
+      const result = await electrobun.readFromClipboard() as { success: boolean; text?: string; error?: string };
+
+      if (result.success && result.text) {
+        // Process markdown content for local images
+        // Always process to handle absolute path images even without currentFilePath
+        const processedText = await processMarkdownImages(result.text, currentFilePath || null);
+
+        // Insert text at current cursor position using Milkdown's API
+        const editor = editorRefStable.current;
+        if (editor?.current?.isReady) {
+          editor.current.insertText(processedText);
+          return true;
+        } else {
+          // Editor not ready, fallback to execCommand
+          document.execCommand('insertText', false, processedText);
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error('Paste failed:', error);
+      return false;
+    }
+  }, [currentFilePath]);
+
+  return { copy, cut, paste, hasSelection };
 }
 
 // Re-export utility for non-hook usage

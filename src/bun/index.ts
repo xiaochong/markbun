@@ -233,6 +233,43 @@ async function main() {
             };
           }
         },
+        readFromClipboard: async () => {
+          try {
+            // Use pbpaste on macOS to read from clipboard
+            const result = await new Promise<{ success: boolean; text?: string; error?: string }>((resolve) => {
+              const proc = spawn('pbpaste', { stdio: ['inherit', 'pipe', 'pipe'] });
+              let output = '';
+              let errorOutput = '';
+
+              proc.stdout.on('data', (data: Buffer) => {
+                output += data.toString();
+              });
+
+              proc.stderr.on('data', (data: Buffer) => {
+                errorOutput += data.toString();
+              });
+
+              proc.on('close', (code: number | null) => {
+                if (code === 0) {
+                  resolve({ success: true, text: output });
+                } else {
+                  resolve({ success: false, error: errorOutput || `pbpaste exited with code ${code}` });
+                }
+              });
+
+              proc.on('error', (error: Error) => {
+                resolve({ success: false, error: error.message });
+              });
+            });
+            return result;
+          } catch (error) {
+            console.error('Failed to read from clipboard:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error'
+            };
+          }
+        },
         // Phase 2: File Management
         readFile: async (params: { path: string }) => {
           try {

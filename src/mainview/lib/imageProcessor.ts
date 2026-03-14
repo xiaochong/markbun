@@ -13,14 +13,20 @@ function isLocalFilePath(path: string): boolean {
   if (path.startsWith('data:') || path.startsWith('blob:') || path.startsWith('http://') || path.startsWith('https://')) {
     return false;
   }
-  // Check if it's an absolute path (starts with / on Unix or drive letter on Windows)
-  return path.startsWith('/') || /^[a-zA-Z]:[\\/]/.test(path);
+  // Consider any non-URL path as potentially local (relative or absolute)
+  // This includes paths like: /absolute/path, ./relative/path, ../parent/path, image.png
+  return true;
 }
 
 // Resolve relative path against base path
-function resolvePath(relativePath: string, basePath: string): string {
+function resolvePath(relativePath: string, basePath: string | null): string {
   if (relativePath.startsWith('/')) {
     return relativePath; // Already absolute
+  }
+
+  // If no base path provided, can't resolve relative paths
+  if (!basePath) {
+    return relativePath;
   }
 
   const baseDir = basePath.substring(0, basePath.lastIndexOf('/'));
@@ -65,7 +71,7 @@ export async function processMarkdownImages(
   const processedImages = await Promise.all(
     matches.map(async ({ fullMatch, alt, path }) => {
       // Resolve relative path
-      const absolutePath = currentFilePath ? resolvePath(path, currentFilePath) : path;
+      const absolutePath = resolvePath(path, currentFilePath);
 
       // Check cache first
       const cached = imageCache.get(absolutePath);

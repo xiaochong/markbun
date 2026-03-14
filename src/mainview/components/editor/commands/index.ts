@@ -38,3 +38,7 @@ export {
   deleteTableColumn,
   deleteTable,
 } from './table';
+
+export {
+  insertText,
+} from './text';

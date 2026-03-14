@@ -54,6 +54,8 @@ export interface MilkdownEditorRef {
   hasSelection: () => boolean;
   // Insert image
   insertImage: (src: string, alt?: string, title?: string) => boolean;
+  // Insert text at current cursor position
+  insertText: (text: string) => boolean;
 }
 
 // 编辑器实例引用类型

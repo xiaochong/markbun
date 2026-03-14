@@ -128,6 +128,10 @@ export const electrobun = {
     return await electroview.rpc.request.writeToClipboard({ text });
   },
 
+  async readFromClipboard() {
+    return await electroview.rpc.request.readFromClipboard({});
+  },
+
   async selectImageFile() {
     return await electroview.rpc.request.selectImageFile({});
   },

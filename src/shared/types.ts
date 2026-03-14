@@ -136,6 +136,7 @@ export type PingWriteRPC = {
       showTableContextMenu: { params: {}; response: { success: boolean } };
       showDefaultContextMenu: { params: {}; response: { success: boolean } };
       writeToClipboard: { params: { text: string }; response: { success: boolean; error?: string } };
+      readFromClipboard: { params: {}; response: { success: boolean; text?: string; error?: string } };
 
       // File management (Phase 2)
       readFile: { params: { path: string }; response: { success: boolean; path?: string; content?: string; error?: string } };

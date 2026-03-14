@@ -38,6 +38,9 @@ function App() {
   const outline = useOutline();
   const quickOpen = useQuickOpen(handleQuickOpenSelect);
 
+  // Track current file path for image processing
+  const [currentFilePath, setCurrentFilePath] = useState<string | null>(null);
+
   const {
     path,
     content,
@@ -49,8 +52,13 @@ function App() {
     handleSaveAs,
   } = useFileOperations();
 
+  // Sync path from useFileOperations to local state for clipboard
+  useEffect(() => {
+    setCurrentFilePath(path);
+  }, [path]);
+
   // Clipboard operations with blob URL handling
-  const clipboard = useClipboard(editorRef);
+  const clipboard = useClipboard(editorRef, currentFilePath);
 
   // Handle editor content changes
   const handleEditorChange = useCallback((markdown: string) => {
@@ -169,6 +177,9 @@ function App() {
     return electrobun.on('file-opened', async (data) => {
       const { path: filePath, content: fileContent } = data as { path: string; content: string };
 
+      // Update current file path for image processing
+      setCurrentFilePath(filePath);
+
       // Auto-set file explorer root to the file's parent directory
       const parentDir = filePath.substring(0, filePath.lastIndexOf('/')) || '/';
       fileExplorer.setRootPath(parentDir);
@@ -215,7 +226,7 @@ function App() {
 
       void loadContent();
     });
-  }, [outline.setHeadings, fileExplorer.setRootPath, fileExplorer.selectFile, hasLocalImages]);
+  }, [outline.setHeadings, fileExplorer.setRootPath, fileExplorer.selectFile, hasLocalImages, setCurrentFilePath]);
 
   // Listen for file-new event to clear editor
   useEffect(() => {
@@ -323,8 +334,7 @@ function App() {
           await clipboard.copy();
           break;
         case 'editor-paste':
-          editorRef.current?.focus();
-          document.execCommand('paste');
+          await clipboard.paste();
           break;
         case 'editor-select-all':
           editorRef.current?.focus();
@@ -431,6 +441,10 @@ function App() {
         case 'x':
           e.preventDefault();
           void clipboard.cut();
+          break;
+        case 'v':
+          e.preventDefault();
+          void clipboard.paste();
           break;
       }
     };

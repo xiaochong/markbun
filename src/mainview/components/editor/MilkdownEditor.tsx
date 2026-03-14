@@ -6,6 +6,7 @@ import { hasSelection } from './utils/editorActions';
 import * as formatting from './commands/formatting';
 import * as paragraph from './commands/paragraph';
 import * as table from './commands/table';
+import * as textCommands from './commands/text';
 
 // Import Crepe base styles (always needed)
 import '@milkdown/crepe/theme/common/style.css';
@@ -91,6 +92,9 @@ export const MilkdownEditor = memo(forwardRef<MilkdownEditorRef, MilkdownEditorP
       // Insert image
       insertImage: (src: string, alt?: string, title?: string) =>
         formatting.insertImage(crepeRef, src, alt, title),
+
+      // Insert text
+      insertText: (text: string) => textCommands.insertText(crepeRef, text),
     }), [
       isReady,
       loading,
