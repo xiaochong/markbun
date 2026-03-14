@@ -251,6 +251,191 @@ These principles are mandatory. They are implementation constraints, not suggest
 - Tests must not spawn real network connections, open browsers, or depend on system state.
 - Tests must be reproducible across macOS and Linux.
 
+## Testing Guidelines
+
+### Test Framework
+
+PingWrite uses **Bun's built-in test runner** for all unit tests.
+
+**Run Tests:**
+```bash
+bun test              # Run all tests once
+bun run test          # Same as above
+bun run test:watch    # Run tests in watch mode
+bun run test:coverage # Run tests with coverage report
+```
+
+### Test File Organization
+
+Tests are located in a separate `tests/` directory, mirroring the `src/` structure:
+
+```
+tests/
+├── unit/
+│   ├── setup.ts                           # Test helper - simplified imports
+│   └── components/
+│       └── editor/
+│           ├── index.test.ts              # Test suite entry
+│           ├── types.test.ts              # Type definition tests
+│           ├── utils/
+│           │   ├── tableHelpers.test.ts   # Table utility tests
+│           │   └── editorActions.test.ts  # Editor action tests
+│           ├── hooks/
+│           │   └── index.test.ts          # Hooks tests
+│           └── commands/
+│               ├── formatting.test.ts     # Formatting command tests
+│               ├── paragraph.test.ts      # Paragraph command tests
+│               └── table.test.ts          # Table command tests
+├── integration/                           # Integration tests (future)
+└── e2e/                                   # E2E tests (future)
+```
+
+**Simplified Imports via `setup.ts`:**
+
+Instead of using long relative paths like `../../../../../src/...`, import from `setup.ts`:
+
+```typescript
+// ✅ 推荐: 从 setup.ts 导入 (简洁)
+import { isTableCell, toggleBold, insertTable } from '../setup';
+
+// ❌ 避免: 长相对路径 (繁琐)
+import { isTableCell } from '../../../../../src/mainview/components/editor/utils/tableHelpers';
+```
+
+**`setup.ts` 提供以下导出:**
+- Utils: `isTableCell`, `findTableNode`, `execCommand`, `hasSelection`, etc.
+- Commands: `toggleBold`, `toggleItalic`, `insertTable`, `deleteTable`, etc.
+- Types: `MilkdownEditorProps`, `TableCellInfo`, etc.
+
+**注意:** Hooks 需要 DOM 环境，不在 `setup.ts` 中导出。如需测试 hooks，请在浏览器环境中直接导入。
+
+### Writing Tests
+
+**Test Naming Convention:**
+- File: `*.test.ts` (Bun convention)
+- Describe block: Module or function name
+- Test case: `should [expected behavior] when [condition]`
+
+**Example:**
+```typescript
+import { describe, it, expect, mock } from 'bun:test';
+import { isTableCell } from '../utils/tableHelpers';
+
+describe('isTableCell', () => {
+  it('should return true for table_cell node', () => {
+    const node = { type: { name: 'table_cell' } };
+    expect(isTableCell(node)).toBe(true);
+  });
+
+  it('should return false for paragraph node', () => {
+    const node = { type: { name: 'paragraph' } };
+    expect(isTableCell(node)).toBe(false);
+  });
+});
+```
+
+### Testing Patterns
+
+**1. Testing Editor Commands:**
+```typescript
+// Always test null/undefined editor reference first
+it('should return false when editor is not initialized', () => {
+  const emptyRef = { current: null };
+  expect(toggleBold(emptyRef as any)).toBe(false);
+});
+
+// Test successful execution
+it('should call editor action when initialized', () => {
+  const ref = createMockCrepeRef();
+  expect(toggleBold(ref as any)).toBe(true);
+});
+```
+
+**2. Testing Hooks:**
+```typescript
+// Test hook is defined and exported
+describe('useCrepeEditor', () => {
+  it('should be defined', () => {
+    const { useCrepeEditor } = require('../../hooks/useCrepeEditor');
+    expect(typeof useCrepeEditor).toBe('function');
+  });
+});
+```
+
+**3. Testing Utilities:**
+```typescript
+// Test edge cases
+it('should handle empty document', () => {
+  const state = createMockState({ selection: { from: 0 } });
+  expect(findTableNode(state)).toBeNull();
+});
+```
+
+### Test Coverage Requirements
+
+**Minimum Coverage:**
+- Utils: 90%+
+- Commands: 80%+
+- Hooks: 70%+
+- Types: Type checking tests
+
+**Coverage Report:**
+```bash
+bun test --coverage
+```
+
+### Mocking Guidelines
+
+**Use `mock()` from `bun:test`:**
+```typescript
+import { mock } from 'bun:test';
+
+const mockFn = mock(() => true);
+expect(mockFn).toHaveBeenCalled();
+expect(mockFn).toHaveBeenCalledTimes(1);
+```
+
+**Mock External Dependencies:**
+```typescript
+// Mock CSS imports
+const mockCssImport = mock(() => ({
+  default: 'mocked-css-content',
+}));
+```
+
+### Pre-commit Testing
+
+Before committing changes to editor module:
+
+```bash
+# 1. Run type checking
+bunx tsc --noEmit
+
+# 2. Run all tests
+bun test
+
+# 3. Run tests with coverage
+bun test --coverage
+```
+
+### When to Write Tests
+
+**Required:**
+- New utility functions
+- New editor commands
+- Changes to table operations
+- Changes to markdown parsing
+
+**Recommended:**
+- New hooks
+- Refactored code
+- Bug fixes (regression tests)
+
+**Not Required:**
+- Type-only changes
+- Documentation updates
+- Style changes (CSS)
+
 ## Common Tasks
 
 ### Add a New Menu Item

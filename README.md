@@ -236,7 +236,9 @@ Settings are stored in `~/.pingwrite/config.json`:
 bun dev          # Start development server
 bun build        # Build for production
 bun build:all    # Build for all platforms
-bun test         # Run tests
+bun test         # Run tests once
+bun run test:watch    # Run tests in watch mode
+bun run test:coverage # Run tests with coverage
 bun lint         # Run ESLint
 bun format       # Format code with Prettier
 ```
@@ -251,6 +253,78 @@ npx shadcn@latest add button tooltip dialog
 
 ```bash
 bun add @milkdown/plugin-math
+```
+
+## 🧪 Testing
+
+### Running Tests
+
+PingWrite uses **Bun's built-in test runner**:
+
+```bash
+# Run all tests
+bun test
+
+# Run tests in watch mode (during development)
+bun run test:watch
+
+# Run tests with coverage report
+bun run test:coverage
+```
+
+### Editor Module Tests
+
+After refactoring, the editor module has comprehensive unit tests:
+
+```
+tests/unit/components/editor/
+├── types.test.ts              # Type definition tests
+├── utils/
+│   ├── tableHelpers.test.ts   # Table utility tests
+│   └── editorActions.test.ts  # Editor action tests
+├── hooks/
+│   └── index.test.ts          # React hooks tests
+└── commands/
+    ├── formatting.test.ts     # Formatting command tests
+    ├── paragraph.test.ts      # Paragraph command tests
+    └── table.test.ts          # Table command tests
+```
+
+**Test Directory Structure:**
+- Tests are in `tests/unit/` mirroring the `src/` structure
+- `tests/unit/setup.ts` - Test helper for simplified imports
+- Future: `tests/integration/` and `tests/e2e/` for other test types
+
+**Simplified Imports:**
+```typescript
+// Import from setup.ts instead of long relative paths
+import { isTableCell, toggleBold } from '../setup';
+```
+
+### Writing Tests
+
+When modifying the editor, you **must** run tests:
+
+```bash
+# Before committing
+bunx tsc --noEmit  # Type check
+bun test           # Run all tests
+```
+
+Test naming convention:
+- `should [expected behavior] when [condition]`
+- Example: `should return false when editor is not initialized`
+
+### Test Coverage
+
+Minimum coverage requirements:
+- Utils: 90%+
+- Commands: 80%+
+- Hooks: 70%+
+
+Generate coverage report:
+```bash
+bun test --coverage
 ```
 
 ## 🤝 Contributing

@@ -8,7 +8,7 @@ import type { TableCellInfo, TableNodeInfo } from '../types';
  * 检查节点是否是表格单元格（包括表头）
  */
 export function isTableCell(node: any): boolean {
-  return node && (node.type.name === 'table_cell' || node.type.name === 'table_header');
+  return !!(node && node.type && (node.type.name === 'table_cell' || node.type.name === 'table_header'));
 }
 
 /**
