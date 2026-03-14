@@ -643,32 +643,50 @@ body {
   background-color: hsl(220 12% 28%) !important;
 }
 
-/* Fix table selection visibility - ensure text remains readable */
-.milkdown-crepe-container .milkdown-table-block {
-  /* Selected cell background override */
-  & .selectedCell::after {
-    background-color: hsl(var(--primary) / 0.2) !important;
-    opacity: 1 !important;
-  }
+/* ===========================================
+   Table Styles - Minimal, non-intrusive
+   =========================================== */
 
-  /* Ensure text in selected cells remains visible */
-  & .selectedCell,
-  & .selectedCell * {
-    color: inherit !important;
-  }
+/* Hide all table drag handles (= buttons) and add buttons (+ buttons) */
+.milkdown-crepe-container .milkdown-table-block .handle,
+.milkdown-crepe-container .milkdown-table-block .cell-handle,
+.milkdown-crepe-container .milkdown-table-block .line-handle,
+.milkdown-crepe-container .milkdown-table-block .add-button,
+.milkdown-crepe-container .milkdown-table-block .button-group {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
 
-  /* Fix ProseMirror-selectednode in tables */
-  & :is(th, td) .ProseMirror-selectednode {
-    background-color: transparent !important;
-    color: inherit !important;
-  }
+/* Remove cell selection highlighting - no outline on selected cells */
+.milkdown-crepe-container .milkdown-table-block .selectedCell::after {
+  display: none !important;
+  background-color: transparent !important;
+  opacity: 0 !important;
+}
 
-  /* Fix selection background for table cells */
-  & :is(th, td)::selection,
-  & :is(th, td) *::selection {
-    background-color: hsl(var(--primary)) !important;
-    color: hsl(var(--primary-foreground)) !important;
-  }
+/* Remove outline on cells with selected content */
+.milkdown-crepe-container .milkdown-table-block :is(th, td):has(.ProseMirror-selectednode) {
+  outline: none !important;
+}
+
+/* Ensure text in selected cells remains visible */
+.milkdown-crepe-container .milkdown-table-block .selectedCell,
+.milkdown-crepe-container .milkdown-table-block .selectedCell * {
+  color: inherit !important;
+}
+
+/* Fix ProseMirror-selectednode in tables - no background */
+.milkdown-crepe-container .milkdown-table-block :is(th, td) .ProseMirror-selectednode {
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
+/* Text selection in tables - only show on actual text selection */
+.milkdown-crepe-container .milkdown-table-block :is(th, td)::selection,
+.milkdown-crepe-container .milkdown-table-block :is(th, td) *::selection {
+  background-color: hsl(var(--primary) / 0.3) !important;
+  color: inherit !important;
 }
 
 /* Image styles */
