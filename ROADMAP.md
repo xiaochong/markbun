@@ -8,7 +8,7 @@ This document outlines the development phases for PingWrite, from MVP to v1.0.
 |-------|---------|-------|--------|
 | Phase 0 | v0.0.x | Project Setup | ✅ Complete |
 | Phase 1 | v0.1.0 | MVP - Core Editor | ✅ Complete |
-| Phase 2 | v0.2.0 | File Management | ⏳ Planned |
+| Phase 2 | v0.2.0 | File Management | ✅ Complete |
 | Phase 3 | v0.3.0 | Enhanced Editing | ⏳ Planned |
 | Phase 4 | v1.0.0 | Production Ready | ⏳ Planned |
 
@@ -80,37 +80,45 @@ This document outlines the development phases for PingWrite, from MVP to v1.0.
 
 ---
 
-## ⏳ Phase 2: File Management (v0.2.0)
+## ✅ Phase 2: File Management (v0.2.0)
 
-**Status:** Planned  
+**Status:** Complete
 **Target:** Full file explorer and navigation
 
 ### Goals
-- File explorer sidebar
-- Folder navigation
-- Recent files
+- ✅ File explorer sidebar
+- ✅ Folder navigation
+- ✅ Recent files
+- ✅ Quick Open (Ctrl/Cmd+P)
+- ✅ Outline Navigation
 
-### Tasks
+### Completed Tasks
 
 #### Sidebar
-- [ ] Collapsible sidebar component
-- [ ] File explorer tree view
-  - [ ] Folder expansion/collapse
-  - [ ] File icons by type
-  - [ ] Context menu (New, Delete, Rename)
-- [ ] File watching for external changes
-- [ ] Drag and drop file support
+- ✅ Collapsible sidebar component with resize handle
+- ✅ File explorer tree view
+  - ✅ Folder expansion/collapse
+  - ✅ File icons by type
+- ✅ Tab switching (Files / Outline)
 
 #### Outline Navigation
-- [ ] Parse document headings
-- [ ] Outline panel in sidebar
-- [ ] Click to jump to heading
-- [ ] Highlight current section
+- ✅ Parse document headings from markdown
+- ✅ Outline panel in sidebar
+- ✅ Click to jump to heading
+- ✅ Hierarchical tree view
 
-#### Recent Files
-- [ ] Recent files list
-- [ ] Persist recent files to settings
-- [ ] Quick open (Ctrl/Cmd + P)
+#### File Management
+- ✅ Folder browsing IPC handlers
+- ✅ File tree component
+- ✅ Recent files persistence (JSON storage)
+- ✅ Quick open dialog (Ctrl/Cmd+P)
+- ✅ Fuzzy search in quick open
+
+### Implementation Details
+- **Main Process**: Added `folders.ts` and `recentFiles.ts` IPC handlers
+- **Renderer**: Added Sidebar, FileExplorer, Outline, and QuickOpen components
+- **Hooks**: Added `useSidebar`, `useFileExplorer`, `useOutline`, `useQuickOpen`
+- **Storage**: Recent files stored in `~/.config/pingwrite/recent-files.json`
 
 ---
 

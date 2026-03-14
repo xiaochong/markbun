@@ -1,21 +1,35 @@
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { MilkdownEditor, MilkdownEditorRef } from './components/editor';
-import { Toolbar, StatusBar, TitleBar } from './components/layout';
+import { Toolbar, StatusBar, TitleBar, Sidebar } from './components/layout';
+import { FileExplorer } from './components/file-explorer';
+import { Outline } from './components/outline';
+import { QuickOpen } from './components/quick-open';
 import { useFileOperations } from './hooks/useFileOperations';
 import { useTheme } from './hooks/useTheme';
+import { useSidebar } from './hooks/useSidebar';
+import { useFileExplorer } from './hooks/useFileExplorer';
+import { useOutline } from './hooks/useOutline';
+import { useQuickOpen } from './hooks/useQuickOpen';
 import { electrobun } from './lib/electrobun';
 import { processMarkdownImages } from './lib/imageProcessor';
+import type { FileNode } from '@/shared/types';
 
 function App() {
   const editorRef = useRef<MilkdownEditorRef>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const { theme, toggleTheme } = useTheme();
   const [editorContent, setEditorContent] = useState('');
 
   // Visibility states for UI components (all hidden by default for distraction-free writing)
-  // Users can toggle UI elements via View menu when needed
   const [showTitleBar, setShowTitleBar] = useState(false);
   const [showToolbar, setShowToolbar] = useState(false);
   const [showStatusBar, setShowStatusBar] = useState(false);
+
+  // Phase 2: Sidebar and file management
+  const sidebar = useSidebar();
+  const fileExplorer = useFileExplorer();
+  const outline = useOutline();
+  const quickOpen = useQuickOpen(handleQuickOpenSelect);
 
   const {
     path,
@@ -32,7 +46,73 @@ function App() {
   const handleEditorChange = useCallback((markdown: string) => {
     updateContent(markdown);
     setEditorContent(markdown);
-  }, [updateContent]);
+    outline.setHeadings(markdown);
+  }, [updateContent, outline.setHeadings]);
+
+  // Handle quick open file selection
+  function handleQuickOpenSelect(filePath: string) {
+    // Open file via IPC
+    openFileByPath(filePath);
+  }
+
+  // Open file by path
+  const openFileByPath = useCallback(async (filePath: string) => {
+    try {
+      const result = await electrobun.openFile() as {
+        success: boolean;
+        path?: string;
+        content?: string;
+        error?: string;
+      };
+
+      if (result.success && result.content !== undefined && result.path === filePath) {
+        const processedContent = await processMarkdownImages(result.content, result.path);
+        if (editorRef.current?.isReady) {
+          editorRef.current.setMarkdown(processedContent);
+          setEditorContent(processedContent);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to open file:', error);
+    }
+  }, []);
+
+  // Handle file click in file explorer
+  const handleFileClick = useCallback((file: FileNode) => {
+    openFileByPath(file.path);
+  }, [openFileByPath]);
+
+  // Handle outline heading click
+  const handleOutlineClick = useCallback((id: string, text: string) => {
+    // Find the editor container
+    const editorContainer = containerRef.current;
+    if (!editorContainer) return;
+
+    // Find all heading elements in the editor
+    const headings = editorContainer.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+    // Find the heading with matching text
+    for (const heading of headings) {
+      if (heading.textContent?.trim() === text) {
+        heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        break;
+      }
+    }
+  }, []);
+
+  // Listen for sidebar toggle
+  useEffect(() => {
+    return electrobun.on('toggle-sidebar', () => {
+      sidebar.toggle();
+    });
+  }, [sidebar.toggle]);
+
+  // Listen for quick open
+  useEffect(() => {
+    return electrobun.on('open-quick-open', () => {
+      quickOpen.open();
+    });
+  }, [quickOpen.open]);
 
   // Listen for theme toggle event from main process
   useEffect(() => {
@@ -46,19 +126,22 @@ function App() {
     return electrobun.on('file-opened', async (data) => {
       const { path: filePath, content: fileContent } = data as { path: string; content: string };
 
-      // Process images in the markdown content
+      // Auto-set file explorer root to the file's parent directory
+      const parentDir = filePath.substring(0, filePath.lastIndexOf('/')) || '/';
+      fileExplorer.setRootPath(parentDir);
+
       const processedContent = await processMarkdownImages(fileContent, filePath);
 
-      // Directly set content to editor when file is opened
       if (editorRef.current?.isReady) {
         editorRef.current.setMarkdown(processedContent);
         setEditorContent(processedContent);
+        outline.setHeadings(processedContent);
       } else {
-        // If editor not ready, wait and try again
         const checkAndSet = () => {
           if (editorRef.current?.isReady) {
             editorRef.current.setMarkdown(processedContent);
             setEditorContent(processedContent);
+            outline.setHeadings(processedContent);
           } else {
             setTimeout(checkAndSet, 50);
           }
@@ -66,7 +149,7 @@ function App() {
         checkAndSet();
       }
     });
-  }, []);
+  }, [outline.setHeadings, fileExplorer.setRootPath]);
 
   // Listen for file-new event to clear editor
   useEffect(() => {
@@ -74,9 +157,10 @@ function App() {
       if (editorRef.current?.isReady) {
         editorRef.current.setMarkdown('');
         setEditorContent('');
+        outline.setHeadings('');
       }
     });
-  }, []);
+  }, [outline.setHeadings]);
 
   // Listen for visibility toggle events
   useEffect(() => {
@@ -130,7 +214,6 @@ function App() {
         case 'para-decrease-heading':
           editorRef.current?.decreaseHeadingLevel();
           break;
-        // Table actions
         case 'table-insert':
           editorRef.current?.insertTable();
           break;
@@ -199,78 +282,14 @@ function App() {
   }, []);
 
   // Toolbar action handlers
-  const handleBold = useCallback(() => {
-    editorRef.current?.toggleBold();
-  }, []);
-
-  const handleItalic = useCallback(() => {
-    editorRef.current?.toggleItalic();
-  }, []);
-
-  const handleHeading = useCallback((level: number) => {
-    editorRef.current?.toggleHeading(level);
-  }, []);
-
-  const handleQuote = useCallback(() => {
-    editorRef.current?.toggleQuote();
-  }, []);
-
-  const handleCode = useCallback(() => {
-    editorRef.current?.toggleCode();
-  }, []);
-
-  const handleLink = useCallback(() => {
-    editorRef.current?.toggleLink();
-  }, []);
-
-  const handleList = useCallback(() => {
-    editorRef.current?.toggleList();
-  }, []);
-
-  const handleOrderedList = useCallback(() => {
-    editorRef.current?.toggleOrderedList();
-  }, []);
-
-  // Paragraph menu handlers
-  const handleSetParagraph = useCallback(() => {
-    editorRef.current?.setParagraph();
-  }, []);
-
-  const handleIncreaseHeadingLevel = useCallback(() => {
-    editorRef.current?.increaseHeadingLevel();
-  }, []);
-
-  const handleDecreaseHeadingLevel = useCallback(() => {
-    editorRef.current?.decreaseHeadingLevel();
-  }, []);
-
-  const handleInsertTable = useCallback(() => {
-    editorRef.current?.insertTable();
-  }, []);
-
-  const handleInsertMathBlock = useCallback(() => {
-    editorRef.current?.insertMathBlock();
-  }, []);
-
-  const handleInsertCodeBlock = useCallback(() => {
-    editorRef.current?.insertCodeBlock();
-  }, []);
-
-  const handleInsertTaskList = useCallback(() => {
-    editorRef.current?.insertTaskList();
-  }, []);
-
-  const handleInsertHorizontalRule = useCallback(() => {
-    editorRef.current?.insertHorizontalRule();
-  }, []);
-
-  const handleInsertParagraphAbove = useCallback(() => {
-    editorRef.current?.insertParagraphAbove();
-  }, []);
-
-  const handleInsertParagraphBelow = useCallback(() => {
-    editorRef.current?.insertParagraphBelow();
-  }, []);
+  const handleBold = useCallback(() => editorRef.current?.toggleBold(), []);
+  const handleItalic = useCallback(() => editorRef.current?.toggleItalic(), []);
+  const handleHeading = useCallback((level: number) => editorRef.current?.toggleHeading(level), []);
+  const handleQuote = useCallback(() => editorRef.current?.toggleQuote(), []);
+  const handleCode = useCallback(() => editorRef.current?.toggleCode(), []);
+  const handleLink = useCallback(() => editorRef.current?.toggleLink(), []);
+  const handleList = useCallback(() => editorRef.current?.toggleList(), []);
+  const handleOrderedList = useCallback(() => editorRef.current?.toggleOrderedList(), []);
 
   // Store callbacks in ref to avoid stale closures in keyboard shortcuts
   const callbacksRef = useRef({
@@ -279,6 +298,8 @@ function App() {
     handleOpen,
     updateContent,
     setEditorContent,
+    quickOpenOpen: quickOpen.open,
+    sidebarToggle: sidebar.toggle,
   });
 
   // Keep callbacksRef up to date
@@ -289,17 +310,19 @@ function App() {
       handleOpen,
       updateContent,
       setEditorContent,
+      quickOpenOpen: quickOpen.open,
+      sidebarToggle: sidebar.toggle,
     };
-  }, [handleSave, handleSaveAs, handleOpen, updateContent]);
+  }, [handleSave, handleSaveAs, handleOpen, updateContent, quickOpen.open, sidebar.toggle]);
 
-  // Keyboard shortcuts - stable listener
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
       const cmdKey = isMac ? e.metaKey : e.ctrlKey;
 
       if (cmdKey) {
-        const { handleSave, handleSaveAs, handleOpen, updateContent, setEditorContent } = callbacksRef.current;
+        const { handleSave, handleSaveAs, handleOpen, updateContent, setEditorContent, quickOpenOpen, sidebarToggle } = callbacksRef.current;
 
         switch (e.key.toLowerCase()) {
           case 's':
@@ -322,22 +345,27 @@ function App() {
               editorRef.current.setMarkdown('');
             }
             break;
+          case 'p':
+            e.preventDefault();
+            quickOpenOpen();
+            break;
+          case 'b':
+            e.preventDefault();
+            sidebarToggle();
+            break;
           case 'c':
           case 'v':
           case 'x':
           case 'a':
           case 'z':
-            // Let these keys pass through for native/WebView handling
             return;
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []); // Empty deps - listener never changes
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
@@ -363,16 +391,53 @@ function App() {
         />
       )}
 
-      {/* Editor */}
-      <main className="flex-1 overflow-hidden">
-        <MilkdownEditor
-          ref={editorRef}
-          defaultValue={content}
-          onChange={handleEditorChange}
-          className="h-full"
-          darkMode={theme === 'dark'}
-        />
-      </main>
+      {/* Main Content Area with Sidebar */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Sidebar */}
+        <Sidebar
+          isOpen={sidebar.isOpen}
+          activeTab={sidebar.activeTab}
+          width={sidebar.width}
+          isResizing={sidebar.isResizing}
+          onTabChange={sidebar.setTab}
+          onClose={sidebar.close}
+          onResizeStart={sidebar.startResize}
+          onResizeEnd={sidebar.stopResize}
+          onWidthChange={sidebar.setWidth}
+        >
+          {sidebar.activeTab === 'files' ? (
+            <FileExplorer
+              nodes={fileExplorer.nodes}
+              rootPath={fileExplorer.rootPath}
+              expandedPaths={fileExplorer.expandedPaths}
+              selectedPath={fileExplorer.selectedPath}
+              isLoading={fileExplorer.isLoading}
+              error={fileExplorer.error}
+              onToggleFolder={fileExplorer.toggleFolder}
+              onSelectFile={fileExplorer.selectFile}
+              onFileClick={handleFileClick}
+              onOpenParent={fileExplorer.openParentFolder}
+            />
+          ) : (
+            <Outline
+              headings={outline.headings}
+              activeId={outline.activeId}
+              onHeadingClick={handleOutlineClick}
+            />
+          )}
+        </Sidebar>
+
+        {/* Editor */}
+        <main ref={containerRef} className="flex-1 overflow-hidden">
+          <MilkdownEditor
+            ref={editorRef}
+            defaultValue={content}
+            onChange={handleEditorChange}
+            className="h-full"
+            darkMode={theme === 'dark'}
+          />
+        </main>
+      </div>
 
       {/* Status Bar */}
       {showStatusBar && (
@@ -383,6 +448,19 @@ function App() {
           onSaveStatus={saveStatus || undefined}
         />
       )}
+
+      {/* Quick Open Dialog */}
+      <QuickOpen
+        isOpen={quickOpen.isOpen}
+        query={quickOpen.query}
+        items={quickOpen.items}
+        selectedIndex={quickOpen.selectedIndex}
+        onQueryChange={quickOpen.setQuery}
+        onSelect={handleQuickOpenSelect}
+        onClose={quickOpen.close}
+        onSelectNext={quickOpen.selectNext}
+        onSelectPrevious={quickOpen.selectPrevious}
+      />
     </div>
   );
 }

@@ -4,6 +4,8 @@ import type { PingWriteRPC } from '../shared/types';
 import { readFile, writeFile, stat } from 'fs/promises';
 import { join } from 'path';
 import { homedir } from 'os';
+import { readFolder } from './ipc/folders';
+import { getRecentFiles, addRecentFile, removeRecentFile, clearRecentFiles } from './ipc/recentFiles';
 
 const DEV_SERVER_PORT = 5173;
 const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`;
@@ -16,6 +18,7 @@ let viewMenuState: ViewMenuState = {
   showTitleBar: false,
   showToolBar: false,
   showStatusBar: false,
+  showSidebar: false,
 };
 
 // Helper to update view menu state and refresh menu
@@ -212,6 +215,35 @@ async function main() {
           ]);
           return { success: true };
         },
+        // Phase 2: File Management
+        readFolder: async ({ path }: { path: string }) => {
+          return await readFolder(path);
+        },
+        getRecentFiles: async () => {
+          return await getRecentFiles();
+        },
+        addRecentFile: async ({ path }: { path: string }) => {
+          return await addRecentFile(path);
+        },
+        removeRecentFile: async ({ path }: { path: string }) => {
+          return await removeRecentFile(path);
+        },
+        clearRecentFiles: async () => {
+          return await clearRecentFiles();
+        },
+        quickOpen: async () => {
+          // Get recent files as quick open items
+          const recent = await getRecentFiles();
+          if (recent.success && recent.files) {
+            const items = recent.files.map(f => ({
+              path: f.path,
+              name: f.name,
+              isRecent: true,
+            }));
+            return { success: true, items };
+          }
+          return { success: true, items: [] };
+        },
       },
       messages: {},
     },
@@ -252,6 +284,10 @@ async function main() {
         try {
           const result = await openFile();
           if (result?.success === true && result.content !== undefined) {
+            // Add to recent files
+            if (result.path) {
+              await addRecentFile(result.path);
+            }
             // @ts-ignore
             win.webview.rpc.send.fileOpened({
               path: result.path || '',
@@ -331,6 +367,17 @@ async function main() {
         updateViewMenuState({ showStatusBar: !viewMenuState.showStatusBar });
         // @ts-ignore
         win.webview.rpc.send.toggleStatusbar({});
+        break;
+
+      case 'view-toggle-sidebar':
+        updateViewMenuState({ showSidebar: !viewMenuState.showSidebar });
+        // @ts-ignore
+        win.webview.rpc.send.toggleSidebar({});
+        break;
+
+      case 'view-quick-open':
+        // @ts-ignore
+        win.webview.rpc.send.openQuickOpen({});
         break;
 
       // Table menu actions

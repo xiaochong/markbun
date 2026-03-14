@@ -49,6 +49,14 @@ const rpc = Electroview.defineRPC<PingWriteRPC>({
         const listeners = (window as any).__electrobunListeners?.['menuAction'] || [];
         listeners.forEach((cb: (data: unknown) => void) => cb({ action }));
       },
+      toggleSidebar: () => {
+        const listeners = (window as any).__electrobunListeners?.['toggle-sidebar'] || [];
+        listeners.forEach((cb: () => void) => cb());
+      },
+      openQuickOpen: () => {
+        const listeners = (window as any).__electrobunListeners?.['open-quick-open'] || [];
+        listeners.forEach((cb: () => void) => cb());
+      },
     },
   },
 });
@@ -85,6 +93,31 @@ export const electrobun = {
 
   async showDefaultContextMenu() {
     return await electroview.rpc.request.showDefaultContextMenu({});
+  },
+
+  // Phase 2: File Management
+  async readFolder(path: string) {
+    return await electroview.rpc.request.readFolder({ path });
+  },
+
+  async getRecentFiles() {
+    return await electroview.rpc.request.getRecentFiles({});
+  },
+
+  async addRecentFile(path: string) {
+    return await electroview.rpc.request.addRecentFile({ path });
+  },
+
+  async removeRecentFile(path: string) {
+    return await electroview.rpc.request.removeRecentFile({ path });
+  },
+
+  async clearRecentFiles() {
+    return await electroview.rpc.request.clearRecentFiles({});
+  },
+
+  async quickOpen() {
+    return await electroview.rpc.request.quickOpen({});
   },
 
   // Subscribe to messages from main process

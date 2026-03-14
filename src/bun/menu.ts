@@ -6,6 +6,7 @@ export interface ViewMenuState {
   showTitleBar: boolean;
   showToolBar: boolean;
   showStatusBar: boolean;
+  showSidebar: boolean;
 }
 
 // Default state: all UI chrome hidden for distraction-free writing experience
@@ -14,6 +15,7 @@ const defaultState: ViewMenuState = {
   showTitleBar: false,
   showToolBar: false,
   showStatusBar: false,
+  showSidebar: false,
 };
 
 export function setupMenu(state: ViewMenuState = defaultState): void {
@@ -115,6 +117,9 @@ export function setupMenu(state: ViewMenuState = defaultState): void {
       label: 'View',
       submenu: [
         { label: 'Toggle Dark Mode', action: 'view-toggle-theme', accelerator: 'CmdOrCtrl+Shift+T' },
+        { type: 'separator' },
+        { label: 'Show Sidebar', action: 'view-toggle-sidebar', accelerator: 'CmdOrCtrl+B', checked: state.showSidebar },
+        { label: 'Quick Open', action: 'view-quick-open', accelerator: 'CmdOrCtrl+P' },
         { type: 'separator' },
         { label: 'Show Title Bar', action: 'view-toggle-titlebar', checked: state.showTitleBar },
         { label: 'Show Tool Bar', action: 'view-toggle-toolbar', checked: state.showToolBar },
