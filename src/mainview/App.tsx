@@ -97,6 +97,73 @@ function App() {
     });
   }, []);
 
+  // Paragraph menu event listener - unified handler
+  useEffect(() => {
+    return electrobun.on('menuAction', (data) => {
+      const { action } = data as { action: string };
+
+      switch (action) {
+        case 'para-heading-1':
+          editorRef.current?.toggleHeading(1);
+          break;
+        case 'para-heading-2':
+          editorRef.current?.toggleHeading(2);
+          break;
+        case 'para-heading-3':
+          editorRef.current?.toggleHeading(3);
+          break;
+        case 'para-heading-4':
+          editorRef.current?.toggleHeading(4);
+          break;
+        case 'para-heading-5':
+          editorRef.current?.toggleHeading(5);
+          break;
+        case 'para-heading-6':
+          editorRef.current?.toggleHeading(6);
+          break;
+        case 'para-paragraph':
+          editorRef.current?.setParagraph();
+          break;
+        case 'para-increase-heading':
+          editorRef.current?.increaseHeadingLevel();
+          break;
+        case 'para-decrease-heading':
+          editorRef.current?.decreaseHeadingLevel();
+          break;
+        case 'para-table':
+          editorRef.current?.insertTable();
+          break;
+        case 'para-math-block':
+          editorRef.current?.insertMathBlock();
+          break;
+        case 'para-code-block':
+          editorRef.current?.insertCodeBlock();
+          break;
+        case 'para-quote':
+          editorRef.current?.toggleQuote();
+          break;
+        case 'para-ordered-list':
+          editorRef.current?.toggleOrderedList();
+          break;
+        case 'para-unordered-list':
+          editorRef.current?.toggleList();
+          break;
+        case 'para-task-list':
+          editorRef.current?.insertTaskList();
+          break;
+        case 'para-insert-above':
+          editorRef.current?.insertParagraphAbove();
+          break;
+        case 'para-insert-below':
+          editorRef.current?.insertParagraphBelow();
+          break;
+        case 'para-horizontal-rule':
+          editorRef.current?.insertHorizontalRule();
+          break;
+      }
+    });
+  }, []);
+
   // Toolbar action handlers
   const handleBold = useCallback(() => {
     editorRef.current?.toggleBold();
@@ -128,6 +195,47 @@ function App() {
 
   const handleOrderedList = useCallback(() => {
     editorRef.current?.toggleOrderedList();
+  }, []);
+
+  // Paragraph menu handlers
+  const handleSetParagraph = useCallback(() => {
+    editorRef.current?.setParagraph();
+  }, []);
+
+  const handleIncreaseHeadingLevel = useCallback(() => {
+    editorRef.current?.increaseHeadingLevel();
+  }, []);
+
+  const handleDecreaseHeadingLevel = useCallback(() => {
+    editorRef.current?.decreaseHeadingLevel();
+  }, []);
+
+  const handleInsertTable = useCallback(() => {
+    editorRef.current?.insertTable();
+  }, []);
+
+  const handleInsertMathBlock = useCallback(() => {
+    editorRef.current?.insertMathBlock();
+  }, []);
+
+  const handleInsertCodeBlock = useCallback(() => {
+    editorRef.current?.insertCodeBlock();
+  }, []);
+
+  const handleInsertTaskList = useCallback(() => {
+    editorRef.current?.insertTaskList();
+  }, []);
+
+  const handleInsertHorizontalRule = useCallback(() => {
+    editorRef.current?.insertHorizontalRule();
+  }, []);
+
+  const handleInsertParagraphAbove = useCallback(() => {
+    editorRef.current?.insertParagraphAbove();
+  }, []);
+
+  const handleInsertParagraphBelow = useCallback(() => {
+    editorRef.current?.insertParagraphBelow();
   }, []);
 
   // Store callbacks in ref to avoid stale closures in keyboard shortcuts

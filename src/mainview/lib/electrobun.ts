@@ -45,6 +45,10 @@ const rpc = Electroview.defineRPC<PingWriteRPC>({
         const listeners = (window as any).__electrobunListeners?.['toggle-statusbar'] || [];
         listeners.forEach((cb: () => void) => cb());
       },
+      menuAction: ({ action }) => {
+        const listeners = (window as any).__electrobunListeners?.['menuAction'] || [];
+        listeners.forEach((cb: (data: unknown) => void) => cb({ action }));
+      },
     },
   },
 });

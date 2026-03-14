@@ -55,13 +55,48 @@ export function setupMenu(state: ViewMenuState = defaultState): void {
       ],
     },
     {
+      label: 'Paragraph',
+      submenu: [
+        // Headings
+        { label: 'Heading 1', action: 'para-heading-1', accelerator: 'CmdOrCtrl+1' },
+        { label: 'Heading 2', action: 'para-heading-2', accelerator: 'CmdOrCtrl+2' },
+        { label: 'Heading 3', action: 'para-heading-3', accelerator: 'CmdOrCtrl+3' },
+        { label: 'Heading 4', action: 'para-heading-4', accelerator: 'CmdOrCtrl+4' },
+        { label: 'Heading 5', action: 'para-heading-5', accelerator: 'CmdOrCtrl+5' },
+        { label: 'Heading 6', action: 'para-heading-6', accelerator: 'CmdOrCtrl+6' },
+        { type: 'separator' },
+        { label: 'Paragraph', action: 'para-paragraph', accelerator: 'CmdOrCtrl+0' },
+        { type: 'separator' },
+        { label: 'Increase Heading Level', action: 'para-increase-heading', accelerator: 'CmdOrCtrl+Plus' },
+        { label: 'Decrease Heading Level', action: 'para-decrease-heading', accelerator: 'CmdOrCtrl+Minus' },
+        { type: 'separator' },
+        // Block elements
+        { label: 'Table', action: 'para-table' },
+        { label: 'Math Block', action: 'para-math-block', accelerator: 'Alt+CmdOrCtrl+B' },
+        { label: 'Code Block', action: 'para-code-block', accelerator: 'Alt+CmdOrCtrl+C' },
+        { type: 'separator' },
+        // Lists and quotes
+        { label: 'Quote', action: 'para-quote', accelerator: 'Alt+CmdOrCtrl+Q' },
+        { label: 'Ordered List', action: 'para-ordered-list', accelerator: 'Alt+CmdOrCtrl+O' },
+        { label: 'Unordered List', action: 'para-unordered-list', accelerator: 'Alt+CmdOrCtrl+U' },
+        { label: 'Task List', action: 'para-task-list', accelerator: 'Alt+CmdOrCtrl+X' },
+        { type: 'separator' },
+        // Paragraph operations
+        { label: 'Insert Paragraph Above', action: 'para-insert-above' },
+        { label: 'Insert Paragraph Below', action: 'para-insert-below' },
+        { type: 'separator' },
+        // Divider
+        { label: 'Horizontal Rule', action: 'para-horizontal-rule', accelerator: 'Alt+CmdOrCtrl+Minus' },
+      ],
+    },
+    {
       label: 'View',
       submenu: [
         { label: 'Toggle Dark Mode', action: 'view-toggle-theme', accelerator: 'CmdOrCtrl+Shift+T' },
         { type: 'separator' },
-        { label: 'Show Title Bar', action: 'view-toggle-titlebar', type: 'checkbox', checked: state.showTitleBar },
-        { label: 'Show Tool Bar', action: 'view-toggle-toolbar', type: 'checkbox', checked: state.showToolBar },
-        { label: 'Show Status Bar', action: 'view-toggle-statusbar', type: 'checkbox', checked: state.showStatusBar },
+        { label: 'Show Title Bar', action: 'view-toggle-titlebar', checked: state.showTitleBar },
+        { label: 'Show Tool Bar', action: 'view-toggle-toolbar', checked: state.showToolBar },
+        { label: 'Show Status Bar', action: 'view-toggle-statusbar', checked: state.showStatusBar },
         { type: 'separator' },
         { label: 'Toggle Developer Tools', action: 'view-toggle-devtools', accelerator: 'CmdOrCtrl+Option+I' },
       ],

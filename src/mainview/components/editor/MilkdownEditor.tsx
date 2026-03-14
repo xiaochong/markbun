@@ -12,6 +12,7 @@ import {
   wrapInOrderedListCommand,
   codeBlockSchema,
   linkSchema,
+  paragraphSchema,
 } from '@milkdown/preset-commonmark';
 import { linkTooltipAPI } from '@milkdown/kit/component/link-tooltip';
 import { clipboard } from '@milkdown/plugin-clipboard';
@@ -44,6 +45,17 @@ export interface MilkdownEditorRef {
   toggleLink: (href?: string, title?: string) => boolean;
   toggleList: () => boolean;
   toggleOrderedList: () => boolean;
+  // Paragraph menu commands
+  setParagraph: () => boolean;
+  increaseHeadingLevel: () => boolean;
+  decreaseHeadingLevel: () => boolean;
+  insertTable: () => boolean;
+  insertMathBlock: () => boolean;
+  insertCodeBlock: () => boolean;
+  insertTaskList: () => boolean;
+  insertHorizontalRule: () => boolean;
+  insertParagraphAbove: () => boolean;
+  insertParagraphBelow: () => boolean;
   // Selection
   hasSelection: () => boolean;
 }
@@ -241,6 +253,242 @@ export const MilkdownEditor = forwardRef<MilkdownEditorRef, MilkdownEditorProps>
       });
     }, []);
 
+    // Set paragraph
+    const setParagraph = useCallback((): boolean => {
+      const editor = crepeRef.current?.editor;
+      if (!editor?.ctx) return false;
+
+      return editor.action(ctx => {
+        const view = ctx.get(editorViewCtx);
+        const { state } = view;
+        const paragraphType = paragraphSchema.type(ctx);
+        if (!paragraphType) return false;
+        return setBlockType(paragraphType)(state, view.dispatch.bind(view));
+      });
+    }, []);
+
+    // Increase heading level
+    const increaseHeadingLevel = useCallback((): boolean => {
+      const editor = crepeRef.current?.editor;
+      if (!editor?.ctx) return false;
+
+      return editor.action(ctx => {
+        const view = ctx.get(editorViewCtx);
+        const { state } = view;
+        const { from, to } = state.selection;
+
+        // Find current heading level
+        let currentLevel = 0;
+        state.doc.nodesBetween(from, to, (node) => {
+          if (node.type.name.startsWith('heading')) {
+            currentLevel = node.attrs.level || 0;
+            return false;
+          }
+        });
+
+        const newLevel = currentLevel > 0 ? Math.min(currentLevel + 1, 6) : 1;
+        return callCommand(wrapInHeadingCommand.key, newLevel)(ctx);
+      });
+    }, []);
+
+    // Decrease heading level
+    const decreaseHeadingLevel = useCallback((): boolean => {
+      const editor = crepeRef.current?.editor;
+      if (!editor?.ctx) return false;
+
+      return editor.action(ctx => {
+        const view = ctx.get(editorViewCtx);
+        const { state } = view;
+        const { from, to } = state.selection;
+
+        // Find current heading level
+        let currentLevel = 0;
+        state.doc.nodesBetween(from, to, (node) => {
+          if (node.type.name.startsWith('heading')) {
+            currentLevel = node.attrs.level || 0;
+            return false;
+          }
+        });
+
+        if (currentLevel <= 1) {
+          // Convert to paragraph
+          const paragraphType = paragraphSchema.type(ctx);
+          if (!paragraphType) return false;
+          return setBlockType(paragraphType)(state, view.dispatch.bind(view));
+        }
+
+        const newLevel = currentLevel - 1;
+        return callCommand(wrapInHeadingCommand.key, newLevel)(ctx);
+      });
+    }, []);
+
+    // Helper to check if current position is at an empty paragraph
+    const isAtEmptyParagraph = useCallback((): boolean => {
+      const editor = crepeRef.current?.editor;
+      if (!editor?.ctx) return false;
+
+      return editor.action(ctx => {
+        const view = ctx.get(editorViewCtx);
+        const { state } = view;
+        const { from } = state.selection;
+
+        // Find the current block node
+        const $pos = state.doc.resolve(from);
+        const blockPos = $pos.before($pos.depth);
+        const blockNode = state.doc.nodeAt(blockPos);
+
+        // Check if it's an empty paragraph
+        return blockNode?.type.name === 'paragraph' && blockNode.textContent === '';
+      });
+    }, []);
+
+    // Helper to insert parsed markdown nodes
+    // If current paragraph is empty, replaces it; otherwise inserts after
+    // For editable blocks (code, math), cursor goes inside
+    // For structural blocks (table, hr), cursor goes after
+    const insertParsedMarkdown = useCallback((markdown: string, cursorInside: boolean = false): boolean => {
+      const editor = crepeRef.current?.editor;
+      if (!editor?.ctx) return false;
+
+      return editor.action(ctx => {
+        const view = ctx.get(editorViewCtx);
+        const parser = ctx.get(parserCtx);
+        const { state } = view;
+        const { from } = state.selection;
+
+        // Parse the markdown
+        const doc = parser(markdown);
+        if (!doc || doc.content.size === 0) {
+          return false;
+        }
+
+        // Get current block info
+        const $pos = state.doc.resolve(from);
+        const currentBlockPos = $pos.before($pos.depth);
+        const currentBlockEnd = $pos.after($pos.depth);
+        const currentBlock = state.doc.nodeAt(currentBlockPos);
+        const isEmptyParagraph = currentBlock?.type.name === 'paragraph' && currentBlock.textContent === '';
+
+        // Build transaction
+        let tr = state.tr;
+        let cursorPos: number;
+
+        if (isEmptyParagraph) {
+          // Replace empty paragraph with new content
+          tr = tr.replaceWith(currentBlockPos, currentBlockEnd, doc.content);
+
+          if (cursorInside) {
+            // Cursor inside the first block (for code, math, etc.)
+            cursorPos = currentBlockPos + 1;
+          } else {
+            // Cursor after the inserted content (for table, hr, etc.)
+            // Position at end of inserted content
+            const insertedSize = doc.content.size;
+            cursorPos = currentBlockPos + insertedSize + 1; // +1 for the newline after
+          }
+        } else {
+          // Insert after current block
+          tr = tr.insert(currentBlockEnd, doc.content);
+
+          if (cursorInside) {
+            // Cursor inside the new block
+            cursorPos = currentBlockEnd + 1;
+          } else {
+            // Cursor after the inserted content
+            const insertedSize = doc.content.size;
+            cursorPos = currentBlockEnd + insertedSize + 1;
+          }
+        }
+
+        // Ensure cursor position is valid
+        cursorPos = Math.min(cursorPos, tr.doc.content.size);
+
+        try {
+          tr = tr.setSelection(TextSelection.create(tr.doc, cursorPos));
+        } catch (e) {
+          // If selection fails, try to place cursor at end of document
+          tr = tr.setSelection(TextSelection.create(tr.doc, tr.doc.content.size));
+        }
+
+        view.dispatch(tr);
+        view.focus();
+        return true;
+      });
+    }, []);
+
+    // Insert table (using markdown syntax) - cursor goes after table
+    const insertTable = useCallback((): boolean => {
+      return insertParsedMarkdown('\n| Column 1 | Column 2 | Column 3 |\n|----------|----------|----------|\n|          |          |          |\n', false);
+    }, [insertParsedMarkdown]);
+
+    // Insert math block - cursor goes inside
+    const insertMathBlock = useCallback((): boolean => {
+      return insertParsedMarkdown('\n$$\n\n$$\n', true);
+    }, [insertParsedMarkdown]);
+
+    // Insert code block (for paragraph menu) - cursor goes inside
+    const insertCodeBlock = useCallback((): boolean => {
+      return insertParsedMarkdown('\n```\n\n```\n', true);
+    }, [insertParsedMarkdown]);
+
+    // Insert task list - cursor goes after
+    const insertTaskList = useCallback((): boolean => {
+      return insertParsedMarkdown('- [ ] Task item\n', false);
+    }, [insertParsedMarkdown]);
+
+    // Insert horizontal rule - cursor goes after
+    const insertHorizontalRule = useCallback((): boolean => {
+      return insertParsedMarkdown('\n---\n', false);
+    }, [insertParsedMarkdown]);
+
+    // Insert paragraph above
+    const insertParagraphAbove = useCallback((): boolean => {
+      const editor = crepeRef.current?.editor;
+      if (!editor?.ctx) return false;
+
+      return editor.action(ctx => {
+        const view = ctx.get(editorViewCtx);
+        const { state } = view;
+        const { from } = state.selection;
+
+        const $pos = state.doc.resolve(from);
+        const blockStart = $pos.before($pos.depth);
+
+        // Insert paragraph and move cursor to it
+        const tr = state.tr.insert(blockStart, state.schema.nodes.paragraph.create());
+        // Position cursor inside the new paragraph (blockStart + 1)
+        const newPos = blockStart + 1;
+        tr.setSelection(TextSelection.create(tr.doc, newPos));
+        view.dispatch(tr);
+        view.focus();
+        return true;
+      });
+    }, []);
+
+    // Insert paragraph below
+    const insertParagraphBelow = useCallback((): boolean => {
+      const editor = crepeRef.current?.editor;
+      if (!editor?.ctx) return false;
+
+      return editor.action(ctx => {
+        const view = ctx.get(editorViewCtx);
+        const { state } = view;
+        const { from } = state.selection;
+
+        const $pos = state.doc.resolve(from);
+        const blockEnd = $pos.after($pos.depth);
+
+        // Insert paragraph and move cursor to it
+        const tr = state.tr.insert(blockEnd, state.schema.nodes.paragraph.create());
+        // Position cursor inside the new paragraph (blockEnd + 1)
+        const newPos = blockEnd + 1;
+        tr.setSelection(TextSelection.create(tr.doc, newPos));
+        view.dispatch(tr);
+        view.focus();
+        return true;
+      });
+    }, []);
+
     // Expose imperative methods
     useImperativeHandle(ref, () => ({
       getMarkdown: () => crepeRef.current?.getMarkdown() ?? '',
@@ -300,6 +548,17 @@ export const MilkdownEditor = forwardRef<MilkdownEditorRef, MilkdownEditorProps>
       },
       toggleList: () => execCommand(wrapInBulletListCommand),
       toggleOrderedList: () => execCommand(wrapInOrderedListCommand),
+      // Paragraph menu commands
+      setParagraph,
+      increaseHeadingLevel,
+      decreaseHeadingLevel,
+      insertTable,
+      insertMathBlock,
+      insertCodeBlock,
+      insertTaskList,
+      insertHorizontalRule,
+      insertParagraphAbove,
+      insertParagraphBelow,
       // Check if there's text selected
       hasSelection: () => {
         const editor = crepeRef.current?.editor;
@@ -310,7 +569,7 @@ export const MilkdownEditor = forwardRef<MilkdownEditorRef, MilkdownEditorProps>
           return from !== to;
         });
       },
-    }), [isReady, loading, execCommand, toggleCodeBlock]);
+    }), [isReady, loading, execCommand, toggleCodeBlock, setParagraph, increaseHeadingLevel, decreaseHeadingLevel, insertTable, insertMathBlock, insertCodeBlock, insertTaskList, insertHorizontalRule, insertParagraphAbove, insertParagraphBelow, insertParsedMarkdown]);
 
     // NOTE: We intentionally do NOT have a useEffect to update content when defaultValue changes.
     // The parent component should use the ref's setMarkdown method when switching files.

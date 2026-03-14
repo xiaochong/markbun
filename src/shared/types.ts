@@ -21,6 +21,7 @@ export type PingWriteRPC = {
       toggleTitlebar: {};
       toggleToolbar: {};
       toggleStatusbar: {};
+      menuAction: { action: string };
     };
   }>;
   webview: RPCSchema<{

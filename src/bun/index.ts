@@ -291,6 +291,30 @@ async function main() {
         // @ts-ignore
         win.webview.rpc.send.toggleStatusbar({});
         break;
+
+      // Paragraph menu actions
+      case 'para-heading-1':
+      case 'para-heading-2':
+      case 'para-heading-3':
+      case 'para-heading-4':
+      case 'para-heading-5':
+      case 'para-heading-6':
+      case 'para-paragraph':
+      case 'para-increase-heading':
+      case 'para-decrease-heading':
+      case 'para-table':
+      case 'para-math-block':
+      case 'para-code-block':
+      case 'para-quote':
+      case 'para-ordered-list':
+      case 'para-unordered-list':
+      case 'para-task-list':
+      case 'para-insert-above':
+      case 'para-insert-below':
+      case 'para-horizontal-rule':
+        // @ts-ignore
+        win.webview.rpc.send.menuAction({ action });
+        break;
     }
   });
 
