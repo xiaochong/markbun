@@ -239,14 +239,14 @@ body {
   display: none !important;
 }
 
-/* Ensure cursor is visible in focused code block - light color for dark bg */
+/* Ensure cursor is visible in focused code block - match external cursor style */
 .milkdown-crepe-container .milkdown-code-block .cm-cursor {
-  border-left-color: hsl(210 20% 90%) !important;
+  border-left-color: hsl(var(--foreground) / 0.75) !important;
   border-left-width: 2px !important;
 }
 
 .dark .milkdown-crepe-container .milkdown-code-block .cm-cursor {
-  border-left-color: hsl(210 20% 96%) !important;
+  border-left-color: hsl(var(--foreground) / 0.85) !important;
 }
 
 /* Hide cursor when code block editor is not focused */
@@ -445,10 +445,10 @@ body {
   color: hsl(0 0% 100%) !important;
 }
 
-/* CodeMirror specific selection styles */
+/* CodeMirror specific selection styles - hide custom layer, use native selection only */
 .milkdown-crepe-container .milkdown-code-block .cm-selectionBackground,
 .milkdown-crepe-container .milkdown-code-block .cm-selectionLayer .cm-selection {
-  background-color: hsl(210 50% 50% / 0.4) !important;
+  display: none !important;
 }
 
 /* Remove selected line background - no highlight when not editing */
