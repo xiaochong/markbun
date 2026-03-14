@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { electrobun } from '@/lib/electrobun';
 import type { FileSystemNode, FileNode } from '@/shared/types';
 
@@ -13,10 +13,7 @@ export interface UseFileExplorerReturn {
   toggleFolder: (path: string) => void;
   selectFile: (path: string | null) => void;
   refresh: () => void;
-  openParentFolder: () => void;
 }
-
-const INITIAL_ROOT = '/Users';
 
 export function useFileExplorer(): UseFileExplorerReturn {
   const [rootPath, setRootPathState] = useState<string | null>(null);
@@ -30,7 +27,7 @@ export function useFileExplorer(): UseFileExplorerReturn {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await electrobun.readFolder(path) as {
+      const result = await electrobun.readFolder({ path }) as {
         success: boolean;
         nodes?: FileSystemNode[];
         error?: string
@@ -49,15 +46,33 @@ export function useFileExplorer(): UseFileExplorerReturn {
   }, []);
 
   const setRootPath = useCallback((path: string | null) => {
-    setRootPathState(path);
-    if (path) {
-      loadFolder(path);
-      setExpandedPaths(new Set([path]));
-    } else {
+    // If no path provided, clear everything
+    if (!path) {
+      setRootPathState(null);
       setNodes([]);
       setExpandedPaths(new Set());
+      return;
     }
-  }, [loadFolder]);
+
+    // If we already have a rootPath, check if the new path is within the current workspace
+    if (rootPath) {
+      // If the new path starts with rootPath, it's within the current workspace
+      // Don't switch root, just update the selected file
+      if (path.startsWith(rootPath)) {
+        return;
+      }
+    }
+
+    // Skip if path hasn't changed
+    if (rootPath === path) {
+      return;
+    }
+
+    // Set new root path and load the folder
+    setRootPathState(path);
+    loadFolder(path);
+    setExpandedPaths(new Set([path]));
+  }, [loadFolder, rootPath]);
 
   const toggleFolder = useCallback(async (path: string) => {
     setExpandedPaths(prev => {
@@ -72,7 +87,7 @@ export function useFileExplorer(): UseFileExplorerReturn {
 
     const node = findNode(nodes, path);
     if (node?.type === 'folder' && !expandedPaths.has(path)) {
-      const result = await electrobun.readFolder(path) as {
+      const result = await electrobun.readFolder({ path }) as {
         success: boolean;
         nodes?: FileSystemNode[];
         error?: string;
@@ -94,13 +109,6 @@ export function useFileExplorer(): UseFileExplorerReturn {
     }
   }, [rootPath, loadFolder]);
 
-  const openParentFolder = useCallback(() => {
-    if (rootPath) {
-      const parent = rootPath.split('/').slice(0, -1).join('/') || '/';
-      setRootPath(parent);
-    }
-  }, [rootPath, setRootPath]);
-
   // Initialize with empty state - no default folder
   // File explorer stays empty until a file is opened
 
@@ -115,7 +123,6 @@ export function useFileExplorer(): UseFileExplorerReturn {
     toggleFolder,
     selectFile,
     refresh,
-    openParentFolder,
   };
 }
 

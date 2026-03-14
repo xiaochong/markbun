@@ -216,17 +216,50 @@ async function main() {
           return { success: true };
         },
         // Phase 2: File Management
-        readFolder: async ({ path }: { path: string }) => {
-          return await readFolder(path);
+        readFile: async (params: { path: string }) => {
+          try {
+            const filePath = params?.path;
+            if (!filePath || typeof filePath !== 'string') {
+              return { success: false, error: 'No file path provided' };
+            }
+            const content = await readFile(filePath, 'utf-8');
+            currentFilePath = filePath;
+            return {
+              success: true,
+              path: filePath,
+              content
+            };
+          } catch (error) {
+            console.error('Failed to read file:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error'
+            };
+          }
+        },
+        readFolder: async (params: { path: string }) => {
+          const folderPath = params.path;
+          if (!folderPath) {
+            return { success: false, error: 'No folder path provided' };
+          }
+          return await readFolder(folderPath);
         },
         getRecentFiles: async () => {
           return await getRecentFiles();
         },
-        addRecentFile: async ({ path }: { path: string }) => {
-          return await addRecentFile(path);
+        addRecentFile: async (params: { path: string }) => {
+          const filePath = params.path;
+          if (!filePath) {
+            return { success: false, error: 'No file path provided' };
+          }
+          return await addRecentFile(filePath);
         },
-        removeRecentFile: async ({ path }: { path: string }) => {
-          return await removeRecentFile(path);
+        removeRecentFile: async (params: { path: string }) => {
+          const filePath = params.path;
+          if (!filePath) {
+            return { success: false, error: 'No file path provided' };
+          }
+          return await removeRecentFile(filePath);
         },
         clearRecentFiles: async () => {
           return await clearRecentFiles();

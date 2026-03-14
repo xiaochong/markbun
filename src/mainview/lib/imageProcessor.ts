@@ -56,28 +56,36 @@ export async function processMarkdownImages(
     return markdown;
   }
 
-  // Process each image
-  let result = markdown;
-  // Process in reverse order to maintain indices
-  for (let i = matches.length - 1; i >= 0; i--) {
-    const { fullMatch, alt, path } = matches[i];
+  // Process all images in parallel for better performance
+  const processedImages = await Promise.all(
+    matches.map(async ({ fullMatch, alt, path }) => {
+      // Resolve relative path
+      const absolutePath = currentFilePath ? resolvePath(path, currentFilePath) : path;
 
-    // Resolve relative path
-    const absolutePath = currentFilePath ? resolvePath(path, currentFilePath) : path;
+      try {
+        const response = await electrobun.readImageAsBase64(absolutePath) as {
+          success: boolean;
+          dataUrl?: string;
+          error?: string;
+        };
 
-    try {
-      const response = await electrobun.readImageAsBase64(absolutePath) as {
-        success: boolean;
-        dataUrl?: string;
-        error?: string;
-      };
-
-      if (response.success && response.dataUrl) {
-        const replacement = `![${alt}](${response.dataUrl})`;
-        result = result.replace(fullMatch, replacement);
+        if (response.success && response.dataUrl) {
+          const replacement = `![${alt}](${response.dataUrl})`;
+          return { fullMatch, replacement };
+        }
+      } catch (error) {
+        console.error(`Failed to process image ${path}:`, error);
       }
-    } catch (error) {
-      console.error(`Failed to process image ${path}:`, error);
+      return null;
+    })
+  );
+
+  // Apply replacements in reverse order to maintain indices
+  let result = markdown;
+  for (let i = processedImages.length - 1; i >= 0; i--) {
+    const processed = processedImages[i];
+    if (processed) {
+      result = result.replace(processed.fullMatch, processed.replacement);
     }
   }
 

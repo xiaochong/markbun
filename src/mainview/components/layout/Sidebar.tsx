@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, memo, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import type { SidebarTab } from '@/shared/types';
 
@@ -15,7 +15,7 @@ interface SidebarProps {
   children: React.ReactNode;
 }
 
-export function Sidebar({
+export const Sidebar = memo(function Sidebar({
   isOpen,
   activeTab,
   width,
@@ -76,22 +76,7 @@ export function Sidebar({
         style={{ width: isOpen ? width - 4 : 0 }}
       >
         {/* Tab Header */}
-        <div className="flex items-center border-b border-border">
-          <TabButton
-            active={activeTab === 'files'}
-            onClick={() => onTabChange('files')}
-            icon={<FilesIcon />}
-            label="Files"
-            className="flex-1 justify-center"
-          />
-          <TabButton
-            active={activeTab === 'outline'}
-            onClick={() => onTabChange('outline')}
-            icon={<OutlineIcon />}
-            label="Outline"
-            className="flex-1 justify-center"
-          />
-        </div>
+        <TabHeader activeTab={activeTab} onTabChange={onTabChange} />
 
         {/* Content Area */}
         <div className="flex-1 overflow-hidden">
@@ -121,7 +106,37 @@ export function Sidebar({
       )}
     </div>
   );
+});
+
+// Tab Header Component - extracted to prevent unnecessary re-renders
+interface TabHeaderProps {
+  activeTab: SidebarTab;
+  onTabChange: (tab: SidebarTab) => void;
 }
+
+const TabHeader = memo(function TabHeader({ activeTab, onTabChange }: TabHeaderProps) {
+  const handleFilesClick = useCallback(() => onTabChange('files'), [onTabChange]);
+  const handleOutlineClick = useCallback(() => onTabChange('outline'), [onTabChange]);
+
+  return (
+    <div className="flex items-center border-b border-border">
+      <TabButton
+        active={activeTab === 'files'}
+        onClick={handleFilesClick}
+        icon={<FilesIcon />}
+        label="Files"
+        className="flex-1 justify-center"
+      />
+      <TabButton
+        active={activeTab === 'outline'}
+        onClick={handleOutlineClick}
+        icon={<OutlineIcon />}
+        label="Outline"
+        className="flex-1 justify-center"
+      />
+    </div>
+  );
+});
 
 // Tab Button Component
 interface TabButtonProps {
@@ -132,7 +147,7 @@ interface TabButtonProps {
   className?: string;
 }
 
-function TabButton({ active, onClick, icon, label, className }: TabButtonProps) {
+const TabButton = memo(function TabButton({ active, onClick, icon, label, className }: TabButtonProps) {
   return (
     <button
       onClick={onClick}
@@ -149,29 +164,29 @@ function TabButton({ active, onClick, icon, label, className }: TabButtonProps) 
       <span className="sm:inline">{label}</span>
     </button>
   );
-}
+});
 
 // Icons
-function FilesIcon() {
+const FilesIcon = memo(function FilesIcon() {
   return (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
     </svg>
   );
-}
+});
 
-function OutlineIcon() {
+const OutlineIcon = memo(function OutlineIcon() {
   return (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
     </svg>
   );
-}
+});
 
-function CloseIcon() {
+const CloseIcon = memo(function CloseIcon() {
   return (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
     </svg>
   );
-}
+});

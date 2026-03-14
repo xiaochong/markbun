@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useState, useCallback } from 'react';
+import { forwardRef, useImperativeHandle, useState, useCallback, memo } from 'react';
 import { Milkdown } from '@milkdown/react';
 import type { MilkdownEditorProps, MilkdownEditorRef } from './types';
 import { useCrepeEditor, useThemeLoader, useContextMenu } from './hooks';
@@ -11,7 +11,7 @@ import * as table from './commands/table';
 import '@milkdown/crepe/theme/common/style.css';
 import '@milkdown/crepe/theme/common/link-tooltip.css';
 
-export const MilkdownEditor = forwardRef<MilkdownEditorRef, MilkdownEditorProps>(
+export const MilkdownEditor = memo(forwardRef<MilkdownEditorRef, MilkdownEditorProps>(
   ({ defaultValue = '', onChange, className = '', darkMode = false }, ref) => {
     const [isReady, setIsReady] = useState(false);
 
@@ -101,6 +101,6 @@ export const MilkdownEditor = forwardRef<MilkdownEditorRef, MilkdownEditorProps>
       </div>
     );
   }
-);
+));
 
 MilkdownEditor.displayName = 'MilkdownEditor';

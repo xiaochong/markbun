@@ -96,20 +96,24 @@ export const electrobun = {
   },
 
   // Phase 2: File Management
-  async readFolder(path: string) {
-    return await electroview.rpc.request.readFolder({ path });
+  async readFile(params: { path: string }) {
+    return await electroview.rpc.request.readFile(params);
+  },
+
+  async readFolder(params: { path: string }) {
+    return await electroview.rpc.request.readFolder(params);
   },
 
   async getRecentFiles() {
     return await electroview.rpc.request.getRecentFiles({});
   },
 
-  async addRecentFile(path: string) {
-    return await electroview.rpc.request.addRecentFile({ path });
+  async addRecentFile(params: { path: string }) {
+    return await electroview.rpc.request.addRecentFile(params);
   },
 
-  async removeRecentFile(path: string) {
-    return await electroview.rpc.request.removeRecentFile({ path });
+  async removeRecentFile(params: { path: string }) {
+    return await electroview.rpc.request.removeRecentFile(params);
   },
 
   async clearRecentFiles() {

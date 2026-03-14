@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { memo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { FileTree } from './FileTree';
 import type { FileSystemNode, FileNode } from '@/shared/types';
@@ -13,10 +13,9 @@ interface FileExplorerProps {
   onToggleFolder: (path: string) => void;
   onSelectFile: (path: string | null) => void;
   onFileClick: (file: FileNode) => void;
-  onOpenParent: () => void;
 }
 
-export function FileExplorer({
+export const FileExplorer = memo(function FileExplorer({
   nodes,
   rootPath,
   expandedPaths,
@@ -26,7 +25,6 @@ export function FileExplorer({
   onToggleFolder,
   onSelectFile,
   onFileClick,
-  onOpenParent,
 }: FileExplorerProps) {
   const handleFileClick = useCallback((node: FileNode) => {
     onSelectFile(node.path);
@@ -35,22 +33,6 @@ export function FileExplorer({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/50 bg-muted/20">
-        <div className="flex items-center gap-2 min-w-0">
-          <button
-            onClick={onOpenParent}
-            className="p-1 rounded hover:bg-accent/60 flex-shrink-0 transition-colors"
-            title="Go to parent folder"
-          >
-            <UpIcon />
-          </button>
-          <span className="text-[11px] text-muted-foreground truncate font-medium">
-            {rootPath || 'No folder open'}
-          </span>
-        </div>
-      </div>
-
       {/* Content */}
       <div className="flex-1 overflow-auto">
         {isLoading && (
@@ -95,17 +77,9 @@ export function FileExplorer({
       </div>
     </div>
   );
-}
+});
 
 // Icons
-function UpIcon() {
-  return (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-    </svg>
-  );
-}
-
 function FolderOpenIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">

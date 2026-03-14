@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { cn } from '@/lib/utils';
 import type { OutlineNode } from '@/shared/types';
 
@@ -7,7 +8,7 @@ interface OutlineProps {
   onHeadingClick: (id: string, text: string) => void;
 }
 
-export function Outline({ headings, activeId, onHeadingClick }: OutlineProps) {
+export const Outline = memo(function Outline({ headings, activeId, onHeadingClick }: OutlineProps) {
   if (headings.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-40 text-sm text-muted-foreground">
@@ -28,7 +29,7 @@ export function Outline({ headings, activeId, onHeadingClick }: OutlineProps) {
       />
     </div>
   );
-}
+});
 
 interface OutlineTreeProps {
   nodes: OutlineNode[];

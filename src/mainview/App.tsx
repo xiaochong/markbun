@@ -1,4 +1,5 @@
-import { useRef, useCallback, useEffect, useState } from 'react';
+import { useRef, useCallback, useEffect, useState, useMemo } from 'react';
+import { cn } from '@/lib/utils';
 import { MilkdownEditor, MilkdownEditorRef } from './components/editor';
 import { Toolbar, StatusBar, TitleBar, Sidebar } from './components/layout';
 import { FileExplorer } from './components/file-explorer';
@@ -53,29 +54,51 @@ function App() {
   function handleQuickOpenSelect(filePath: string) {
     // Open file via IPC
     openFileByPath(filePath);
+    // Close quick open dialog
+    quickOpen.close();
   }
 
   // Open file by path
   const openFileByPath = useCallback(async (filePath: string) => {
     try {
-      const result = await electrobun.openFile() as {
+      const result = await electrobun.readFile({ path: filePath }) as {
         success: boolean;
         path?: string;
         content?: string;
         error?: string;
       };
 
-      if (result.success && result.content !== undefined && result.path === filePath) {
-        const processedContent = await processMarkdownImages(result.content, result.path);
+      if (result.success && result.content !== undefined && result.path) {
+        // Auto-set file explorer root to the file's parent directory
+        const parentDir = result.path.substring(0, result.path.lastIndexOf('/')) || '/';
+        fileExplorer.setRootPath(parentDir);
+
+        // Update selected file in file explorer (highlight current file)
+        fileExplorer.selectFile(result.path);
+
+        // Show content immediately for instant response
         if (editorRef.current?.isReady) {
-          editorRef.current.setMarkdown(processedContent);
-          setEditorContent(processedContent);
+          editorRef.current.setMarkdown(result.content);
+          setEditorContent(result.content);
         }
+
+        // Process images in background for better performance
+        processMarkdownImages(result.content, result.path).then(processedContent => {
+          if (editorRef.current?.isReady && processedContent !== result.content) {
+            editorRef.current.setMarkdown(processedContent);
+            setEditorContent(processedContent);
+          }
+        }).catch(error => {
+          console.error('Failed to process images:', error);
+        });
+
+        // Add to recent files
+        await electrobun.addRecentFile({ path: result.path });
       }
     } catch (error) {
       console.error('Failed to open file:', error);
     }
-  }, []);
+  }, [fileExplorer.setRootPath, fileExplorer.selectFile]);
 
   // Handle file click in file explorer
   const handleFileClick = useCallback((file: FileNode) => {
@@ -130,26 +153,39 @@ function App() {
       const parentDir = filePath.substring(0, filePath.lastIndexOf('/')) || '/';
       fileExplorer.setRootPath(parentDir);
 
-      const processedContent = await processMarkdownImages(fileContent, filePath);
+      // Update selected file in file explorer (highlight current file)
+      fileExplorer.selectFile(filePath);
 
+      // Show content immediately for instant response
       if (editorRef.current?.isReady) {
-        editorRef.current.setMarkdown(processedContent);
-        setEditorContent(processedContent);
-        outline.setHeadings(processedContent);
+        editorRef.current.setMarkdown(fileContent);
+        setEditorContent(fileContent);
+        outline.setHeadings(fileContent);
       } else {
         const checkAndSet = () => {
           if (editorRef.current?.isReady) {
-            editorRef.current.setMarkdown(processedContent);
-            setEditorContent(processedContent);
-            outline.setHeadings(processedContent);
+            editorRef.current.setMarkdown(fileContent);
+            setEditorContent(fileContent);
+            outline.setHeadings(fileContent);
           } else {
             setTimeout(checkAndSet, 50);
           }
         };
         checkAndSet();
       }
+
+      // Process images in background for better performance
+      processMarkdownImages(fileContent, filePath).then(processedContent => {
+        if (editorRef.current?.isReady && processedContent !== fileContent) {
+          editorRef.current.setMarkdown(processedContent);
+          setEditorContent(processedContent);
+          outline.setHeadings(processedContent);
+        }
+      }).catch(error => {
+        console.error('Failed to process images:', error);
+      });
     });
-  }, [outline.setHeadings, fileExplorer.setRootPath]);
+  }, [outline.setHeadings, fileExplorer.setRootPath, fileExplorer.selectFile]);
 
   // Listen for file-new event to clear editor
   useEffect(() => {
@@ -405,7 +441,8 @@ function App() {
           onResizeEnd={sidebar.stopResize}
           onWidthChange={sidebar.setWidth}
         >
-          {sidebar.activeTab === 'files' ? (
+          {/* File Explorer - hidden when outline tab is active */}
+          <div className={cn('h-full', sidebar.activeTab === 'files' ? 'block' : 'hidden')}>
             <FileExplorer
               nodes={fileExplorer.nodes}
               rootPath={fileExplorer.rootPath}
@@ -416,15 +453,16 @@ function App() {
               onToggleFolder={fileExplorer.toggleFolder}
               onSelectFile={fileExplorer.selectFile}
               onFileClick={handleFileClick}
-              onOpenParent={fileExplorer.openParentFolder}
             />
-          ) : (
+          </div>
+          {/* Outline - hidden when files tab is active */}
+          <div className={cn('h-full', sidebar.activeTab === 'outline' ? 'block' : 'hidden')}>
             <Outline
               headings={outline.headings}
               activeId={outline.activeId}
               onHeadingClick={handleOutlineClick}
             />
-          )}
+          </div>
         </Sidebar>
 
         {/* Editor */}

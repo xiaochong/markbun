@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { electrobun } from '@/lib/electrobun';
 import type { QuickOpenItem, RecentFile } from '@/shared/types';
 
@@ -18,8 +18,10 @@ export interface UseQuickOpenReturn {
 export function useQuickOpen(onSelect: (path: string) => void): UseQuickOpenReturn {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQueryState] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [items, setItems] = useState<QuickOpenItem[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const debounceTimerRef = useRef<number | null>(null);
 
   // Load items when opening
   const open = useCallback(async () => {
@@ -39,19 +41,31 @@ export function useQuickOpen(onSelect: (path: string) => void): UseQuickOpenRetu
   const close = useCallback(() => {
     setIsOpen(false);
     setQueryState('');
+    setDebouncedQuery('');
     setSelectedIndex(0);
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
   }, []);
 
   const setQuery = useCallback((newQuery: string) => {
     setQueryState(newQuery);
     setSelectedIndex(0);
+
+    // Debounce the search query
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = window.setTimeout(() => {
+      setDebouncedQuery(newQuery);
+    }, 150);
   }, []);
 
-  // Filter items based on query
+  // Filter items based on debounced query
   const filteredItems = useMemo(() => {
-    if (!query.trim()) return items;
+    if (!debouncedQuery.trim()) return items;
 
-    const q = query.toLowerCase();
+    const q = debouncedQuery.toLowerCase();
     return items
       .map(item => ({
         ...item,
@@ -59,7 +73,7 @@ export function useQuickOpen(onSelect: (path: string) => void): UseQuickOpenRetu
       }))
       .filter(item => item.score > 0)
       .sort((a, b) => (b.score || 0) - (a.score || 0));
-  }, [items, query]);
+  }, [items, debouncedQuery]);
 
   const selectNext = useCallback(() => {
     setSelectedIndex(prev =>
