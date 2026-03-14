@@ -130,8 +130,42 @@ function App() {
         case 'para-decrease-heading':
           editorRef.current?.decreaseHeadingLevel();
           break;
-        case 'para-table':
+        // Table actions
+        case 'table-insert':
           editorRef.current?.insertTable();
+          break;
+        case 'table-insert-row-above':
+          editorRef.current?.insertTableRowAbove();
+          break;
+        case 'table-insert-row-below':
+          editorRef.current?.insertTableRowBelow();
+          break;
+        case 'table-insert-col-left':
+          editorRef.current?.insertTableColumnLeft();
+          break;
+        case 'table-insert-col-right':
+          editorRef.current?.insertTableColumnRight();
+          break;
+        case 'table-move-row-up':
+          editorRef.current?.moveTableRowUp();
+          break;
+        case 'table-move-row-down':
+          editorRef.current?.moveTableRowDown();
+          break;
+        case 'table-move-col-left':
+          editorRef.current?.moveTableColumnLeft();
+          break;
+        case 'table-move-col-right':
+          editorRef.current?.moveTableColumnRight();
+          break;
+        case 'table-delete-row':
+          editorRef.current?.deleteTableRow();
+          break;
+        case 'table-delete-col':
+          editorRef.current?.deleteTableColumn();
+          break;
+        case 'table-delete':
+          editorRef.current?.deleteTable();
           break;
         case 'para-math-block':
           editorRef.current?.insertMathBlock();

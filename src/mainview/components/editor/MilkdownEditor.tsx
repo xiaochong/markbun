@@ -17,8 +17,9 @@ import {
 import { linkTooltipAPI } from '@milkdown/kit/component/link-tooltip';
 import { clipboard } from '@milkdown/plugin-clipboard';
 import { history } from '@milkdown/plugin-history';
-import { TextSelection } from '@milkdown/prose/state';
+import { TextSelection, NodeSelection } from '@milkdown/prose/state';
 import { setBlockType } from '@milkdown/prose/commands';
+import { gfm } from '@milkdown/preset-gfm';
 
 // Import Crepe base styles (always needed)
 import '@milkdown/crepe/theme/common/style.css';
@@ -56,6 +57,18 @@ export interface MilkdownEditorRef {
   insertHorizontalRule: () => boolean;
   insertParagraphAbove: () => boolean;
   insertParagraphBelow: () => boolean;
+  // Table operations
+  insertTableRowAbove: () => boolean;
+  insertTableRowBelow: () => boolean;
+  insertTableColumnLeft: () => boolean;
+  insertTableColumnRight: () => boolean;
+  moveTableRowUp: () => boolean;
+  moveTableRowDown: () => boolean;
+  moveTableColumnLeft: () => boolean;
+  moveTableColumnRight: () => boolean;
+  deleteTableRow: () => boolean;
+  deleteTableColumn: () => boolean;
+  deleteTable: () => boolean;
   // Selection
   hasSelection: () => boolean;
 }
@@ -151,6 +164,8 @@ export const MilkdownEditor = forwardRef<MilkdownEditorRef, MilkdownEditorProps>
       crepe.editor.use(clipboard);
       // Enable history plugin for undo/redo
       crepe.editor.use(history);
+      // Enable GFM (GitHub Flavored Markdown) for table support
+      crepe.editor.use(gfm);
 
       // Listen for content changes
       crepe.on((listener) => {
@@ -489,6 +504,650 @@ export const MilkdownEditor = forwardRef<MilkdownEditorRef, MilkdownEditorProps>
       });
     }, []);
 
+    // ===== Table Operations =====
+    // Helper to find table node and position
+    const findTableNode = useCallback((state: any): { node: any; pos: number } | null => {
+      const { from } = state.selection;
+
+      // Look for table node by traversing up from current position
+      const $pos = state.doc.resolve(from);
+      for (let d = $pos.depth; d >= 0; d--) {
+        const node = $pos.node(d);
+        if (node.type.name === 'table') {
+          return { node, pos: $pos.before(d) };
+        }
+      }
+
+      return null;
+    }, []);
+
+    // Helper to check if a node is a table cell (including header)
+    const isTableCell = (node: any): boolean => {
+      return node && (node.type.name === 'table_cell' || node.type.name === 'table_header');
+    };
+
+    // Helper to find current cell in table
+    const findCurrentCell = useCallback((state: any): { row: number; col: number; cellPos: number; isHeader: boolean } | null => {
+      const { from } = state.selection;
+      const $pos = state.doc.resolve(from);
+
+      // Traverse up to find table structure
+      for (let d = $pos.depth; d >= 0; d--) {
+        const node = $pos.node(d);
+
+        if (isTableCell(node)) {
+          const isHeader = node.type.name === 'table_header';
+
+          // Find row and table parents
+          const rowNode = $pos.node(d - 1);
+          const tableNode = $pos.node(d - 2);
+
+          if (rowNode?.type.name === 'table_row' && tableNode?.type.name === 'table') {
+            // Find row index by iterating through table rows
+            let rowIndex = -1;
+            const rowStartPos = $pos.before(d - 1);
+            for (let i = 0; i < tableNode.childCount; i++) {
+              const childRow = tableNode.child(i);
+              // Calculate position of this row
+              let calcPos = $pos.before(d - 2);
+              for (let j = 0; j < i; j++) {
+                calcPos += tableNode.child(j).nodeSize;
+              }
+              calcPos += 1; // +1 for row open token
+              if (calcPos === rowStartPos) {
+                rowIndex = i;
+                break;
+              }
+            }
+
+            // Find column index
+            let colIndex = -1;
+            const cellStartPos = $pos.before(d);
+            for (let i = 0; i < rowNode.childCount; i++) {
+              let calcPos = $pos.before(d - 1) + 1; // +1 for row open token
+              for (let j = 0; j < i; j++) {
+                calcPos += rowNode.child(j).nodeSize;
+              }
+              if (calcPos === cellStartPos) {
+                colIndex = i;
+                break;
+              }
+            }
+
+            if (rowIndex >= 0 && colIndex >= 0) {
+              return { row: rowIndex, col: colIndex, cellPos: $pos.start(d), isHeader };
+            }
+          }
+          break;
+        }
+      }
+
+      return null;
+    }, []);
+
+    // Insert row above
+    const insertTableRowAbove = useCallback((): boolean => {
+      const editor = crepeRef.current?.editor;
+      if (!editor?.ctx) return false;
+
+      return editor.action(ctx => {
+        const view = ctx.get(editorViewCtx);
+        const { state } = view;
+
+        const cellInfo = findCurrentCell(state);
+        if (!cellInfo) return false;
+
+        const tableInfo = findTableNode(state);
+        if (!tableInfo) return false;
+
+        const { node: tableNode, pos: tablePos } = tableInfo;
+        const { row } = cellInfo;
+
+        // Get number of columns from first row
+        const firstRow = tableNode.child(0);
+        const colCount = firstRow.childCount;
+
+        // Create new row with empty cells
+        const newCells: any[] = [];
+        for (let i = 0; i < colCount; i++) {
+          // Use table_cell for data rows, table_header only for header row (row 0)
+          const cellType = row === 0 ? state.schema.nodes.table_header : state.schema.nodes.table_cell;
+          newCells.push(cellType.create(null, state.schema.nodes.paragraph.create()));
+        }
+        const newRow = state.schema.nodes.table_row.create(null, newCells);
+
+        // Calculate position to insert (before current row)
+        let insertPos = tablePos + 1;
+        for (let i = 0; i < row; i++) {
+          insertPos += tableNode.child(i).nodeSize;
+        }
+
+        const tr = state.tr.insert(insertPos, newRow);
+        view.dispatch(tr);
+        view.focus();
+        return true;
+      });
+    }, [findCurrentCell, findTableNode]);
+
+    // Insert row below
+    const insertTableRowBelow = useCallback((): boolean => {
+      const editor = crepeRef.current?.editor;
+      if (!editor?.ctx) return false;
+
+      return editor.action(ctx => {
+        const view = ctx.get(editorViewCtx);
+        const { state } = view;
+
+        const cellInfo = findCurrentCell(state);
+        if (!cellInfo) return false;
+
+        const tableInfo = findTableNode(state);
+        if (!tableInfo) return false;
+
+        const { node: tableNode, pos: tablePos } = tableInfo;
+        const { row } = cellInfo;
+
+        // Get number of columns from first row
+        const firstRow = tableNode.child(0);
+        const colCount = firstRow.childCount;
+
+        // Create new row with empty cells (always use table_cell for new rows)
+        const newCells: any[] = [];
+        for (let i = 0; i < colCount; i++) {
+          newCells.push(state.schema.nodes.table_cell.create(null, state.schema.nodes.paragraph.create()));
+        }
+        const newRow = state.schema.nodes.table_row.create(null, newCells);
+
+        // Calculate position to insert (after current row)
+        let insertPos = tablePos + 1;
+        for (let i = 0; i <= row; i++) {
+          insertPos += tableNode.child(i).nodeSize;
+        }
+
+        const tr = state.tr.insert(insertPos, newRow);
+        view.dispatch(tr);
+        view.focus();
+        return true;
+      });
+    }, [findCurrentCell, findTableNode]);
+
+    // Insert column left
+    const insertTableColumnLeft = useCallback((): boolean => {
+      const editor = crepeRef.current?.editor;
+      if (!editor?.ctx) return false;
+
+      return editor.action(ctx => {
+        const view = ctx.get(editorViewCtx);
+        const { state } = view;
+
+        const cellInfo = findCurrentCell(state);
+        if (!cellInfo) return false;
+
+        const tableInfo = findTableNode(state);
+        if (!tableInfo) return false;
+
+        const { node: tableNode, pos: tablePos } = tableInfo;
+        const { col } = cellInfo;
+
+        // Build new rows with inserted column
+        const newRows: any[] = [];
+        for (let rowIdx = 0; rowIdx < tableNode.childCount; rowIdx++) {
+          const rowNode = tableNode.child(rowIdx);
+          const newCells: any[] = [];
+
+          for (let cellIdx = 0; cellIdx < rowNode.childCount; cellIdx++) {
+            // Insert new cell before current column
+            if (cellIdx === col) {
+              // Use table_header for header row (row 0), table_cell for others
+              const cellType = rowIdx === 0 ? state.schema.nodes.table_header : state.schema.nodes.table_cell;
+              newCells.push(cellType.create(null, state.schema.nodes.paragraph.create()));
+            }
+            newCells.push(rowNode.child(cellIdx));
+          }
+
+          newRows.push(state.schema.nodes.table_row.create(null, newCells));
+        }
+
+        // Replace the entire table
+        const newTable = tableNode.type.create(tableNode.attrs, newRows);
+        const tr = state.tr.replaceWith(tablePos, tablePos + tableNode.nodeSize, newTable);
+
+        view.dispatch(tr);
+        view.focus();
+        return true;
+      });
+    }, [findCurrentCell, findTableNode]);
+
+    // Insert column right
+    const insertTableColumnRight = useCallback((): boolean => {
+      const editor = crepeRef.current?.editor;
+      if (!editor?.ctx) return false;
+
+      return editor.action(ctx => {
+        const view = ctx.get(editorViewCtx);
+        const { state } = view;
+
+        const cellInfo = findCurrentCell(state);
+        if (!cellInfo) return false;
+
+        const tableInfo = findTableNode(state);
+        if (!tableInfo) return false;
+
+        const { node: tableNode, pos: tablePos } = tableInfo;
+        const { col } = cellInfo;
+
+        // Build new rows with inserted column
+        const newRows: any[] = [];
+        for (let rowIdx = 0; rowIdx < tableNode.childCount; rowIdx++) {
+          const rowNode = tableNode.child(rowIdx);
+          const newCells: any[] = [];
+
+          for (let cellIdx = 0; cellIdx < rowNode.childCount; cellIdx++) {
+            newCells.push(rowNode.child(cellIdx));
+            // Insert new cell after current column
+            if (cellIdx === col) {
+              // Use table_header for header row (row 0), table_cell for others
+              const cellType = rowIdx === 0 ? state.schema.nodes.table_header : state.schema.nodes.table_cell;
+              newCells.push(cellType.create(null, state.schema.nodes.paragraph.create()));
+            }
+          }
+
+          newRows.push(state.schema.nodes.table_row.create(null, newCells));
+        }
+
+        // Replace the entire table
+        const newTable = tableNode.type.create(tableNode.attrs, newRows);
+        const tr = state.tr.replaceWith(tablePos, tablePos + tableNode.nodeSize, newTable);
+
+        view.dispatch(tr);
+        view.focus();
+        return true;
+      });
+    }, [findCurrentCell, findTableNode]);
+
+    // Move row up
+    const moveTableRowUp = useCallback((): boolean => {
+      const editor = crepeRef.current?.editor;
+      if (!editor?.ctx) return false;
+
+      return editor.action(ctx => {
+        const view = ctx.get(editorViewCtx);
+        const { state } = view;
+
+        const cellInfo = findCurrentCell(state);
+        if (!cellInfo || cellInfo.row === 0) return false;
+
+        const tableInfo = findTableNode(state);
+        if (!tableInfo) return false;
+
+        const { node: tableNode, pos: tablePos } = tableInfo;
+        const { row } = cellInfo;
+
+        // Get the two rows to swap
+        const currentRow = tableNode.child(row);
+        const prevRow = tableNode.child(row - 1);
+
+        // Calculate positions
+        let currentRowPos = tablePos + 1;
+        for (let i = 0; i < row; i++) {
+          currentRowPos += tableNode.child(i).nodeSize;
+        }
+        let prevRowPos = tablePos + 1;
+        for (let i = 0; i < row - 1; i++) {
+          prevRowPos += tableNode.child(i).nodeSize;
+        }
+
+        // Create a fragment with swapped rows
+        const rows: any[] = [];
+        for (let i = 0; i < tableNode.childCount; i++) {
+          if (i === row - 1) {
+            rows.push(currentRow);
+          } else if (i === row) {
+            rows.push(prevRow);
+          } else {
+            rows.push(tableNode.child(i));
+          }
+        }
+
+        // Replace the entire table content
+        const newTable = tableNode.type.create(tableNode.attrs, rows);
+        const tr = state.tr.replaceWith(tablePos, tablePos + tableNode.nodeSize, newTable);
+
+        view.dispatch(tr);
+        view.focus();
+        return true;
+      });
+    }, [findCurrentCell, findTableNode]);
+
+    // Move row down
+    const moveTableRowDown = useCallback((): boolean => {
+      const editor = crepeRef.current?.editor;
+      if (!editor?.ctx) return false;
+
+      return editor.action(ctx => {
+        const view = ctx.get(editorViewCtx);
+        const { state } = view;
+
+        const cellInfo = findCurrentCell(state);
+        if (!cellInfo) return false;
+
+        const tableInfo = findTableNode(state);
+        if (!tableInfo) return false;
+
+        const { node: tableNode, pos: tablePos } = tableInfo;
+        const { row } = cellInfo;
+
+        if (row >= tableNode.childCount - 1) return false;
+
+        // Get the two rows to swap
+        const currentRow = tableNode.child(row);
+        const nextRow = tableNode.child(row + 1);
+
+        // Create a fragment with swapped rows
+        const rows: any[] = [];
+        for (let i = 0; i < tableNode.childCount; i++) {
+          if (i === row) {
+            rows.push(nextRow);
+          } else if (i === row + 1) {
+            rows.push(currentRow);
+          } else {
+            rows.push(tableNode.child(i));
+          }
+        }
+
+        // Replace the entire table content
+        const newTable = tableNode.type.create(tableNode.attrs, rows);
+        const tr = state.tr.replaceWith(tablePos, tablePos + tableNode.nodeSize, newTable);
+
+        view.dispatch(tr);
+        view.focus();
+        return true;
+      });
+    }, [findCurrentCell, findTableNode]);
+
+    // Move column left
+    const moveTableColumnLeft = useCallback((): boolean => {
+      const editor = crepeRef.current?.editor;
+      if (!editor?.ctx) return false;
+
+      return editor.action(ctx => {
+        const view = ctx.get(editorViewCtx);
+        const { state } = view;
+
+        const cellInfo = findCurrentCell(state);
+        if (!cellInfo || cellInfo.col === 0) return false;
+
+        const tableInfo = findTableNode(state);
+        if (!tableInfo) return false;
+
+        const { node: tableNode, pos: tablePos } = tableInfo;
+        const { col } = cellInfo;
+
+        // Build new rows with swapped columns
+        const newRows: any[] = [];
+        for (let rowIdx = 0; rowIdx < tableNode.childCount; rowIdx++) {
+          const rowNode = tableNode.child(rowIdx);
+          const newCells: any[] = [];
+
+          for (let cellIdx = 0; cellIdx < rowNode.childCount; cellIdx++) {
+            if (cellIdx === col - 1) {
+              newCells.push(rowNode.child(col)); // Current column moves left
+            } else if (cellIdx === col) {
+              newCells.push(rowNode.child(col - 1)); // Previous column moves right
+            } else {
+              newCells.push(rowNode.child(cellIdx));
+            }
+          }
+
+          newRows.push(state.schema.nodes.table_row.create(null, newCells));
+        }
+
+        // Replace the entire table
+        const newTable = tableNode.type.create(tableNode.attrs, newRows);
+        const tr = state.tr.replaceWith(tablePos, tablePos + tableNode.nodeSize, newTable);
+
+        view.dispatch(tr);
+        view.focus();
+        return true;
+      });
+    }, [findCurrentCell, findTableNode]);
+
+    // Move column right
+    const moveTableColumnRight = useCallback((): boolean => {
+      const editor = crepeRef.current?.editor;
+      if (!editor?.ctx) return false;
+
+      return editor.action(ctx => {
+        const view = ctx.get(editorViewCtx);
+        const { state } = view;
+
+        const cellInfo = findCurrentCell(state);
+        if (!cellInfo) return false;
+
+        const tableInfo = findTableNode(state);
+        if (!tableInfo) return false;
+
+        const { node: tableNode, pos: tablePos } = tableInfo;
+        const { col } = cellInfo;
+
+        if (col >= tableNode.child(0).childCount - 1) return false;
+
+        // Build new rows with swapped columns
+        const newRows: any[] = [];
+        for (let rowIdx = 0; rowIdx < tableNode.childCount; rowIdx++) {
+          const rowNode = tableNode.child(rowIdx);
+          const newCells: any[] = [];
+
+          for (let cellIdx = 0; cellIdx < rowNode.childCount; cellIdx++) {
+            if (cellIdx === col) {
+              newCells.push(rowNode.child(col + 1)); // Next column moves left
+            } else if (cellIdx === col + 1) {
+              newCells.push(rowNode.child(col)); // Current column moves right
+            } else {
+              newCells.push(rowNode.child(cellIdx));
+            }
+          }
+
+          newRows.push(state.schema.nodes.table_row.create(null, newCells));
+        }
+
+        // Replace the entire table
+        const newTable = tableNode.type.create(tableNode.attrs, newRows);
+        const tr = state.tr.replaceWith(tablePos, tablePos + tableNode.nodeSize, newTable);
+
+        view.dispatch(tr);
+        view.focus();
+        return true;
+      });
+    }, [findCurrentCell, findTableNode]);
+
+    // Delete current row
+    const deleteTableRow = useCallback((): boolean => {
+      const editor = crepeRef.current?.editor;
+      if (!editor?.ctx) return false;
+
+      return editor.action(ctx => {
+        const view = ctx.get(editorViewCtx);
+        const { state } = view;
+        const { $from } = state.selection;
+
+        // Traverse up to find table_row and table
+        let tableNode: any = null;
+        let tablePos = -1;
+        let rowNode: any = null;
+        let rowPos = -1;
+        let rowIndex = -1;
+
+        for (let d = $from.depth; d >= 0; d--) {
+          const node = $from.node(d);
+          if (node.type.name === 'table') {
+            tableNode = node;
+            tablePos = $from.before(d);
+            break;
+          }
+        }
+
+        if (!tableNode) return false;
+
+        for (let d = $from.depth; d >= 0; d--) {
+          const node = $from.node(d);
+          if (node.type.name === 'table_row') {
+            rowNode = node;
+            rowPos = $from.before(d);
+            break;
+          }
+        }
+
+        if (!rowNode) return false;
+
+        // Calculate row index
+        for (let i = 0; i < tableNode.childCount; i++) {
+          let calcPos = tablePos + 1;
+          for (let j = 0; j < i; j++) {
+            calcPos += tableNode.child(j).nodeSize;
+          }
+          if (calcPos === rowPos) {
+            rowIndex = i;
+            break;
+          }
+        }
+
+        if (rowIndex === -1) return false;
+
+        // If table has only one row, delete the entire table
+        if (tableNode.childCount <= 1) {
+          const tr = state.tr.delete(tablePos, tablePos + tableNode.nodeSize);
+          view.dispatch(tr);
+          view.focus();
+          return true;
+        }
+
+        // Delete the row
+        const tr = state.tr.delete(rowPos, rowPos + rowNode.nodeSize);
+        view.dispatch(tr);
+        view.focus();
+        return true;
+      });
+    }, []);
+
+    // Delete current column
+    const deleteTableColumn = useCallback((): boolean => {
+      const editor = crepeRef.current?.editor;
+      if (!editor?.ctx) return false;
+
+      return editor.action(ctx => {
+        const view = ctx.get(editorViewCtx);
+        const { state } = view;
+        const { $from } = state.selection;
+
+        // Traverse up to find table_cell, table_row and table
+        let tableNode: any = null;
+        let tablePos = -1;
+        let rowNode: any = null;
+        let cellNode: any = null;
+        let colIndex = -1;
+
+        for (let d = $from.depth; d >= 0; d--) {
+          const node = $from.node(d);
+          if (node.type.name === 'table') {
+            tableNode = node;
+            tablePos = $from.before(d);
+            break;
+          }
+        }
+
+        if (!tableNode) return false;
+
+        for (let d = $from.depth; d >= 0; d--) {
+          const node = $from.node(d);
+          if (node.type.name === 'table_row') {
+            rowNode = node;
+            break;
+          }
+        }
+
+        if (!rowNode) return false;
+
+        for (let d = $from.depth; d >= 0; d--) {
+          const node = $from.node(d);
+          if (node.type.name === 'table_cell' || node.type.name === 'table_header') {
+            cellNode = node;
+            // Calculate column index
+            const cellPos = $from.before(d);
+            for (let i = 0; i < rowNode.childCount; i++) {
+              let calcPos = $from.before(d - 1) + 1; // +1 for row open token
+              for (let j = 0; j < i; j++) {
+                calcPos += rowNode.child(j).nodeSize;
+              }
+              if (calcPos === cellPos) {
+                colIndex = i;
+                break;
+              }
+            }
+            break;
+          }
+        }
+
+        if (colIndex === -1) return false;
+
+        // Get number of columns
+        const colCount = rowNode.childCount;
+
+        // If table has only one column, delete the entire table
+        if (colCount <= 1) {
+          const tr = state.tr.delete(tablePos, tablePos + tableNode.nodeSize);
+          view.dispatch(tr);
+          view.focus();
+          return true;
+        }
+
+        // Build new rows without the deleted column
+        const newRows: any[] = [];
+        for (let rowIdx = 0; rowIdx < tableNode.childCount; rowIdx++) {
+          const currentRowNode = tableNode.child(rowIdx);
+          const newCells: any[] = [];
+
+          for (let cellIdx = 0; cellIdx < currentRowNode.childCount; cellIdx++) {
+            if (cellIdx !== colIndex) {
+              newCells.push(currentRowNode.child(cellIdx));
+            }
+          }
+
+          newRows.push(state.schema.nodes.table_row.create(null, newCells));
+        }
+
+        // Replace the entire table
+        const newTable = tableNode.type.create(tableNode.attrs, newRows);
+        const tr = state.tr.replaceWith(tablePos, tablePos + tableNode.nodeSize, newTable);
+
+        view.dispatch(tr);
+        view.focus();
+        return true;
+      });
+    }, []);
+
+    // Delete entire table
+    const deleteTable = useCallback((): boolean => {
+      const editor = crepeRef.current?.editor;
+      if (!editor?.ctx) return false;
+
+      return editor.action(ctx => {
+        const view = ctx.get(editorViewCtx);
+        const { state } = view;
+
+        const tableInfo = findTableNode(state);
+        if (!tableInfo) return false;
+
+        const { node: tableNode, pos: tablePos } = tableInfo;
+
+        // Delete the entire table
+        const tr = state.tr.delete(tablePos, tablePos + tableNode.nodeSize);
+        view.dispatch(tr);
+        view.focus();
+        return true;
+      });
+    }, [findTableNode]);
+
     // Expose imperative methods
     useImperativeHandle(ref, () => ({
       getMarkdown: () => crepeRef.current?.getMarkdown() ?? '',
@@ -559,6 +1218,18 @@ export const MilkdownEditor = forwardRef<MilkdownEditorRef, MilkdownEditorProps>
       insertHorizontalRule,
       insertParagraphAbove,
       insertParagraphBelow,
+      // Table operations
+      insertTableRowAbove,
+      insertTableRowBelow,
+      insertTableColumnLeft,
+      insertTableColumnRight,
+      moveTableRowUp,
+      moveTableRowDown,
+      moveTableColumnLeft,
+      moveTableColumnRight,
+      deleteTableRow,
+      deleteTableColumn,
+      deleteTable,
       // Check if there's text selected
       hasSelection: () => {
         const editor = crepeRef.current?.editor;
@@ -569,7 +1240,7 @@ export const MilkdownEditor = forwardRef<MilkdownEditorRef, MilkdownEditorProps>
           return from !== to;
         });
       },
-    }), [isReady, loading, execCommand, toggleCodeBlock, setParagraph, increaseHeadingLevel, decreaseHeadingLevel, insertTable, insertMathBlock, insertCodeBlock, insertTaskList, insertHorizontalRule, insertParagraphAbove, insertParagraphBelow, insertParsedMarkdown]);
+    }), [isReady, loading, execCommand, toggleCodeBlock, setParagraph, increaseHeadingLevel, decreaseHeadingLevel, insertTable, insertMathBlock, insertCodeBlock, insertTaskList, insertHorizontalRule, insertParagraphAbove, insertParagraphBelow, insertParsedMarkdown, insertTableRowAbove, insertTableRowBelow, insertTableColumnLeft, insertTableColumnRight, moveTableRowUp, moveTableRowDown, moveTableColumnLeft, moveTableColumnRight, deleteTableRow, deleteTableColumn, deleteTable]);
 
     // NOTE: We intentionally do NOT have a useEffect to update content when defaultValue changes.
     // The parent component should use the ref's setMarkdown method when switching files.

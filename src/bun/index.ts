@@ -292,6 +292,19 @@ async function main() {
         win.webview.rpc.send.toggleStatusbar({});
         break;
 
+      // Table menu actions
+      case 'table-insert':
+      case 'table-insert-row-above':
+      case 'table-insert-row-below':
+      case 'table-insert-col-left':
+      case 'table-insert-col-right':
+      case 'table-move-row-up':
+      case 'table-move-row-down':
+      case 'table-move-col-left':
+      case 'table-move-col-right':
+      case 'table-delete-row':
+      case 'table-delete-col':
+      case 'table-delete':
       // Paragraph menu actions
       case 'para-heading-1':
       case 'para-heading-2':
@@ -302,7 +315,6 @@ async function main() {
       case 'para-paragraph':
       case 'para-increase-heading':
       case 'para-decrease-heading':
-      case 'para-table':
       case 'para-math-block':
       case 'para-code-block':
       case 'para-quote':
