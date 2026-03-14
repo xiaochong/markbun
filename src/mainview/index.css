@@ -703,3 +703,60 @@ body {
   outline: 2px solid hsl(var(--primary));
   outline-offset: 2px;
 }
+
+/* ===========================================
+   Cursor Styles - Enhanced visibility
+   =========================================== */
+
+/* Main cursor color - slightly softer than pure foreground */
+.milkdown-crepe-container .ProseMirror-focused {
+  --prosemirror-virtual-cursor-color: hsl(var(--foreground) / 0.75) !important;
+}
+
+/* Dark mode cursor adjustments */
+.dark .milkdown-crepe-container .ProseMirror-focused {
+  --prosemirror-virtual-cursor-color: hsl(var(--foreground) / 0.85) !important;
+}
+
+/* Ensure cursor blink animation works everywhere */
+.milkdown-crepe-container .prosemirror-virtual-cursor-animation {
+  animation: prosemirror-virtual-cursor-blink 1s linear infinite !important;
+  animation-delay: 0.5s !important;
+}
+
+/* Make cursor slightly thicker for visibility */
+.milkdown-crepe-container .prosemirror-virtual-cursor {
+  border-left-width: 2px !important;
+  z-index: 100 !important;
+}
+
+/* Ensure cursor is always visible on inline code backgrounds */
+.milkdown-crepe-container .prosemirror-virtual-cursor {
+  /* Use a slightly softer color */
+  border-left-color: hsl(var(--foreground) / 0.75) !important;
+}
+
+.dark .milkdown-crepe-container .prosemirror-virtual-cursor {
+  border-left-color: hsl(var(--foreground) / 0.85) !important;
+}
+
+/* Override any potential hiding of cursor */
+.milkdown-crepe-container .ProseMirror-focused .prosemirror-virtual-cursor {
+  display: block !important;
+  opacity: 1 !important;
+}
+
+/* Hide the L-shaped borders on left/right cursor variants */
+.milkdown-crepe-container .prosemirror-virtual-cursor-left,
+.milkdown-crepe-container .prosemirror-virtual-cursor-right {
+  border-bottom: none !important;
+  border-right: none !important;
+  border-left: 2px solid hsl(var(--foreground) / 0.75) !important;
+  width: 0 !important;
+  transform: translate(-1px) !important;
+}
+
+.dark .milkdown-crepe-container .prosemirror-virtual-cursor-left,
+.dark .milkdown-crepe-container .prosemirror-virtual-cursor-right {
+  border-left-color: hsl(var(--foreground) / 0.85) !important;
+}
