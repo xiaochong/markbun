@@ -60,8 +60,8 @@ function App() {
 
   // Check if markdown contains local images that need processing
   const hasLocalImages = useCallback((content: string): boolean => {
-    // Match ![alt](path) where path is not data: or http/https
-    return /!\[.*?\]\((?!data:|https?:\/\/)[^)]+\)/.test(content);
+    // Match ![alt](path) where path is not data:, blob:, or http/https
+    return /!\[.*?\]\((?!data:|blob:|https?:\/\/)[^)]+\)/.test(content);
   }, []);
 
   // Open file by path

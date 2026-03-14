@@ -6,8 +6,8 @@ const IMAGE_REGEX = /!\[([^\]]*)\]\(([^)]+)\)/g;
 
 // Check if a path is a local file path (not URL)
 function isLocalFilePath(path: string): boolean {
-  // Skip if it's already a data URL or http/https URL
-  if (path.startsWith('data:') || path.startsWith('http://') || path.startsWith('https://')) {
+  // Skip if it's already a data URL, blob URL, or http/https URL
+  if (path.startsWith('data:') || path.startsWith('blob:') || path.startsWith('http://') || path.startsWith('https://')) {
     return false;
   }
   // Check if it's an absolute path (starts with / on Unix or drive letter on Windows)
@@ -35,7 +35,8 @@ function resolvePath(relativePath: string, basePath: string): string {
   return '/' + resolved.join('/');
 }
 
-// Process markdown content and convert local images to base64
+// Process markdown content and convert local images to Blob URLs
+// Uses Blob URLs instead of base64 data URLs for better performance with large images
 export async function processMarkdownImages(
   markdown: string,
   currentFilePath: string | null
@@ -78,10 +79,10 @@ export async function processMarkdownImages(
         };
 
         if (response.success && response.dataUrl) {
-          // Store in cache
-          imageCache.set(absolutePath, response.dataUrl);
+          // Convert base64 to Blob URL for better performance
+          const blobUrl = imageCache.setFromBase64(absolutePath, response.dataUrl);
 
-          const replacement = `![${alt}](${response.dataUrl})`;
+          const replacement = `![${alt}](${blobUrl})`;
           return { fullMatch, replacement };
         }
       } catch (error) {
