@@ -6,6 +6,7 @@ import { join } from 'path';
 import { homedir } from 'os';
 import { readFolder } from './ipc/folders';
 import { getRecentFiles, addRecentFile, removeRecentFile, clearRecentFiles } from './ipc/recentFiles';
+import { spawn } from 'child_process';
 
 const DEV_SERVER_PORT = 5173;
 const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`;
@@ -205,15 +206,32 @@ async function main() {
         },
         showDefaultContextMenu: async () => {
           // Show default context menu with standard editing actions
+          // Note: We use custom actions instead of roles to handle copy/paste in the renderer
+          // This ensures blob URLs are properly converted to original paths
           ContextMenu.showContextMenu([
-            { role: 'undo' },
-            { role: 'redo' },
+            { label: 'Undo', action: 'editor-undo' },
+            { label: 'Redo', action: 'editor-redo' },
             { type: 'separator' },
-            { role: 'cut' },
-            { role: 'copy' },
-            { role: 'paste' },
+            { label: 'Cut', action: 'editor-cut' },
+            { label: 'Copy', action: 'editor-copy' },
+            { label: 'Paste', action: 'editor-paste' },
           ]);
           return { success: true };
+        },
+        writeToClipboard: async ({ text }: { text: string }) => {
+          try {
+            // Use pbcopy on macOS to write to clipboard
+            const proc = spawn('pbcopy', { stdio: ['pipe', 'inherit', 'inherit'] });
+            proc.stdin.write(text);
+            proc.stdin.end();
+            return { success: true };
+          } catch (error) {
+            console.error('Failed to write to clipboard:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error'
+            };
+          }
         },
         // Phase 2: File Management
         readFile: async (params: { path: string }) => {
@@ -426,6 +444,13 @@ async function main() {
       case 'table-delete-row':
       case 'table-delete-col':
       case 'table-delete':
+      // Edit menu actions
+      case 'editor-undo':
+      case 'editor-redo':
+      case 'editor-cut':
+      case 'editor-copy':
+      case 'editor-paste':
+      case 'editor-select-all':
       // Paragraph menu actions
       case 'para-heading-1':
       case 'para-heading-2':

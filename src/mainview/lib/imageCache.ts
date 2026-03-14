@@ -5,15 +5,18 @@
 
 interface CacheEntry {
   blobUrl: string;
+  originalPath: string;
   lastAccessed: number;
 }
 
 class LRUImageCache {
-  private cache: Map<string, CacheEntry>;
+  private cache: Map<string, CacheEntry>; // path -> entry
+  private blobUrlToPath: Map<string, string>; // blobUrl -> path (reverse lookup)
   private maxSize: number;
 
   constructor(maxSize: number = 50) {
     this.cache = new Map();
+    this.blobUrlToPath = new Map();
     this.maxSize = maxSize;
   }
 
@@ -39,10 +42,20 @@ class LRUImageCache {
       this.evictLRU();
     }
 
+    // Remove old reverse mapping if exists
+    const oldEntry = this.cache.get(path);
+    if (oldEntry) {
+      this.blobUrlToPath.delete(oldEntry.blobUrl);
+    }
+
     this.cache.set(path, {
       blobUrl,
+      originalPath: path,
       lastAccessed: Date.now(),
     });
+
+    // Add reverse mapping
+    this.blobUrlToPath.set(blobUrl, path);
   }
 
   /**
@@ -99,6 +112,13 @@ class LRUImageCache {
   }
 
   /**
+   * Get original path from Blob URL
+   */
+  getOriginalPath(blobUrl: string): string | undefined {
+    return this.blobUrlToPath.get(blobUrl);
+  }
+
+  /**
    * Check if path is in cache
    */
   has(path: string): boolean {
@@ -113,6 +133,8 @@ class LRUImageCache {
     if (entry) {
       // Revoke Blob URL to free memory
       URL.revokeObjectURL(entry.blobUrl);
+      // Remove reverse mapping
+      this.blobUrlToPath.delete(entry.blobUrl);
     }
     return this.cache.delete(path);
   }
@@ -126,6 +148,7 @@ class LRUImageCache {
       URL.revokeObjectURL(entry.blobUrl);
     }
     this.cache.clear();
+    this.blobUrlToPath.clear();
   }
 
   /**
@@ -153,6 +176,7 @@ class LRUImageCache {
       const entry = this.cache.get(oldestKey);
       if (entry) {
         URL.revokeObjectURL(entry.blobUrl);
+        this.blobUrlToPath.delete(entry.blobUrl);
       }
       this.cache.delete(oldestKey);
     }

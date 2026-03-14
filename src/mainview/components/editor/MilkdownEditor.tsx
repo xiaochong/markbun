@@ -23,6 +23,7 @@ export const MilkdownEditor = memo(forwardRef<MilkdownEditorRef, MilkdownEditorP
       getMarkdown,
       setMarkdown,
       focus,
+      getSelectedMarkdown,
     } = useCrepeEditor(defaultValue, onChange, setIsReady);
 
     // Theme loading hook
@@ -44,6 +45,7 @@ export const MilkdownEditor = memo(forwardRef<MilkdownEditorRef, MilkdownEditorP
       getMarkdown,
       setMarkdown,
       focus,
+      getSelectedMarkdown,
       isReady: isReady && !loading,
 
       // Formatting commands
@@ -89,6 +91,7 @@ export const MilkdownEditor = memo(forwardRef<MilkdownEditorRef, MilkdownEditorP
       getMarkdown,
       setMarkdown,
       focus,
+      getSelectedMarkdown,
       crepeRef,
     ]);
 

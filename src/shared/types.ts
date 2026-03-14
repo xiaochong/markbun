@@ -135,6 +135,7 @@ export type PingWriteRPC = {
       readImageAsBase64: { params: { path: string }; response: { success: boolean; dataUrl?: string; error?: string } };
       showTableContextMenu: { params: {}; response: { success: boolean } };
       showDefaultContextMenu: { params: {}; response: { success: boolean } };
+      writeToClipboard: { params: { text: string }; response: { success: boolean; error?: string } };
 
       // File management (Phase 2)
       readFile: { params: { path: string }; response: { success: boolean; path?: string; content?: string; error?: string } };

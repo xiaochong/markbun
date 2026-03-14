@@ -15,6 +15,7 @@ export interface MilkdownEditorRef {
   setMarkdown: (markdown: string) => void;
   focus: () => void;
   isReady: boolean;
+  getSelectedMarkdown: () => string | null;
   // Formatting commands
   toggleBold: () => boolean;
   toggleItalic: () => boolean;

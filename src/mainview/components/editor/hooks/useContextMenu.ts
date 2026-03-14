@@ -1,7 +1,18 @@
 import { useEffect, RefObject } from 'react';
 import { Crepe } from '@milkdown/crepe';
-import { editorViewCtx } from '@milkdown/kit/core';
+import { editorViewCtx, serializerCtx, schemaCtx } from '@milkdown/kit/core';
 import { electrobun } from '../../../lib/electrobun';
+
+// Global variable to store selection state before context menu opens
+// This is needed because the selection might be lost when the menu is clicked
+declare global {
+  interface Window {
+    __pendingEditorSelection?: {
+      text: string;
+      hasBlobUrl: boolean;
+    } | null;
+  }
+}
 
 export function useContextMenu(
   crepeRef: RefObject<Crepe | null>,
@@ -18,6 +29,56 @@ export function useContextMenu(
       // Check if click is inside the editor
       const target = e.target as HTMLElement;
       if (!target.closest('.ProseMirror')) return;
+
+      // Save current selection before showing menu
+      // This is important because clicking the menu may cause selection to be lost
+      const selection = window.getSelection();
+      console.log('[ContextMenu] Selection:', selection?.toString().substring(0, 100));
+      console.log('[ContextMenu] isCollapsed:', selection?.isCollapsed);
+
+      if (selection && !selection.isCollapsed) {
+        // Try to get markdown-formatted selection from Milkdown
+        let selectedMarkdown: string | null = null;
+
+        try {
+          const editor = crepeRef.current?.editor;
+          if (editor?.ctx) {
+            // Get ProseMirror view and check selection
+            const view = editor.ctx.get(editorViewCtx);
+            const { from, to, empty } = view.state.selection;
+
+            if (!empty && from !== to) {
+              // Get serializer and schema
+              const serializer = editor.ctx.get(serializerCtx);
+              const schema = editor.ctx.get(schemaCtx);
+
+              // Create a temporary document with the selected content
+              const slice = view.state.selection.content();
+              const doc = schema.topNodeType.createAndFill(undefined, slice.content);
+
+              if (doc) {
+                // Serialize to markdown
+                selectedMarkdown = serializer(doc);
+                console.log('[ContextMenu] Got markdown selection:', selectedMarkdown.substring(0, 200));
+              }
+            }
+          }
+        } catch (e) {
+          console.error('[ContextMenu] Failed to get markdown selection:', e);
+        }
+
+        // Fallback to plain text if markdown extraction failed
+        const textToSave = selectedMarkdown || selection.toString();
+        console.log('[ContextMenu] Saving selection, hasBlobUrl:', textToSave.includes('blob:http'));
+
+        window.__pendingEditorSelection = {
+          text: textToSave,
+          hasBlobUrl: textToSave.includes('blob:http'),
+        };
+      } else {
+        console.log('[ContextMenu] No selection or collapsed');
+        window.__pendingEditorSelection = null;
+      }
 
       // Use the click position to check if it's inside a table
       const isInTableAtClick = editor.action((ctx) => {
@@ -44,8 +105,11 @@ export function useContextMenu(
       if (isInTableAtClick) {
         e.preventDefault();
         electrobun.showTableContextMenu();
+      } else {
+        // Show our custom default menu instead of browser's native menu
+        e.preventDefault();
+        electrobun.showDefaultContextMenu();
       }
-      // Otherwise, let the default browser context menu show
     };
 
     container.addEventListener('contextmenu', handleContextMenu);

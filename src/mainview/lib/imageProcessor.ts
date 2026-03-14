@@ -4,6 +4,9 @@ import { imageCache } from './imageCache';
 // Regex to match markdown image syntax: ![alt](path)
 const IMAGE_REGEX = /!\[([^\]]*)\]\(([^)]+)\)/g;
 
+// Regex to match blob URLs
+const BLOB_URL_REGEX = /blob:https?:\/\/[^/]+\/([a-f0-9-]+)/i;
+
 // Check if a path is a local file path (not URL)
 function isLocalFilePath(path: string): boolean {
   // Skip if it's already a data URL, blob URL, or http/https URL
@@ -102,4 +105,21 @@ export async function processMarkdownImages(
   }
 
   return result;
+}
+
+/**
+ * Convert Blob URLs back to original file paths
+ * Used when saving or copying markdown content
+ */
+export function restoreOriginalImagePaths(markdown: string): string {
+  return markdown.replace(IMAGE_REGEX, (match, alt, url) => {
+    // Check if this is a blob URL
+    if (BLOB_URL_REGEX.test(url)) {
+      const originalPath = imageCache.getOriginalPath(url);
+      if (originalPath) {
+        return `![${alt}](${originalPath})`;
+      }
+    }
+    return match;
+  });
 }

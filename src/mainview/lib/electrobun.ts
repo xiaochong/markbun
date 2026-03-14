@@ -124,6 +124,10 @@ export const electrobun = {
     return await electroview.rpc.request.quickOpen({});
   },
 
+  async writeToClipboard(text: string) {
+    return await electroview.rpc.request.writeToClipboard({ text });
+  },
+
   // Subscribe to messages from main process
   on(event: string, callback: (data?: unknown) => void): () => void {
     const win = window as any;

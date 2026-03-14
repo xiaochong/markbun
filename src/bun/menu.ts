@@ -47,14 +47,14 @@ export function setupMenu(state: ViewMenuState = defaultState): void {
     {
       label: 'Edit',
       submenu: [
-        { label: 'Undo', role: 'undo', accelerator: 'CmdOrCtrl+Z' },
-        { label: 'Redo', role: 'redo', accelerator: 'CmdOrCtrl+Shift+Z' },
+        { label: 'Undo', action: 'editor-undo', accelerator: 'CmdOrCtrl+Z' },
+        { label: 'Redo', action: 'editor-redo', accelerator: 'CmdOrCtrl+Shift+Z' },
         { type: 'separator' },
-        { label: 'Cut', role: 'cut', accelerator: 'CmdOrCtrl+X' },
-        { label: 'Copy', role: 'copy', accelerator: 'CmdOrCtrl+C' },
-        { label: 'Paste', role: 'paste', accelerator: 'CmdOrCtrl+V' },
+        { label: 'Cut', action: 'editor-cut', accelerator: 'CmdOrCtrl+X' },
+        { label: 'Copy', action: 'editor-copy', accelerator: 'CmdOrCtrl+C' },
+        { label: 'Paste', action: 'editor-paste', accelerator: 'CmdOrCtrl+V' },
         { type: 'separator' },
-        { label: 'Select All', role: 'selectAll', accelerator: 'CmdOrCtrl+A' },
+        { label: 'Select All', action: 'editor-select-all', accelerator: 'CmdOrCtrl+A' },
       ],
     },
     {

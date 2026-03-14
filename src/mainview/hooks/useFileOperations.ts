@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { electrobun } from '@/lib/electrobun';
+import { restoreOriginalImagePaths } from '@/lib/imageProcessor';
 
 interface FileState {
   path: string | null;
@@ -119,7 +120,9 @@ export function useFileOperations() {
 
     setSaveStatus('saving');
     try {
-      const result = await electrobun.saveFile(state.content, state.path) as { success: boolean; path?: string; error?: string };
+      // Convert blob URLs back to original paths before saving
+      const contentToSave = restoreOriginalImagePaths(state.content);
+      const result = await electrobun.saveFile(contentToSave, state.path) as { success: boolean; path?: string; error?: string };
 
       if (result.success) {
         setFileState(prev => ({ ...prev, isDirty: false }));
@@ -127,7 +130,7 @@ export function useFileOperations() {
         setTimeout(() => setSaveStatus(null), 2000);
       } else {
         setSaveStatus('error');
-        setTimeout(() => setSaveStatus(null), 2000);
+        setTimeout(() => setSaveStatus(null), 2002);
       }
     } catch (error) {
       console.error('Failed to save file:', error);
@@ -142,7 +145,9 @@ export function useFileOperations() {
 
     setSaveStatus('saving');
     try {
-      const result = await electrobun.saveFileAs(state.content) as { success: boolean; path?: string; error?: string };
+      // Convert blob URLs back to original paths before saving
+      const contentToSave = restoreOriginalImagePaths(state.content);
+      const result = await electrobun.saveFileAs(contentToSave) as { success: boolean; path?: string; error?: string };
 
       if (result.success) {
         setFileState({

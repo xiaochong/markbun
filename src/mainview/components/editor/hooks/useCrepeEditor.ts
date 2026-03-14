@@ -1,10 +1,11 @@
 import { useRef, useState, useCallback } from 'react';
 import { Crepe } from '@milkdown/crepe';
 import { useEditor } from '@milkdown/react';
-import { editorViewCtx, parserCtx } from '@milkdown/kit/core';
+import { editorViewCtx, parserCtx, serializerCtx, schemaCtx } from '@milkdown/kit/core';
 import { clipboard } from '@milkdown/plugin-clipboard';
 import { history } from '@milkdown/plugin-history';
 import { gfm } from '@milkdown/preset-gfm';
+import { clipboardBlobConverter } from '../plugins/clipboardBlobConverter';
 import type { MilkdownEditorProps } from '../types';
 
 const SCROLL_HIDE_DELAY = 800;
@@ -17,6 +18,7 @@ export interface UseCrepeEditorReturn {
   getMarkdown: () => string;
   setMarkdown: (markdown: string) => void;
   focus: () => void;
+  getSelectedMarkdown: () => string | null;
 }
 
 export function useCrepeEditor(
@@ -73,6 +75,8 @@ export function useCrepeEditor(
 
     // Enable clipboard plugin for copy/paste
     crepe.editor.use(clipboard);
+    // Add blob URL converter (must be after clipboard plugin to override its serializer)
+    crepe.editor.use(clipboardBlobConverter);
     // Enable history plugin for undo/redo
     crepe.editor.use(history);
     // Enable GFM (GitHub Flavored Markdown) for table support
@@ -191,6 +195,34 @@ export function useCrepeEditor(
     editorElement?.focus();
   }, []);
 
+  const getSelectedMarkdown = useCallback(() => {
+    const editor = crepeRef.current?.editor;
+    if (!editor?.ctx) return null;
+
+    try {
+      const view = editor.ctx.get(editorViewCtx);
+      const { from, to, empty } = view.state.selection;
+
+      if (empty || from === to) return null;
+
+      // Get serializer and schema
+      const serializer = editor.ctx.get(serializerCtx);
+      const schema = editor.ctx.get(schemaCtx);
+
+      // Create a temporary document with the selected content
+      const slice = view.state.selection.content();
+      const doc = schema.topNodeType.createAndFill(undefined, slice.content);
+
+      if (!doc) return null;
+
+      // Serialize to markdown
+      return serializer(doc);
+    } catch (e) {
+      console.error('Failed to get selected markdown:', e);
+      return null;
+    }
+  }, []);
+
   return {
     crepeRef,
     containerRef,
@@ -199,5 +231,6 @@ export function useCrepeEditor(
     getMarkdown,
     setMarkdown,
     focus,
+    getSelectedMarkdown,
   };
 }
