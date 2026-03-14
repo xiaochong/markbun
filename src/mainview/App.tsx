@@ -11,10 +11,11 @@ function App() {
   const { theme, toggleTheme } = useTheme();
   const [editorContent, setEditorContent] = useState('');
 
-  // Visibility states for UI components (default: TitleBar hidden, Toolbar hidden, StatusBar shown)
+  // Visibility states for UI components (all hidden by default for distraction-free writing)
+  // Users can toggle UI elements via View menu when needed
   const [showTitleBar, setShowTitleBar] = useState(false);
   const [showToolbar, setShowToolbar] = useState(false);
-  const [showStatusBar, setShowStatusBar] = useState(true);
+  const [showStatusBar, setShowStatusBar] = useState(false);
 
   const {
     path,

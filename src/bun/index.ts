@@ -15,7 +15,7 @@ let currentFilePath: string | null = null;
 let viewMenuState: ViewMenuState = {
   showTitleBar: false,
   showToolBar: false,
-  showStatusBar: true,
+  showStatusBar: false,
 };
 
 // Helper to update view menu state and refresh menu

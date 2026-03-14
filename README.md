@@ -13,32 +13,42 @@ PingWrite is an open-source, cross-platform markdown editor designed for seamles
 ## 🚧 Development Status
 
 > **⚠️ Early Development Stage**
-> 
-> PingWrite is currently in active development. The project structure is set up with Electrobun + React + Tailwind CSS, but most features are not yet implemented.
-> 
+>
+> PingWrite is currently in active development. The v0.1.0 MVP has been completed with core editing capabilities.
+>
 > **Current Status:**
 > - ✅ Electrobun desktop framework configured
 > - ✅ React + Vite + Tailwind CSS setup
 > - ✅ Development environment with HMR
-> - 🚧 Milkdown WYSIWYG editor integration (in progress)
-> - ⏳ File explorer sidebar (planned)
-> - ⏳ Toolbar and status bar (planned)
-> - ⏳ Dark mode support (planned)
-> 
+> - ✅ Milkdown WYSIWYG editor integration
+> - ✅ File operations (New, Open, Save, Save As)
+> - ✅ Dark mode support
+> - ✅ Toolbar and status bar (hidden by default)
+> - ⏳ File explorer sidebar (v0.2.0)
+> - ⏳ Outline navigation (v0.2.0)
+>
 > See [ROADMAP.md](./ROADMAP.md) for detailed development phases.
 
-## ✨ Features (Planned)
+## ✨ Features
+
+### Design Philosophy
+
+PingWrite follows a **chromeless editing philosophy** inspired by the pioneering work of [iA Writer](https://ia.net/writer) and [Typora](https://typora.io). The interface is intentionally minimal — all toolbars, title bars, and status bars are hidden by default to eliminate visual distractions and keep you focused on your content.
+
+When you need them, every UI element can be instantly toggled via the **View menu** or keyboard shortcuts. This approach puts the written word at the center of the experience, not the application chrome.
+
+### Core Features
 
 - 🎯 **Seamless WYSIWYG Editing** - Write markdown naturally without distraction
 - ⚡ **Lightning Fast** - Built with Bun and native webviews for <50ms startup
 - 🎨 **Beautiful Typography** - Carefully crafted themes and styles
-- 📁 **File Management** - Built-in file browser with folder support
-- 🔍 **Outline Navigation** - Jump to any heading instantly
-- 🧮 **Math Support** - LaTeX equations with live preview
-- 📊 **Tables** - Intuitive table editing
+- 🖼️ **Chromeless Interface** - Distraction-free writing with all UI elements hidden by default
 - 🌙 **Dark Mode** - Easy on the eyes for night writing
-- 🖼️ **Image Support** - Drag and drop images
-- 💾 **Auto Save** - Never lose your work
+- 📁 **File Management** - Built-in file browser with folder support (planned)
+- 🔍 **Outline Navigation** - Jump to any heading instantly (planned)
+- 🧮 **Math Support** - LaTeX equations with live preview (planned)
+- 📊 **Tables** - Intuitive table editing (planned)
+- 💾 **Auto Save** - Never lose your work (planned)
 - ⌨️ **Keyboard Shortcuts** - Vim mode support (planned)
 
 ## 🚀 Quick Start
@@ -148,6 +158,17 @@ pingwrite/
 3. **Save**: `Cmd/Ctrl + S`
 4. **Save As**: `Cmd/Ctrl + Shift + S`
 
+### Interface Controls
+
+PingWrite uses a **chromeless interface** — all toolbars and UI elements are hidden by default for distraction-free writing. Toggle UI elements via the **View menu** or shortcuts:
+
+| UI Element | Menu Command | Default State |
+|------------|--------------|---------------|
+| Title Bar | `View → Show Title Bar` | Hidden |
+| Toolbar | `View → Show Tool Bar` | Hidden |
+| Status Bar | `View → Show Status Bar` | Hidden |
+| Dark Mode | `View → Toggle Dark Mode` | `Cmd/Ctrl + Shift + T` |
+
 ### Markdown Shortcuts
 
 | Action | Shortcut |
@@ -244,11 +265,11 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 ## 📝 Roadmap
 
-### v0.1.0 (MVP)
-- [ ] Basic WYSIWYG editing
-- [ ] File open/save
-- [ ] Markdown syntax support
-- [ ] Dark mode
+### v0.1.0 (MVP) ✅ Completed
+- [x] Basic WYSIWYG editing
+- [x] File open/save
+- [x] Markdown syntax support
+- [x] Dark mode
 
 ### v0.2.0
 - [ ] File explorer sidebar

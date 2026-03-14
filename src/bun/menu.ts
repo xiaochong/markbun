@@ -8,11 +8,12 @@ export interface ViewMenuState {
   showStatusBar: boolean;
 }
 
-// Default state: TitleBar hidden, ToolBar hidden, StatusBar shown
+// Default state: all UI chrome hidden for distraction-free writing experience
+// Users can enable specific UI elements via View menu based on their workflow needs
 const defaultState: ViewMenuState = {
   showTitleBar: false,
   showToolBar: false,
-  showStatusBar: true,
+  showStatusBar: false,
 };
 
 export function setupMenu(state: ViewMenuState = defaultState): void {

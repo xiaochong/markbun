@@ -7,7 +7,7 @@ This document outlines the development phases for PingWrite, from MVP to v1.0.
 | Phase | Version | Focus | Status |
 |-------|---------|-------|--------|
 | Phase 0 | v0.0.x | Project Setup | ✅ Complete |
-| Phase 1 | v0.1.0 | MVP - Core Editor | 🚧 In Progress |
+| Phase 1 | v0.1.0 | MVP - Core Editor | ✅ Complete |
 | Phase 2 | v0.2.0 | File Management | ⏳ Planned |
 | Phase 3 | v0.3.0 | Enhanced Editing | ⏳ Planned |
 | Phase 4 | v1.0.0 | Production Ready | ⏳ Planned |
@@ -32,10 +32,11 @@ This document outlines the development phases for PingWrite, from MVP to v1.0.
 
 ---
 
-## 🚧 Phase 1: MVP - Core Editor (v0.1.0)
+## ✅ Phase 1: MVP - Core Editor (v0.1.0)
 
-**Status:** In Progress  
+**Status:** Complete
 **Target:** Basic working editor with markdown support
+**Design Philosophy:** Chromeless interface - all UI elements (toolbar, title bar, status bar) are hidden by default to provide a distraction-free writing experience. Users can toggle individual elements via the View menu based on their workflow needs.
 
 ### Goals
 - Integrate Milkdown WYSIWYG editor
@@ -45,37 +46,37 @@ This document outlines the development phases for PingWrite, from MVP to v1.0.
 ### Tasks
 
 #### Editor Core
-- [ ] Install and configure Milkdown
-  - [ ] Core editor with commonmark preset
-  - [ ] GFM (GitHub Flavored Markdown) support
-  - [ ] History plugin (undo/redo)
-  - [ ] Clipboard plugin (copy/paste)
-- [ ] Create MilkdownEditor React component
-- [ ] Implement editor styles (seamless editing experience)
+- [x] Install and configure Milkdown
+  - [x] Core editor with commonmark preset
+  - [x] GFM (GitHub Flavored Markdown) support
+  - [x] History plugin (undo/redo)
+  - [x] Clipboard plugin (copy/paste)
+- [x] Create MilkdownEditor React component
+- [x] Implement editor styles (seamless editing experience)
 
 #### File Operations
-- [ ] IPC handlers for file operations
-  - [ ] `file:open` - Open file dialog and read content
-  - [ ] `file:save` - Save current content
-  - [ ] `file:saveAs` - Save with new name
-- [ ] Menu items (New, Open, Save, Save As)
-- [ ] Keyboard shortcuts (Ctrl/Cmd + N, O, S, Shift+S)
+- [x] IPC handlers for file operations
+  - [x] `file:open` - Open file dialog and read content
+  - [x] `file:save` - Save current content
+  - [x] `file:saveAs` - Save with new name
+- [x] Menu items (New, Open, Save, Save As)
+- [x] Keyboard shortcuts (Ctrl/Cmd + N, O, S, Shift+S)
 
 #### Basic UI
-- [ ] Simple toolbar with format buttons
-  - [ ] Bold, Italic, Code
-  - [ ] Heading 1, 2, 3
-  - [ ] Bullet list, Numbered list
-  - [ ] Quote, Link
-- [ ] Status bar
-  - [ ] Word count
-  - [ ] Save status indicator
-- [ ] Title bar with document name
+- [x] Simple toolbar with format buttons
+  - [x] Bold, Italic, Code
+  - [x] Heading 1, 2, 3
+  - [x] Bullet list, Numbered list
+  - [x] Quote, Link
+- [x] Status bar
+  - [x] Word count
+  - [x] Save status indicator
+- [x] Title bar with document name
 
 #### Theming
-- [ ] Light mode default theme
-- [ ] Basic dark mode support
-- [ ] CSS variables for theming
+- [x] Light mode default theme
+- [x] Basic dark mode support
+- [x] CSS variables for theming
 
 ---
 
@@ -196,4 +197,12 @@ This document outlines the development phases for PingWrite, from MVP to v1.0.
 - Features may be added or removed based on feedback
 - Security and performance are considerations at every phase
 
-*Last updated: 2026-03-09*
+### Design Principles
+
+**Chromeless Interface**: PingWrite prioritizes content over chrome. All UI elements (toolbar, title bar, status bar) are hidden by default to minimize visual distraction. This design decision follows the philosophy pioneered by iA Writer and Typora — the editor should be invisible, letting the writer focus entirely on their words.
+
+Users retain full control: every UI element can be toggled on demand via the View menu or keyboard shortcuts. This approach accommodates different workflows while maintaining a clean, minimal default state.
+
+---
+
+*Last updated: 2026-03-14*
