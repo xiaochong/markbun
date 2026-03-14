@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect, useState, useMemo } from 'react';
+import { useRef, useCallback, useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { MilkdownEditor, MilkdownEditorRef } from './components/editor';
 import { Toolbar, StatusBar, TitleBar, Sidebar } from './components/layout';
@@ -11,8 +11,9 @@ import { useSidebar } from './hooks/useSidebar';
 import { useFileExplorer } from './hooks/useFileExplorer';
 import { useOutline } from './hooks/useOutline';
 import { useQuickOpen } from './hooks/useQuickOpen';
+import { useClipboard } from './hooks/useClipboard';
 import { electrobun } from './lib/electrobun';
-import { processMarkdownImages, restoreOriginalImagePaths } from './lib/imageProcessor';
+import { processMarkdownImages } from './lib/imageProcessor';
 import type { FileNode } from '@/shared/types';
 
 function App() {
@@ -42,6 +43,9 @@ function App() {
     handleSave,
     handleSaveAs,
   } = useFileOperations();
+
+  // Clipboard operations with blob URL handling
+  const clipboard = useClipboard(editorRef);
 
   // Handle editor content changes
   const handleEditorChange = useCallback((markdown: string) => {
@@ -238,105 +242,52 @@ function App() {
     });
   }, []);
 
-  // Paragraph menu event listener - unified handler
+  // Menu action handler
   useEffect(() => {
     return electrobun.on('menuAction', async (data) => {
       const { action } = data as { action: string };
-      console.log('[App] menuAction received:', action);
 
+      // Paragraph formatting
+      const paragraphActions: Record<string, () => void> = {
+        'para-heading-1': () => editorRef.current?.toggleHeading(1),
+        'para-heading-2': () => editorRef.current?.toggleHeading(2),
+        'para-heading-3': () => editorRef.current?.toggleHeading(3),
+        'para-heading-4': () => editorRef.current?.toggleHeading(4),
+        'para-heading-5': () => editorRef.current?.toggleHeading(5),
+        'para-heading-6': () => editorRef.current?.toggleHeading(6),
+        'para-paragraph': () => editorRef.current?.setParagraph(),
+        'para-increase-heading': () => editorRef.current?.increaseHeadingLevel(),
+        'para-decrease-heading': () => editorRef.current?.decreaseHeadingLevel(),
+        'para-math-block': () => editorRef.current?.insertMathBlock(),
+        'para-code-block': () => editorRef.current?.insertCodeBlock(),
+        'para-quote': () => editorRef.current?.toggleQuote(),
+        'para-ordered-list': () => editorRef.current?.toggleOrderedList(),
+        'para-unordered-list': () => editorRef.current?.toggleList(),
+        'para-task-list': () => editorRef.current?.insertTaskList(),
+        'para-insert-above': () => editorRef.current?.insertParagraphAbove(),
+        'para-insert-below': () => editorRef.current?.insertParagraphBelow(),
+        'para-horizontal-rule': () => editorRef.current?.insertHorizontalRule(),
+        'table-insert': () => editorRef.current?.insertTable(),
+        'table-insert-row-above': () => editorRef.current?.insertTableRowAbove(),
+        'table-insert-row-below': () => editorRef.current?.insertTableRowBelow(),
+        'table-insert-col-left': () => editorRef.current?.insertTableColumnLeft(),
+        'table-insert-col-right': () => editorRef.current?.insertTableColumnRight(),
+        'table-move-row-up': () => editorRef.current?.moveTableRowUp(),
+        'table-move-row-down': () => editorRef.current?.moveTableRowDown(),
+        'table-move-col-left': () => editorRef.current?.moveTableColumnLeft(),
+        'table-move-col-right': () => editorRef.current?.moveTableColumnRight(),
+        'table-delete-row': () => editorRef.current?.deleteTableRow(),
+        'table-delete-col': () => editorRef.current?.deleteTableColumn(),
+        'table-delete': () => editorRef.current?.deleteTable(),
+      };
+
+      if (paragraphActions[action]) {
+        paragraphActions[action]();
+        return;
+      }
+
+      // Edit actions
       switch (action) {
-        case 'para-heading-1':
-          editorRef.current?.toggleHeading(1);
-          break;
-        case 'para-heading-2':
-          editorRef.current?.toggleHeading(2);
-          break;
-        case 'para-heading-3':
-          editorRef.current?.toggleHeading(3);
-          break;
-        case 'para-heading-4':
-          editorRef.current?.toggleHeading(4);
-          break;
-        case 'para-heading-5':
-          editorRef.current?.toggleHeading(5);
-          break;
-        case 'para-heading-6':
-          editorRef.current?.toggleHeading(6);
-          break;
-        case 'para-paragraph':
-          editorRef.current?.setParagraph();
-          break;
-        case 'para-increase-heading':
-          editorRef.current?.increaseHeadingLevel();
-          break;
-        case 'para-decrease-heading':
-          editorRef.current?.decreaseHeadingLevel();
-          break;
-        case 'table-insert':
-          editorRef.current?.insertTable();
-          break;
-        case 'table-insert-row-above':
-          editorRef.current?.insertTableRowAbove();
-          break;
-        case 'table-insert-row-below':
-          editorRef.current?.insertTableRowBelow();
-          break;
-        case 'table-insert-col-left':
-          editorRef.current?.insertTableColumnLeft();
-          break;
-        case 'table-insert-col-right':
-          editorRef.current?.insertTableColumnRight();
-          break;
-        case 'table-move-row-up':
-          editorRef.current?.moveTableRowUp();
-          break;
-        case 'table-move-row-down':
-          editorRef.current?.moveTableRowDown();
-          break;
-        case 'table-move-col-left':
-          editorRef.current?.moveTableColumnLeft();
-          break;
-        case 'table-move-col-right':
-          editorRef.current?.moveTableColumnRight();
-          break;
-        case 'table-delete-row':
-          editorRef.current?.deleteTableRow();
-          break;
-        case 'table-delete-col':
-          editorRef.current?.deleteTableColumn();
-          break;
-        case 'table-delete':
-          editorRef.current?.deleteTable();
-          break;
-        case 'para-math-block':
-          editorRef.current?.insertMathBlock();
-          break;
-        case 'para-code-block':
-          editorRef.current?.insertCodeBlock();
-          break;
-        case 'para-quote':
-          editorRef.current?.toggleQuote();
-          break;
-        case 'para-ordered-list':
-          editorRef.current?.toggleOrderedList();
-          break;
-        case 'para-unordered-list':
-          editorRef.current?.toggleList();
-          break;
-        case 'para-task-list':
-          editorRef.current?.insertTaskList();
-          break;
-        case 'para-insert-above':
-          editorRef.current?.insertParagraphAbove();
-          break;
-        case 'para-insert-below':
-          editorRef.current?.insertParagraphBelow();
-          break;
-        case 'para-horizontal-rule':
-          editorRef.current?.insertHorizontalRule();
-          break;
-
-        // Context menu / Edit menu editing actions
         case 'editor-undo':
           editorRef.current?.focus();
           document.execCommand('undo');
@@ -345,83 +296,12 @@ function App() {
           editorRef.current?.focus();
           document.execCommand('redo');
           break;
-        case 'editor-cut': {
-          console.log('[App] editor-cut from menu');
-          // Get selection directly
-          let selectedText: string | null = null;
-
-          // Try editor selection first
-          const editorSelection = editorRef.current?.getSelectedMarkdown?.();
-          console.log('[App] editorSelection:', editorSelection?.substring(0, 50));
-          if (editorSelection) {
-            selectedText = editorSelection;
-          }
-
-          // Fallback to window selection
-          if (!selectedText) {
-            const selection = window.getSelection();
-            console.log('[App] window selection:', selection?.toString().substring(0, 50));
-            if (selection && !selection.isCollapsed) {
-              selectedText = selection.toString();
-            }
-          }
-
-          console.log('[App] selectedText for cut:', selectedText?.substring(0, 50));
-
-          if (selectedText) {
-            const textToCopy = selectedText.includes('blob:http')
-              ? restoreOriginalImagePaths(selectedText)
-              : selectedText;
-
-            try {
-              const result = await electrobun.writeToClipboard(textToCopy) as { success: boolean };
-              console.log('[App] Cut result:', result);
-              if (result.success) {
-                document.execCommand('delete');
-              }
-            } catch (e) {
-              console.error('[App] Cut failed:', e);
-            }
-          }
+        case 'editor-cut':
+          await clipboard.cut();
           break;
-        }
-        case 'editor-copy': {
-          console.log('[App] editor-copy from menu');
-          // Get selection directly
-          let selectedText: string | null = null;
-
-          // Try editor selection first
-          const editorSelection = editorRef.current?.getSelectedMarkdown?.();
-          console.log('[App] editorSelection:', editorSelection?.substring(0, 50));
-          if (editorSelection) {
-            selectedText = editorSelection;
-          }
-
-          // Fallback to window selection
-          if (!selectedText) {
-            const selection = window.getSelection();
-            console.log('[App] window selection:', selection?.toString().substring(0, 50));
-            if (selection && !selection.isCollapsed) {
-              selectedText = selection.toString();
-            }
-          }
-
-          console.log('[App] selectedText for copy:', selectedText?.substring(0, 50));
-
-          if (selectedText) {
-            const textToCopy = selectedText.includes('blob:http')
-              ? restoreOriginalImagePaths(selectedText)
-              : selectedText;
-
-            try {
-              const result = await electrobun.writeToClipboard(textToCopy);
-              console.log('[App] Copy result:', result);
-            } catch (e) {
-              console.error('[App] Copy failed:', e);
-            }
-          }
+        case 'editor-copy':
+          await clipboard.copy();
           break;
-        }
         case 'editor-paste':
           editorRef.current?.focus();
           document.execCommand('paste');
@@ -432,7 +312,7 @@ function App() {
           break;
       }
     });
-  }, []);
+  }, [clipboard]);
 
   // Toolbar action handlers
   const handleBold = useCallback(() => editorRef.current?.toggleBold(), []);
@@ -444,131 +324,57 @@ function App() {
   const handleList = useCallback(() => editorRef.current?.toggleList(), []);
   const handleOrderedList = useCallback(() => editorRef.current?.toggleOrderedList(), []);
 
-  // Store callbacks in ref to avoid stale closures in keyboard shortcuts
-  const callbacksRef = useRef({
-    handleSave,
-    handleSaveAs,
-    handleOpen,
-    updateContent,
-    setEditorContent,
-    quickOpenOpen: quickOpen.open,
-    sidebarToggle: sidebar.toggle,
-  });
-
-  // Keep callbacksRef up to date
-  useEffect(() => {
-    callbacksRef.current = {
-      handleSave,
-      handleSaveAs,
-      handleOpen,
-      updateContent,
-      setEditorContent,
-      quickOpenOpen: quickOpen.open,
-      sidebarToggle: sidebar.toggle,
-    };
-  }, [handleSave, handleSaveAs, handleOpen, updateContent, quickOpen.open, sidebar.toggle]);
-
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
       const cmdKey = isMac ? e.metaKey : e.ctrlKey;
 
-      if (cmdKey) {
-        const { handleSave, handleSaveAs, handleOpen, updateContent, setEditorContent, quickOpenOpen, sidebarToggle } = callbacksRef.current;
+      if (!cmdKey) return;
 
-        switch (e.key.toLowerCase()) {
-          case 's':
-            e.preventDefault();
-            if (e.shiftKey) {
-              handleSaveAs();
-            } else {
-              handleSave();
-            }
-            break;
-          case 'o':
-            e.preventDefault();
-            handleOpen();
-            break;
-          case 'n':
-            e.preventDefault();
-            updateContent('');
-            setEditorContent('');
-            if (editorRef.current?.isReady) {
-              editorRef.current.setMarkdown('');
-            }
-            break;
-          case 'p':
-            e.preventDefault();
-            quickOpenOpen();
-            break;
-          case 'b':
-            e.preventDefault();
-            sidebarToggle();
-            break;
-          case 'c': {
-            // Intercept Cmd+C to handle blob URL conversion
-            e.preventDefault();
-
-            // Get selection directly
-            let selectedText: string | null = null;
-            const editorSelection = editorRef.current?.getSelectedMarkdown?.();
-            if (editorSelection) {
-              selectedText = editorSelection;
-            }
-            if (!selectedText) {
-              const selection = window.getSelection();
-              if (selection && !selection.isCollapsed) {
-                selectedText = selection.toString();
-              }
-            }
-            if (selectedText) {
-              const textToCopy = selectedText.includes('blob:http')
-                ? restoreOriginalImagePaths(selectedText)
-                : selectedText;
-              void electrobun.writeToClipboard(textToCopy);
-            }
-            break;
+      switch (e.key.toLowerCase()) {
+        case 's':
+          e.preventDefault();
+          if (e.shiftKey) {
+            handleSaveAs();
+          } else {
+            handleSave();
           }
-          case 'x': {
-            // Intercept Cmd+X to handle blob URL conversion
-            e.preventDefault();
-
-            // Get selection directly
-            let selectedText: string | null = null;
-            const editorSelection = editorRef.current?.getSelectedMarkdown?.();
-            if (editorSelection) {
-              selectedText = editorSelection;
-            }
-            if (!selectedText) {
-              const selection = window.getSelection();
-              if (selection && !selection.isCollapsed) {
-                selectedText = selection.toString();
-              }
-            }
-            if (selectedText) {
-              const textToCopy = selectedText.includes('blob:http')
-                ? restoreOriginalImagePaths(selectedText)
-                : selectedText;
-              void electrobun.writeToClipboard(textToCopy).then((result: { success: boolean }) => {
-                if (result.success) {
-                  document.execCommand('delete');
-                }
-              });
-            }
-            break;
+          break;
+        case 'o':
+          e.preventDefault();
+          handleOpen();
+          break;
+        case 'n':
+          e.preventDefault();
+          updateContent('');
+          setEditorContent('');
+          if (editorRef.current?.isReady) {
+            editorRef.current.setMarkdown('');
           }
-          case 'v':
-          case 'a':
-          case 'z':
-            return;
-        }
+          break;
+        case 'p':
+          e.preventDefault();
+          quickOpen.open();
+          break;
+        case 'b':
+          e.preventDefault();
+          sidebar.toggle();
+          break;
+        case 'c':
+          e.preventDefault();
+          void clipboard.copy();
+          break;
+        case 'x':
+          e.preventDefault();
+          void clipboard.cut();
+          break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [handleSave, handleSaveAs, handleOpen, updateContent, quickOpen.open, sidebar.toggle, clipboard]);
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
