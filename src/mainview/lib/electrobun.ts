@@ -79,6 +79,14 @@ export const electrobun = {
     return await electroview.rpc.request.readImageAsBase64({ path });
   },
 
+  async showTableContextMenu() {
+    return await electroview.rpc.request.showTableContextMenu({});
+  },
+
+  async showDefaultContextMenu() {
+    return await electroview.rpc.request.showDefaultContextMenu({});
+  },
+
   // Subscribe to messages from main process
   on(event: string, callback: (data?: unknown) => void): () => void {
     const win = window as any;

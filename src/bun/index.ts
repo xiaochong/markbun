@@ -1,4 +1,4 @@
-import { BrowserWindow, BrowserView, Updater, Utils, ApplicationMenu } from 'electrobun/bun';
+import { BrowserWindow, BrowserView, Updater, Utils, ApplicationMenu, ContextMenu } from 'electrobun/bun';
 import { setupMenu, type ViewMenuState } from './menu';
 import type { PingWriteRPC } from '../shared/types';
 import { readFile, writeFile, stat } from 'fs/promises';
@@ -179,6 +179,39 @@ async function main() {
             };
           }
         },
+        showTableContextMenu: async () => {
+          // Show context menu for table operations
+          ContextMenu.showContextMenu([
+            { label: 'Insert Row Above', action: 'table-insert-row-above' },
+            { label: 'Insert Row Below', action: 'table-insert-row-below' },
+            { type: 'separator' },
+            { label: 'Insert Column Left', action: 'table-insert-col-left' },
+            { label: 'Insert Column Right', action: 'table-insert-col-right' },
+            { type: 'separator' },
+            { label: 'Move Row Up', action: 'table-move-row-up' },
+            { label: 'Move Row Down', action: 'table-move-row-down' },
+            { type: 'separator' },
+            { label: 'Move Column Left', action: 'table-move-col-left' },
+            { label: 'Move Column Right', action: 'table-move-col-right' },
+            { type: 'separator' },
+            { label: 'Delete Row', action: 'table-delete-row' },
+            { label: 'Delete Column', action: 'table-delete-col' },
+            { label: 'Delete Table', action: 'table-delete' },
+          ]);
+          return { success: true };
+        },
+        showDefaultContextMenu: async () => {
+          // Show default context menu with standard editing actions
+          ContextMenu.showContextMenu([
+            { role: 'undo' },
+            { role: 'redo' },
+            { type: 'separator' },
+            { role: 'cut' },
+            { role: 'copy' },
+            { role: 'paste' },
+          ]);
+          return { success: true };
+        },
       },
       messages: {},
     },
@@ -194,6 +227,14 @@ async function main() {
       y: 200,
     },
     rpc,
+  });
+
+  // Handle context menu clicks
+  ContextMenu.on('context-menu-clicked', (event: { data: { action: string } }) => {
+    const action = event.data.action;
+    // Forward context menu actions to renderer
+    // @ts-ignore
+    win.webview.rpc.send.menuAction({ action });
   });
 
   // Handle menu actions
