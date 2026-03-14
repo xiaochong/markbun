@@ -133,6 +133,12 @@ export function useCrepeEditor(
     const editor = crepeRef.current?.editor;
     if (!editor?.ctx) return;
 
+    // Reset scroll position to top before setting content
+    const container = containerRef.current;
+    if (container) {
+      container.scrollTop = 0;
+    }
+
     try {
       const lines = markdown.split('\n');
       const totalLines = lines.length;
@@ -147,6 +153,18 @@ export function useCrepeEditor(
         view.dispatch(
           view.state.tr.replaceWith(0, view.state.doc.content.size, doc.content)
         );
+
+        // Ensure scroll is at top after content is set
+        requestAnimationFrame(() => {
+          if (container) {
+            container.scrollTop = 0;
+          }
+          // Also try to scroll the ProseMirror editor element
+          const editorElement = container?.querySelector('.ProseMirror') as HTMLElement | null;
+          if (editorElement) {
+            editorElement.scrollTop = 0;
+          }
+        });
         return;
       }
 
@@ -203,6 +221,23 @@ export function useCrepeEditor(
       } else {
         setTimeout(loadNextChunk, 50);
       }
+
+      // After all chunks are loaded, ensure scroll is at top
+      const resetScrollToTop = () => {
+        requestAnimationFrame(() => {
+          if (container) {
+            container.scrollTop = 0;
+          }
+          const editorElement = container?.querySelector('.ProseMirror') as HTMLElement | null;
+          if (editorElement) {
+            editorElement.scrollTop = 0;
+          }
+        });
+      };
+
+      // Schedule scroll reset after chunks should be loaded (approximate)
+      const estimatedLoadTime = Math.ceil(remainingLines.length / CHUNK_SIZE_LINES) * 60;
+      setTimeout(resetScrollToTop, estimatedLoadTime);
 
     } catch (e) {
       console.error('Set content error:', e);
