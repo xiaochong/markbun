@@ -31,10 +31,13 @@ export const FileExplorer = memo(function FileExplorer({
     onFileClick(node);
   }, [onSelectFile, onFileClick]);
 
+  // Get root directory name from path
+  const rootName = rootPath ? rootPath.split('/').pop() || rootPath : null;
+
   return (
     <div className="flex flex-col h-full">
       {/* Content */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto scrollbar-auto">
         {isLoading && (
           <div className="flex items-center justify-center h-20">
             <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -64,15 +67,24 @@ export const FileExplorer = memo(function FileExplorer({
           </div>
         )}
 
-        {!isLoading && !error && nodes.length > 0 && (
-          <FileTree
-            nodes={nodes}
-            expandedPaths={expandedPaths}
-            selectedPath={selectedPath}
-            onToggleFolder={onToggleFolder}
-            onFileClick={handleFileClick}
-            level={0}
-          />
+        {!isLoading && !error && nodes.length > 0 && rootPath && rootName && (
+          <div className="select-none">
+            {/* Root Directory Name - Typora style */}
+            <div className="flex items-center gap-[6px] py-[3px] px-3 text-[12.5px] font-medium text-foreground/90">
+              <FolderIcon />
+              <span className="truncate">{rootName}</span>
+            </div>
+
+            {/* Children - folders and files at same level */}
+            <FileTree
+              nodes={nodes}
+              expandedPaths={expandedPaths}
+              selectedPath={selectedPath}
+              onToggleFolder={onToggleFolder}
+              onFileClick={handleFileClick}
+              level={1}
+            />
+          </div>
         )}
       </div>
     </div>
@@ -92,6 +104,15 @@ function FolderClosedIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+    </svg>
+  );
+}
+
+// Folder Icon for root directory (Typora style - outlined)
+function FolderIcon() {
+  return (
+    <svg className="w-4 h-4 text-blue-500/80 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+      <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
     </svg>
   );
 }

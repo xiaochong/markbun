@@ -20,13 +20,15 @@ export const Outline = memo(function Outline({ headings, activeId, onHeadingClic
   }
 
   return (
-    <div className="py-1">
-      <OutlineTree
-        nodes={headings}
-        activeId={activeId}
-        onHeadingClick={onHeadingClick}
-        level={0}
-      />
+    <div className="h-full overflow-auto scrollbar-thin scrollbar-auto">
+      <div className="py-1">
+        <OutlineTree
+          nodes={headings}
+          activeId={activeId}
+          onHeadingClick={onHeadingClick}
+          level={0}
+        />
+      </div>
     </div>
   );
 });

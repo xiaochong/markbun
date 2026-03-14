@@ -54,15 +54,15 @@ function FileTreeNode({
 }: FileTreeNodeProps) {
   const isExpanded = expandedPaths.has(node.path);
   const isSelected = selectedPath === node.path;
-  // Typora style: 12px per level, + 4px base padding
-  const paddingLeft = level * 12 + 4;
+  // Typora style: 12px per level, level 1 starts at 12px (under root folder icon)
+  const paddingLeft = level * 12;
 
   if (node.type === 'folder') {
     return (
       <div>
         <div
           className={cn(
-            'flex items-center gap-[2px] py-[2px] pr-2 text-[12.5px] cursor-pointer hover:bg-accent/40 transition-colors leading-tight',
+            'flex items-center gap-[6px] py-[2px] pr-2 text-[12.5px] cursor-pointer hover:bg-accent/40 transition-colors leading-tight',
             isSelected && 'bg-accent/60'
           )}
           style={{ paddingLeft }}
@@ -106,11 +106,11 @@ function FileTreeNode({
   );
 }
 
-// Chevron Icon (smaller, more compact)
+// Chevron Icon - same width as file placeholder for alignment
 function ChevronIcon({ expanded }: { expanded: boolean }) {
   return (
     <svg
-      className={cn('w-3 h-3 text-muted-foreground/70 transition-transform flex-shrink-0', expanded && 'rotate-90')}
+      className={cn('w-4 h-3 text-muted-foreground/70 transition-transform flex-shrink-0', expanded && 'rotate-90')}
       fill="none"
       stroke="currentColor"
       viewBox="0 0 24 24"
