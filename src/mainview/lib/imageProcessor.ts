@@ -1,4 +1,5 @@
 import { electrobun } from './electrobun';
+import { imageCache } from './imageCache';
 
 // Regex to match markdown image syntax: ![alt](path)
 const IMAGE_REGEX = /!\[([^\]]*)\]\(([^)]+)\)/g;
@@ -62,6 +63,13 @@ export async function processMarkdownImages(
       // Resolve relative path
       const absolutePath = currentFilePath ? resolvePath(path, currentFilePath) : path;
 
+      // Check cache first
+      const cached = imageCache.get(absolutePath);
+      if (cached) {
+        const replacement = `![${alt}](${cached})`;
+        return { fullMatch, replacement };
+      }
+
       try {
         const response = await electrobun.readImageAsBase64(absolutePath) as {
           success: boolean;
@@ -70,6 +78,9 @@ export async function processMarkdownImages(
         };
 
         if (response.success && response.dataUrl) {
+          // Store in cache
+          imageCache.set(absolutePath, response.dataUrl);
+
           const replacement = `![${alt}](${response.dataUrl})`;
           return { fullMatch, replacement };
         }

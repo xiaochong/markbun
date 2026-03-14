@@ -58,6 +58,12 @@ function App() {
     quickOpen.close();
   }
 
+  // Check if markdown contains local images that need processing
+  const hasLocalImages = useCallback((content: string): boolean => {
+    // Match ![alt](path) where path is not data: or http/https
+    return /!\[.*?\]\((?!data:|https?:\/\/)[^)]+\)/.test(content);
+  }, []);
+
   // Open file by path
   const openFileByPath = useCallback(async (filePath: string) => {
     try {
@@ -76,21 +82,26 @@ function App() {
         // Update selected file in file explorer (highlight current file)
         fileExplorer.selectFile(result.path);
 
-        // Show content immediately for instant response
-        if (editorRef.current?.isReady) {
-          editorRef.current.setMarkdown(result.content);
-          setEditorContent(result.content);
-        }
+        // Check if content has local images
+        const needsImageProcessing = hasLocalImages(result.content);
 
-        // Process images in background for better performance
-        processMarkdownImages(result.content, result.path).then(processedContent => {
-          if (editorRef.current?.isReady && processedContent !== result.content) {
+        if (needsImageProcessing) {
+          // Process images first, then render once
+          const processedContent = await processMarkdownImages(result.content, result.path);
+
+          if (editorRef.current?.isReady) {
             editorRef.current.setMarkdown(processedContent);
             setEditorContent(processedContent);
+            outline.setHeadings(processedContent);
           }
-        }).catch(error => {
-          console.error('Failed to process images:', error);
-        });
+        } else {
+          // No local images, render immediately
+          if (editorRef.current?.isReady) {
+            editorRef.current.setMarkdown(result.content);
+            setEditorContent(result.content);
+            outline.setHeadings(result.content);
+          }
+        }
 
         // Add to recent files
         await electrobun.addRecentFile({ path: result.path });
@@ -98,7 +109,7 @@ function App() {
     } catch (error) {
       console.error('Failed to open file:', error);
     }
-  }, [fileExplorer.setRootPath, fileExplorer.selectFile]);
+  }, [fileExplorer.setRootPath, fileExplorer.selectFile, hasLocalImages, outline.setHeadings]);
 
   // Handle file click in file explorer
   const handleFileClick = useCallback((file: FileNode) => {
@@ -156,36 +167,46 @@ function App() {
       // Update selected file in file explorer (highlight current file)
       fileExplorer.selectFile(filePath);
 
-      // Show content immediately for instant response
-      if (editorRef.current?.isReady) {
-        editorRef.current.setMarkdown(fileContent);
-        setEditorContent(fileContent);
-        outline.setHeadings(fileContent);
-      } else {
-        const checkAndSet = () => {
+      // Check if content has local images
+      const needsImageProcessing = hasLocalImages(fileContent);
+
+      const setContent = async () => {
+        if (needsImageProcessing) {
+          // Process images first, then render once
+          const processedContent = await processMarkdownImages(fileContent, filePath);
+          if (editorRef.current?.isReady) {
+            editorRef.current.setMarkdown(processedContent);
+            setEditorContent(processedContent);
+            outline.setHeadings(processedContent);
+          }
+        } else {
+          // No local images, render immediately
           if (editorRef.current?.isReady) {
             editorRef.current.setMarkdown(fileContent);
             setEditorContent(fileContent);
             outline.setHeadings(fileContent);
-          } else {
-            setTimeout(checkAndSet, 50);
           }
-        };
-        checkAndSet();
-      }
-
-      // Process images in background for better performance
-      processMarkdownImages(fileContent, filePath).then(processedContent => {
-        if (editorRef.current?.isReady && processedContent !== fileContent) {
-          editorRef.current.setMarkdown(processedContent);
-          setEditorContent(processedContent);
-          outline.setHeadings(processedContent);
         }
-      }).catch(error => {
-        console.error('Failed to process images:', error);
-      });
+      };
+
+      const loadContent = async () => {
+        if (editorRef.current?.isReady) {
+          await setContent();
+        } else {
+          const checkAndSet = () => {
+            if (editorRef.current?.isReady) {
+              void setContent();
+            } else {
+              setTimeout(checkAndSet, 50);
+            }
+          };
+          checkAndSet();
+        }
+      };
+
+      void loadContent();
     });
-  }, [outline.setHeadings, fileExplorer.setRootPath, fileExplorer.selectFile]);
+  }, [outline.setHeadings, fileExplorer.setRootPath, fileExplorer.selectFile, hasLocalImages]);
 
   // Listen for file-new event to clear editor
   useEffect(() => {

@@ -1,5 +1,9 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import type { OutlineNode } from '@/shared/types';
+import { debounce } from '@/lib/utils';
+
+const DEBOUNCE_DELAY = 300;
+const LARGE_FILE_LINE_THRESHOLD = 1000;
 
 export interface UseOutlineReturn {
   headings: OutlineNode[];
@@ -11,11 +15,37 @@ export interface UseOutlineReturn {
 export function useOutline(): UseOutlineReturn {
   const [headings, setHeadingsState] = useState<OutlineNode[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const pendingMarkdownRef = useRef<string | null>(null);
+
+  // Debounced parsing for large files to avoid blocking input
+  const debouncedParse = useRef(
+    debounce((markdown: string) => {
+      const parsed = parseHeadingsOptimized(markdown);
+      setHeadingsState(buildHeadingTree(parsed));
+    }, DEBOUNCE_DELAY)
+  ).current;
 
   const setHeadings = useCallback((markdown: string) => {
-    const parsed = parseHeadings(markdown);
-    setHeadingsState(buildHeadingTree(parsed));
-  }, []);
+    const lineCount = markdown.split('\n').length;
+
+    // For small files, parse immediately
+    // For large files, use debounced parsing to avoid blocking
+    if (lineCount < LARGE_FILE_LINE_THRESHOLD) {
+      const parsed = parseHeadingsOptimized(markdown);
+      setHeadingsState(buildHeadingTree(parsed));
+    } else {
+      // Debounce for large files during editing
+      pendingMarkdownRef.current = markdown;
+      debouncedParse(markdown);
+    }
+  }, [debouncedParse]);
+
+  // Clean up pending debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedParse.cancel?.();
+    };
+  }, [debouncedParse]);
 
   return {
     headings,
@@ -33,19 +63,34 @@ interface ParsedHeading {
   line: number;
 }
 
-function parseHeadings(markdown: string): ParsedHeading[] {
+// Optimized parser with fast skip for non-heading lines
+function parseHeadingsOptimized(markdown: string): ParsedHeading[] {
   const lines = markdown.split('\n');
   const headings: ParsedHeading[] = [];
+  const totalLines = lines.length;
 
-  lines.forEach((line, index) => {
-    const match = line.match(/^(#{1,6})\s+(.+)$/);
-    if (match) {
-      const level = match[1].length;
-      const text = match[2].trim();
-      const id = generateHeadingId(text, index);
-      headings.push({ level, text, id, line: index + 1 });
+  for (let i = 0; i < totalLines; i++) {
+    const line = lines[i];
+
+    // Fast skip: headings must start with #
+    if (line.length === 0 || line[0] !== '#') continue;
+
+    // Check for valid heading pattern
+    let level = 0;
+    while (level < line.length && level < 6 && line[level] === '#') {
+      level++;
     }
-  });
+
+    // Must have space after #s
+    if (level === 0 || level >= line.length || line[level] !== ' ') continue;
+
+    // Extract text (skip the #s and the space)
+    const text = line.slice(level + 1).trim();
+    if (text.length === 0) continue;
+
+    const id = generateHeadingId(text, i);
+    headings.push({ level, text, id, line: i + 1 });
+  }
 
   return headings;
 }
