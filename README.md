@@ -32,8 +32,10 @@ MarkBun is an open-source, cross-platform markdown editor designed for seamless 
 > - ✅ File operations (New, Open, Save, Save As)
 > - ✅ Dark mode support
 > - ✅ Toolbar and status bar (hidden by default)
-> - ⏳ File explorer sidebar (v0.2.0)
-> - ⏳ Outline navigation (v0.2.0)
+> - ✅ File explorer sidebar (v0.2.0)
+> - ✅ Outline navigation (v0.2.0)
+> - ✅ Quick Open (Ctrl/Cmd+P)
+> - ⏳ Math equations (v0.3.0)
 >
 > See [ROADMAP.md](./ROADMAP.md) for detailed development phases.
 
@@ -52,8 +54,9 @@ When you need them, every UI element can be instantly toggled via the **View men
 - 🎨 **Beautiful Typography** - Carefully crafted themes and styles
 - 🖼️ **Chromeless Interface** - Distraction-free writing with all UI elements hidden by default
 - 🌙 **Dark Mode** - Easy on the eyes for night writing
-- 📁 **File Management** - Built-in file browser with folder support (planned)
-- 🔍 **Outline Navigation** - Jump to any heading instantly (planned)
+- 📁 **File Management** - Built-in file browser with folder support
+- 🔍 **Outline Navigation** - Jump to any heading instantly
+- ⚡ **Quick Open** - Fuzzy file finder with Ctrl/Cmd+P
 - 🧮 **Math Support** - LaTeX equations with live preview (planned)
 - 📊 **Tables** - Intuitive table editing (planned)
 - 💾 **Auto Save** - Never lose your work (planned)
@@ -353,16 +356,17 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 - [x] Markdown syntax support
 - [x] Dark mode
 
-### v0.2.0
-- [ ] File explorer sidebar
-- [ ] Outline navigation
+### v0.2.0 ✅ Completed
+- [x] File explorer sidebar
+- [x] Outline navigation
 - [x] Image drag & drop
-- [ ] Math equations
+- [x] Quick Open (Ctrl/Cmd+P)
+- [x] Recent files
 
 ### v0.3.0
 - [ ] Table editing
 - [ ] Auto-save
-- [ ] Recent files
+- [ ] Math equations (LaTeX)
 - [ ] Settings UI
 
 ### v1.0.0
