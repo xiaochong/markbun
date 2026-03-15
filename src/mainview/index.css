@@ -335,6 +335,79 @@ body {
   display: none !important;
 }
 
+/* ===========================================
+   LaTeX Code Block - Edit/Preview Mode
+   =========================================== */
+
+/* Only apply to LaTeX code blocks (identified by data-lang attribute) */
+
+/* Default state: only show preview, hide source code and PREVIEW label */
+.milkdown-crepe-container .milkdown-code-block[data-lang="latex"]:not(.selected) .codemirror-host,
+.milkdown-crepe-container .milkdown-code-block[data-lang="LaTeX"]:not(.selected) .codemirror-host {
+  position: absolute !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Hide PREVIEW label and divider when not selected */
+.milkdown-crepe-container .milkdown-code-block[data-lang="latex"]:not(.selected) .preview-label,
+.milkdown-crepe-container .milkdown-code-block[data-lang="latex"]:not(.selected) .preview-divider,
+.milkdown-crepe-container .milkdown-code-block[data-lang="LaTeX"]:not(.selected) .preview-label,
+.milkdown-crepe-container .milkdown-code-block[data-lang="LaTeX"]:not(.selected) .preview-divider {
+  display: none !important;
+}
+
+/* Selected state: show source code */
+.milkdown-crepe-container .milkdown-code-block[data-lang="latex"].selected .codemirror-host,
+.milkdown-crepe-container .milkdown-code-block[data-lang="LaTeX"].selected .codemirror-host {
+  position: relative !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  height: auto !important;
+}
+
+/* Show PREVIEW label when selected */
+.milkdown-crepe-container .milkdown-code-block[data-lang="latex"].selected .preview-label,
+.milkdown-crepe-container .milkdown-code-block[data-lang="LaTeX"].selected .preview-label {
+  display: block !important;
+}
+
+.milkdown-crepe-container .milkdown-code-block[data-lang="latex"].selected .preview-divider,
+.milkdown-crepe-container .milkdown-code-block[data-lang="LaTeX"].selected .preview-divider {
+  display: block !important;
+}
+
+/* Hide the preview toggle button for LaTeX blocks */
+.milkdown-crepe-container .milkdown-code-block[data-lang="latex"] .preview-toggle-button,
+.milkdown-crepe-container .milkdown-code-block[data-lang="LaTeX"] .preview-toggle-button {
+  display: none !important;
+}
+
+/* Preview panel styling for LaTeX blocks */
+.milkdown-crepe-container .milkdown-code-block[data-lang="latex"]:not(.selected) .preview-panel,
+.milkdown-crepe-container .milkdown-code-block[data-lang="LaTeX"]:not(.selected) .preview-panel {
+  margin-top: 0 !important;
+}
+
+.milkdown-crepe-container .milkdown-code-block[data-lang="latex"]:not(.selected) .preview,
+.milkdown-crepe-container .milkdown-code-block[data-lang="LaTeX"]:not(.selected) .preview {
+  padding-top: 16px !important;
+}
+
+/* Selected state: add top padding to match the layout */
+.milkdown-crepe-container .milkdown-code-block[data-lang="latex"].selected .preview,
+.milkdown-crepe-container .milkdown-code-block[data-lang="LaTeX"].selected .preview {
+  padding-top: 0 !important;
+}
+
+/* Click handling for LaTeX code blocks - make preview area clickable to select */
+.milkdown-crepe-container .milkdown-code-block[data-lang="latex"]:not(.selected),
+.milkdown-crepe-container .milkdown-code-block[data-lang="LaTeX"]:not(.selected) {
+  cursor: pointer;
+}
+
 /* Hide the left border/line in code blocks */
 .milkdown-crepe-container .milkdown-code-block .cm-editor {
   border-left: none !important;

@@ -2,6 +2,7 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 import { Crepe } from '@milkdown/crepe';
 import { useEditor } from '@milkdown/react';
 import { editorViewCtx, parserCtx, serializerCtx, schemaCtx, commandsCtx } from '@milkdown/kit/core';
+import { NodeSelection } from '@milkdown/kit/prose/state';
 import { clipboard } from '@milkdown/plugin-clipboard';
 import { history } from '@milkdown/plugin-history';
 import { gfm } from '@milkdown/preset-gfm';
@@ -286,6 +287,135 @@ export function useCrepeEditor(
       console.error('Failed to get selected markdown:', e);
       return null;
     }
+  }, []);
+
+  // LaTeX code block: auto-detect language and add data-lang attribute
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const updateLatexCodeBlocks = () => {
+      const codeBlocks = container.querySelectorAll('.milkdown-code-block');
+      codeBlocks.forEach((block) => {
+        const langButton = block.querySelector('.language-button');
+        if (langButton) {
+          const lang = langButton.textContent?.trim().toLowerCase() || '';
+          const prevLang = (block as HTMLElement).dataset.lang;
+
+          // Set data-lang attribute for CSS targeting
+          (block as HTMLElement).dataset.lang = lang;
+
+          // If language changed from latex to something else, remove selected class
+          if (prevLang === 'latex' && lang !== 'latex') {
+            block.classList.remove('selected');
+          }
+        }
+      });
+    };
+
+    // Initial update
+    updateLatexCodeBlocks();
+
+    // Watch for changes
+    const observer = new MutationObserver(() => {
+      updateLatexCodeBlocks();
+    });
+
+    observer.observe(container, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  // LaTeX code block: handle click to enter/exit edit mode
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const codeBlock = target.closest('.milkdown-code-block') as HTMLElement | null;
+
+      // Check if we clicked inside a LaTeX code block
+      if (codeBlock) {
+        const lang = codeBlock.dataset.lang;
+        if (lang !== 'latex' && lang !== 'LaTeX') return;
+
+        // Don't handle clicks on the language button or picker
+        if (target.closest('.language-button') || target.closest('.language-picker')) {
+          return;
+        }
+
+        // If already selected, do nothing
+        if (codeBlock.classList.contains('selected')) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Get the editor instance
+        const editor = crepeRef.current?.editor;
+        if (!editor?.ctx) return;
+
+        // Find the code block node position in ProseMirror
+        const view = editor.ctx.get(editorViewCtx);
+
+        // Try to find the position of this code block
+        let pos: number | null = null;
+
+        // Method 1: Use posAtDOM with the code block element
+        try {
+          pos = view.posAtDOM(codeBlock, 0);
+        } catch {
+          pos = null;
+        }
+
+        // Method 2: If that fails, search through the document
+        if (pos === null) {
+          view.state.doc.descendants((node, nodePos) => {
+            if (node.type.name === 'code_block' && pos === null) {
+              const domAtPos = view.nodeDOM(nodePos);
+              if (domAtPos === codeBlock || (domAtPos instanceof HTMLElement && domAtPos.contains(codeBlock))) {
+                pos = nodePos;
+                return false;
+              }
+            }
+            return true;
+          });
+        }
+
+        if (pos !== null) {
+          // Add selected class to enable edit mode
+          codeBlock.classList.add('selected');
+
+          // Select the node in ProseMirror
+          view.dispatch(
+            view.state.tr.setSelection(NodeSelection.create(view.state.doc, pos))
+          );
+
+          // Focus the CodeMirror editor inside this code block
+          const cmEditor = codeBlock.querySelector('.cm-editor') as HTMLElement | null;
+          if (cmEditor) {
+            // Use setTimeout to allow the CSS transition to complete
+            setTimeout(() => {
+              const cmContent = cmEditor.querySelector('.cm-content') as HTMLElement | null;
+              cmContent?.focus();
+            }, 50);
+          }
+        }
+      } else {
+        // Clicked outside any code block - deselect all LaTeX code blocks
+        const selectedLatexBlocks = container.querySelectorAll('.milkdown-code-block[data-lang="latex"].selected, .milkdown-code-block[data-lang="LaTeX"].selected');
+        selectedLatexBlocks.forEach((block) => {
+          block.classList.remove('selected');
+        });
+      }
+    };
+
+    container.addEventListener('click', handleClick, true);
+    return () => container.removeEventListener('click', handleClick, true);
   }, []);
 
   // Image drag and drop handlers
