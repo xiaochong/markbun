@@ -1,4 +1,4 @@
-// Shared types and RPC type definitions for PingWrite
+// Shared types and RPC type definitions for MarkBun
 import type { RPCSchema } from "electrobun/bun";
 
 // ============================================================================
@@ -124,7 +124,7 @@ export interface QuickOpenItem {
 // ============================================================================
 
 // @ts-ignore - Type complexity issue with RPCSchema resolution
-export type PingWriteRPC = {
+export type MarkBunRPC = {
   bun: RPCSchema<{
     requests: {
       // File operations (Phase 1)

@@ -1,6 +1,6 @@
-# PingWrite Development Roadmap
+# MarkBun Development Roadmap
 
-This document outlines the development phases for PingWrite, from MVP to v1.0.
+This document outlines the development phases for MarkBun, from MVP to v1.0.
 
 ## 📊 Phase Overview
 
@@ -118,7 +118,7 @@ This document outlines the development phases for PingWrite, from MVP to v1.0.
 - **Main Process**: Added `folders.ts` and `recentFiles.ts` IPC handlers
 - **Renderer**: Added Sidebar, FileExplorer, Outline, and QuickOpen components
 - **Hooks**: Added `useSidebar`, `useFileExplorer`, `useOutline`, `useQuickOpen`
-- **Storage**: Recent files stored in `~/.config/pingwrite/recent-files.json`
+- **Storage**: Recent files stored in `~/.config/markbun/recent-files.json`
 
 ---
 
@@ -207,7 +207,7 @@ This document outlines the development phases for PingWrite, from MVP to v1.0.
 
 ### Design Principles
 
-**Chromeless Interface**: PingWrite prioritizes content over chrome. All UI elements (toolbar, title bar, status bar) are hidden by default to minimize visual distraction. This design decision follows the philosophy pioneered by iA Writer and Typora — the editor should be invisible, letting the writer focus entirely on their words.
+**Chromeless Interface**: MarkBun prioritizes content over chrome. All UI elements (toolbar, title bar, status bar) are hidden by default to minimize visual distraction. This design decision follows the philosophy pioneered by iA Writer and Typora — the editor should be invisible, letting the writer focus entirely on their words.
 
 Users retain full control: every UI element can be toggled on demand via the View menu or keyboard shortcuts. This approach accommodates different workflows while maintaining a clean, minimal default state.
 

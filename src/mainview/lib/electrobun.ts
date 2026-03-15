@@ -1,10 +1,10 @@
 // Electrobun view client for renderer process
 import { Electroview } from 'electrobun/view';
-import type { PingWriteRPC } from '../../shared/types';
+import type { MarkBunRPC } from '../../shared/types';
 
 // Define RPC for the view side with increased timeout
 // @ts-ignore - Type complexity with RPCSchema
-const rpc = Electroview.defineRPC<PingWriteRPC>({
+const rpc = Electroview.defineRPC<MarkBunRPC>({
   maxRequestTime: 30000, // 30 seconds timeout for file operations
   handlers: {
     requests: {},

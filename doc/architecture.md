@@ -1,14 +1,14 @@
-# PingWrite Architecture
+# MarkBun Architecture
 
 ## Overview
 
-PingWrite is a Typora-like markdown desktop editor built with a modern, performant tech stack. This document describes the architecture, design decisions, and technical implementation details.
+MarkBun is a Typora-like markdown desktop editor built with a modern, performant tech stack. This document describes the architecture, design decisions, and technical implementation details.
 
 ## High-Level Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           PingWrite Application                              │
+│                           MarkBun Application                                │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │   ┌─────────────────┐         IPC (JSON-RPC)         ┌─────────────────┐   │
@@ -272,9 +272,9 @@ interface Settings {
 ```
 
 Stored in:
-- macOS: `~/Library/Application Support/PingWrite/settings.json`
-- Windows: `%APPDATA%/PingWrite/settings.json`
-- Linux: `~/.config/PingWrite/settings.json`
+- macOS: `~/Library/Application Support/MarkBun/settings.json`
+- Windows: `%APPDATA%/MarkBun/settings.json`
+- Linux: `~/.config/MarkBun/settings.json`
 
 ## Styling Architecture
 
@@ -289,7 +289,7 @@ Stored in:
    ↓
 4. Milkdown Styles
    ↓
-5. PingWrite Custom Styles
+5. MarkBun Custom Styles
 ```
 
 ### CSS Variables (shadcn/ui Theme)
@@ -362,7 +362,7 @@ Custom styles for the seamless editing experience:
 ## File Organization
 
 ```
-pingwrite/
+markbun/
 ├── src/
 │   ├── bun/                  
 │   │   ├── index.ts          # Main process (Electrobun/Bun)

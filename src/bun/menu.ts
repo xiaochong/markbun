@@ -22,15 +22,15 @@ export function setupMenu(state: ViewMenuState = defaultState): void {
   const menu: ApplicationMenuItemConfig[] = [
     // macOS requires the app menu as the first menu
     {
-      label: 'PingWrite',
+      label: 'MarkBun',
       submenu: [
-        { label: 'About PingWrite', action: 'app-about' },
+        { label: 'About MarkBun', action: 'app-about' },
         { type: 'separator' },
-        { label: 'Hide PingWrite', role: 'hide', accelerator: 'Cmd+H' },
+        { label: 'Hide MarkBun', role: 'hide', accelerator: 'Cmd+H' },
         { label: 'Hide Others', role: 'hideOthers', accelerator: 'Cmd+Option+H' },
         { label: 'Show All', role: 'showAll' },
         { type: 'separator' },
-        { label: 'Quit PingWrite', role: 'quit', accelerator: 'Cmd+Q' },
+        { label: 'Quit MarkBun', role: 'quit', accelerator: 'Cmd+Q' },
       ],
     },
     {

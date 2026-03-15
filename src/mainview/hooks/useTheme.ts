@@ -6,7 +6,7 @@ export function useTheme() {
   const [theme, setTheme] = useState<Theme>(() => {
     // Check localStorage first
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('pingwrite-theme');
+      const saved = localStorage.getItem('markbun-theme');
       if (saved === 'dark' || saved === 'light') {
         return saved;
       }
@@ -27,7 +27,7 @@ export function useTheme() {
       root.classList.remove('dark');
     }
     
-    localStorage.setItem('pingwrite-theme', theme);
+    localStorage.setItem('markbun-theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {

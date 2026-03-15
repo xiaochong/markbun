@@ -1,4 +1,4 @@
-# PingWrite
+# MarkBun
 
 > 📝 A fast, beautiful, Typora-like markdown desktop editor
 
@@ -6,15 +6,23 @@
 [![Built with Milkdown](https://img.shields.io/badge/Built%20with-Milkdown-orange)](https://milkdown.dev)
 [![Powered by Electrobun](https://img.shields.io/badge/Powered%20by-Electrobun-purple)](https://electrobun.dev)
 
-PingWrite is an open-source, cross-platform markdown editor designed for seamless writing. Like Typora, it provides a distraction-free WYSIWYG editing experience where markdown syntax fades away to reveal beautifully formatted content.
+MarkBun is an open-source, cross-platform markdown editor designed for seamless writing. Like Typora, it provides a distraction-free WYSIWYG editing experience where markdown syntax fades away to reveal beautifully formatted content.
 
-![PingWrite Preview](doc/assets/preview.png)
+**Mark** (from Markdown) + **Bun** (from Electrobun) = MarkBun
+
+> 🍞 **Why "Mark"?**
+>
+> In the Age of AI, Markdown is the *lingua franca* — the universal currency of digital communication.
+> Learn Markdown, earn your bread. It's that simple.
+> (Plus, "Markbun" sounds way tastier than "Plaintextbun")
+
+![MarkBun Preview](doc/assets/preview.png)
 
 ## 🚧 Development Status
 
 > **⚠️ Early Development Stage**
 >
-> PingWrite is currently in active development. The v0.1.0 MVP has been completed with core editing capabilities.
+> MarkBun is currently in active development. The v0.1.0 MVP has been completed with core editing capabilities.
 >
 > **Current Status:**
 > - ✅ Electrobun desktop framework configured
@@ -33,7 +41,7 @@ PingWrite is an open-source, cross-platform markdown editor designed for seamles
 
 ### Design Philosophy
 
-PingWrite follows a **chromeless editing philosophy** inspired by the pioneering work of [iA Writer](https://ia.net/writer) and [Typora](https://typora.io). The interface is intentionally minimal — all toolbars, title bars, and status bars are hidden by default to eliminate visual distractions and keep you focused on your content.
+MarkBun follows a **chromeless editing philosophy** inspired by the pioneering work of [iA Writer](https://ia.net/writer) and [Typora](https://typora.io). The interface is intentionally minimal — all toolbars, title bars, and status bars are hidden by default to eliminate visual distractions and keep you focused on your content.
 
 When you need them, every UI element can be instantly toggled via the **View menu** or keyboard shortcuts. This approach puts the written word at the center of the experience, not the application chrome.
 
@@ -70,6 +78,10 @@ bun run dev
 # Development with HMR (recommended)
 bun run dev:hmr
 ```
+
+### Project Rename Note
+
+This project was previously called "PingWrite". It has been renamed to **MarkBun** to better reflect its nature: a Markdown editor powered by Electrobun (Mark + Bun).
 
 ### Build
 
@@ -109,7 +121,7 @@ When you run `bun run dev` (without HMR):
 ## 📁 Project Structure
 
 ```
-pingwrite/
+markbun/
 ├── src/
 │   ├── bun/                  
 │   │   ├── index.ts          # Main process (Electrobun/Bun)
@@ -160,7 +172,7 @@ pingwrite/
 
 ### Interface Controls
 
-PingWrite uses a **chromeless interface** — all toolbars and UI elements are hidden by default for distraction-free writing. Toggle UI elements via the **View menu** or shortcuts:
+MarkBun uses a **chromeless interface** — all toolbars and UI elements are hidden by default for distraction-free writing. Toggle UI elements via the **View menu** or shortcuts:
 
 | UI Element | Menu Command | Default State |
 |------------|--------------|---------------|
@@ -197,10 +209,10 @@ Type `/` anywhere to open the command palette:
 
 ### Themes
 
-PingWrite supports custom themes. Place your theme files in `~/.pingwrite/themes/`:
+MarkBun supports custom themes. Place your theme files in `~/.markbun/themes/`:
 
 ```css
-/* ~/.pingwrite/themes/my-theme.css */
+/* ~/.markbun/themes/my-theme.css */
 :root {
   --font-serif: "Georgia", serif;
   --font-sans: "Inter", sans-serif;
@@ -214,7 +226,7 @@ PingWrite supports custom themes. Place your theme files in `~/.pingwrite/themes
 
 ### Settings
 
-Settings are stored in `~/.pingwrite/config.json`:
+Settings are stored in `~/.markbun/config.json`:
 
 ```json
 {
@@ -259,7 +271,7 @@ bun add @milkdown/plugin-math
 
 ### Running Tests
 
-PingWrite uses **Bun's built-in test runner**:
+MarkBun uses **Bun's built-in test runner**:
 
 ```bash
 # Run all tests
@@ -365,7 +377,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 ## 📄 License
 
-PingWrite is licensed under the [MIT License](LICENSE).
+MarkBun is licensed under the [MIT License](LICENSE).
 
 ## 🙏 Acknowledgements
 

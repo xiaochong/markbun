@@ -1,6 +1,6 @@
-# Contributing to PingWrite
+# Contributing to MarkBun
 
-Thank you for your interest in contributing to PingWrite! This document provides guidelines and instructions for contributing to the project.
+Thank you for your interest in contributing to MarkBun! This document provides guidelines and instructions for contributing to the project.
 
 ## 🚀 Getting Started
 
@@ -14,8 +14,8 @@ Thank you for your interest in contributing to PingWrite! This document provides
 
 1. **Fork and clone the repository**
    ```bash
-   git clone https://github.com/yourusername/pingwrite.git
-   cd pingwrite
+   git clone https://github.com/yourusername/markbun.git
+   cd markbun
    ```
 
 2. **Install dependencies**
@@ -35,7 +35,7 @@ Thank you for your interest in contributing to PingWrite! This document provides
 ## 🏗️ Project Structure
 
 ```
-pingwrite/
+markbun/
 ├── src/
 │   ├── bun/              # Main process (Bun/Electrobun)
 │   │   └── index.ts      # Entry point
@@ -134,4 +134,4 @@ By contributing, you agree that your contributions will be licensed under the MI
 
 ---
 
-Thank you for helping make PingWrite better! 🎉
+Thank you for helping make MarkBun better! 🎉

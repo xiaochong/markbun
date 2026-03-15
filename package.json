@@ -1,7 +1,7 @@
 {
-	"name": "pingwrite",
+	"name": "markbun",
 	"version": "0.1.0",
-	"description": "A fast, beautiful, Typora-like markdown desktop editor built with Electrobun and Milkdown",
+	"description": "A fast, beautiful, Typora-like markdown desktop editor built with Electrobun and Milkdown (Mark + Bun)",
 	"scripts": {
 		"start": "vite build && electrobun dev",
 		"dev": "electrobun dev --watch",

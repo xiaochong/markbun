@@ -1,8 +1,8 @@
-# AGENTS.md - PingWrite Development Guide
+# AGENTS.md - MarkBun Development Guide
 
 ## Project Overview
 
-**PingWrite** is a Typora-like markdown desktop editor built with:
+**MarkBun** is a Typora-like markdown desktop editor built with:
 - **Milkdown**: WYSIWYG markdown editor framework
 - **Electrobun**: Bun + WebView cross-platform desktop framework  
 - **shadcn/ui**: React component library
@@ -12,7 +12,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                      PingWrite Application                       │
+│                      MarkBun Application                         │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │  ┌──────────────┐    IPC      ┌──────────────────────────────┐  │
@@ -51,7 +51,7 @@ Milkdown is a plugin-driven WYSIWYG markdown editor built on ProseMirror.
 - **ProseMirror**: Underlying document model and editing engine
 - **Remark**: Markdown parser/serializer
 
-**Usage Pattern for PingWrite:**
+**Usage Pattern for MarkBun:**
 ```typescript
 import { Editor } from "@milkdown/kit/core";
 import { commonmark } from "@milkdown/kit/preset/commonmark";
@@ -99,7 +99,7 @@ import { BrowserWindow, ApplicationMenu } from "electrobun/bun";
 
 // Create window
 const win = new BrowserWindow({
-  title: "PingWrite",
+  title: "MarkBun",
   url: "views://main-ui/index.html",
   width: 1200,
   height: 800,
@@ -152,7 +152,7 @@ Component library with excellent TypeScript support and customization.
 - Use `size-*` for equal dimensions
 - Forms use `FieldGroup` + `Field` structure
 
-**Components for PingWrite:**
+**Components for MarkBun:**
 - `Button` - Toolbar buttons
 - `Tooltip` - Button hints
 - `Dialog` - Settings, modals
@@ -291,7 +291,7 @@ These principles are mandatory. They are implementation constraints, not suggest
 
 ### Test Framework
 
-PingWrite uses **Bun's built-in test runner** for all unit tests.
+MarkBun uses **Bun's built-in test runner** for all unit tests.
 
 **Run Tests:**
 ```bash

@@ -2,8 +2,8 @@ import type { ElectrobunConfig } from "electrobun";
 
 export default {
 	app: {
-		name: "PingWrite",
-		identifier: "dev.pingwrite.app",
+		name: "MarkBun",
+		identifier: "dev.markbun.app",
 		version: "0.1.0",
 	},
 	build: {

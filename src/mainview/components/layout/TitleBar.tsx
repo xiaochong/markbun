@@ -15,7 +15,7 @@ export function TitleBar({ className, title = 'Untitled', isDirty }: TitleBarPro
     )}>
       <span className="font-medium truncate">
         {isDirty && '● '}
-        {title} - PingWrite
+        {title} - MarkBun
       </span>
     </div>
   );

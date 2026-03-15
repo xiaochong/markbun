@@ -1,6 +1,6 @@
 import { BrowserWindow, BrowserView, Updater, Utils, ApplicationMenu, ContextMenu } from 'electrobun/bun';
 import { setupMenu, type ViewMenuState } from './menu';
-import type { PingWriteRPC } from '../shared/types';
+import type { MarkBunRPC } from '../shared/types';
 import { readFile, writeFile, stat } from 'fs/promises';
 import { join } from 'path';
 import { homedir } from 'os';
@@ -135,7 +135,7 @@ async function main() {
 
   // Define RPC handlers
   // @ts-ignore - Type complexity with RPCSchema
-  const rpc = BrowserView.defineRPC<PingWriteRPC>({
+  const rpc = BrowserView.defineRPC<MarkBunRPC>({
     maxRequestTime: 30000, // 30 seconds timeout for file operations
     handlers: {
       requests: {
@@ -365,7 +365,7 @@ async function main() {
   });
 
   const win = new BrowserWindow({
-    title: 'PingWrite',
+    title: 'MarkBun',
     url,
     frame: {
       width: 1000,
@@ -547,7 +547,7 @@ async function main() {
     }
   });
 
-  console.log('[Bun Main] PingWrite started!');
+  console.log('[Bun Main] MarkBun started!');
 }
 
 main().catch(console.error);

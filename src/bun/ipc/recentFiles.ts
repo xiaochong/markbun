@@ -5,13 +5,13 @@ import { homedir } from 'os';
 import type { RecentFile } from '../../shared/types';
 
 const MAX_RECENT_FILES = 20;
-const RECENT_FILES_PATH = join(homedir(), '.config', 'pingwrite', 'recent-files.json');
+const RECENT_FILES_PATH = join(homedir(), '.config', 'markbun', 'recent-files.json');
 
 /**
  * Ensure the config directory exists
  */
 async function ensureConfigDir(): Promise<void> {
-  const configDir = join(homedir(), '.config', 'pingwrite');
+  const configDir = join(homedir(), '.config', 'markbun');
   try {
     await access(configDir);
   } catch {
