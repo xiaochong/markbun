@@ -1,4 +1,4 @@
-import { BrowserWindow, BrowserView, Updater, Utils, ApplicationMenu, ContextMenu } from 'electrobun/bun';
+import { BrowserWindow, BrowserView, Updater, Utils, ApplicationMenu, ContextMenu, Screen } from 'electrobun/bun';
 import { setupMenu, type ViewMenuState } from './menu';
 import type { MarkBunRPC } from '../shared/types';
 import { readFile, writeFile, stat, mkdir, readdir, open } from 'fs/promises';
@@ -6,6 +6,8 @@ import { join, dirname, relative } from 'path';
 import { homedir } from 'os';
 import { readFolder } from './ipc/folders';
 import { getRecentFiles, addRecentFile, removeRecentFile, clearRecentFiles } from './ipc/recentFiles';
+import { loadSettings, saveSettings, type Settings } from './services/settings';
+import { loadUIState, saveUIState, type UIState } from './services/uiState';
 import { spawn } from 'child_process';
 
 const DEV_SERVER_PORT = 5173;
@@ -132,6 +134,12 @@ let viewMenuState: ViewMenuState = {
   showSidebar: false,
 };
 
+// Current settings
+let currentSettings: Settings | null = null;
+
+// Current UI state
+let currentUIState: UIState | null = null;
+
 // Helper to update view menu state and refresh menu
 function updateViewMenuState(updates: Partial<ViewMenuState>) {
   viewMenuState = { ...viewMenuState, ...updates };
@@ -229,7 +237,7 @@ async function getMainViewUrl(): Promise<string> {
         await fetch(DEV_SERVER_URL, { method: 'HEAD' });
         return DEV_SERVER_URL;
       } catch {
-        console.log('[Bun Main] Vite dev server not running. Run `bun run dev:hmr` for HMR support.');
+        // Dev server not running, use bundled assets
       }
     }
   } catch {}
@@ -238,6 +246,23 @@ async function getMainViewUrl(): Promise<string> {
 
 // Create the main application window
 async function main() {
+  // Load settings and UI state before setting up menu
+  try {
+    currentSettings = await loadSettings();
+    currentUIState = await loadUIState();
+
+    // Update view menu state from saved UI state
+    viewMenuState = {
+      showTitleBar: currentUIState.showTitleBar,
+      showToolBar: currentUIState.showToolBar,
+      showStatusBar: currentUIState.showStatusBar,
+      showSidebar: currentUIState.showSidebar,
+    };
+
+  } catch (error) {
+    console.error('[Bun Main] Failed to load settings:', error);
+  }
+
   // Setup application menu FIRST (before creating window)
   setupMenu(viewMenuState);
 
@@ -558,21 +583,272 @@ async function main() {
             };
           }
         },
+        // Settings (Phase 3)
+        getSettings: async () => {
+          try {
+            if (!currentSettings) {
+              currentSettings = await loadSettings();
+            }
+            // Convert Settings to AppSettings for RPC
+            const appSettings = {
+              theme: currentSettings.appearance.theme,
+              fontSize: currentSettings.editor.fontSize,
+              lineHeight: currentSettings.editor.lineHeight,
+              autoSave: currentSettings.general.autoSave,
+              autoSaveInterval: currentSettings.general.autoSaveInterval,
+            };
+            return { success: true, settings: appSettings };
+          } catch (error) {
+            console.error('[RPC] Failed to get settings:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            };
+          }
+        },
+        saveSettings: async ({ settings }: { settings: { theme: 'light' | 'dark' | 'system'; fontSize: number; lineHeight: number; autoSave: boolean; autoSaveInterval: number } }) => {
+          try {
+            currentSettings = {
+              __version: 1,
+              general: {
+                autoSave: settings.autoSave,
+                autoSaveInterval: settings.autoSaveInterval,
+              },
+              editor: {
+                fontSize: settings.fontSize,
+                lineHeight: settings.lineHeight,
+              },
+              appearance: {
+                theme: settings.theme,
+                sidebarWidth: currentSettings?.appearance.sidebarWidth ?? 280,
+              },
+            };
+            const result = await saveSettings(currentSettings);
+            return result;
+          } catch (error) {
+            console.error('[RPC] Failed to save settings:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            };
+          }
+        },
+        getUIState: async () => {
+          try {
+            if (!currentUIState) {
+              currentUIState = await loadUIState();
+            }
+            return { success: true, state: currentUIState };
+          } catch (error) {
+            console.error('[RPC] Failed to get UI state:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            };
+          }
+        },
+        saveUIState: async ({ state }: { state: Partial<UIState> }) => {
+          try {
+            // Merge with current state (preserving window state if not provided)
+            currentUIState = {
+              ...currentUIState,
+              ...state,
+            } as UIState;
+            // Also update view menu state
+            viewMenuState = {
+              showTitleBar: currentUIState.showTitleBar,
+              showToolBar: currentUIState.showToolBar,
+              showStatusBar: currentUIState.showStatusBar,
+              showSidebar: currentUIState.showSidebar,
+            };
+            setupMenu(viewMenuState);
+            const result = await saveUIState(currentUIState);
+            return result;
+            return result;
+          } catch (error) {
+            console.error('[RPC] Failed to save UI state:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            };
+          }
+        },
+        updateWindowBounds: async ({ x, y, width, height }: { x: number; y: number; width: number; height: number }) => {
+          try {
+            if (currentUIState) {
+              currentUIState.windowX = x;
+              currentUIState.windowY = y;
+              currentUIState.windowWidth = width;
+              currentUIState.windowHeight = height;
+            }
+            return { success: true };
+          } catch (error) {
+            console.error('[RPC] Failed to update window bounds:', error);
+            return { success: false };
+          }
+        },
       },
       messages: {},
     },
   });
 
+  // Use saved window state or defaults
+  let windowX = currentUIState?.windowX ?? 200;
+  let windowY = currentUIState?.windowY ?? 200;
+  let windowWidth = currentUIState?.windowWidth ?? 1200;
+  let windowHeight = currentUIState?.windowHeight ?? 800;
+
+
+  // Multi-monitor support: Check if the window is within any available display
+  try {
+    const displays = Screen.getAllDisplays();
+
+    // Check if window center is within any display
+    const windowCenterX = windowX + windowWidth / 2;
+    const windowCenterY = windowY + windowHeight / 2;
+    const MIN_VISIBLE_PIXELS = 100;
+
+    const isWindowOnAnyDisplay = displays.some(display => {
+      const { x, y, width, height } = display.bounds;
+      // Check if at least MIN_VISIBLE_PIXELS of the window would be visible
+      const windowRight = windowX + windowWidth;
+      const windowBottom = windowY + windowHeight;
+      const displayRight = x + width;
+      const displayBottom = y + height;
+
+      // Check horizontal overlap
+      const horizontalOverlap = windowX < displayRight - MIN_VISIBLE_PIXELS &&
+                               windowRight > x + MIN_VISIBLE_PIXELS;
+      // Check vertical overlap
+      const verticalOverlap = windowY < displayBottom - MIN_VISIBLE_PIXELS &&
+                             windowBottom > y + MIN_VISIBLE_PIXELS;
+
+      return horizontalOverlap && verticalOverlap;
+    });
+
+    if (!isWindowOnAnyDisplay) {
+      const primaryDisplay = Screen.getPrimaryDisplay();
+      const workArea = primaryDisplay.workArea;
+      windowWidth = Math.min(windowWidth, workArea.width - 100);
+      windowHeight = Math.min(windowHeight, workArea.height - 100);
+      windowX = workArea.x + Math.round((workArea.width - windowWidth) / 2);
+      windowY = workArea.y + Math.round((workArea.height - windowHeight) / 2);
+    }
+  } catch (error) {
+    console.error('[Bun Main] Failed to get display info:', error);
+    // Fallback to basic validation
+    const MIN_VISIBLE_PIXELS = 100;
+    const MAX_REASONABLE_SCREEN_WIDTH = 7680;
+    const MAX_REASONABLE_SCREEN_HEIGHT = 4320;
+
+    const isXValid = windowX >= -windowWidth + MIN_VISIBLE_PIXELS && windowX < MAX_REASONABLE_SCREEN_WIDTH;
+    const isYValid = windowY >= -windowHeight + MIN_VISIBLE_PIXELS && windowY < MAX_REASONABLE_SCREEN_HEIGHT;
+    const isWidthValid = windowWidth >= 400 && windowWidth <= MAX_REASONABLE_SCREEN_WIDTH;
+    const isHeightValid = windowHeight >= 300 && windowHeight <= MAX_REASONABLE_SCREEN_HEIGHT;
+
+    if (!isXValid || !isYValid || !isWidthValid || !isHeightValid) {
+      windowX = 200;
+      windowY = 200;
+      windowWidth = 1200;
+      windowHeight = 800;
+    }
+  }
+
   const win = new BrowserWindow({
     title: 'MarkBun',
     url,
     frame: {
-      width: 1000,
-      height: 700,
-      x: 200,
-      y: 200,
+      width: windowWidth,
+      height: windowHeight,
+      x: windowX,
+      y: windowY,
     },
     rpc,
+  });
+
+  // Save window state when it changes
+  let windowStateTimeout: NodeJS.Timeout | null = null;
+  const saveWindowState = async () => {
+    if (windowStateTimeout) {
+      clearTimeout(windowStateTimeout);
+    }
+    windowStateTimeout = setTimeout(async () => {
+      try {
+        // Use getFrame() method to get current window bounds
+        // @ts-ignore - getFrame method exists but may not be typed
+        const frame = win.getFrame ? win.getFrame() : null;
+        if (frame && currentUIState) {
+          const newX = frame.x ?? windowX;
+          const newY = frame.y ?? windowY;
+          const newWidth = frame.width ?? windowWidth;
+          const newHeight = frame.height ?? windowHeight;
+
+          // Only save if values actually changed
+          if (
+            currentUIState.windowX !== newX ||
+            currentUIState.windowY !== newY ||
+            currentUIState.windowWidth !== newWidth ||
+            currentUIState.windowHeight !== newHeight
+          ) {
+            currentUIState.windowX = newX;
+            currentUIState.windowY = newY;
+            currentUIState.windowWidth = newWidth;
+            currentUIState.windowHeight = newHeight;
+
+            // Get display info for multi-monitor support
+            try {
+              const displays = Screen.getAllDisplays();
+              const windowCenterX = newX + newWidth / 2;
+              const windowCenterY = newY + newHeight / 2;
+
+              const currentDisplay = displays.find(d => {
+                const { x, y, width, height } = d.bounds;
+                return windowCenterX >= x && windowCenterX < x + width &&
+                       windowCenterY >= y && windowCenterY < y + height;
+              });
+
+              if (currentDisplay) {
+                currentUIState.displayId = currentDisplay.id;
+                currentUIState.displayWidth = currentDisplay.bounds.width;
+                currentUIState.displayHeight = currentDisplay.bounds.height;
+              }
+            } catch {
+              // Silently ignore display info errors
+            }
+
+            await saveUIState(currentUIState);
+          }
+        }
+      } catch (error) {
+        console.error('[Bun Main] Failed to save window state:', error);
+      }
+    }, 500);
+  };
+
+  // Listen for window move/resize events
+  // @ts-ignore - Events may not be typed
+  if (win.on) {
+    // @ts-ignore
+    win.on('move', () => void saveWindowState());
+    // @ts-ignore
+    win.on('resize', () => void saveWindowState());
+  }
+
+  // Save state before app quits
+  const cleanup = async () => {
+    await saveWindowState();
+  };
+
+  process.on('exit', cleanup);
+
+  process.on('SIGINT', async () => {
+    await cleanup();
+    process.exit(0);
+  });
+
+  process.on('SIGTERM', async () => {
+    await cleanup();
+    process.exit(0);
   });
 
   // Handle context menu clicks
@@ -668,6 +944,11 @@ async function main() {
         win.webview.rpc.send.showAbout({});
         break;
 
+      case 'app-preferences':
+        // @ts-ignore
+        win.webview.rpc.send.openSettings({});
+        break;
+
       case 'view-toggle-titlebar':
         updateViewMenuState({ showTitleBar: !viewMenuState.showTitleBar });
         // @ts-ignore
@@ -749,7 +1030,6 @@ async function main() {
     }
   });
 
-  console.log('[Bun Main] MarkBun started!');
 }
 
 main().catch(console.error);

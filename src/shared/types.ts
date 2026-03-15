@@ -119,6 +119,27 @@ export interface QuickOpenItem {
   score?: number; // fuzzy search score
 }
 
+/**
+ * UI State for persistence
+ */
+export interface UIState {
+  showTitleBar: boolean;
+  showToolBar: boolean;
+  showStatusBar: boolean;
+  showSidebar: boolean;
+  sidebarWidth: number;
+  sidebarActiveTab: SidebarTab;
+  // Window state
+  windowX: number;
+  windowY: number;
+  windowWidth: number;
+  windowHeight: number;
+  // Display info for multi-monitor support
+  displayId?: number;
+  displayWidth?: number;
+  displayHeight?: number;
+}
+
 // ============================================================================
 // RPC Type Definitions
 // ============================================================================
@@ -137,6 +158,13 @@ export type MarkBunRPC = {
       showDefaultContextMenu: { params: {}; response: { success: boolean } };
       writeToClipboard: { params: { text: string }; response: { success: boolean; error?: string } };
       readFromClipboard: { params: {}; response: { success: boolean; text?: string; error?: string } };
+
+      // Settings (Phase 3)
+      getSettings: { params: {}; response: { success: boolean; settings?: AppSettings; error?: string } };
+      saveSettings: { params: { settings: AppSettings }; response: { success: boolean; error?: string } };
+      getUIState: { params: {}; response: { success: boolean; state?: UIState; error?: string } };
+      saveUIState: { params: { state: Partial<UIState> }; response: { success: boolean; error?: string } };
+      updateWindowBounds: { params: { x: number; y: number; width: number; height: number }; response: { success: boolean } };
 
       // File management (Phase 2)
       readFile: { params: { path: string }; response: { success: boolean; path?: string; content?: string; error?: string } };
@@ -166,6 +194,9 @@ export type MarkBunRPC = {
       // Phase 2 messages
       toggleSidebar: {};
       openQuickOpen: {};
+
+      // Phase 3 messages
+      openSettings: {};
     };
   }>;
   webview: RPCSchema<{

@@ -57,9 +57,11 @@ When you need them, every UI element can be instantly toggled via the **View men
 - 📁 **File Management** - Built-in file browser with folder support
 - 🔍 **Outline Navigation** - Jump to any heading instantly
 - ⚡ **Quick Open** - Fuzzy file finder with Ctrl/Cmd+P
-- 🧮 **Math Support** - LaTeX equations with live preview (planned)
-- 📊 **Tables** - Intuitive table editing (planned)
-- 💾 **Auto Save** - Never lose your work (planned)
+- 🧮 **Math Support** - LaTeX equations with live preview
+- 📊 **Tables** - Intuitive table editing with header styling
+- 💾 **Auto Save** - Hybrid throttle/debounce strategy
+- ⚙️ **Settings** - Persistent settings with UI
+- 🖥️ **Multi-Monitor** - Window position saved per display with smart fallback
 - ⌨️ **Keyboard Shortcuts** - Vim mode support (planned)
 
 ## 🚀 Quick Start
@@ -178,7 +180,9 @@ MarkBun uses a **chromeless interface** — all toolbars and UI elements are hid
 | Title Bar | `View → Show Title Bar` | Hidden |
 | Toolbar | `View → Show Tool Bar` | Hidden |
 | Status Bar | `View → Show Status Bar` | Hidden |
+| Sidebar | `View → Show Sidebar` | Hidden (`Cmd/Ctrl + B`) |
 | Dark Mode | `View → Toggle Dark Mode` | `Cmd/Ctrl + Shift + T` |
+| Settings | `MarkBun → Preferences` | `Cmd/Ctrl + ,` |
 
 ### Markdown Shortcuts
 
@@ -225,19 +229,52 @@ MarkBun supports custom themes. Place your theme files in `~/.markbun/themes/`:
 
 ### Settings
 
-Settings are stored in `~/.markbun/config.json`:
+Settings are stored in `~/.config/markbun/settings.json`:
 
 ```json
 {
-  "theme": "default",
-  "fontSize": 16,
-  "lineHeight": 1.6,
-  "autoSave": true,
-  "autoSaveInterval": 30000,
-  "showLineNumbers": false,
-  "wordWrap": true
+  "__version": 1,
+  "general": {
+    "autoSave": true,
+    "autoSaveInterval": 2000
+  },
+  "editor": {
+    "fontSize": 15,
+    "lineHeight": 1.65
+  },
+  "appearance": {
+    "theme": "system",
+    "sidebarWidth": 280
+  }
 }
 ```
+
+UI state is stored separately in `~/.config/markbun/ui-state.json`:
+
+```json
+{
+  "showTitleBar": false,
+  "showToolBar": false,
+  "showStatusBar": false,
+  "showSidebar": false,
+  "sidebarWidth": 280,
+  "sidebarActiveTab": "files",
+  "windowX": 200,
+  "windowY": 200,
+  "windowWidth": 1200,
+  "windowHeight": 800
+}
+```
+
+The window position and size are automatically saved and restored on restart. If the saved position is outside the visible screen area (e.g., when a monitor is disconnected), the window will be reset to a safe default position on the primary display.
+
+### Multi-Monitor Support
+
+MarkBun fully supports multi-monitor setups:
+- Window position is saved per display
+- Automatically detects when a display is disconnected
+- Falls back to primary display when the original display is unavailable
+- Validates window visibility before restoring to ensure the window is always accessible
 
 ## 🛠️ Development
 
@@ -363,11 +400,13 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 - [x] Quick Open (Ctrl/Cmd+P)
 - [x] Recent files
 
-### v0.3.0
-- [ ] Table editing
-- [ ] Auto-save
-- [ ] Math equations (LaTeX)
-- [ ] Settings UI
+### v0.3.0 ✅ Completed
+- [x] Table header styling
+- [x] Auto-save (with hybrid throttle/debounce strategy)
+- [x] Settings UI (General, Editor, Appearance tabs)
+- [x] UI state persistence (sidebar width, visibility)
+- [x] Theme management (light/dark/system)
+- [x] Multi-monitor support with display detection
 
 ### v1.0.0
 - [ ] Vim mode

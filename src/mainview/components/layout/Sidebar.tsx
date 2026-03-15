@@ -72,7 +72,7 @@ export const Sidebar = memo(function Sidebar({
       {/* Sidebar Content */}
       <div
         ref={sidebarRef}
-        className="flex flex-col h-full bg-muted/30 border-r border-border"
+        className="group relative flex flex-col h-full bg-muted/30 border-r border-border"
         style={{ width: isOpen ? width - 4 : 0 }}
       >
         {/* Tab Header */}
@@ -86,7 +86,7 @@ export const Sidebar = memo(function Sidebar({
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-2 right-2 p-1 rounded-md hover:bg-accent opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute top-2 right-2 p-1 rounded-md hover:bg-accent opacity-0 group-hover:opacity-100 transition-opacity z-10"
           title="Close sidebar (Cmd/Ctrl+B)"
         >
           <CloseIcon />
@@ -150,9 +150,10 @@ interface TabButtonProps {
 const TabButton = memo(function TabButton({ active, onClick, icon, label, className }: TabButtonProps) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className={cn(
-        'flex items-center gap-1.5 px-3 py-[6px] text-[12.5px] font-medium transition-colors border-b-2',
+        'flex items-center gap-1.5 px-3 py-[6px] text-[12.5px] font-medium transition-colors border-b-2 pointer-events-auto',
         active
           ? 'border-primary text-foreground bg-muted/50'
           : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30',

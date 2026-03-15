@@ -57,6 +57,10 @@ const rpc = Electroview.defineRPC<MarkBunRPC>({
         const listeners = (window as any).__electrobunListeners?.['open-quick-open'] || [];
         listeners.forEach((cb: () => void) => cb());
       },
+      openSettings: () => {
+        const listeners = (window as any).__electrobunListeners?.['open-settings'] || [];
+        listeners.forEach((cb: () => void) => cb());
+      },
     },
   },
 });
@@ -146,6 +150,27 @@ export const electrobun = {
 
   async saveDroppedImage(fileName: string, base64Data: string, workspaceRoot: string) {
     return await electroview.rpc.request.saveDroppedImage({ fileName, base64Data, workspaceRoot });
+  },
+
+  // Phase 3: Settings
+  async getSettings() {
+    return await electroview.rpc.request.getSettings({});
+  },
+
+  async saveSettings(params: { theme: 'light' | 'dark' | 'system'; fontSize: number; lineHeight: number; autoSave: boolean; autoSaveInterval: number }) {
+    return await electroview.rpc.request.saveSettings({ settings: params });
+  },
+
+  async getUIState() {
+    return await electroview.rpc.request.getUIState({});
+  },
+
+  async saveUIState(params: Partial<{ showTitleBar: boolean; showToolBar: boolean; showStatusBar: boolean; showSidebar: boolean; sidebarWidth: number; sidebarActiveTab: 'files' | 'outline' | 'search' }>) {
+    return await electroview.rpc.request.saveUIState({ state: params });
+  },
+
+  async updateWindowBounds(x: number, y: number, width: number, height: number) {
+    return await electroview.rpc.request.updateWindowBounds({ x, y, width, height });
   },
 
   // Subscribe to messages from main process

@@ -13,6 +13,7 @@ export interface UseSidebarReturn {
   toggle: () => void;
   open: () => void;
   close: () => void;
+  setIsOpen: (isOpen: boolean) => void;
   setTab: (tab: SidebarTab) => void;
   setWidth: (width: number) => void;
   startResize: () => void;
@@ -56,6 +57,10 @@ export function useSidebar(): UseSidebarReturn {
     setIsResizing(false);
   }, []);
 
+  const setIsOpenCallback = useCallback((value: boolean) => {
+    setIsOpen(value);
+  }, []);
+
   return {
     isOpen,
     activeTab,
@@ -63,6 +68,7 @@ export function useSidebar(): UseSidebarReturn {
     toggle,
     open,
     close,
+    setIsOpen: setIsOpenCallback,
     setTab,
     setWidth,
     startResize,

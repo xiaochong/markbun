@@ -685,6 +685,46 @@ body {
    Table Styles - Minimal, non-intrusive
    =========================================== */
 
+/* Table header styling */
+.milkdown-crepe-container .milkdown-table-block th {
+  font-weight: 600;
+  background-color: hsl(var(--muted));
+  border-bottom: 2px solid hsl(var(--border));
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.dark .milkdown-crepe-container .milkdown-table-block th {
+  background-color: hsl(220 10% 28%);
+}
+
+/* Table cell styling */
+.milkdown-crepe-container .milkdown-table-block td {
+  padding: 8px 12px;
+  border-bottom: 1px solid hsl(var(--border) / 0.5);
+}
+
+/* Table row hover effect */
+.milkdown-crepe-container .milkdown-table-block tr:hover {
+  background-color: hsl(var(--muted) / 0.5);
+}
+
+.dark .milkdown-crepe-container .milkdown-table-block tr:hover {
+  background-color: hsl(220 10% 28% / 0.5);
+}
+
+/* Table border styling */
+.milkdown-crepe-container .milkdown-table-block {
+  border: 1px solid hsl(var(--border));
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.milkdown-crepe-container .milkdown-table-block table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
 /* Hide all table drag handles (= buttons) and add buttons (+ buttons) */
 .milkdown-crepe-container .milkdown-table-block .handle,
 .milkdown-crepe-container .milkdown-table-block .cell-handle,

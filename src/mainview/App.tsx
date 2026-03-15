@@ -6,6 +6,7 @@ import { FileExplorer } from './components/file-explorer';
 import { Outline } from './components/outline';
 import { QuickOpen } from './components/quick-open';
 import { ImageInsertDialog } from './components/image-insert';
+import { SettingsDialog } from './components/settings';
 import { useFileOperations } from './hooks/useFileOperations';
 import { useTheme } from './hooks/useTheme';
 import { useSidebar } from './hooks/useSidebar';
@@ -21,15 +22,41 @@ import {
   loadLocalImage,
   isLocalFilePath,
 } from './lib/image';
-import type { FileNode } from '@/shared/types';
+import type { FileNode, AppSettings, UIState } from '@/shared/types';
 
 function App() {
   const editorRef = useRef<MilkdownEditorRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { theme, toggleTheme } = useTheme();
   const [editorContent, setEditorContent] = useState('');
 
-  // Visibility states for UI components (all hidden by default for distraction-free writing)
+  // Phase 3: Settings
+  const [settings, setSettings] = useState<AppSettings | null>(null);
+  const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+
+  // Load settings on mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      const result = await electrobun.getSettings() as { success: boolean; settings?: AppSettings };
+      if (result.success && result.settings) {
+        setSettings(result.settings);
+      }
+    };
+    void loadSettings();
+  }, []);
+
+  // Theme management from settings
+  const { theme, toggleTheme } = useTheme({
+    initialTheme: settings?.theme ?? 'system',
+    onThemeChange: async (newTheme) => {
+      if (settings) {
+        const newSettings = { ...settings, theme: newTheme };
+        setSettings(newSettings);
+        await electrobun.saveSettings(newSettings);
+      }
+    },
+  });
+
+  // Visibility states for UI components (loaded from settings or defaults)
   const [showTitleBar, setShowTitleBar] = useState(false);
   const [showToolbar, setShowToolbar] = useState(false);
   const [showStatusBar, setShowStatusBar] = useState(false);
@@ -37,11 +64,84 @@ function App() {
   // Image insert dialog state
   const [showImageDialog, setShowImageDialog] = useState(false);
 
-  // Phase 2: Sidebar and file management
+  // Phase 2: Sidebar and file management - MUST be declared before UI state effects
   const sidebar = useSidebar();
   const fileExplorer = useFileExplorer();
   const outline = useOutline();
   const quickOpen = useQuickOpen(handleQuickOpenSelect);
+
+  // Load UI state on mount (only once, not when sidebar changes)
+  useEffect(() => {
+    const loadUIState = async () => {
+      const result = await electrobun.getUIState() as { success: boolean; state?: UIState };
+      if (result.success && result.state) {
+        setShowTitleBar(result.state.showTitleBar);
+        setShowToolbar(result.state.showToolBar);
+        setShowStatusBar(result.state.showStatusBar);
+        // Use setIsOpen and setWidth directly to avoid triggering sidebar tab switch
+        sidebar.setIsOpen(result.state.showSidebar);
+        sidebar.setWidth(result.state.sidebarWidth);
+        // Only set tab without opening sidebar
+        sidebar.setTab(result.state.sidebarActiveTab);
+      }
+    };
+    void loadUIState();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Debounced UI state save (UI state only, window state is managed by main process)
+  const uiStateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingUIStateRef = useRef<{
+    showTitleBar: boolean;
+    showToolBar: boolean;
+    showStatusBar: boolean;
+    showSidebar: boolean;
+    sidebarWidth: number;
+    sidebarActiveTab: 'files' | 'outline' | 'search';
+  } | null>(null);
+
+  const flushUIState = useCallback(async () => {
+    if (pendingUIStateRef.current) {
+      await electrobun.saveUIState(pendingUIStateRef.current);
+      pendingUIStateRef.current = null;
+    }
+  }, []);
+
+  const saveUIState = useCallback(() => {
+    // Store pending state
+    pendingUIStateRef.current = {
+      showTitleBar,
+      showToolBar: showToolbar,
+      showStatusBar,
+      showSidebar: sidebar.isOpen,
+      sidebarWidth: sidebar.width,
+      sidebarActiveTab: sidebar.activeTab,
+    };
+
+    if (uiStateTimeoutRef.current) {
+      clearTimeout(uiStateTimeoutRef.current);
+    }
+    uiStateTimeoutRef.current = setTimeout(() => {
+      void flushUIState();
+    }, 300);
+  }, [showTitleBar, showToolbar, showStatusBar, sidebar.isOpen, sidebar.width, sidebar.activeTab, flushUIState]);
+
+  // Save UI state when visibility changes
+  useEffect(() => {
+    saveUIState();
+  }, [showTitleBar, showToolbar, showStatusBar, sidebar.isOpen, sidebar.width, sidebar.activeTab, saveUIState]);
+
+  // Save UI state before window closes
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Flush any pending state immediately
+      void flushUIState();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [flushUIState]);
+
 
   // Track current file path for image processing
   const [currentFilePath, setCurrentFilePath] = useState<string | null>(null);
@@ -55,7 +155,10 @@ function App() {
     handleOpen,
     handleSave,
     handleSaveAs,
-  } = useFileOperations();
+  } = useFileOperations({
+    enableAutoSave: settings?.autoSave ?? true,
+    autoSaveInterval: settings?.autoSaveInterval ?? 2000,
+  });
 
   // Sync path from useFileOperations to local state and workspace manager
   useEffect(() => {
@@ -256,6 +359,23 @@ function App() {
       }
     });
   }, [outline.setHeadings]);
+
+  // Listen for settings dialog open event
+  useEffect(() => {
+    return electrobun.on('open-settings', () => {
+      setShowSettingsDialog(true);
+    });
+  }, []);
+
+  // Handle settings save
+  const handleSettingsSave = useCallback(async (newSettings: AppSettings) => {
+    setSettings(newSettings);
+    // The RPC expects { settings: params }, but our lib wraps it
+    const result = await electrobun.saveSettings(newSettings) as { success: boolean; error?: string };
+    if (!result.success) {
+      console.error('Failed to save settings:', result.error);
+    }
+  }, []);
 
   // Listen for visibility toggle events
   useEffect(() => {
@@ -552,6 +672,14 @@ function App() {
         isOpen={showImageDialog}
         onClose={() => setShowImageDialog(false)}
         onInsert={handleImageInsert}
+      />
+
+      {/* Settings Dialog */}
+      <SettingsDialog
+        isOpen={showSettingsDialog}
+        settings={settings}
+        onClose={() => setShowSettingsDialog(false)}
+        onSave={handleSettingsSave}
       />
     </div>
   );

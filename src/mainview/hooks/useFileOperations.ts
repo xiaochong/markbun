@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { electrobun } from '@/lib/electrobun';
 import { restoreOriginalImagePaths } from '@/lib/image';
+import { useAutoSave } from './useAutoSave';
 
 interface FileState {
   path: string | null;
@@ -8,7 +9,14 @@ interface FileState {
   isDirty: boolean;
 }
 
-export function useFileOperations() {
+interface UseFileOperationsOptions {
+  enableAutoSave?: boolean;
+  autoSaveInterval?: number;
+}
+
+export function useFileOperations(options: UseFileOperationsOptions = {}) {
+  const { enableAutoSave = true, autoSaveInterval = 2000 } = options;
+
   const [fileState, setFileState] = useState<FileState>({
     path: null,
     content: '',
@@ -18,6 +26,39 @@ export function useFileOperations() {
   const [saveStatus, setSaveStatus] = useState<'saving' | 'saved' | 'error' | null>(null);
   const fileStateRef = useRef(fileState);
   fileStateRef.current = fileState;
+
+  // Auto-save callback
+  const handleAutoSave = useCallback(async () => {
+    const state = fileStateRef.current;
+    if (!state.path || !state.isDirty) return;
+
+    setSaveStatus('saving');
+    try {
+      const contentToSave = restoreOriginalImagePaths(state.content);
+      const result = await electrobun.saveFile(contentToSave, state.path) as { success: boolean; error?: string };
+
+      if (result.success) {
+        setFileState(prev => ({ ...prev, isDirty: false }));
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus(null), 2000);
+      } else {
+        setSaveStatus('error');
+        setTimeout(() => setSaveStatus(null), 2000);
+      }
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus(null), 2000);
+    }
+  }, []);
+
+  // Setup auto-save
+  const { triggerSave: triggerAutoSave } = useAutoSave({
+    enabled: enableAutoSave && !!fileState.path,
+    interval: autoSaveInterval,
+    onSave: handleAutoSave,
+    isDirty: fileState.isDirty,
+  });
 
   // Listen for events from main process
   useEffect(() => {
@@ -74,12 +115,20 @@ export function useFileOperations() {
 
   // Update content
   const updateContent = useCallback((newContent: string) => {
-    setFileState(prev => ({
-      ...prev,
-      content: newContent,
-      isDirty: prev.path !== null ? newContent !== prev.content : newContent.length > 0,
-    }));
-  }, []);
+    setFileState(prev => {
+      const isDirty = prev.path !== null ? newContent !== prev.content : newContent.length > 0;
+      return {
+        ...prev,
+        content: newContent,
+        isDirty,
+      };
+    });
+
+    // Trigger auto-save on content change
+    if (enableAutoSave && fileStateRef.current.path) {
+      triggerAutoSave();
+    }
+  }, [enableAutoSave, triggerAutoSave]);
 
   // Open file (triggers native dialog)
   const handleOpen = useCallback(async () => {

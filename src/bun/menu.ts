@@ -26,6 +26,8 @@ export function setupMenu(state: ViewMenuState = defaultState): void {
       submenu: [
         { label: 'About MarkBun', action: 'app-about' },
         { type: 'separator' },
+        { label: 'Preferences...', action: 'app-preferences', accelerator: 'Cmd+,' },
+        { type: 'separator' },
         { label: 'Hide MarkBun', role: 'hide', accelerator: 'Cmd+H' },
         { label: 'Hide Others', role: 'hideOthers', accelerator: 'Cmd+Option+H' },
         { label: 'Show All', role: 'showAll' },

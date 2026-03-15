@@ -9,7 +9,7 @@ This document outlines the development phases for MarkBun, from MVP to v1.0.
 | Phase 0 | v0.0.x | Project Setup | ✅ Complete |
 | Phase 1 | v0.1.0 | MVP - Core Editor | ✅ Complete |
 | Phase 2 | v0.2.0 | File Management | ✅ Complete |
-| Phase 3 | v0.3.0 | Enhanced Editing | ⏳ Planned |
+| Phase 3 | v0.3.0 | Enhanced Editing | ✅ Complete |
 | Phase 4 | v1.0.0 | Production Ready | ⏳ Planned |
 
 ---
@@ -122,10 +122,10 @@ This document outlines the development phases for MarkBun, from MVP to v1.0.
 
 ---
 
-## ⏳ Phase 3: Enhanced Editing (v0.3.0)
+## ✅ Phase 3: Enhanced Editing (v0.3.0)
 
-**Status:** Planned  
-**Target:** Advanced editor features
+**Status:** Complete
+**Target:** Advanced editor features, auto-save, and UI state persistence
 
 ### Tasks
 
@@ -134,19 +134,26 @@ This document outlines the development phases for MarkBun, from MVP to v1.0.
   - [ ] Inline math: `$...$`
   - [ ] Block math: `$$...$$`
   - [ ] Live preview
-- [ ] Table editing
-  - [ ] Insert table dialog
-  - [ ] Add/remove rows and columns
-  - [ ] Column resizing
+- [x] Table editing
+  - [x] Insert table dialog
+  - [x] Add/remove rows and columns
+  - [x] Header styling
 - [x] Image support
   - [x] Drag and drop images
   - [x] Image upload/paste
   - [ ] Image resizing
 
 #### Auto-save
-- [ ] Auto-save on change (debounced)
-- [ ] Configurable auto-save interval
-- [ ] Unsaved changes indicator
+- [x] Auto-save on change (hybrid throttle/debounce strategy)
+- [x] Configurable auto-save interval
+- [x] Unsaved changes indicator
+
+#### UI State Persistence
+- [x] Save and restore window position and size
+- [x] Multi-monitor support with display detection
+- [x] Sidebar width and visibility state
+- [x] Active sidebar tab (Files/Outline)
+- [x] Theme preference (light/dark/system)
 
 #### Search
 - [ ] Find in document (Ctrl/Cmd + F)
@@ -168,12 +175,12 @@ This document outlines the development phases for MarkBun, from MVP to v1.0.
 - [ ] Multiple cursors
 - [ ] Split view (edit + preview)
 
-#### Settings
-- [ ] Settings UI dialog
-- [ ] Font family and size
-- [ ] Line height
-- [ ] Word wrap toggle
-- [ ] Show/hide line numbers
+#### Settings (Completed in v0.3.0)
+- [x] Settings UI dialog
+- [x] Font family and size
+- [x] Line height
+- [x] Word wrap toggle
+- [x] Show/hide line numbers
 
 #### Polish
 - [ ] Custom themes support
@@ -213,4 +220,4 @@ Users retain full control: every UI element can be toggled on demand via the Vie
 
 ---
 
-*Last updated: 2026-03-14*
+*Last updated: 2026-03-15*
