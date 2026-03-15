@@ -79,10 +79,6 @@ bun run dev
 bun run dev:hmr
 ```
 
-### Project Rename Note
-
-This project was previously called "PingWrite". It has been renamed to **MarkBun** to better reflect its nature: a Markdown editor powered by Electrobun (Mark + Bun).
-
 ### Build
 
 ```bash
