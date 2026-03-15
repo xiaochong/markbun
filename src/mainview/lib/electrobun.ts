@@ -136,6 +136,14 @@ export const electrobun = {
     return await electroview.rpc.request.selectImageFile({});
   },
 
+  async getDesktopPath() {
+    return await electroview.rpc.request.getDesktopPath({});
+  },
+
+  async getWorkspaceRoot() {
+    return await electroview.rpc.request.getWorkspaceRoot({});
+  },
+
   // Subscribe to messages from main process
   on(event: string, callback: (data?: unknown) => void): () => void {
     const win = window as any;

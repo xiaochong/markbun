@@ -2,7 +2,7 @@ import { $prose } from '@milkdown/utils';
 import { schemaCtx, serializerCtx } from '@milkdown/kit/core';
 import { Plugin, PluginKey } from '@milkdown/prose/state';
 import { Slice } from '@milkdown/prose/model';
-import { restoreOriginalImagePaths } from '@/lib/imageProcessor';
+import { prepareForClipboard } from '@/lib/image';
 
 /**
  * Milkdown plugin to convert blob URLs back to original paths when copying
@@ -30,11 +30,7 @@ export const clipboardBlobConverter = $prose((ctx) => {
         let markdown = serializer(doc);
 
         // Convert blob URLs to original paths
-        if (markdown.includes('blob:http')) {
-          markdown = restoreOriginalImagePaths(markdown);
-        }
-
-        return markdown;
+        return prepareForClipboard(markdown);
       },
     },
   });

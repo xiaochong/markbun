@@ -10,7 +10,7 @@
 
 import { useCallback, useRef } from 'react';
 import { electrobun } from '@/lib/electrobun';
-import { restoreOriginalImagePaths, processMarkdownImages } from '@/lib/imageProcessor';
+import { prepareForClipboard, processFromClipboard } from '@/lib/image';
 import type { MilkdownEditorRef } from '@/components/editor';
 
 export interface ClipboardOperations {
@@ -47,7 +47,7 @@ function getSelectedText(editorRef: React.RefObject<MilkdownEditorRef | null>): 
  * Converts text with blob URLs to original paths if needed
  */
 function prepareTextForClipboard(text: string): string {
-  return text.includes('blob:http') ? restoreOriginalImagePaths(text) : text;
+  return prepareForClipboard(text);
 }
 
 export function useClipboard(
@@ -102,8 +102,7 @@ export function useClipboard(
 
       if (result.success && result.text) {
         // Process markdown content for local images
-        // Always process to handle absolute path images even without currentFilePath
-        const processedText = await processMarkdownImages(result.text, currentFilePath || null);
+        const processedText = await processFromClipboard(result.text);
 
         // Insert text at current cursor position using Milkdown's API
         const editor = editorRefStable.current;
@@ -121,7 +120,7 @@ export function useClipboard(
       console.error('Paste failed:', error);
       return false;
     }
-  }, [currentFilePath]);
+  }, []);
 
   return { copy, cut, paste, hasSelection };
 }

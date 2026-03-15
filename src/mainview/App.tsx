@@ -14,8 +14,13 @@ import { useOutline } from './hooks/useOutline';
 import { useQuickOpen } from './hooks/useQuickOpen';
 import { useClipboard } from './hooks/useClipboard';
 import { electrobun } from './lib/electrobun';
-import { processMarkdownImages } from './lib/imageProcessor';
-import { imageCache } from './lib/imageCache';
+import {
+  workspaceManager,
+  processMarkdownImages,
+  hasLocalImages,
+  loadLocalImage,
+  isLocalFilePath,
+} from './lib/image';
 import type { FileNode } from '@/shared/types';
 
 function App() {
@@ -52,10 +57,22 @@ function App() {
     handleSaveAs,
   } = useFileOperations();
 
-  // Sync path from useFileOperations to local state for clipboard
+  // Sync path from useFileOperations to local state and workspace manager
   useEffect(() => {
     setCurrentFilePath(path);
+    workspaceManager.setCurrentFile(path);
   }, [path]);
+
+  // Initialize workspace root on mount (desktop as default)
+  useEffect(() => {
+    const initWorkspace = async () => {
+      const result = await electrobun.getDesktopPath() as { success: boolean; path?: string };
+      if (result.success && result.path) {
+        workspaceManager.setWorkspaceRoot(result.path);
+      }
+    };
+    void initWorkspace();
+  }, []);
 
   // Clipboard operations with blob URL handling
   const clipboard = useClipboard(editorRef, currentFilePath);
@@ -75,12 +92,6 @@ function App() {
     quickOpen.close();
   }
 
-  // Check if markdown contains local images that need processing
-  const hasLocalImages = useCallback((content: string): boolean => {
-    // Match ![alt](path) where path is not data:, blob:, or http/https
-    return /!\[.*?\]\((?!data:|blob:|https?:\/\/)[^)]+\)/.test(content);
-  }, []);
-
   // Open file by path
   const openFileByPath = useCallback(async (filePath: string) => {
     try {
@@ -92,6 +103,9 @@ function App() {
       };
 
       if (result.success && result.content !== undefined && result.path) {
+        // Update workspace and file state
+        workspaceManager.setCurrentFile(result.path);
+
         // Auto-set file explorer root to the file's parent directory
         const parentDir = result.path.substring(0, result.path.lastIndexOf('/')) || '/';
         fileExplorer.setRootPath(parentDir);
@@ -104,7 +118,7 @@ function App() {
 
         if (needsImageProcessing) {
           // Process images first, then render once
-          const processedContent = await processMarkdownImages(result.content, result.path);
+          const processedContent = await processMarkdownImages(result.content);
 
           if (editorRef.current?.isReady) {
             editorRef.current.setMarkdown(processedContent);
@@ -126,7 +140,7 @@ function App() {
     } catch (error) {
       console.error('Failed to open file:', error);
     }
-  }, [fileExplorer.setRootPath, fileExplorer.selectFile, hasLocalImages, outline.setHeadings]);
+  }, [fileExplorer.setRootPath, fileExplorer.selectFile, outline.setHeadings]);
 
   // Handle file click in file explorer
   const handleFileClick = useCallback((file: FileNode) => {
@@ -177,7 +191,8 @@ function App() {
     return electrobun.on('file-opened', async (data) => {
       const { path: filePath, content: fileContent } = data as { path: string; content: string };
 
-      // Update current file path for image processing
+      // Update workspace and file state
+      workspaceManager.setCurrentFile(filePath);
       setCurrentFilePath(filePath);
 
       // Auto-set file explorer root to the file's parent directory
@@ -193,7 +208,7 @@ function App() {
       const setContent = async () => {
         if (needsImageProcessing) {
           // Process images first, then render once
-          const processedContent = await processMarkdownImages(fileContent, filePath);
+          const processedContent = await processMarkdownImages(fileContent);
           if (editorRef.current?.isReady) {
             editorRef.current.setMarkdown(processedContent);
             setEditorContent(processedContent);
@@ -226,7 +241,7 @@ function App() {
 
       void loadContent();
     });
-  }, [outline.setHeadings, fileExplorer.setRootPath, fileExplorer.selectFile, hasLocalImages, setCurrentFilePath]);
+  }, [outline.setHeadings, fileExplorer.setRootPath, fileExplorer.selectFile]);
 
   // Listen for file-new event to clear editor
   useEffect(() => {
@@ -235,6 +250,9 @@ function App() {
         editorRef.current.setMarkdown('');
         setEditorContent('');
         outline.setHeadings('');
+        // Reset workspace current file but keep root
+        workspaceManager.setCurrentFile(null);
+        setCurrentFilePath(null);
       }
     });
   }, [outline.setHeadings]);
@@ -354,46 +372,23 @@ function App() {
   const handleList = useCallback(() => editorRef.current?.toggleList(), []);
   const handleOrderedList = useCallback(() => editorRef.current?.toggleOrderedList(), []);
 
-  // Handle image insert
+  // Handle image insert - using new image module
   const handleImageInsert = useCallback(async (src: string, alt: string) => {
-    // Insert image at current cursor position
     const editor = editorRef.current;
     if (!editor?.isReady) return;
 
     let imageUrl = src;
 
-    // Check if it's a local file path (not URL)
-    const isLocalFile = !src.startsWith('http://') &&
-                        !src.startsWith('https://') &&
-                        !src.startsWith('data:') &&
-                        !src.startsWith('blob:') &&
-                        src.startsWith('/');
-
-    if (isLocalFile) {
-      // Check cache first
-      const cached = imageCache.get(src);
-      if (cached) {
-        imageUrl = cached;
-      } else {
-        // Read image and convert to Blob URL
-        try {
-          const response = await electrobun.readImageAsBase64(src) as {
-            success: boolean;
-            dataUrl?: string;
-            error?: string;
-          };
-          if (response.success && response.dataUrl) {
-            imageUrl = imageCache.setFromBase64(src, response.dataUrl);
-          } else {
-            console.error('Failed to read image:', response.error);
-          }
-        } catch (error) {
-          console.error('Failed to read image file:', error);
-        }
+    // Check if it's a local file path
+    if (isLocalFilePath(src) && src.startsWith('/')) {
+      // Resolve and load through workspace
+      const resolvedPath = workspaceManager.resolvePath(src);
+      const blobUrl = await loadLocalImage(resolvedPath);
+      if (blobUrl) {
+        imageUrl = blobUrl;
       }
     }
 
-    // Insert image using Milkdown's insertImageCommand
     editor.insertImage(imageUrl, alt);
   }, []);
 
@@ -422,6 +417,8 @@ function App() {
           e.preventDefault();
           updateContent('');
           setEditorContent('');
+          workspaceManager.setCurrentFile(null);
+          setCurrentFilePath(null);
           if (editorRef.current?.isReady) {
             editorRef.current.setMarkdown('');
           }

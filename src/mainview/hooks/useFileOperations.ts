@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { electrobun } from '@/lib/electrobun';
-import { restoreOriginalImagePaths } from '@/lib/imageProcessor';
+import { restoreOriginalImagePaths } from '@/lib/image';
 
 interface FileState {
   path: string | null;

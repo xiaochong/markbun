@@ -147,6 +147,8 @@ export type MarkBunRPC = {
       clearRecentFiles: { params: {}; response: { success: boolean; error?: string } };
       quickOpen: { params: {}; response: { success: boolean; items?: QuickOpenItem[]; error?: string } };
       selectImageFile: { params: {}; response: { success: boolean; path?: string; error?: string } };
+      getDesktopPath: { params: {}; response: { success: boolean; path?: string; error?: string } };
+      getWorkspaceRoot: { params: {}; response: { success: boolean; path?: string; error?: string } };
     };
     messages: {
       fileOpened: { path: string; content: string };

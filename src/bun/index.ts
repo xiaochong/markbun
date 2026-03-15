@@ -15,6 +15,14 @@ const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`;
 let currentFilePath: string | null = null;
 
 // Current view menu state
+let currentWorkspaceRoot: string | null = null;
+
+// Helper to get desktop path for current platform
+function getDesktopPath(): string {
+  return join(homedir(), 'Desktop');
+}
+
+// Current view menu state
 let viewMenuState: ViewMenuState = {
   showTitleBar: false,
   showToolBar: false,
@@ -359,6 +367,18 @@ async function main() {
             };
           }
         },
+        getDesktopPath: async () => {
+          return {
+            success: true,
+            path: getDesktopPath(),
+          };
+        },
+        getWorkspaceRoot: async () => {
+          return {
+            success: true,
+            path: currentWorkspaceRoot ?? getDesktopPath(),
+          };
+        },
       },
       messages: {},
     },
@@ -402,6 +422,9 @@ async function main() {
             // Add to recent files
             if (result.path) {
               await addRecentFile(result.path);
+              // Update workspace root to file's directory
+              const dirSeparator = result.path.lastIndexOf('/');
+              currentWorkspaceRoot = dirSeparator > 0 ? result.path.substring(0, dirSeparator) : '/';
             }
             // @ts-ignore
             win.webview.rpc.send.fileOpened({
