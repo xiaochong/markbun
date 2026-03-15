@@ -840,13 +840,38 @@ body {
   color: inherit !important;
 }
 
-/* Image styles */
+/* Image styles - Comprehensive fix for image sizing issues */
 .milkdown-crepe-container img {
   max-width: 100%;
+  width: auto;
   height: auto;
+  max-height: none;
   display: block;
   margin: 1rem 0;
   border-radius: 4px;
+  object-fit: contain;
+  box-sizing: border-box;
+}
+
+/* Image block container styles - prevent sizing issues on file switch */
+.milkdown-crepe-container .milkdown-image-block,
+.milkdown-crepe-container .milkdown-image-block * {
+  max-width: 100% !important;
+}
+
+.milkdown-crepe-container .milkdown-image-block img,
+.milkdown-crepe-container .image-block img,
+.milkdown-crepe-container [class*="image-block"] img {
+  max-width: 100% !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+}
+
+/* Ensure image wrapper doesn't expand */
+.milkdown-crepe-container .milkdown-image-block {
+  width: 100%;
+  overflow: hidden;
 }
 
 /* Image selected state */

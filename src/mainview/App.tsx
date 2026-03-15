@@ -259,6 +259,12 @@ function App() {
         // Check if content has local images
         const needsImageProcessing = hasLocalImages(result.content);
 
+        // Clear editor first to force ImageBlock components to fully re-render
+        // This prevents image sizing issues when switching between files with images
+        if (editorRef.current?.isReady) {
+          editorRef.current.setMarkdown('');
+        }
+
         if (needsImageProcessing) {
           // Process images first, then render once
           const processedContent = await processMarkdownImages(result.content);
@@ -270,9 +276,12 @@ function App() {
           }
 
           if (editorRef.current?.isReady) {
-            editorRef.current.setMarkdown(processedContent);
-            setEditorContent(processedContent);
-            outline.setHeadings(processedContent);
+            // Use requestAnimationFrame to ensure the empty content is rendered first
+            requestAnimationFrame(() => {
+              editorRef.current?.setMarkdown(processedContent);
+              setEditorContent(processedContent);
+              outline.setHeadings(processedContent);
+            });
           }
         } else {
           // Check if cancelled before rendering
@@ -283,9 +292,12 @@ function App() {
 
           // No local images, render immediately
           if (editorRef.current?.isReady) {
-            editorRef.current.setMarkdown(result.content);
-            setEditorContent(result.content);
-            outline.setHeadings(result.content);
+            // Use requestAnimationFrame to ensure the empty content is rendered first
+            requestAnimationFrame(() => {
+              editorRef.current?.setMarkdown(result.content);
+              setEditorContent(result.content);
+              outline.setHeadings(result.content);
+            });
           }
         }
 
@@ -387,6 +399,12 @@ function App() {
 
       const setContent = async () => {
         try {
+          // Clear editor first to force ImageBlock components to fully re-render
+          // This prevents image sizing issues when switching between files with images
+          if (editorRef.current?.isReady) {
+            editorRef.current.setMarkdown('');
+          }
+
           if (needsImageProcessing) {
             // Process images first, then render once
             const processedContent = await processMarkdownImages(fileContent);
@@ -398,9 +416,12 @@ function App() {
             }
 
             if (editorRef.current?.isReady) {
-              editorRef.current.setMarkdown(processedContent);
-              setEditorContent(processedContent);
-              outline.setHeadings(processedContent);
+              // Use requestAnimationFrame to ensure the empty content is rendered first
+              requestAnimationFrame(() => {
+                editorRef.current?.setMarkdown(processedContent);
+                setEditorContent(processedContent);
+                outline.setHeadings(processedContent);
+              });
             }
           } else {
             // Check if cancelled before render
@@ -411,9 +432,12 @@ function App() {
 
             // No local images, render immediately
             if (editorRef.current?.isReady) {
-              editorRef.current.setMarkdown(fileContent);
-              setEditorContent(fileContent);
-              outline.setHeadings(fileContent);
+              // Use requestAnimationFrame to ensure the empty content is rendered first
+              requestAnimationFrame(() => {
+                editorRef.current?.setMarkdown(fileContent);
+                setEditorContent(fileContent);
+                outline.setHeadings(fileContent);
+              });
             }
           }
         } finally {
