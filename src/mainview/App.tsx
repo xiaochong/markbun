@@ -580,20 +580,6 @@ function App() {
         />
       )}
 
-      {/* Toolbar */}
-      {showToolbar && (
-        <Toolbar
-          onBold={handleBold}
-          onItalic={handleItalic}
-          onHeading={handleHeading}
-          onQuote={handleQuote}
-          onCode={handleCode}
-          onLink={handleLink}
-          onList={handleList}
-          onOrderedList={handleOrderedList}
-        />
-      )}
-
       {/* Main Content Area with Sidebar */}
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
@@ -633,12 +619,25 @@ function App() {
         </Sidebar>
 
         {/* Editor */}
-        <main ref={containerRef} className="flex-1 overflow-hidden">
+        <main ref={containerRef} className="flex-1 flex flex-col overflow-hidden">
+          {/* Toolbar */}
+          {showToolbar && (
+            <Toolbar
+              onBold={handleBold}
+              onItalic={handleItalic}
+              onHeading={handleHeading}
+              onQuote={handleQuote}
+              onCode={handleCode}
+              onLink={handleLink}
+              onList={handleList}
+              onOrderedList={handleOrderedList}
+            />
+          )}
           <MilkdownEditor
             ref={editorRef}
             defaultValue={content}
             onChange={handleEditorChange}
-            className="h-full"
+            className="flex-1"
             darkMode={theme === 'dark'}
           />
         </main>
