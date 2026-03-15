@@ -1,8 +1,8 @@
 import { BrowserWindow, BrowserView, Updater, Utils, ApplicationMenu, ContextMenu } from 'electrobun/bun';
 import { setupMenu, type ViewMenuState } from './menu';
 import type { MarkBunRPC } from '../shared/types';
-import { readFile, writeFile, stat, mkdir } from 'fs/promises';
-import { join, dirname } from 'path';
+import { readFile, writeFile, stat, mkdir, readdir, open } from 'fs/promises';
+import { join, dirname, relative } from 'path';
 import { homedir } from 'os';
 import { readFolder } from './ipc/folders';
 import { getRecentFiles, addRecentFile, removeRecentFile, clearRecentFiles } from './ipc/recentFiles';
@@ -20,6 +20,108 @@ let currentWorkspaceRoot: string | null = null;
 // Helper to get desktop path for current platform
 function getDesktopPath(): string {
   return join(homedir(), 'Desktop');
+}
+
+// Helper to read first and last N bytes from a file for comparison
+async function readFileHeadAndTail(
+  filePath: string,
+  byteCount: number
+): Promise<{ head: Buffer; tail: Buffer } | null> {
+  try {
+    const fileHandle = await open(filePath, 'r');
+    try {
+      const fileStat = await fileHandle.stat();
+      const fileSize = fileStat.size;
+
+      // Read first N bytes
+      const headBuffer = Buffer.alloc(byteCount);
+      await fileHandle.read(headBuffer, 0, byteCount, 0);
+
+      // Read last N bytes (if file is larger than byteCount)
+      const tailBuffer = Buffer.alloc(byteCount);
+      if (fileSize > byteCount) {
+        await fileHandle.read(tailBuffer, 0, byteCount, fileSize - byteCount);
+      } else {
+        // File is smaller than byteCount, read what we can
+        await fileHandle.read(tailBuffer, 0, fileSize, 0);
+      }
+
+      return { head: headBuffer, tail: tailBuffer };
+    } finally {
+      await fileHandle.close();
+    }
+  } catch {
+    return null;
+  }
+}
+
+// Helper to recursively find a file in workspace with depth limit
+async function findFileInWorkspace(
+  workspaceRoot: string,
+  fileName: string,
+  fileSize: number,
+  fileHead: Buffer,
+  fileTail: Buffer,
+  options: {
+    maxDepth?: number;
+    skipDirs?: string[];
+  } = {}
+): Promise<{ absolutePath: string; relativePath: string; mtime?: Date } | null> {
+  const { maxDepth = 3, skipDirs = ['.git', 'node_modules', '.cache', 'dist', 'build'] } = options;
+
+  async function search(dir: string, depth: number): Promise<{ absolutePath: string; relativePath: string; mtime?: Date } | null> {
+    if (depth > maxDepth) return null;
+
+    try {
+      const entries = await readdir(dir, { withFileTypes: true });
+
+      for (const entry of entries) {
+        // Skip hidden files and directories
+        if (entry.name.startsWith('.')) continue;
+
+        const fullPath = join(dir, entry.name);
+
+        if (entry.isDirectory()) {
+          // Skip specified directories
+          if (skipDirs.includes(entry.name)) continue;
+
+          const found = await search(fullPath, depth + 1);
+          if (found) return found;
+        } else if (entry.isFile() && entry.name === fileName) {
+          try {
+            const existingStat = await stat(fullPath);
+
+            // Check file size matches
+            if (existingStat.size !== fileSize) continue;
+
+            // Compare head and tail bytes
+            const existingData = await readFileHeadAndTail(fullPath, 10);
+            if (!existingData) continue;
+
+            const headMatches = fileHead.equals(existingData.head);
+            const tailMatches = fileTail.equals(existingData.tail);
+
+            if (headMatches && tailMatches) {
+              return {
+                absolutePath: fullPath,
+                relativePath: relative(workspaceRoot, fullPath),
+                mtime: existingStat.mtime,
+              };
+            }
+          } catch {
+            // Continue searching
+            continue;
+          }
+        }
+      }
+    } catch {
+      // Directory not readable, skip
+    }
+
+    return null;
+  }
+
+  return search(workspaceRoot, 0);
 }
 
 // Current view menu state
@@ -381,28 +483,41 @@ async function main() {
         },
         saveDroppedImage: async ({ fileName, base64Data, workspaceRoot }: { fileName: string; base64Data: string; workspaceRoot: string }) => {
           try {
-            // Check if the file already exists in workspace (no need to copy)
-            const potentialPath = join(workspaceRoot, fileName);
-            try {
-              const fileStat = await stat(potentialPath);
-              if (fileStat.isFile()) {
-                // File already exists in workspace, use it directly
-                return {
-                  success: true,
-                  relativePath: fileName,
-                  absolutePath: potentialPath,
-                };
-              }
-            } catch {
-              // File doesn't exist, continue to save
+            // Decode base64 to buffer for comparison
+            const imageBuffer = Buffer.from(base64Data, 'base64');
+            const fileSize = imageBuffer.length;
+
+            // Extract head and tail bytes (10 bytes each) for comparison
+            const headBytes = imageBuffer.slice(0, 10);
+            const tailBytes = fileSize > 10
+              ? imageBuffer.slice(fileSize - 10)
+              : imageBuffer.slice(0);
+
+            // Step 1: Check if file already exists in workspace (recursively, max 3 levels)
+            const existingFile = await findFileInWorkspace(
+              workspaceRoot,
+              fileName,
+              fileSize,
+              headBytes,
+              tailBytes,
+              { maxDepth: 3 }
+            );
+
+            if (existingFile) {
+              // File already exists in workspace, use it directly
+              return {
+                success: true,
+                relativePath: existingFile.relativePath,
+                absolutePath: existingFile.absolutePath,
+              };
             }
 
+            // Step 2: File doesn't exist, save to assets directory
             // Create assets directory if it doesn't exist
             const assetsDir = join(workspaceRoot, 'assets');
             try {
               await stat(assetsDir);
             } catch {
-              // Directory doesn't exist, create it
               await mkdir(assetsDir, { recursive: true });
             }
 
@@ -417,21 +532,17 @@ async function main() {
             while (true) {
               try {
                 await stat(targetPath);
-                // File exists, try new name
                 targetFileName = `${baseName}_${counter}${ext}`;
                 targetPath = join(assetsDir, targetFileName);
                 counter++;
               } catch {
-                // File doesn't exist, use this name
                 break;
               }
             }
 
-            // Decode base64 and save
-            const imageBuffer = Buffer.from(base64Data, 'base64');
+            // Save the file
             await writeFile(targetPath, imageBuffer);
 
-            // Return relative path from workspace root
             const relativePath = `assets/${targetFileName}`;
 
             return {

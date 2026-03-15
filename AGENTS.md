@@ -753,7 +753,10 @@ export function prepareForClipboard(markdown: string): string {
 When implementing drag-drop image insertion:
 
 1. Read file as base64 (FileReader)
-2. Save to workspace via Bun process (preserves relative path)
+2. Check if file already exists in workspace (recursive, max 3 levels)
+   - Compare: filename + file size + first/last 10 bytes
+   - If found → use existing file's relative path
+   - If not found → save to `assets/` directory
 3. Load through `loadLocalImage()` → returns blob URL
 4. Insert markdown with blob URL
 5. On save, blob URLs automatically convert to relative paths
@@ -763,9 +766,23 @@ When implementing drag-drop image insertion:
 const dataUrl = await readFileAsDataURL(file);
 const base64 = extractBase64FromDataUrl(dataUrl);
 const saveResult = await electrobun.saveDroppedImage(fileName, base64, workspaceRoot);
+// Bun process will:
+// - Search recursively (max 3 levels) for existing file
+// - Compare: name + size + head(10bytes) + tail(10bytes)
+// - Return existing path if found, or save to assets/
 const blobUrl = await loadLocalImage(saveResult.absolutePath); // ✅ Use blob URL
 editor.insertImage(blobUrl, alt); // ✅ Not base64!
 ```
+
+**Duplicate Detection Logic:**
+- **Step 1**: Search workspace recursively (max depth: 3)
+- **Step 2**: Skip hidden dirs (`.git`, `node_modules`, `.cache`, `dist`, `build`)
+- **Step 3**: For files with matching name:
+  - Compare file size
+  - Compare first 10 bytes (file header/signature)
+  - Compare last 10 bytes (unique content)
+- **Step 4**: If all match → use existing file, don't copy
+- **Step 5**: If not found → save to `assets/<filename>`
 
 ## Resources
 
