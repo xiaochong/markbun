@@ -144,6 +144,10 @@ export const electrobun = {
     return await electroview.rpc.request.getWorkspaceRoot({});
   },
 
+  async saveDroppedImage(fileName: string, base64Data: string, workspaceRoot: string) {
+    return await electroview.rpc.request.saveDroppedImage({ fileName, base64Data, workspaceRoot });
+  },
+
   // Subscribe to messages from main process
   on(event: string, callback: (data?: unknown) => void): () => void {
     const win = window as any;

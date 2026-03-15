@@ -109,7 +109,10 @@ export const MilkdownEditor = memo(forwardRef<MilkdownEditorRef, MilkdownEditorP
     // The parent component should use the ref's setMarkdown method when switching files.
 
     return (
-      <div ref={containerRef} className={`milkdown-crepe-container ${className}`}>
+      <div
+        ref={containerRef}
+        className={`milkdown-crepe-container relative ${className}`}
+      >
         <Milkdown />
       </div>
     );

@@ -1,8 +1,8 @@
 import { BrowserWindow, BrowserView, Updater, Utils, ApplicationMenu, ContextMenu } from 'electrobun/bun';
 import { setupMenu, type ViewMenuState } from './menu';
 import type { MarkBunRPC } from '../shared/types';
-import { readFile, writeFile, stat } from 'fs/promises';
-import { join } from 'path';
+import { readFile, writeFile, stat, mkdir } from 'fs/promises';
+import { join, dirname } from 'path';
 import { homedir } from 'os';
 import { readFolder } from './ipc/folders';
 import { getRecentFiles, addRecentFile, removeRecentFile, clearRecentFiles } from './ipc/recentFiles';
@@ -378,6 +378,74 @@ async function main() {
             success: true,
             path: currentWorkspaceRoot ?? getDesktopPath(),
           };
+        },
+        saveDroppedImage: async ({ fileName, base64Data, workspaceRoot }: { fileName: string; base64Data: string; workspaceRoot: string }) => {
+          try {
+            // Check if the file already exists in workspace (no need to copy)
+            const potentialPath = join(workspaceRoot, fileName);
+            try {
+              const fileStat = await stat(potentialPath);
+              if (fileStat.isFile()) {
+                // File already exists in workspace, use it directly
+                return {
+                  success: true,
+                  relativePath: fileName,
+                  absolutePath: potentialPath,
+                };
+              }
+            } catch {
+              // File doesn't exist, continue to save
+            }
+
+            // Create assets directory if it doesn't exist
+            const assetsDir = join(workspaceRoot, 'assets');
+            try {
+              await stat(assetsDir);
+            } catch {
+              // Directory doesn't exist, create it
+              await mkdir(assetsDir, { recursive: true });
+            }
+
+            // Generate unique filename if file already exists in assets
+            let targetFileName = fileName;
+            let targetPath = join(assetsDir, targetFileName);
+            let counter = 1;
+            const extMatch = fileName.match(/^(.*)(\.[^.]+)$/);
+            const baseName = extMatch ? extMatch[1] : fileName;
+            const ext = extMatch ? extMatch[2] : '';
+
+            while (true) {
+              try {
+                await stat(targetPath);
+                // File exists, try new name
+                targetFileName = `${baseName}_${counter}${ext}`;
+                targetPath = join(assetsDir, targetFileName);
+                counter++;
+              } catch {
+                // File doesn't exist, use this name
+                break;
+              }
+            }
+
+            // Decode base64 and save
+            const imageBuffer = Buffer.from(base64Data, 'base64');
+            await writeFile(targetPath, imageBuffer);
+
+            // Return relative path from workspace root
+            const relativePath = `assets/${targetFileName}`;
+
+            return {
+              success: true,
+              relativePath,
+              absolutePath: targetPath,
+            };
+          } catch (error) {
+            console.error('Failed to save dropped image:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            };
+          }
         },
       },
       messages: {},

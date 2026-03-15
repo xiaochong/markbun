@@ -1,12 +1,20 @@
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import { Crepe } from '@milkdown/crepe';
 import { useEditor } from '@milkdown/react';
-import { editorViewCtx, parserCtx, serializerCtx, schemaCtx } from '@milkdown/kit/core';
+import { editorViewCtx, parserCtx, serializerCtx, schemaCtx, commandsCtx } from '@milkdown/kit/core';
 import { clipboard } from '@milkdown/plugin-clipboard';
 import { history } from '@milkdown/plugin-history';
 import { gfm } from '@milkdown/preset-gfm';
 import { clipboardBlobConverter } from '../plugins/clipboardBlobConverter';
+import { electrobun } from '@/lib/electrobun';
+import { workspaceManager, loadLocalImage, imageCache } from '@/lib/image';
 import type { MilkdownEditorProps } from '../types';
+
+// Helper to extract base64 data from data URL
+function extractBase64FromDataUrl(dataUrl: string): string {
+  const match = dataUrl.match(/^data:[^;]+;base64,(.+)$/);
+  return match ? match[1] : dataUrl;
+}
 
 const SCROLL_HIDE_DELAY = 800;
 
@@ -15,6 +23,7 @@ export interface UseCrepeEditorReturn {
   containerRef: React.RefObject<HTMLDivElement | null>;
   isReady: boolean;
   loading: boolean;
+  isDraggingOver: boolean;
   getMarkdown: () => string;
   setMarkdown: (markdown: string) => void;
   focus: () => void;
@@ -30,6 +39,8 @@ export function useCrepeEditor(
   const containerRef = useRef<HTMLDivElement>(null);
   const onChangeRef = useRef(onChange);
   const initialValueRef = useRef(defaultValue);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const dragCounterRef = useRef(0);
 
   // Keep onChange callback up to date
   onChangeRef.current = onChange;
@@ -277,11 +288,170 @@ export function useCrepeEditor(
     }
   }, []);
 
+  // Image drag and drop handlers
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleDragEnter = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounterRef.current++;
+
+      // Check if files are being dragged
+      if (e.dataTransfer?.types.includes('Files')) {
+        setIsDraggingOver(true);
+      }
+    };
+
+    const handleDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounterRef.current--;
+
+      if (dragCounterRef.current === 0) {
+        setIsDraggingOver(false);
+      }
+    };
+
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // Allow drop
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'copy';
+        e.dataTransfer.dropEffect = 'copy';
+      }
+    };
+
+    const handleDrop = async (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounterRef.current = 0;
+      setIsDraggingOver(false);
+
+      const files = e.dataTransfer?.files;
+      if (!files || files.length === 0) {
+        return;
+      }
+
+      // Filter image files
+      const imageFiles = Array.from(files).filter(file =>
+        file.type.startsWith('image/')
+      );
+
+      if (imageFiles.length === 0) {
+        return;
+      }
+
+      // Get workspace root for saving images
+      const workspaceRoot = workspaceManager.getWorkspaceRoot();
+      if (!workspaceRoot) {
+        console.error('[Drop] No workspace root set, cannot save images');
+        return;
+      }
+
+      // Process each image
+      for (const file of imageFiles) {
+        try {
+          // Step 1: Read file as base64
+          const reader = new FileReader();
+          const dataUrl = await new Promise<string>((resolve, reject) => {
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = (e) => reject(new Error('FileReader error: ' + e));
+            reader.readAsDataURL(file);
+          });
+
+          // Step 2: Extract base64 data and save to workspace via Bun process
+          const base64Data = extractBase64FromDataUrl(dataUrl);
+          const saveResult = await electrobun.saveDroppedImage(
+            file.name,
+            base64Data,
+            workspaceRoot
+          ) as {
+            success: boolean;
+            relativePath?: string;
+            absolutePath?: string;
+            error?: string;
+          };
+
+          if (!saveResult.success || !saveResult.relativePath || !saveResult.absolutePath) {
+            console.error('[Drop] Failed to save image:', saveResult.error);
+            continue;
+          }
+
+          // Step 3: Load the saved image and get blob URL for display
+          const blobUrl = await loadLocalImage(saveResult.absolutePath);
+          if (!blobUrl) {
+            console.error('[Drop] Failed to load saved image');
+            continue;
+          }
+
+          // Step 4: Insert image into editor with blob URL (for display)
+          // but use relative path in the actual markdown structure
+          const crepe = crepeRef.current;
+          if (crepe?.editor.ctx) {
+            // Get drop position from mouse coordinates
+            const dropPos = crepe.editor.action((ctx) => {
+              const view = ctx.get(editorViewCtx);
+              // Use ProseMirror's posAtCoords to get document position
+              const pos = view.posAtCoords({ left: e.clientX, top: e.clientY });
+              return pos?.pos ?? null;
+            });
+
+            if (dropPos === null) {
+              console.error('[Drop] Could not determine drop position');
+              continue;
+            }
+
+            // Use markdown parser with blob URL for immediate display
+            // The blob URL is cached and mapped to the absolute path
+            // When saving, the blob URL will be converted back to the relative path
+            const altText = file.name.replace(/\.[^/.]+$/, '');
+            const markdown = `\n![${altText}](${blobUrl})\n`;
+
+            try {
+              crepe.editor.action((ctx) => {
+                const view = ctx.get(editorViewCtx);
+                const parser = ctx.get(parserCtx);
+                const doc = parser(markdown);
+                if (doc && doc.content.size > 0) {
+                  // Insert at the drop position
+                  const tr = view.state.tr.replaceWith(dropPos, dropPos, doc.content);
+                  view.dispatch(tr);
+                }
+              });
+            } catch (err) {
+              console.error('[Drop] Failed to insert image:', err);
+            }
+          } else {
+            console.error('[Drop] Editor not ready');
+          }
+        } catch (error) {
+          console.error('[Drop] Failed to process dropped image:', error);
+        }
+      }
+    };
+
+    container.addEventListener('dragenter', handleDragEnter);
+    container.addEventListener('dragleave', handleDragLeave);
+    container.addEventListener('dragover', handleDragOver);
+    container.addEventListener('drop', handleDrop);
+
+    return () => {
+      container.removeEventListener('dragenter', handleDragEnter);
+      container.removeEventListener('dragleave', handleDragLeave);
+      container.removeEventListener('dragover', handleDragOver);
+      container.removeEventListener('drop', handleDrop);
+    };
+  }, []);
+
   return {
     crepeRef,
     containerRef,
     isReady: !loading,
     loading,
+    isDraggingOver,
     getMarkdown,
     setMarkdown,
     focus,

@@ -655,6 +655,118 @@ const editor = Editor.make()
   .create();
 ```
 
+## Image Handling Best Practices
+
+### CRITICAL: Always Use Blob URLs for Display
+
+**Never embed base64 images directly in the editor.** This causes severe performance issues with large images.
+
+#### The Pattern
+
+```
+Storage:     File System (original image)
+              ↓
+Loading:     Bun process reads → base64 → Blob URL
+              ↓
+Display:     Markdown uses Blob URL ( performant )
+              ↓
+Saving:      Blob URL → original path (via cache mapping)
+```
+
+#### Implementation Flow
+
+**1. Loading Images (Bun Process)**
+```typescript
+// src/bun/index.ts - readImageAsBase64
+const imageBuffer = await readFile(path);
+const base64 = imageBuffer.toString('base64');
+return { success: true, dataUrl: `data:${mimeType};base64,${base64}` };
+```
+
+**2. Converting to Blob URL (Renderer)**
+```typescript
+// src/mainview/lib/image/cache.ts - ImageCache
+function dataUrlToBlobUrl(dataUrl: string): string {
+  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+  const mimeType = match[1];
+  const base64Data = match[2];
+
+  // Convert base64 to binary
+  const byteCharacters = atob(base64Data);
+  const byteArrays: BlobPart[] = [];
+
+  // Process in chunks to avoid stack overflow with large images
+  const chunkSize = 8192;
+  for (let offset = 0; offset < byteCharacters.length; offset += chunkSize) {
+    const chunk = byteCharacters.slice(offset, offset + chunkSize);
+    const byteNumbers = new Array(chunk.length);
+    for (let i = 0; i < chunk.length; i++) {
+      byteNumbers[i] = chunk.charCodeAt(i);
+    }
+    byteArrays.push(new Uint8Array(byteNumbers));
+  }
+
+  const blob = new Blob(byteArrays, { type: mimeType });
+  return URL.createObjectURL(blob);
+}
+```
+
+**3. Display in Editor**
+```typescript
+// Editor markdown uses blob URL
+const markdown = `![alt](blob:https://...)`;
+```
+
+**4. Restore Original Path on Save**
+```typescript
+// src/mainview/lib/image/clipboard.ts - prepareForClipboard
+export function prepareForClipboard(markdown: string): string {
+  return markdown.replace(IMAGE_REGEX, (match, alt, url) => {
+    if (isBlobUrl(url)) {
+      const originalPath = imageCache.getOriginalPath(url);
+      if (originalPath) {
+        return `![${alt}](${originalPath})`;
+      }
+    }
+    return match;
+  });
+}
+```
+
+#### Why Blob URLs?
+
+| Approach | Pros | Cons |
+|---------|------|------|
+| **Blob URL** ✅ | Fast rendering, low memory, cached | Requires cache management |
+| **Base64 in Markdown** ❌ | Self-contained | Slow rendering, huge memory, laggy UI |
+| **File Path Directly** ❌ | Simple | WebView cannot access local files (security) |
+
+#### Key Rules
+
+1. **WebView Limitation**: WebView cannot access `file://` paths directly → must use blob/data URLs
+2. **Performance**: Base64 in markdown bloats document size and slows rendering
+3. **Cache Management**: Use LRU cache with `URL.revokeObjectURL()` to prevent memory leaks
+4. **Path Mapping**: Always maintain `blobUrl <-> originalPath` mapping for save/export
+
+#### Drag-Drop Implementation
+
+When implementing drag-drop image insertion:
+
+1. Read file as base64 (FileReader)
+2. Save to workspace via Bun process (preserves relative path)
+3. Load through `loadLocalImage()` → returns blob URL
+4. Insert markdown with blob URL
+5. On save, blob URLs automatically convert to relative paths
+
+```typescript
+// Correct flow
+const dataUrl = await readFileAsDataURL(file);
+const base64 = extractBase64FromDataUrl(dataUrl);
+const saveResult = await electrobun.saveDroppedImage(fileName, base64, workspaceRoot);
+const blobUrl = await loadLocalImage(saveResult.absolutePath); // ✅ Use blob URL
+editor.insertImage(blobUrl, alt); // ✅ Not base64!
+```
+
 ## Resources
 
 - [Milkdown Docs](https://milkdown.dev/docs)

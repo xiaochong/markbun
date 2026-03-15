@@ -149,6 +149,7 @@ export type MarkBunRPC = {
       selectImageFile: { params: {}; response: { success: boolean; path?: string; error?: string } };
       getDesktopPath: { params: {}; response: { success: boolean; path?: string; error?: string } };
       getWorkspaceRoot: { params: {}; response: { success: boolean; path?: string; error?: string } };
+      saveDroppedImage: { params: { fileName: string; base64Data: string; workspaceRoot: string }; response: { success: boolean; relativePath?: string; absolutePath?: string; error?: string } };
     };
     messages: {
       fileOpened: { path: string; content: string };

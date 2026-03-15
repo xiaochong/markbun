@@ -356,7 +356,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 ### v0.2.0
 - [ ] File explorer sidebar
 - [ ] Outline navigation
-- [ ] Image drag & drop
+- [x] Image drag & drop
 - [ ] Math equations
 
 ### v0.3.0

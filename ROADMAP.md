@@ -138,9 +138,9 @@ This document outlines the development phases for MarkBun, from MVP to v1.0.
   - [ ] Insert table dialog
   - [ ] Add/remove rows and columns
   - [ ] Column resizing
-- [ ] Image support
-  - [ ] Drag and drop images
-  - [ ] Image upload/paste
+- [x] Image support
+  - [x] Drag and drop images
+  - [x] Image upload/paste
   - [ ] Image resizing
 
 #### Auto-save
