@@ -29,6 +29,9 @@ function App() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [editorContent, setEditorContent] = useState('');
 
+  // Flag to ignore editor changes during file switching
+  const isSwitchingFileRef = useRef(false);
+
   // Phase 3: Settings
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
@@ -155,10 +158,15 @@ function App() {
     handleOpen,
     handleSave,
     handleSaveAs,
+    cancelPendingSave,
+    resetFileState,
   } = useFileOperations({
     enableAutoSave: settings?.autoSave ?? true,
     autoSaveInterval: settings?.autoSaveInterval ?? 2000,
   });
+
+  // File loading cancel token to prevent race conditions
+  const loadingCancelTokenRef = useRef<{ cancelled: boolean; path: string } | null>(null);
 
   // Sync path from useFileOperations to local state and workspace manager
   useEffect(() => {
@@ -182,6 +190,11 @@ function App() {
 
   // Handle editor content changes
   const handleEditorChange = useCallback((markdown: string) => {
+    // Ignore changes during file switching to prevent race conditions
+    if (isSwitchingFileRef.current) {
+      console.log('[Editor] Ignoring change during file switch');
+      return;
+    }
     updateContent(markdown);
     setEditorContent(markdown);
     outline.setHeadings(markdown);
@@ -197,6 +210,23 @@ function App() {
 
   // Open file by path
   const openFileByPath = useCallback(async (filePath: string) => {
+    // Set flag to ignore editor changes during file switch
+    isSwitchingFileRef.current = true;
+
+    // Cancel any pending auto-save to prevent saving to wrong file
+    cancelPendingSave();
+
+    // Cancel any ongoing file loading to prevent race conditions
+    if (loadingCancelTokenRef.current) {
+      loadingCancelTokenRef.current.cancelled = true;
+    }
+
+    // Create new cancel token for this load operation
+    const token = { cancelled: false, path: filePath };
+    loadingCancelTokenRef.current = token;
+
+    console.log('[FileLoad] Starting load:', filePath);
+
     try {
       const result = await electrobun.readFile({ path: filePath }) as {
         success: boolean;
@@ -204,6 +234,12 @@ function App() {
         content?: string;
         error?: string;
       };
+
+      // Check if this load operation has been cancelled
+      if (token.cancelled) {
+        console.log('[FileLoad] Load cancelled for:', filePath);
+        return;
+      }
 
       if (result.success && result.content !== undefined && result.path) {
         // Update workspace and file state
@@ -216,6 +252,10 @@ function App() {
         // Update selected file in file explorer (highlight current file)
         fileExplorer.selectFile(result.path);
 
+        // Reset file state to prevent auto-save from saving old file
+        // This sets isDirty to false so any pending auto-save won't trigger
+        resetFileState(result.path, result.content);
+
         // Check if content has local images
         const needsImageProcessing = hasLocalImages(result.content);
 
@@ -223,12 +263,24 @@ function App() {
           // Process images first, then render once
           const processedContent = await processMarkdownImages(result.content);
 
+          // Check again if cancelled after async image processing
+          if (token.cancelled || loadingCancelTokenRef.current?.path !== filePath) {
+            console.log('[FileLoad] Load cancelled after image processing for:', filePath);
+            return;
+          }
+
           if (editorRef.current?.isReady) {
             editorRef.current.setMarkdown(processedContent);
             setEditorContent(processedContent);
             outline.setHeadings(processedContent);
           }
         } else {
+          // Check if cancelled before rendering
+          if (token.cancelled) {
+            console.log('[FileLoad] Load cancelled before render for:', filePath);
+            return;
+          }
+
           // No local images, render immediately
           if (editorRef.current?.isReady) {
             editorRef.current.setMarkdown(result.content);
@@ -239,11 +291,18 @@ function App() {
 
         // Add to recent files
         await electrobun.addRecentFile({ path: result.path });
+        console.log('[FileLoad] Load completed:', filePath);
       }
     } catch (error) {
-      console.error('Failed to open file:', error);
+      console.error('[FileLoad] Failed to open file:', filePath, error);
+    } finally {
+      // Clear the switching flag after a short delay to ensure all editor events are processed
+      setTimeout(() => {
+        isSwitchingFileRef.current = false;
+        console.log('[FileLoad] File switch flag cleared:', filePath);
+      }, 100);
     }
-  }, [fileExplorer.setRootPath, fileExplorer.selectFile, outline.setHeadings]);
+  }, [fileExplorer.setRootPath, fileExplorer.selectFile, outline.setHeadings, cancelPendingSave, resetFileState]);
 
   // Handle file click in file explorer
   const handleFileClick = useCallback((file: FileNode) => {
@@ -294,6 +353,21 @@ function App() {
     return electrobun.on('file-opened', async (data) => {
       const { path: filePath, content: fileContent } = data as { path: string; content: string };
 
+      // Set flag to ignore editor changes during file switch
+      isSwitchingFileRef.current = true;
+
+      // Cancel any pending auto-save
+      cancelPendingSave();
+
+      // Cancel any ongoing file loading
+      if (loadingCancelTokenRef.current) {
+        loadingCancelTokenRef.current.cancelled = true;
+      }
+
+      // Create new cancel token for this event
+      const token = { cancelled: false, path: filePath };
+      loadingCancelTokenRef.current = token;
+
       // Update workspace and file state
       workspaceManager.setCurrentFile(filePath);
       setCurrentFilePath(filePath);
@@ -305,33 +379,67 @@ function App() {
       // Update selected file in file explorer (highlight current file)
       fileExplorer.selectFile(filePath);
 
+      // Reset file state to prevent auto-save from saving old file
+      resetFileState(filePath, fileContent);
+
       // Check if content has local images
       const needsImageProcessing = hasLocalImages(fileContent);
 
       const setContent = async () => {
-        if (needsImageProcessing) {
-          // Process images first, then render once
-          const processedContent = await processMarkdownImages(fileContent);
-          if (editorRef.current?.isReady) {
-            editorRef.current.setMarkdown(processedContent);
-            setEditorContent(processedContent);
-            outline.setHeadings(processedContent);
+        try {
+          if (needsImageProcessing) {
+            // Process images first, then render once
+            const processedContent = await processMarkdownImages(fileContent);
+
+            // Check if cancelled after image processing
+            if (token.cancelled || loadingCancelTokenRef.current?.path !== filePath) {
+              console.log('[FileLoad] Event load cancelled after image processing for:', filePath);
+              return;
+            }
+
+            if (editorRef.current?.isReady) {
+              editorRef.current.setMarkdown(processedContent);
+              setEditorContent(processedContent);
+              outline.setHeadings(processedContent);
+            }
+          } else {
+            // Check if cancelled before render
+            if (token.cancelled) {
+              console.log('[FileLoad] Event load cancelled before render for:', filePath);
+              return;
+            }
+
+            // No local images, render immediately
+            if (editorRef.current?.isReady) {
+              editorRef.current.setMarkdown(fileContent);
+              setEditorContent(fileContent);
+              outline.setHeadings(fileContent);
+            }
           }
-        } else {
-          // No local images, render immediately
-          if (editorRef.current?.isReady) {
-            editorRef.current.setMarkdown(fileContent);
-            setEditorContent(fileContent);
-            outline.setHeadings(fileContent);
-          }
+        } finally {
+          // Clear the switching flag after a short delay to ensure all editor events are processed
+          setTimeout(() => {
+            isSwitchingFileRef.current = false;
+            console.log('[FileLoad] Event file switch flag cleared:', filePath);
+          }, 100);
         }
       };
 
       const loadContent = async () => {
+        // Check if cancelled before starting
+        if (token.cancelled) {
+          console.log('[FileLoad] Event load cancelled before starting:', filePath);
+          return;
+        }
+
         if (editorRef.current?.isReady) {
           await setContent();
         } else {
           const checkAndSet = () => {
+            if (token.cancelled) {
+              console.log('[FileLoad] Event load cancelled during editor wait:', filePath);
+              return;
+            }
             if (editorRef.current?.isReady) {
               void setContent();
             } else {
@@ -344,7 +452,7 @@ function App() {
 
       void loadContent();
     });
-  }, [outline.setHeadings, fileExplorer.setRootPath, fileExplorer.selectFile]);
+  }, [outline.setHeadings, fileExplorer.setRootPath, fileExplorer.selectFile, cancelPendingSave, resetFileState]);
 
   // Listen for file-new event to clear editor
   useEffect(() => {

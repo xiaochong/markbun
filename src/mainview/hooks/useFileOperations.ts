@@ -27,15 +27,45 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
   const fileStateRef = useRef(fileState);
   fileStateRef.current = fileState;
 
+  // Track the file being saved to prevent saving to wrong file
+  const savingFilePathRef = useRef<string | null>(null);
+
   // Auto-save callback
   const handleAutoSave = useCallback(async () => {
     const state = fileStateRef.current;
+    console.log('[AutoSave] Triggered for:', state.path, 'isDirty:', state.isDirty);
     if (!state.path || !state.isDirty) return;
+
+    // Record the file we're about to save
+    const targetPath = state.path;
+    savingFilePathRef.current = targetPath;
 
     setSaveStatus('saving');
     try {
+      // Check again if the file has changed before saving
+      if (fileStateRef.current.path !== targetPath) {
+        console.log('[AutoSave] Aborting save, file changed from', targetPath, 'to', fileStateRef.current.path);
+        setSaveStatus(null);
+        return;
+      }
+
       const contentToSave = restoreOriginalImagePaths(state.content);
-      const result = await electrobun.saveFile(contentToSave, state.path) as { success: boolean; error?: string };
+
+      // Double-check path before actual save operation
+      if (fileStateRef.current.path !== targetPath) {
+        console.log('[AutoSave] Aborting save before write, file changed from', targetPath, 'to', fileStateRef.current.path);
+        setSaveStatus(null);
+        return;
+      }
+
+      const result = await electrobun.saveFile(contentToSave, targetPath) as { success: boolean; error?: string };
+
+      // After save completes, verify we're still on the same file before updating state
+      if (fileStateRef.current.path !== targetPath) {
+        console.log('[AutoSave] File changed during save, ignoring result for:', targetPath);
+        setSaveStatus(null);
+        return;
+      }
 
       if (result.success) {
         setFileState(prev => ({ ...prev, isDirty: false }));
@@ -49,11 +79,13 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
       console.error('Auto-save failed:', error);
       setSaveStatus('error');
       setTimeout(() => setSaveStatus(null), 2000);
+    } finally {
+      savingFilePathRef.current = null;
     }
   }, []);
 
   // Setup auto-save
-  const { triggerSave: triggerAutoSave } = useAutoSave({
+  const { triggerSave: triggerAutoSave, cancelPendingSave } = useAutoSave({
     enabled: enableAutoSave && !!fileState.path,
     interval: autoSaveInterval,
     onSave: handleAutoSave,
@@ -63,18 +95,6 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
   // Listen for events from main process
   useEffect(() => {
     const unsubscribers: (() => void)[] = [];
-
-    // File opened event (from menu)
-    unsubscribers.push(
-      electrobun.on('file-opened', (data) => {
-        const { path, content } = data as { path: string; content: string };
-        setFileState({
-          path,
-          content,
-          isDirty: false,
-        });
-      })
-    );
 
     // New file event (from menu)
     unsubscribers.push(
@@ -130,6 +150,16 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
     }
   }, [enableAutoSave, triggerAutoSave]);
 
+  // Reset file state for file switching - clears dirty flag to prevent auto-save race
+  const resetFileState = useCallback((newPath: string | null, newContent: string) => {
+    console.log('[FileOperations] Resetting file state:', { path: newPath, contentLength: newContent.length });
+    setFileState({
+      path: newPath,
+      content: newContent,
+      isDirty: false,
+    });
+  }, []);
+
   // Open file (triggers native dialog)
   const handleOpen = useCallback(async () => {
     try {
@@ -162,29 +192,71 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
   const handleSave = useCallback(async () => {
     const state = fileStateRef.current;
 
+    console.log('[Save] Attempting to save:', {
+      path: state.path,
+      contentLength: state.content.length,
+      isDirty: state.isDirty,
+    });
+
     if (!state.path) {
       await handleSaveAs();
       return;
     }
 
+    if (!state.isDirty) {
+      console.log('[Save] File not dirty, skipping save:', state.path);
+      return;
+    }
+
+    // Record the file we're about to save
+    const targetPath = state.path;
+    savingFilePathRef.current = targetPath;
+
     setSaveStatus('saving');
     try {
+      // Check again if the file has changed before saving
+      if (fileStateRef.current.path !== targetPath) {
+        console.log('[Save] Aborting save, file changed from', targetPath, 'to', fileStateRef.current.path);
+        setSaveStatus(null);
+        return;
+      }
+
       // Convert blob URLs back to original paths before saving
       const contentToSave = restoreOriginalImagePaths(state.content);
-      const result = await electrobun.saveFile(contentToSave, state.path) as { success: boolean; path?: string; error?: string };
+      console.log('[Save] Saving content to:', targetPath, 'Content length:', contentToSave.length);
+
+      // Double-check path before actual save operation
+      if (fileStateRef.current.path !== targetPath) {
+        console.log('[Save] Aborting save before write, file changed from', targetPath, 'to', fileStateRef.current.path);
+        setSaveStatus(null);
+        return;
+      }
+
+      const result = await electrobun.saveFile(contentToSave, targetPath) as { success: boolean; path?: string; error?: string };
+
+      // After save completes, verify we're still on the same file before updating state
+      if (fileStateRef.current.path !== targetPath) {
+        console.log('[Save] File changed during save, ignoring result for:', targetPath);
+        setSaveStatus(null);
+        return;
+      }
 
       if (result.success) {
         setFileState(prev => ({ ...prev, isDirty: false }));
         setSaveStatus('saved');
+        console.log('[Save] Save successful:', targetPath);
         setTimeout(() => setSaveStatus(null), 2000);
       } else {
         setSaveStatus('error');
+        console.error('[Save] Save failed:', targetPath, result.error);
         setTimeout(() => setSaveStatus(null), 2002);
       }
     } catch (error) {
-      console.error('Failed to save file:', error);
+      console.error('[Save] Failed to save file:', targetPath, error);
       setSaveStatus('error');
       setTimeout(() => setSaveStatus(null), 2000);
+    } finally {
+      savingFilePathRef.current = null;
     }
   }, []);
 
@@ -224,5 +296,7 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
     handleOpen,
     handleSave,
     handleSaveAs,
+    cancelPendingSave,
+    resetFileState,
   };
 }
