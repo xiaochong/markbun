@@ -33,8 +33,6 @@ export function useContextMenu(
       // Save current selection before showing menu
       // This is important because clicking the menu may cause selection to be lost
       const selection = window.getSelection();
-      console.log('[ContextMenu] Selection:', selection?.toString().substring(0, 100));
-      console.log('[ContextMenu] isCollapsed:', selection?.isCollapsed);
 
       if (selection && !selection.isCollapsed) {
         // Try to get markdown-formatted selection from Milkdown
@@ -59,24 +57,21 @@ export function useContextMenu(
               if (doc) {
                 // Serialize to markdown
                 selectedMarkdown = serializer(doc);
-                console.log('[ContextMenu] Got markdown selection:', selectedMarkdown.substring(0, 200));
               }
             }
           }
-        } catch (e) {
-          console.error('[ContextMenu] Failed to get markdown selection:', e);
+        } catch {
+          // Silently ignore markdown extraction errors
         }
 
         // Fallback to plain text if markdown extraction failed
         const textToSave = selectedMarkdown || selection.toString();
-        console.log('[ContextMenu] Saving selection, hasBlobUrl:', textToSave.includes('blob:http'));
 
         window.__pendingEditorSelection = {
           text: textToSave,
           hasBlobUrl: textToSave.includes('blob:http'),
         };
       } else {
-        console.log('[ContextMenu] No selection or collapsed');
         window.__pendingEditorSelection = null;
       }
 
