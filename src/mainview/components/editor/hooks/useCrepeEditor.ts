@@ -162,9 +162,9 @@ export function useCrepeEditor(
         const doc = parser(markdown);
         if (!doc) return;
 
-        view.dispatch(
-          view.state.tr.replaceWith(0, view.state.doc.content.size, doc.content)
-        );
+        const tr = view.state.tr.replaceWith(0, view.state.doc.content.size, doc.content);
+        tr.setMeta("addToHistory", false);  // 不添加到历史记录
+        view.dispatch(tr);
 
         // Ensure scroll is at top after content is set
         requestAnimationFrame(() => {
@@ -189,9 +189,9 @@ export function useCrepeEditor(
 
       if (!firstDoc) return;
 
-      view.dispatch(
-        view.state.tr.replaceWith(0, view.state.doc.content.size, firstDoc.content)
-      );
+      const tr = view.state.tr.replaceWith(0, view.state.doc.content.size, firstDoc.content);
+      tr.setMeta("addToHistory", false);  // 不添加到历史记录
+      view.dispatch(tr);
 
       // Then load remaining chunks using requestIdleCallback or setTimeout
       const remainingLines = lines.slice(CHUNK_SIZE_LINES);
@@ -207,9 +207,9 @@ export function useCrepeEditor(
           const chunkDoc = parser(chunk);
           if (chunkDoc) {
             const currentSize = view.state.doc.content.size;
-            view.dispatch(
-              view.state.tr.insert(currentSize, chunkDoc.content)
-            );
+            const tr = view.state.tr.insert(currentSize, chunkDoc.content);
+            tr.setMeta("addToHistory", false);  // 不添加到历史记录
+            view.dispatch(tr);
           }
         } catch (e) {
           console.error('Chunk load error:', e);
