@@ -7,6 +7,7 @@ export interface ViewMenuState {
   showToolBar: boolean;
   showStatusBar: boolean;
   showSidebar: boolean;
+  sourceMode: boolean;
 }
 
 // Default state: all UI chrome hidden for distraction-free writing experience
@@ -16,6 +17,7 @@ const defaultState: ViewMenuState = {
   showToolBar: false,
   showStatusBar: false,
   showSidebar: false,
+  sourceMode: false,
 };
 
 export function setupMenu(state: ViewMenuState = defaultState): void {
@@ -140,6 +142,8 @@ export function setupMenu(state: ViewMenuState = defaultState): void {
         { label: 'Show Title Bar', action: 'view-toggle-titlebar', checked: state.showTitleBar },
         { label: 'Show Tool Bar', action: 'view-toggle-toolbar', checked: state.showToolBar },
         { label: 'Show Status Bar', action: 'view-toggle-statusbar', checked: state.showStatusBar },
+        { type: 'separator' },
+        { label: 'Source Mode', action: 'view-toggle-source-mode', accelerator: 'CmdOrCtrl+Shift+S', checked: state.sourceMode },
         { type: 'separator' },
         { label: 'Toggle Developer Tools', action: 'view-toggle-devtools', accelerator: 'CmdOrCtrl+Option+I' },
       ],

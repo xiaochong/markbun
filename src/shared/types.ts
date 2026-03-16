@@ -127,6 +127,7 @@ export interface UIState {
   showToolBar: boolean;
   showStatusBar: boolean;
   showSidebar: boolean;
+  sourceMode: boolean;
   sidebarWidth: number;
   sidebarActiveTab: SidebarTab;
   // Window state
@@ -197,6 +198,9 @@ export type MarkBunRPC = {
 
       // Phase 3 messages
       openSettings: {};
+
+      // Source mode toggle
+      toggleSourceMode: {};
     };
   }>;
   webview: RPCSchema<{

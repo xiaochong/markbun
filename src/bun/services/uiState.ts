@@ -8,6 +8,7 @@ export interface UIState {
   showToolBar: boolean;
   showStatusBar: boolean;
   showSidebar: boolean;
+  sourceMode: boolean;
   sidebarWidth: number;
   sidebarActiveTab: SidebarTab;
   // Window state
@@ -29,6 +30,7 @@ const defaultUIState: UIState = {
   showToolBar: false,
   showStatusBar: false,
   showSidebar: false,
+  sourceMode: false,
   sidebarWidth: 280,
   sidebarActiveTab: 'files',
   // Default window state

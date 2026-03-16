@@ -1,6 +1,6 @@
 import { useRef, useCallback, useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { MilkdownEditor, MilkdownEditorRef } from './components/editor';
+import { MilkdownEditor, MilkdownEditorRef, SourceEditor, SourceEditorRef } from './components/editor';
 import { Toolbar, StatusBar, TitleBar, Sidebar } from './components/layout';
 import { FileExplorer } from './components/file-explorer';
 import { Outline } from './components/outline';
@@ -26,6 +26,7 @@ import type { FileNode, AppSettings, UIState } from '@/shared/types';
 
 function App() {
   const editorRef = useRef<MilkdownEditorRef>(null);
+  const sourceEditorRef = useRef<SourceEditorRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [editorContent, setEditorContent] = useState('');
 
@@ -63,6 +64,13 @@ function App() {
   const [showTitleBar, setShowTitleBar] = useState(false);
   const [showToolbar, setShowToolbar] = useState(false);
   const [showStatusBar, setShowStatusBar] = useState(false);
+  const [sourceMode, setSourceMode] = useState(false);
+  const sourceModeRef = useRef(sourceMode);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    sourceModeRef.current = sourceMode;
+  }, [sourceMode]);
 
   // Image insert dialog state
   const [showImageDialog, setShowImageDialog] = useState(false);
@@ -81,6 +89,7 @@ function App() {
         setShowTitleBar(result.state.showTitleBar);
         setShowToolbar(result.state.showToolBar);
         setShowStatusBar(result.state.showStatusBar);
+        setSourceMode(result.state.sourceMode ?? false);
         // Use setIsOpen and setWidth directly to avoid triggering sidebar tab switch
         sidebar.setIsOpen(result.state.showSidebar);
         sidebar.setWidth(result.state.sidebarWidth);
@@ -99,6 +108,7 @@ function App() {
     showToolBar: boolean;
     showStatusBar: boolean;
     showSidebar: boolean;
+    sourceMode: boolean;
     sidebarWidth: number;
     sidebarActiveTab: 'files' | 'outline' | 'search';
   } | null>(null);
@@ -117,6 +127,7 @@ function App() {
       showToolBar: showToolbar,
       showStatusBar,
       showSidebar: sidebar.isOpen,
+      sourceMode,
       sidebarWidth: sidebar.width,
       sidebarActiveTab: sidebar.activeTab,
     };
@@ -127,12 +138,12 @@ function App() {
     uiStateTimeoutRef.current = setTimeout(() => {
       void flushUIState();
     }, 300);
-  }, [showTitleBar, showToolbar, showStatusBar, sidebar.isOpen, sidebar.width, sidebar.activeTab, flushUIState]);
+  }, [showTitleBar, showToolbar, showStatusBar, sidebar.isOpen, sidebar.width, sidebar.activeTab, flushUIState, sourceMode]);
 
   // Save UI state when visibility changes
   useEffect(() => {
     saveUIState();
-  }, [showTitleBar, showToolbar, showStatusBar, sidebar.isOpen, sidebar.width, sidebar.activeTab, saveUIState]);
+  }, [showTitleBar, showToolbar, showStatusBar, sourceMode, sidebar.isOpen, sidebar.width, sidebar.activeTab, saveUIState]);
 
   // Save UI state before window closes
   useEffect(() => {
@@ -188,11 +199,23 @@ function App() {
   // Clipboard operations with blob URL handling
   const clipboard = useClipboard(editorRef, currentFilePath);
 
-  // Handle editor content changes
+  // Handle editor content changes from Milkdown
   const handleEditorChange = useCallback((markdown: string) => {
     // Ignore changes during file switching to prevent race conditions
     if (isSwitchingFileRef.current) {
       console.log('[Editor] Ignoring change during file switch');
+      return;
+    }
+    updateContent(markdown);
+    setEditorContent(markdown);
+    outline.setHeadings(markdown);
+  }, [updateContent, outline.setHeadings]);
+
+  // Handle editor content changes from SourceEditor
+  const handleSourceEditorChange = useCallback((markdown: string) => {
+    // Ignore changes during file switching to prevent race conditions
+    if (isSwitchingFileRef.current) {
+      console.log('[Source Editor] Ignoring change during file switch');
       return;
     }
     updateContent(markdown);
@@ -265,41 +288,48 @@ function App() {
           editorRef.current.setMarkdown('');
         }
 
-        if (needsImageProcessing) {
-          // Process images first, then render once
-          const processedContent = await processMarkdownImages(result.content);
+        const contentToLoad = needsImageProcessing
+          ? await processMarkdownImages(result.content)
+          : result.content;
 
-          // Check again if cancelled after async image processing
-          if (token.cancelled || loadingCancelTokenRef.current?.path !== filePath) {
-            console.log('[FileLoad] Load cancelled after image processing for:', filePath);
-            return;
-          }
-
-          if (editorRef.current?.isReady) {
-            // Use requestAnimationFrame to ensure the empty content is rendered first
-            requestAnimationFrame(() => {
-              editorRef.current?.setMarkdown(processedContent);
-              setEditorContent(processedContent);
-              outline.setHeadings(processedContent);
-            });
-          }
-        } else {
-          // Check if cancelled before rendering
-          if (token.cancelled) {
-            console.log('[FileLoad] Load cancelled before render for:', filePath);
-            return;
-          }
-
-          // No local images, render immediately
-          if (editorRef.current?.isReady) {
-            // Use requestAnimationFrame to ensure the empty content is rendered first
-            requestAnimationFrame(() => {
-              editorRef.current?.setMarkdown(result.content);
-              setEditorContent(result.content);
-              outline.setHeadings(result.content);
-            });
-          }
+        // Check again if cancelled after async image processing
+        if (token.cancelled || loadingCancelTokenRef.current?.path !== filePath) {
+          console.log('[FileLoad] Load cancelled after image processing for:', filePath);
+          return;
         }
+
+        // Wait for appropriate editor to be ready and load content
+        const waitForEditorAndLoad = async () => {
+          // Wait for editor to be ready (use ref to get latest sourceMode)
+          while (!token.cancelled) {
+            const isSourceMode = sourceModeRef.current;
+            const editorReady = isSourceMode
+              ? sourceEditorRef.current?.isReady
+              : editorRef.current?.isReady;
+            if (editorReady) break;
+            await new Promise(resolve => setTimeout(resolve, 50));
+          }
+
+          if (token.cancelled) return;
+
+          // Load content into appropriate editor (use ref to get latest sourceMode)
+          const isSourceMode = sourceModeRef.current;
+          if (isSourceMode) {
+            // In source mode, load into SourceEditor
+            sourceEditorRef.current?.setValue(contentToLoad);
+            setEditorContent(contentToLoad);
+            outline.setHeadings(contentToLoad);
+          } else {
+            // In preview mode, load into MilkdownEditor
+            requestAnimationFrame(() => {
+              editorRef.current?.setMarkdown(contentToLoad);
+              setEditorContent(contentToLoad);
+              outline.setHeadings(contentToLoad);
+            });
+          }
+        };
+
+        await waitForEditorAndLoad();
 
         // Add to recent files
         await electrobun.addRecentFile({ path: result.path });
@@ -314,7 +344,7 @@ function App() {
         console.log('[FileLoad] File switch flag cleared:', filePath);
       }, 100);
     }
-  }, [fileExplorer.setRootPath, fileExplorer.selectFile, outline.setHeadings, cancelPendingSave, resetFileState]);
+  }, [fileExplorer.setRootPath, fileExplorer.selectFile, outline.setHeadings, cancelPendingSave, resetFileState, sourceMode]);
 
   // Handle file click in file explorer
   const handleFileClick = useCallback((file: FileNode) => {
@@ -360,6 +390,36 @@ function App() {
     });
   }, [toggleTheme]);
 
+  // Listen for source mode toggle event from main process
+  useEffect(() => {
+    return electrobun.on('toggle-source-mode', () => {
+      setSourceMode(prev => {
+        const newMode = !prev;
+
+        // Sync content between editors when switching modes
+        if (newMode) {
+          // Switching to source mode: get content from Milkdown
+          const markdown = editorRef.current?.getMarkdown() ?? '';
+          // Use setTimeout to ensure the source editor is ready
+          setTimeout(() => {
+            sourceEditorRef.current?.setValue(markdown);
+            sourceEditorRef.current?.focus();
+          }, 0);
+        } else {
+          // Switching to preview mode: get content from source editor
+          const markdown = sourceEditorRef.current?.getValue() ?? '';
+          // Use setTimeout to ensure the Milkdown editor is ready
+          setTimeout(() => {
+            editorRef.current?.setMarkdown(markdown);
+            editorRef.current?.focus();
+          }, 0);
+        }
+
+        return newMode;
+      });
+    });
+  }, []);
+
   // Listen for file-opened event to set editor content directly
   useEffect(() => {
     return electrobun.on('file-opened', async (data) => {
@@ -399,46 +459,51 @@ function App() {
 
       const setContent = async () => {
         try {
+          // Get current source mode (use ref to avoid stale closure)
+          const isSourceMode = sourceModeRef.current;
+
           // Clear editor first to force ImageBlock components to fully re-render
           // This prevents image sizing issues when switching between files with images
-          if (editorRef.current?.isReady) {
+          if (!isSourceMode && editorRef.current?.isReady) {
             editorRef.current.setMarkdown('');
           }
 
-          if (needsImageProcessing) {
-            // Process images first, then render once
-            const processedContent = await processMarkdownImages(fileContent);
+          const contentToLoad = needsImageProcessing
+            ? await processMarkdownImages(fileContent)
+            : fileContent;
 
-            // Check if cancelled after image processing
-            if (token.cancelled || loadingCancelTokenRef.current?.path !== filePath) {
-              console.log('[FileLoad] Event load cancelled after image processing for:', filePath);
-              return;
-            }
+          // Check if cancelled after async image processing
+          if (token.cancelled || loadingCancelTokenRef.current?.path !== filePath) {
+            console.log('[FileLoad] Event load cancelled after image processing for:', filePath);
+            return;
+          }
 
-            if (editorRef.current?.isReady) {
-              // Use requestAnimationFrame to ensure the empty content is rendered first
-              requestAnimationFrame(() => {
-                editorRef.current?.setMarkdown(processedContent);
-                setEditorContent(processedContent);
-                outline.setHeadings(processedContent);
-              });
-            }
+          // Wait for appropriate editor to be ready
+          while (!token.cancelled) {
+            const currentIsSourceMode = sourceModeRef.current;
+            const editorReady = currentIsSourceMode
+              ? sourceEditorRef.current?.isReady
+              : editorRef.current?.isReady;
+            if (editorReady) break;
+            await new Promise(resolve => setTimeout(resolve, 50));
+          }
+
+          if (token.cancelled) return;
+
+          // Load content into appropriate editor (use ref to get latest sourceMode)
+          const currentIsSourceMode = sourceModeRef.current;
+          if (currentIsSourceMode) {
+            // In source mode, load into SourceEditor
+            sourceEditorRef.current?.setValue(contentToLoad);
+            setEditorContent(contentToLoad);
+            outline.setHeadings(contentToLoad);
           } else {
-            // Check if cancelled before render
-            if (token.cancelled) {
-              console.log('[FileLoad] Event load cancelled before render for:', filePath);
-              return;
-            }
-
-            // No local images, render immediately
-            if (editorRef.current?.isReady) {
-              // Use requestAnimationFrame to ensure the empty content is rendered first
-              requestAnimationFrame(() => {
-                editorRef.current?.setMarkdown(fileContent);
-                setEditorContent(fileContent);
-                outline.setHeadings(fileContent);
-              });
-            }
+            // In preview mode, load into MilkdownEditor
+            requestAnimationFrame(() => {
+              editorRef.current?.setMarkdown(contentToLoad);
+              setEditorContent(contentToLoad);
+              outline.setHeadings(contentToLoad);
+            });
           }
         } finally {
           // Clear the switching flag after a short delay to ensure all editor events are processed
@@ -456,21 +521,31 @@ function App() {
           return;
         }
 
-        if (editorRef.current?.isReady) {
+        // Wait for appropriate editor to be ready
+        const waitForEditor = () => {
+          return new Promise<void>((resolve) => {
+            const check = () => {
+              if (token.cancelled) {
+                resolve();
+                return;
+              }
+              const isSourceMode = sourceMode;
+              const editorReady = isSourceMode
+                ? sourceEditorRef.current?.isReady
+                : editorRef.current?.isReady;
+              if (editorReady) {
+                resolve();
+              } else {
+                setTimeout(check, 50);
+              }
+            };
+            check();
+          });
+        };
+
+        await waitForEditor();
+        if (!token.cancelled) {
           await setContent();
-        } else {
-          const checkAndSet = () => {
-            if (token.cancelled) {
-              console.log('[FileLoad] Event load cancelled during editor wait:', filePath);
-              return;
-            }
-            if (editorRef.current?.isReady) {
-              void setContent();
-            } else {
-              setTimeout(checkAndSet, 50);
-            }
-          };
-          checkAndSet();
         }
       };
 
@@ -481,16 +556,26 @@ function App() {
   // Listen for file-new event to clear editor
   useEffect(() => {
     return electrobun.on('file-new', () => {
-      if (editorRef.current?.isReady) {
-        editorRef.current.setMarkdown('');
-        setEditorContent('');
-        outline.setHeadings('');
-        // Reset workspace current file but keep root
-        workspaceManager.setCurrentFile(null);
-        setCurrentFilePath(null);
+      if (sourceMode) {
+        // In source mode, clear SourceEditor
+        if (sourceEditorRef.current?.isReady) {
+          sourceEditorRef.current.setValue('');
+          setEditorContent('');
+          outline.setHeadings('');
+        }
+      } else {
+        // In preview mode, clear MilkdownEditor
+        if (editorRef.current?.isReady) {
+          editorRef.current.setMarkdown('');
+          setEditorContent('');
+          outline.setHeadings('');
+        }
       }
+      // Reset workspace current file but keep root
+      workspaceManager.setCurrentFile(null);
+      setCurrentFilePath(null);
     });
-  }, [outline.setHeadings]);
+  }, [outline.setHeadings, sourceMode]);
 
   // Listen for settings dialog open event
   useEffect(() => {
@@ -671,8 +756,14 @@ function App() {
           setEditorContent('');
           workspaceManager.setCurrentFile(null);
           setCurrentFilePath(null);
-          if (editorRef.current?.isReady) {
-            editorRef.current.setMarkdown('');
+          if (sourceMode) {
+            if (sourceEditorRef.current?.isReady) {
+              sourceEditorRef.current.setValue('');
+            }
+          } else {
+            if (editorRef.current?.isReady) {
+              editorRef.current.setMarkdown('');
+            }
           }
           break;
         case 'p':
@@ -700,7 +791,7 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleSave, handleSaveAs, handleOpen, updateContent, quickOpen.open, sidebar.toggle, clipboard]);
+  }, [handleSave, handleSaveAs, handleOpen, updateContent, quickOpen.open, sidebar.toggle, clipboard, sourceMode]);
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
@@ -752,8 +843,8 @@ function App() {
 
         {/* Editor */}
         <main ref={containerRef} className="flex-1 flex flex-col overflow-hidden">
-          {/* Toolbar */}
-          {showToolbar && (
+          {/* Toolbar - only show in preview mode */}
+          {showToolbar && !sourceMode && (
             <Toolbar
               onBold={handleBold}
               onItalic={handleItalic}
@@ -765,13 +856,23 @@ function App() {
               onOrderedList={handleOrderedList}
             />
           )}
-          <MilkdownEditor
-            ref={editorRef}
-            defaultValue={content}
-            onChange={handleEditorChange}
-            className="flex-1"
-            darkMode={theme === 'dark'}
-          />
+          {sourceMode ? (
+            <SourceEditor
+              ref={sourceEditorRef}
+              defaultValue={content}
+              onChange={handleSourceEditorChange}
+              className="flex-1"
+              darkMode={theme === 'dark'}
+            />
+          ) : (
+            <MilkdownEditor
+              ref={editorRef}
+              defaultValue={content}
+              onChange={handleEditorChange}
+              className="flex-1"
+              darkMode={theme === 'dark'}
+            />
+          )}
         </main>
       </div>
 

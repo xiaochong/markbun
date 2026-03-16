@@ -61,6 +61,10 @@ const rpc = Electroview.defineRPC<MarkBunRPC>({
         const listeners = (window as any).__electrobunListeners?.['open-settings'] || [];
         listeners.forEach((cb: () => void) => cb());
       },
+      toggleSourceMode: () => {
+        const listeners = (window as any).__electrobunListeners?.['toggle-source-mode'] || [];
+        listeners.forEach((cb: () => void) => cb());
+      },
     },
   },
 });

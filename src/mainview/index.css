@@ -936,3 +936,84 @@ body {
 .dark .milkdown-crepe-container .prosemirror-virtual-cursor-right {
   border-left-color: hsl(var(--foreground) / 0.85) !important;
 }
+
+/* ===========================================
+   Source Editor (CodeMirror) Styles
+   =========================================== */
+
+/* Source editor container - match Milkdown dimensions */
+.source-editor-container {
+  width: 100%;
+  height: 100%;
+  /* Don't set overflow here - let CodeMirror handle scrolling internally */
+  overflow: hidden;
+  /* Don't set background here - let CodeMirror theme handle it */
+}
+
+/* Ensure CodeMirror takes full height and handles overflow properly */
+.source-editor-container .cm-editor {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* CodeMirror scroller - this is the actual scrollable area */
+.source-editor-container .cm-scroller {
+  font-family: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, Monaco, 'Courier New', monospace;
+  overflow: auto !important;
+  /* Ensure single scrollbar */
+  scrollbar-width: thin;
+}
+
+/* Hide CodeMirror's default focus outline */
+.source-editor-container .cm-focused {
+  outline: none !important;
+}
+
+/* Scrollbar styling for source editor - target cm-scroller only */
+.source-editor-container .cm-scroller::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.source-editor-container .cm-scroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.source-editor-container .cm-scroller::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 4px;
+}
+
+.source-editor-container .cm-scroller:hover::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--border));
+}
+
+.source-editor-container .cm-scroller::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--muted-foreground));
+}
+
+/* Firefox scrollbar support - target cm-scroller */
+.source-editor-container .cm-scroller {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.source-editor-container .cm-scroller:hover {
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+
+
+/* Dark theme adjustments */
+.dark .source-editor-container {
+  background-color: #2d333b;
+}
+
+/* Ensure consistent cursor in source editor */
+.source-editor-container .cm-cursor {
+  border-left-width: 2px !important;
+}
+
+/* Selection styling for source editor */
+.source-editor-container ::selection {
+  background-color: hsl(var(--primary) / 0.3) !important;
+}

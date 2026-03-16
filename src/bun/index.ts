@@ -132,6 +132,7 @@ let viewMenuState: ViewMenuState = {
   showToolBar: false,
   showStatusBar: false,
   showSidebar: false,
+  sourceMode: false,
 };
 
 // Current settings
@@ -257,6 +258,7 @@ async function main() {
       showToolBar: currentUIState.showToolBar,
       showStatusBar: currentUIState.showStatusBar,
       showSidebar: currentUIState.showSidebar,
+      sourceMode: currentUIState.sourceMode,
     };
 
   } catch (error) {
@@ -660,6 +662,7 @@ async function main() {
               showToolBar: currentUIState.showToolBar,
               showStatusBar: currentUIState.showStatusBar,
               showSidebar: currentUIState.showSidebar,
+              sourceMode: currentUIState.sourceMode,
             };
             setupMenu(viewMenuState);
             const result = await saveUIState(currentUIState);
@@ -976,6 +979,12 @@ async function main() {
       case 'view-quick-open':
         // @ts-ignore
         win.webview.rpc.send.openQuickOpen({});
+        break;
+
+      case 'view-toggle-source-mode':
+        updateViewMenuState({ sourceMode: !viewMenuState.sourceMode });
+        // @ts-ignore
+        win.webview.rpc.send.toggleSourceMode({});
         break;
 
       // Table menu actions
