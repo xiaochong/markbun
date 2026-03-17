@@ -4,4 +4,4 @@ node_modules
 .idea
 build
 artifacts
-CLAUDE.md
+CLAUDE.md.DS_Store
