@@ -102,11 +102,18 @@ describe('insertTableRowAbove', () => {
   it('should insert row above current row', () => {
     const mockDispatch = mock(() => {});
     const mockFocus = mock(() => {});
+    const mockInsert = mock(() => ({ doc: {} }));
 
     const mockAction = mock((fn: Function) => {
+      const mockState = {
+        ...createMockTableState(),
+        tr: {
+          insert: mockInsert,
+        },
+      };
       const mockCtx = {
         get: () => ({
-          state: createMockTableState(),
+          state: mockState,
           dispatch: mockDispatch,
           focus: mockFocus,
         }),
@@ -123,7 +130,8 @@ describe('insertTableRowAbove', () => {
       },
     };
 
-    expect(typeof insertTableRowAbove).toBe('function');
+    const result = insertTableRowAbove(ref as any);
+    expect(typeof result).toBe('boolean');
   });
 });
 
