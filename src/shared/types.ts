@@ -179,6 +179,13 @@ export type MarkBunRPC = {
       getDesktopPath: { params: {}; response: { success: boolean; path?: string; error?: string } };
       getWorkspaceRoot: { params: {}; response: { success: boolean; path?: string; error?: string } };
       saveDroppedImage: { params: { fileName: string; base64Data: string; workspaceRoot: string }; response: { success: boolean; relativePath?: string; absolutePath?: string; error?: string } };
+
+      // Custom save dialog
+      listFolder: { params: { path: string }; response: { success: boolean; items?: Array<{ name: string; path: string; isDirectory: boolean }>; error?: string } };
+      getParentFolder: { params: { path: string }; response: { success: boolean; path?: string; error?: string } };
+      saveFileWithPath: { params: { content: string; folderPath: string; fileName: string }; response: { success: boolean; fullPath?: string; error?: string } };
+      fileExists: { params: { path: string }; response: { exists: boolean; isDirectory?: boolean } };
+      showConfirmationDialog: { params: { title: string; message: string; detail?: string; confirmLabel?: string; cancelLabel?: string }; response: { confirmed: boolean } };
     };
     messages: {
       fileOpened: { path: string; content: string };

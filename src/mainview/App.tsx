@@ -7,6 +7,7 @@ import { Outline } from './components/outline';
 import { QuickOpen } from './components/quick-open';
 import { ImageInsertDialog } from './components/image-insert';
 import { SettingsDialog } from './components/settings';
+import { SaveDialog } from './components/save-dialog';
 import { useFileOperations } from './hooks/useFileOperations';
 import { useTheme } from './hooks/useTheme';
 import { useSidebar } from './hooks/useSidebar';
@@ -165,10 +166,13 @@ function App() {
     content,
     isDirty,
     saveStatus,
+    saveDialogState,
     updateContent,
     handleOpen,
     handleSave,
     handleSaveAs,
+    closeSaveDialog,
+    handleSaveFromDialog,
     cancelPendingSave,
     resetFileState,
   } = useFileOperations({
@@ -912,6 +916,15 @@ function App() {
         settings={settings}
         onClose={() => setShowSettingsDialog(false)}
         onSave={handleSettingsSave}
+      />
+
+      {/* Save Dialog */}
+      <SaveDialog
+        isOpen={saveDialogState.isOpen}
+        defaultFileName={saveDialogState.defaultFileName}
+        initialFolderPath={saveDialogState.initialFolderPath}
+        onClose={closeSaveDialog}
+        onSave={handleSaveFromDialog}
       />
     </div>
   );

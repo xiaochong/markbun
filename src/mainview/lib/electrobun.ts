@@ -156,6 +156,27 @@ export const electrobun = {
     return await electroview.rpc.request.saveDroppedImage({ fileName, base64Data, workspaceRoot });
   },
 
+  // Custom save dialog methods
+  async listFolder(params: { path: string }) {
+    return await electroview.rpc.request.listFolder(params);
+  },
+
+  async getParentFolder(params: { path: string }) {
+    return await electroview.rpc.request.getParentFolder(params);
+  },
+
+  async saveFileWithPath(params: { content: string; folderPath: string; fileName: string }) {
+    return await electroview.rpc.request.saveFileWithPath(params);
+  },
+
+  async fileExists(params: { path: string }) {
+    return await electroview.rpc.request.fileExists(params);
+  },
+
+  async showConfirmationDialog(params: { title: string; message: string; detail?: string; confirmLabel?: string; cancelLabel?: string }) {
+    return await electroview.rpc.request.showConfirmationDialog(params);
+  },
+
   // Phase 3: Settings
   async getSettings() {
     return await electroview.rpc.request.getSettings({});

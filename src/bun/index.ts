@@ -585,6 +585,135 @@ async function main() {
             };
           }
         },
+
+        // Custom save dialog - list folder contents
+        listFolder: async ({ path }: { path: string }) => {
+          try {
+            const entries = await readdir(path, { withFileTypes: true });
+            const items = entries
+              .filter(entry => {
+                const name = entry.name;
+                // Hide Unix hidden files
+                if (name.startsWith('.')) return false;
+                // Hide Windows system folders
+                const windowsHidden = [
+                  '$recycle.bin',
+                  '$recycle',
+                  'system volume information',
+                  'config.msi',
+                  'msocache',
+                  'pagefile.sys',
+                  'swapfile.sys',
+                  'hiberfil.sys',
+                  'recycler',
+                  'thumbs.db',
+                  'desktop.ini',
+                  'ntuser.dat',
+                  'ntuser.ini',
+                ];
+                if (windowsHidden.includes(name.toLowerCase())) return false;
+                // Hide macOS system folders
+                const macSystem = [
+                  '.ds_store',
+                  '.trashes',
+                  '.fseventsd',
+                  '.spotlight-v100',
+                  '.temporaryitems',
+                  'desktop.db',
+                  'desktopdf',
+                  '.appledb',
+                  '.appledesktop',
+                  '.appledouble',
+                ];
+                const lowerName = name.toLowerCase();
+                if (macSystem.some(sys => lowerName === sys || lowerName.startsWith('._'))) return false;
+                return true;
+              })
+              .map(entry => ({
+                name: entry.name,
+                path: join(path, entry.name),
+                isDirectory: entry.isDirectory(),
+              }))
+              .sort((a, b) => {
+                // Folders first, then alphabetically
+                if (a.isDirectory && !b.isDirectory) return -1;
+                if (!a.isDirectory && b.isDirectory) return 1;
+                return a.name.localeCompare(b.name);
+              });
+            return { success: true, items };
+          } catch (error) {
+            console.error('Failed to list folder:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            };
+          }
+        },
+
+        // Get parent folder path
+        getParentFolder: async ({ path }: { path: string }) => {
+          try {
+            const parentPath = dirname(path);
+            // Don't go above root
+            if (parentPath === path) {
+              return { success: false, error: 'Already at root' };
+            }
+            return { success: true, path: parentPath };
+          } catch (error) {
+            console.error('Failed to get parent folder:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            };
+          }
+        },
+
+        // Save file with specified path
+        saveFileWithPath: async ({ content, folderPath, fileName }: { content: string; folderPath: string; fileName: string }) => {
+          try {
+            const fullPath = join(folderPath, fileName);
+            await writeFile(fullPath, content, 'utf-8');
+            currentFilePath = fullPath;
+            return { success: true, fullPath };
+          } catch (error) {
+            console.error('Failed to save file:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            };
+          }
+        },
+
+        // Check if file exists
+        fileExists: async ({ path }: { path: string }) => {
+          try {
+            const s = await stat(path);
+            return { exists: true, isDirectory: s.isDirectory() };
+          } catch {
+            return { exists: false };
+          }
+        },
+
+        // Show confirmation dialog for file overwrite
+        showConfirmationDialog: async ({ title, message, detail, confirmLabel = 'Replace', cancelLabel = 'Cancel' }: { title: string; message: string; detail?: string; confirmLabel?: string; cancelLabel?: string }) => {
+          try {
+            const { response } = await Utils.showMessageBox({
+              type: 'warning',
+              title,
+              message,
+              detail,
+              buttons: [cancelLabel, confirmLabel],
+              defaultId: 0,
+              cancelId: 0,
+            });
+            // response 0 = Cancel, 1 = Replace
+            return { confirmed: response === 1 };
+          } catch (error) {
+            console.error('Failed to show confirmation dialog:', error);
+            return { confirmed: false };
+          }
+        },
+
         // Settings (Phase 3)
         getSettings: async () => {
           try {

@@ -14,6 +14,12 @@ interface UseFileOperationsOptions {
   autoSaveInterval?: number;
 }
 
+interface SaveDialogState {
+  isOpen: boolean;
+  defaultFileName: string;
+  initialFolderPath?: string;
+}
+
 export function useFileOperations(options: UseFileOperationsOptions = {}) {
   const { enableAutoSave = true, autoSaveInterval = 2000 } = options;
 
@@ -24,6 +30,12 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
   });
 
   const [saveStatus, setSaveStatus] = useState<'saving' | 'saved' | 'error' | null>(null);
+
+  // Custom save dialog state
+  const [saveDialogState, setSaveDialogState] = useState<SaveDialogState>({
+    isOpen: false,
+    defaultFileName: 'Untitled.md',
+  });
   const fileStateRef = useRef(fileState);
   fileStateRef.current = fileState;
 
@@ -260,42 +272,96 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
     }
   }, []);
 
-  // Save file as (with native dialog)
-  const handleSaveAs = useCallback(async () => {
+  // Open custom save dialog
+  const openSaveDialog = useCallback(() => {
     const state = fileStateRef.current;
+    const defaultFileName = state.path
+      ? state.path.split('/').pop() || 'Untitled.md'
+      : 'Untitled.md';
+
+    setSaveDialogState({
+      isOpen: true,
+      defaultFileName,
+      initialFolderPath: state.path ? state.path.substring(0, state.path.lastIndexOf('/')) : undefined,
+    });
+  }, []);
+
+  // Close save dialog
+  const closeSaveDialog = useCallback(() => {
+    setSaveDialogState(prev => ({ ...prev, isOpen: false }));
+  }, []);
+
+  // Handle save from custom dialog
+  const handleSaveFromDialog = useCallback(async (folderPath: string, fileName: string) => {
+    const state = fileStateRef.current;
+    const contentToSave = restoreOriginalImagePaths(state.content);
+
+    // Construct full file path
+    const fullPath = `${folderPath}/${fileName}`;
+
+    // Check if file already exists
+    const existsResult = await electrobun.fileExists({ path: fullPath }) as { exists: boolean; isDirectory?: boolean };
+
+    if (existsResult.exists && !existsResult.isDirectory) {
+      // File exists, show confirmation dialog
+      const confirmResult = await electrobun.showConfirmationDialog({
+        title: 'File Already Exists',
+        message: `"${fileName}" already exists in this location.`,
+        detail: 'Do you want to replace it with the new file?',
+        confirmLabel: 'Replace',
+        cancelLabel: 'Cancel',
+      }) as { confirmed: boolean };
+
+      if (!confirmResult.confirmed) {
+        // User cancelled, don't save
+        return;
+      }
+    }
 
     setSaveStatus('saving');
     try {
-      // Convert blob URLs back to original paths before saving
-      const contentToSave = restoreOriginalImagePaths(state.content);
-      const result = await electrobun.saveFileAs(contentToSave) as { success: boolean; path?: string; error?: string };
+      const result = await electrobun.saveFileWithPath({
+        content: contentToSave,
+        folderPath,
+        fileName,
+      }) as { success: boolean; fullPath?: string; error?: string };
 
       if (result.success) {
         setFileState({
-          path: result.path || null,
+          path: result.fullPath || null,
           content: state.content,
           isDirty: false,
         });
         setSaveStatus('saved');
         setTimeout(() => setSaveStatus(null), 2000);
+        // Close dialog after successful save
+        closeSaveDialog();
       } else {
         setSaveStatus('error');
         setTimeout(() => setSaveStatus(null), 2000);
       }
     } catch (error) {
-      console.error('Failed to save file as:', error);
+      console.error('Failed to save file:', error);
       setSaveStatus('error');
       setTimeout(() => setSaveStatus(null), 2000);
     }
-  }, []);
+  }, [closeSaveDialog]);
+
+  // Save file as (opens custom dialog)
+  const handleSaveAs = useCallback(async () => {
+    openSaveDialog();
+  }, [openSaveDialog]);
 
   return {
     ...fileState,
     saveStatus,
+    saveDialogState,
     updateContent,
     handleOpen,
     handleSave,
     handleSaveAs,
+    closeSaveDialog,
+    handleSaveFromDialog,
     cancelPendingSave,
     resetFileState,
   };
