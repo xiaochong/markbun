@@ -760,6 +760,7 @@ async function main() {
   const win = new BrowserWindow({
     title: 'MarkBun',
     url,
+    renderer: "cef",
     frame: {
       width: windowWidth,
       height: windowHeight,

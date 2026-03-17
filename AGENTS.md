@@ -655,6 +655,23 @@ const editor = Editor.make()
   .create();
 ```
 
+### Automation with agent-browser
+
+Load the `agent-browser` skill for browser automation testing and debugging. **Always use `--cdp 9222`**:
+
+```shell
+# Connect to the running Chrome with remote debugging on port 9222
+agent-browser --cdp 9222 open http://localhost:5173
+agent-browser --cdp 9222 snapshot
+```
+
+Example commands:
+```bash
+agent-browser --cdp 9222 snapshot -i       # Get interactive elements snapshot
+agent-browser --cdp 9222 click @e1         # Click element
+agent-browser --cdp 9222 screenshot        # Take screenshot
+```
+
 ## Image Handling Best Practices
 
 ### CRITICAL: Always Use Blob URLs for Display
