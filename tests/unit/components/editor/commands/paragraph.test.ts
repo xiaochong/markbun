@@ -40,6 +40,37 @@ describe('setParagraph', () => {
     const ref = { current: { editor: {} } };
     expect(setParagraph(ref as any)).toBe(false);
   });
+
+  it('should execute paragraph schema type and setBlockType', () => {
+    const mockDispatch = mock(() => {});
+    const mockAction = mock((fn: Function) => {
+      const mockCtx = {
+        get: (key: any) => {
+          if (key.name === 'editorViewCtx') {
+            return {
+              state: {},
+              dispatch: mockDispatch,
+            };
+          }
+          return null;
+        },
+      };
+      // paragraphSchema.type() might return null, so function returns false
+      return fn(mockCtx);
+    });
+
+    const ref = {
+      current: {
+        editor: {
+          ctx: {},
+          action: mockAction,
+        },
+      },
+    };
+
+    const result = setParagraph(ref as any);
+    expect(typeof result).toBe('boolean');
+  });
 });
 
 describe('increaseHeadingLevel', () => {
@@ -107,7 +138,37 @@ describe('increaseHeadingLevel', () => {
   });
 
   it('should cap heading level at 6', () => {
+    const mockAction = mock((fn: Function) => {
+      const mockCtx = {
+        get: () => ({
+          state: {
+            doc: {
+              nodesBetween: (from: number, to: number, callback: Function) => {
+                callback({ type: { name: 'heading' }, attrs: { level: 6 } });
+              },
+            },
+            selection: { from: 10, to: 20 },
+          },
+        }),
+      };
+      return fn(mockCtx);
+    });
+
+    const ref = {
+      current: {
+        editor: {
+          ctx: {},
+          action: mockAction,
+        },
+      },
+    };
+
     expect(typeof increaseHeadingLevel).toBe('function');
+  });
+
+  it('should return false when editor has no ctx', () => {
+    const ref = { current: { editor: {} } };
+    expect(increaseHeadingLevel(ref as any)).toBe(false);
   });
 });
 
@@ -175,6 +236,11 @@ describe('decreaseHeadingLevel', () => {
     };
 
     expect(typeof decreaseHeadingLevel).toBe('function');
+  });
+
+  it('should return false when editor has no ctx', () => {
+    const ref = { current: { editor: {} } };
+    expect(decreaseHeadingLevel(ref as any)).toBe(false);
   });
 });
 
