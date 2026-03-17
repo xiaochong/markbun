@@ -5,8 +5,15 @@ import type { FileSystemNode, FileNode, FolderNode } from '../../shared/types';
 
 /**
  * Read a folder and return its contents as a tree structure
+ * @param folderPath - Path to the folder to read
+ * @param maxDepth - Maximum depth to recursively load (default: 3, 0 means no recursion)
+ * @param currentDepth - Current depth in the recursion (internal use)
  */
-export async function readFolder(folderPath: string): Promise<{ success: boolean; nodes?: FileSystemNode[]; error?: string }> {
+export async function readFolder(
+  folderPath: string,
+  maxDepth: number = 3,
+  currentDepth: number = 0
+): Promise<{ success: boolean; nodes?: FileSystemNode[]; error?: string }> {
   try {
     const entries = await readdir(folderPath, { withFileTypes: true });
 
@@ -21,11 +28,20 @@ export async function readFolder(folderPath: string): Promise<{ success: boolean
       }
 
       if (entry.isDirectory()) {
+        // Only recursively load children if we haven't reached maxDepth
+        let children: FileSystemNode[] = [];
+        if (currentDepth < maxDepth) {
+          const childResult = await readFolder(fullPath, maxDepth, currentDepth + 1);
+          if (childResult.success && childResult.nodes) {
+            children = childResult.nodes;
+          }
+        }
+
         const folderNode: FolderNode = {
           type: 'folder',
           name: entry.name,
           path: fullPath,
-          children: [], // Lazy load children
+          children, // Load children if within depth limit
           isExpanded: false,
         };
         nodes.push(folderNode);

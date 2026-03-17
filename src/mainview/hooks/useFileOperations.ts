@@ -12,6 +12,7 @@ interface FileState {
 interface UseFileOperationsOptions {
   enableAutoSave?: boolean;
   autoSaveInterval?: number;
+  onSaveSuccess?: (path: string) => void;
 }
 
 interface SaveDialogState {
@@ -21,7 +22,11 @@ interface SaveDialogState {
 }
 
 export function useFileOperations(options: UseFileOperationsOptions = {}) {
-  const { enableAutoSave = true, autoSaveInterval = 2000 } = options;
+  const { enableAutoSave = true, autoSaveInterval = 2000, onSaveSuccess } = options;
+
+  // Use ref to store callback to avoid dependency issues
+  const onSaveSuccessRef = useRef(onSaveSuccess);
+  onSaveSuccessRef.current = onSaveSuccess;
 
   const [fileState, setFileState] = useState<FileState>({
     path: null,
@@ -257,6 +262,7 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
         setFileState(prev => ({ ...prev, isDirty: false }));
         setSaveStatus('saved');
         console.log('[Save] Save successful:', targetPath);
+        onSaveSuccessRef.current?.(targetPath);
         setTimeout(() => setSaveStatus(null), 2000);
       } else {
         setSaveStatus('error');
@@ -327,12 +333,16 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
       }) as { success: boolean; fullPath?: string; error?: string };
 
       if (result.success) {
+        const savedPath = result.fullPath || null;
         setFileState({
-          path: result.fullPath || null,
+          path: savedPath,
           content: state.content,
           isDirty: false,
         });
         setSaveStatus('saved');
+        if (savedPath) {
+          onSaveSuccessRef.current?.(savedPath);
+        }
         setTimeout(() => setSaveStatus(null), 2000);
         // Close dialog after successful save
         closeSaveDialog();

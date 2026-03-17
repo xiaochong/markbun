@@ -78,7 +78,14 @@ function App() {
 
   // Phase 2: Sidebar and file management - MUST be declared before UI state effects
   const sidebar = useSidebar();
-  const fileExplorer = useFileExplorer();
+  const fileExplorer = useFileExplorer({
+    enablePolling: true,
+    pollingInterval: 5000,
+    maxDepth: 3,
+  });
+  // Use ref to track rootPath for save callback to avoid stale closure
+  const fileExplorerRef = useRef(fileExplorer);
+  fileExplorerRef.current = fileExplorer;
   const outline = useOutline();
   const quickOpen = useQuickOpen(handleQuickOpenSelect);
 
@@ -178,6 +185,21 @@ function App() {
   } = useFileOperations({
     enableAutoSave: settings?.autoSave ?? true,
     autoSaveInterval: settings?.autoSaveInterval ?? 2000,
+    onSaveSuccess: (savedPath) => {
+      // Set root path to the file's parent directory (so new files appear in file explorer)
+      const parentDir = savedPath.substring(0, savedPath.lastIndexOf('/')) || '/';
+      // Check current rootPath using ref to avoid stale closure
+      const currentRoot = fileExplorerRef.current.rootPath;
+      if (currentRoot === parentDir) {
+        // Same directory: setRootPath would skip, so force refresh with specific path
+        fileExplorerRef.current.refresh(true, parentDir);
+      } else {
+        // Different directory or null: setRootPath will load the new directory
+        fileExplorerRef.current.setRootPath(parentDir);
+      }
+      // Select the saved file in file explorer
+      fileExplorerRef.current.selectFile(savedPath);
+    },
   });
 
   // File loading cancel token to prevent race conditions

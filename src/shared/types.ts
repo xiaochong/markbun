@@ -169,7 +169,7 @@ export type MarkBunRPC = {
 
       // File management (Phase 2)
       readFile: { params: { path: string }; response: { success: boolean; path?: string; content?: string; error?: string } };
-      readFolder: { params: { path: string }; response: { success: boolean; nodes?: FileSystemNode[]; error?: string } };
+      readFolder: { params: { path: string; maxDepth?: number }; response: { success: boolean; nodes?: FileSystemNode[]; error?: string } };
       getRecentFiles: { params: {}; response: { success: boolean; files?: RecentFile[]; error?: string } };
       addRecentFile: { params: { path: string }; response: { success: boolean; error?: string } };
       removeRecentFile: { params: { path: string }; response: { success: boolean; error?: string } };

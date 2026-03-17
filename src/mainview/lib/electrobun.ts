@@ -108,7 +108,7 @@ export const electrobun = {
     return await electroview.rpc.request.readFile(params);
   },
 
-  async readFolder(params: { path: string }) {
+  async readFolder(params: { path: string; maxDepth?: number }) {
     return await electroview.rpc.request.readFolder(params);
   },
 

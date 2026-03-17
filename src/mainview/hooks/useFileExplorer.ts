@@ -1,6 +1,12 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { electrobun } from '@/lib/electrobun';
 import type { FileSystemNode, FileNode } from '@/shared/types';
+
+export interface UseFileExplorerOptions {
+  enablePolling?: boolean;
+  pollingInterval?: number;
+  maxDepth?: number;
+}
 
 export interface UseFileExplorerReturn {
   rootPath: string | null;
@@ -12,10 +18,15 @@ export interface UseFileExplorerReturn {
   setRootPath: (path: string | null) => void;
   toggleFolder: (path: string) => void;
   selectFile: (path: string | null) => void;
-  refresh: () => void;
+  refresh: (silent?: boolean, specificPath?: string) => void;
 }
 
-export function useFileExplorer(): UseFileExplorerReturn {
+export function useFileExplorer(options: UseFileExplorerOptions = {}): UseFileExplorerReturn {
+  const {
+    enablePolling = true,
+    pollingInterval = 5000,
+    maxDepth = 3,
+  } = options;
   const [rootPath, setRootPathState] = useState<string | null>(null);
   const [nodes, setNodes] = useState<FileSystemNode[]>([]);
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
@@ -23,11 +34,20 @@ export function useFileExplorer(): UseFileExplorerReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadFolder = useCallback(async (path: string) => {
-    setIsLoading(true);
+  // Track visibility state to pause polling when hidden
+  const isVisibleRef = useRef(true);
+
+  // Use ref to track rootPath for refresh to avoid stale closure
+  const rootPathRef = useRef(rootPath);
+  rootPathRef.current = rootPath;
+
+  const loadFolder = useCallback(async (path: string, depth: number = maxDepth, silent: boolean = false) => {
+    if (!silent) {
+      setIsLoading(true);
+    }
     setError(null);
     try {
-      const result = await electrobun.readFolder({ path }) as {
+      const result = await electrobun.readFolder({ path, maxDepth: depth }) as {
         success: boolean;
         nodes?: FileSystemNode[];
         error?: string
@@ -41,9 +61,11 @@ export function useFileExplorer(): UseFileExplorerReturn {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
-      setIsLoading(false);
+      if (!silent) {
+        setIsLoading(false);
+      }
     }
-  }, []);
+  }, [maxDepth]);
 
   const setRootPath = useCallback((path: string | null) => {
     // If no path provided, clear everything
@@ -87,7 +109,7 @@ export function useFileExplorer(): UseFileExplorerReturn {
 
     const node = findNode(nodes, path);
     if (node?.type === 'folder' && !expandedPaths.has(path)) {
-      const result = await electrobun.readFolder({ path }) as {
+      const result = await electrobun.readFolder({ path, maxDepth: 1 }) as {
         success: boolean;
         nodes?: FileSystemNode[];
         error?: string;
@@ -103,11 +125,36 @@ export function useFileExplorer(): UseFileExplorerReturn {
     setSelectedPath(path);
   }, []);
 
-  const refresh = useCallback(() => {
-    if (rootPath) {
-      loadFolder(rootPath);
+  const refresh = useCallback((silent: boolean = false, specificPath?: string) => {
+    // Use specificPath if provided, otherwise use ref to get latest rootPath
+    const pathToLoad = specificPath || rootPathRef.current;
+    if (pathToLoad) {
+      loadFolder(pathToLoad, maxDepth, silent);
     }
-  }, [rootPath, loadFolder]);
+  }, [loadFolder, maxDepth]);
+
+  // Polling effect for external file changes
+  useEffect(() => {
+    if (!enablePolling || !rootPath) return;
+
+    // Update visibility state
+    const handleVisibilityChange = () => {
+      isVisibleRef.current = document.visibilityState === 'visible';
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    const intervalId = setInterval(() => {
+      // Only refresh when window is visible (silent mode to avoid flashing)
+      if (isVisibleRef.current) {
+        refresh(true);
+      }
+    }, pollingInterval);
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [enablePolling, pollingInterval, rootPath, refresh]);
 
   // Initialize with empty state - no default folder
   // File explorer stays empty until a file is opened

@@ -429,12 +429,13 @@ async function main() {
             };
           }
         },
-        readFolder: async (params: { path: string }) => {
+        readFolder: async (params: { path: string; maxDepth?: number }) => {
           const folderPath = params.path;
+          const maxDepth = params.maxDepth ?? 3;
           if (!folderPath) {
             return { success: false, error: 'No folder path provided' };
           }
-          return await readFolder(folderPath);
+          return await readFolder(folderPath, maxDepth);
         },
         getRecentFiles: async () => {
           return await getRecentFiles();
