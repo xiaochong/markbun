@@ -109,4 +109,55 @@ describe('debounce', () => {
     const debounced = debounce(fn, 100);
     expect(() => debounced.cancel()).not.toThrow();
   });
+
+  it('should call function after delay', async () => {
+    let called = false;
+    const fn = () => { called = true; };
+    const debounced = debounce(fn, 10);
+
+    debounced();
+    expect(called).toBe(false);
+
+    await new Promise(resolve => setTimeout(resolve, 20));
+    expect(called).toBe(true);
+  });
+
+  it('should reset timer on multiple calls', async () => {
+    let callCount = 0;
+    const fn = () => { callCount++; };
+    const debounced = debounce(fn, 50);
+
+    debounced();
+    await new Promise(resolve => setTimeout(resolve, 30));
+    debounced();
+    await new Promise(resolve => setTimeout(resolve, 30));
+
+    expect(callCount).toBe(0);
+
+    await new Promise(resolve => setTimeout(resolve, 60));
+    expect(callCount).toBe(1);
+  });
+
+  it('should pass arguments to debounced function', async () => {
+    let receivedArgs: number[] = [];
+    const fn = (...args: number[]) => { receivedArgs = args; };
+    const debounced = debounce(fn, 10);
+
+    debounced(1, 2, 3);
+    await new Promise(resolve => setTimeout(resolve, 20));
+
+    expect(receivedArgs).toEqual([1, 2, 3]);
+  });
+
+  it('should prevent function call when cancelled', async () => {
+    let called = false;
+    const fn = () => { called = true; };
+    const debounced = debounce(fn, 50);
+
+    debounced();
+    debounced.cancel();
+
+    await new Promise(resolve => setTimeout(resolve, 60));
+    expect(called).toBe(false);
+  });
 });
