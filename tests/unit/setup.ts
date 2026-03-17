@@ -20,6 +20,16 @@ export {
   toggleLink,
   toggleList,
   toggleOrderedList,
+  toggleUnderline,
+  toggleHighlight,
+  toggleSuperscript,
+  toggleSubscript,
+  insertInlineMath,
+  insertComment,
+  insertLocalImage,
+  toggleStrikethrough,
+  toggleCodeBlock,
+  insertImage,
 } from '../../src/mainview/components/editor/commands/formatting';
 
 export {

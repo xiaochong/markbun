@@ -12,6 +12,16 @@ import {
   toggleLink,
   toggleList,
   toggleOrderedList,
+  toggleUnderline,
+  toggleHighlight,
+  toggleSuperscript,
+  toggleSubscript,
+  insertInlineMath,
+  insertComment,
+  insertLocalImage,
+  toggleStrikethrough,
+  toggleCodeBlock,
+  insertImage,
 } from '../../../setup';
 
 // Helper to create mock Crepe ref
@@ -181,5 +191,92 @@ describe('toggleOrderedList', () => {
   it('should return false when editor is not initialized', () => {
     const emptyRef = { current: null };
     expect(toggleOrderedList(emptyRef as any)).toBe(false);
+  });
+});
+
+describe('toggleStrikethrough', () => {
+  it('should return false when editor is not initialized', () => {
+    const emptyRef = { current: null };
+    expect(toggleStrikethrough(emptyRef as any)).toBe(false);
+  });
+
+  it('should call editor action when initialized', () => {
+    const ref = createMockCrepeRef();
+    toggleStrikethrough(ref as any);
+    expect(ref.current.editor.action).toHaveBeenCalled();
+  });
+});
+
+describe('toggleUnderline', () => {
+  it('should return false for unsupported feature', () => {
+    const ref = createMockCrepeRef();
+    expect(toggleUnderline(ref as any)).toBe(false);
+  });
+});
+
+describe('toggleHighlight', () => {
+  it('should return false for unsupported feature', () => {
+    const ref = createMockCrepeRef();
+    expect(toggleHighlight(ref as any)).toBe(false);
+  });
+});
+
+describe('toggleSuperscript', () => {
+  it('should return false for unsupported feature', () => {
+    const ref = createMockCrepeRef();
+    expect(toggleSuperscript(ref as any)).toBe(false);
+  });
+});
+
+describe('toggleSubscript', () => {
+  it('should return false for unsupported feature', () => {
+    const ref = createMockCrepeRef();
+    expect(toggleSubscript(ref as any)).toBe(false);
+  });
+});
+
+describe('insertInlineMath', () => {
+  it('should return false for unsupported feature', () => {
+    const ref = createMockCrepeRef();
+    expect(insertInlineMath(ref as any)).toBe(false);
+  });
+});
+
+describe('insertComment', () => {
+  it('should return false for unsupported feature', () => {
+    const ref = createMockCrepeRef();
+    expect(insertComment(ref as any)).toBe(false);
+  });
+});
+
+describe('insertLocalImage', () => {
+  it('should return false for unimplemented feature', () => {
+    const ref = createMockCrepeRef();
+    expect(insertLocalImage(ref as any)).toBe(false);
+  });
+});
+
+describe('insertImage', () => {
+  it('should return false when editor is not initialized', () => {
+    const emptyRef = { current: null };
+    expect(insertImage(emptyRef as any, 'test.png')).toBe(false);
+  });
+
+  it('should call editor action when initialized', () => {
+    const ref = createMockCrepeRef();
+    insertImage(ref as any, 'test.png', 'alt', 'title');
+    expect(ref.current.editor.action).toHaveBeenCalled();
+  });
+});
+
+describe('toggleCodeBlock', () => {
+  it('should return false when editor is not initialized', () => {
+    const emptyRef = { current: null };
+    expect(toggleCodeBlock(emptyRef as any)).toBe(false);
+  });
+
+  it('should return false when editor has no ctx', () => {
+    const ref = { current: { editor: {} } };
+    expect(toggleCodeBlock(ref as any)).toBe(false);
   });
 });
