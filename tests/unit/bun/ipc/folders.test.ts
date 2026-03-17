@@ -135,6 +135,15 @@ describe('readFolder', () => {
     expect(result.success).toBe(true);
     expect(result.nodes!.some(n => n.name.toLowerCase() === '.ds_store')).toBe(false);
   });
+
+  it('should skip macOS resource fork files (._*)', async () => {
+    await writeFile(join(tempDir, '._resource'), '');
+    await writeFile(join(tempDir, 'valid.md'), '# Test');
+
+    const result = await readFolder(tempDir);
+    expect(result.success).toBe(true);
+    expect(result.nodes!.some(n => n.name.startsWith('._'))).toBe(false);
+  });
 });
 
 describe('expandFolder', () => {
