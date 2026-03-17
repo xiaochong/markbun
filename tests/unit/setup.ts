@@ -49,6 +49,10 @@ export {
   deleteTable,
 } from '../../src/mainview/components/editor/commands/table';
 
+export {
+  insertText,
+} from '../../src/mainview/components/editor/commands/text';
+
 // Types
 export type {
   MilkdownEditorProps,
