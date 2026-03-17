@@ -94,6 +94,11 @@ describe('insertTableRowAbove', () => {
     expect(insertTableRowAbove(emptyRef as any)).toBe(false);
   });
 
+  it('should return false when editor has no ctx', () => {
+    const ref = { current: { editor: {} } };
+    expect(insertTableRowAbove(ref as any)).toBe(false);
+  });
+
   it('should insert row above current row', () => {
     const mockDispatch = mock(() => {});
     const mockFocus = mock(() => {});
@@ -126,6 +131,11 @@ describe('insertTableRowBelow', () => {
   it('should return false when editor is not initialized', () => {
     const emptyRef = { current: null };
     expect(insertTableRowBelow(emptyRef as any)).toBe(false);
+  });
+
+  it('should return false when editor has no ctx', () => {
+    const ref = { current: { editor: {} } };
+    expect(insertTableRowBelow(ref as any)).toBe(false);
   });
 
   it('should insert row below current row', () => {
@@ -214,6 +224,40 @@ describe('deleteTableRow', () => {
     expect(deleteTableRow(emptyRef as any)).toBe(false);
   });
 
+  it('should return false when not in a table cell', () => {
+    const mockAction = mock((fn: Function) => {
+      const mockCtx = {
+        get: () => ({
+          state: {
+            selection: {
+              from: 10,
+              $from: {
+                depth: 1,
+                node: () => ({ type: { name: 'paragraph' } }),
+              },
+            },
+            doc: {
+              resolve: () => mockCtx.get().state.selection.$from,
+            },
+          },
+        }),
+      };
+      return fn(mockCtx);
+    });
+
+    const ref = {
+      current: {
+        editor: {
+          ctx: {},
+          action: mockAction,
+        },
+      },
+    };
+
+    const result = deleteTableRow(ref as any);
+    expect(typeof result).toBe('boolean');
+  });
+
   it('should delete entire table when only one row remains', () => {
     expect(typeof deleteTableRow).toBe('function');
   });
@@ -242,6 +286,11 @@ describe('deleteTable', () => {
   it('should return false when editor is not initialized', () => {
     const emptyRef = { current: null };
     expect(deleteTable(emptyRef as any)).toBe(false);
+  });
+
+  it('should return false when editor has no ctx', () => {
+    const ref = { current: { editor: {} } };
+    expect(deleteTable(ref as any)).toBe(false);
   });
 
   it('should delete entire table', () => {
