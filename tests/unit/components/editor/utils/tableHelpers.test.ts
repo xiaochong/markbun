@@ -56,6 +56,50 @@ describe('findTableNode', () => {
 
     expect(findTableNode(mockState as any)).toBeNull();
   });
+
+  it('should find table node when cursor is in a table', () => {
+    const mockTableNode = { type: { name: 'table' }, childCount: 2 };
+    const mockState = {
+      selection: {
+        from: 15,
+        $from: {
+          depth: 3,
+          node: (d: number) => {
+            if (d === 3) return { type: { name: 'table_cell' } };
+            if (d === 2) return { type: { name: 'table_row' } };
+            if (d === 1) return mockTableNode;
+            return { type: { name: 'paragraph' } };
+          },
+          before: (d: number) => (d === 1 ? 10 : 5),
+        },
+      },
+      doc: { resolve: (pos: number) => mockState.selection.$from },
+    };
+
+    const result = findTableNode(mockState as any);
+    expect(result).not.toBeNull();
+    expect(result?.node.type.name).toBe('table');
+    expect(result?.pos).toBe(10);
+  });
+
+  it('should find table at depth 0', () => {
+    const mockTableNode = { type: { name: 'table' } };
+    const mockState = {
+      selection: {
+        from: 5,
+        $from: {
+          depth: 0,
+          node: () => mockTableNode,
+          before: () => 0,
+        },
+      },
+      doc: { resolve: (pos: number) => mockState.selection.$from },
+    };
+
+    const result = findTableNode(mockState as any);
+    expect(result).not.toBeNull();
+    expect(result?.node.type.name).toBe('table');
+  });
 });
 
 describe('findCurrentCell', () => {
