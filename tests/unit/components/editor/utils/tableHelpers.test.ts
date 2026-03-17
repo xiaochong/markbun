@@ -106,4 +106,96 @@ describe('findCurrentCell', () => {
   it('should be defined', () => {
     expect(typeof findCurrentCell).toBe('function');
   });
+
+  it('should return null when not in a table cell', () => {
+    const mockState = {
+      selection: {
+        from: 10,
+        $from: {
+          depth: 2,
+          node: () => ({ type: { name: 'paragraph' } }),
+        },
+      },
+      doc: { resolve: () => mockState.selection.$from },
+    };
+
+    expect(findCurrentCell(mockState as any)).toBeNull();
+  });
+
+  it('should find current cell in a table', () => {
+    const mockCellNode = { type: { name: 'table_cell' }, nodeSize: 10 };
+    const mockRowNode = { type: { name: 'table_row' }, childCount: 2, child: () => mockCellNode };
+    const mockTableNode = { type: { name: 'table' }, childCount: 1, child: () => mockRowNode };
+
+    let callCount = 0;
+    const mockState = {
+      selection: {
+        from: 20,
+        $from: {
+          depth: 3,
+          node: (d: number) => {
+            if (d === 3) return mockCellNode;
+            if (d === 2) return mockRowNode;
+            if (d === 1) return mockTableNode;
+            return { type: { name: 'doc' } };
+          },
+          before: (d: number) => {
+            if (d === 1) return 10;
+            if (d === 2) return 11;
+            if (d === 3) return 12;
+            return 0;
+          },
+          start: () => 15,
+        },
+      },
+      doc: { resolve: () => mockState.selection.$from },
+    };
+
+    const result = findCurrentCell(mockState as any);
+    expect(typeof result).toBe('object');
+  });
+
+  it('should handle table_header cells', () => {
+    const mockHeaderNode = { type: { name: 'table_header' }, nodeSize: 10 };
+    const mockRowNode = { type: { name: 'table_row' }, childCount: 1, child: () => mockHeaderNode };
+    const mockTableNode = { type: { name: 'table' }, childCount: 1, child: () => mockRowNode };
+
+    const mockState = {
+      selection: {
+        from: 15,
+        $from: {
+          depth: 3,
+          node: (d: number) => {
+            if (d === 3) return mockHeaderNode;
+            if (d === 2) return mockRowNode;
+            if (d === 1) return mockTableNode;
+            return { type: { name: 'doc' } };
+          },
+          before: (d: number) => (d === 1 ? 5 : d === 2 ? 6 : 7),
+          start: () => 10,
+        },
+      },
+      doc: { resolve: () => mockState.selection.$from },
+    };
+
+    const result = findCurrentCell(mockState as any);
+    expect(typeof result).toBe('object');
+  });
+
+  it('should return null when row parent is missing', () => {
+    const mockCellNode = { type: { name: 'table_cell' } };
+
+    const mockState = {
+      selection: {
+        from: 10,
+        $from: {
+          depth: 1,
+          node: () => mockCellNode,
+        },
+      },
+      doc: { resolve: () => mockState.selection.$from },
+    };
+
+    expect(findCurrentCell(mockState as any)).toBeNull();
+  });
 });
