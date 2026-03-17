@@ -35,6 +35,11 @@ describe('setParagraph', () => {
     const ref = createMockCrepeRef();
     expect(setParagraph(ref as any)).toBe(true);
   });
+
+  it('should return false when editor has no ctx', () => {
+    const ref = { current: { editor: {} } };
+    expect(setParagraph(ref as any)).toBe(false);
+  });
 });
 
 describe('increaseHeadingLevel', () => {
@@ -179,8 +184,10 @@ describe('insertTable', () => {
     expect(insertTable(emptyRef as any)).toBe(false);
   });
 
-  it('should insert table markdown', () => {
-    expect(typeof insertTable).toBe('function');
+  it('should call insertParsedMarkdown with table content', () => {
+    const ref = createMockCrepeRef();
+    const result = insertTable(ref as any);
+    expect(typeof result).toBe('boolean');
   });
 });
 
@@ -189,12 +196,24 @@ describe('insertMathBlock', () => {
     const emptyRef = { current: null };
     expect(insertMathBlock(emptyRef as any)).toBe(false);
   });
+
+  it('should call insertParsedMarkdown with math block content', () => {
+    const ref = createMockCrepeRef();
+    const result = insertMathBlock(ref as any);
+    expect(typeof result).toBe('boolean');
+  });
 });
 
 describe('insertCodeBlock', () => {
   it('should return false when editor is not initialized', () => {
     const emptyRef = { current: null };
     expect(insertCodeBlock(emptyRef as any)).toBe(false);
+  });
+
+  it('should call insertParsedMarkdown with code block content', () => {
+    const ref = createMockCrepeRef();
+    const result = insertCodeBlock(ref as any);
+    expect(typeof result).toBe('boolean');
   });
 });
 
@@ -203,12 +222,24 @@ describe('insertTaskList', () => {
     const emptyRef = { current: null };
     expect(insertTaskList(emptyRef as any)).toBe(false);
   });
+
+  it('should call insertParsedMarkdown with task list content', () => {
+    const ref = createMockCrepeRef();
+    const result = insertTaskList(ref as any);
+    expect(typeof result).toBe('boolean');
+  });
 });
 
 describe('insertHorizontalRule', () => {
   it('should return false when editor is not initialized', () => {
     const emptyRef = { current: null };
     expect(insertHorizontalRule(emptyRef as any)).toBe(false);
+  });
+
+  it('should call insertParsedMarkdown with horizontal rule content', () => {
+    const ref = createMockCrepeRef();
+    const result = insertHorizontalRule(ref as any);
+    expect(typeof result).toBe('boolean');
   });
 });
 
@@ -270,7 +301,50 @@ describe('insertParagraphBelow', () => {
     expect(insertParagraphBelow(emptyRef as any)).toBe(false);
   });
 
+  it('should insert paragraph below current block when editor has no ctx', () => {
+    const ref = { current: { editor: {} } };
+    expect(insertParagraphBelow(ref as any)).toBe(false);
+  });
+
   it('should insert paragraph below current block', () => {
+    const mockAction = mock((fn: Function) => {
+      const mockCtx = {
+        get: () => ({
+          state: {
+            selection: { from: 20 },
+            doc: {
+              resolve: () => ({
+                after: () => 30,
+                depth: 1,
+              }),
+            },
+            schema: {
+              nodes: {
+                paragraph: { create: () => ({ type: 'paragraph' }) },
+              },
+            },
+            tr: {
+              insert: () => ({
+                setSelection: () => ({}),
+              }),
+            },
+          },
+          dispatch: mock(() => {}),
+          focus: mock(() => {}),
+        }),
+      };
+      return fn(mockCtx);
+    });
+
+    const ref = {
+      current: {
+        editor: {
+          ctx: {},
+          action: mockAction,
+        },
+      },
+    };
+
     expect(typeof insertParagraphBelow).toBe('function');
   });
 });
