@@ -81,7 +81,12 @@ export async function readFolder(
  * Check if a file extension is supported
  */
 function isSupportedFile(ext: string): boolean {
-  const supported = ['.md', '.markdown', '.txt', '.mdx'];
+  const supported = [
+    // Markdown/text files
+    '.md', '.markdown', '.txt', '.mdx',
+    // Image files
+    '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.ico'
+  ];
   return supported.includes(ext);
 }
 

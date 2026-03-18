@@ -1,10 +1,9 @@
-import { memo, useCallback, useState, useRef } from 'react';
-import { cn } from '@/lib/utils';
-import { electrobun } from '@/lib/electrobun';
-import { FileTree } from './FileTree';
-import { ContextMenu, type ContextMenuAction } from './ContextMenu';
-import { MoveDialog } from './MoveDialog';
-import type { FileSystemNode, FileNode } from '@/shared/types';
+import {memo, useCallback, useRef, useState} from 'react';
+import {electrobun} from '@/lib/electrobun';
+import {FileTree} from './FileTree';
+import {ContextMenu, type ContextMenuAction} from './ContextMenu';
+import {MoveDialog} from './MoveDialog';
+import type {FileNode, FileSystemNode} from '@/shared/types';
 
 interface FileExplorerProps {
   nodes: FileSystemNode[];

@@ -2,10 +2,11 @@ import { useRef, useCallback, useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { MilkdownEditor, MilkdownEditorRef, SourceEditor, SourceEditorRef } from './components/editor';
 import { Toolbar, StatusBar, TitleBar, Sidebar } from './components/layout';
-import { FileExplorer } from './components/file-explorer';
+import { FileExplorer, isImageFile } from './components/file-explorer';
 import { Outline } from './components/outline';
 import { QuickOpen } from './components/quick-open';
 import { ImageInsertDialog } from './components/image-insert';
+import { ImageViewer } from './components/image-viewer';
 import { SettingsDialog } from './components/settings';
 import { SaveDialog } from './components/save-dialog';
 import { useFileOperations } from './hooks/useFileOperations';
@@ -33,6 +34,9 @@ function App() {
 
   // Flag to ignore editor changes during file switching
   const isSwitchingFileRef = useRef(false);
+
+  // Image viewer state
+  const [imagePreviewPath, setImagePreviewPath] = useState<string | null>(null);
 
   // Phase 3: Settings
   const [settings, setSettings] = useState<AppSettings | null>(null);
@@ -276,6 +280,9 @@ function App() {
 
     console.log('[FileLoad] Starting load:', filePath);
 
+    // Clear image preview when opening a file in editor
+    setImagePreviewPath(null);
+
     try {
       const result = await electrobun.readFile({ path: filePath }) as {
         success: boolean;
@@ -374,8 +381,19 @@ function App() {
 
   // Handle file click in file explorer
   const handleFileClick = useCallback((file: FileNode) => {
+    // Check if it's an image file
+    if (isImageFile(file.extension)) {
+      // Show image preview instead of opening in editor
+      setImagePreviewPath(file.path);
+      // Update file explorer selection
+      fileExplorer.selectFile(file.path);
+      return;
+    }
+
+    // For non-image files, clear image preview and open in editor
+    setImagePreviewPath(null);
     openFileByPath(file.path);
-  }, [openFileByPath]);
+  }, [openFileByPath, fileExplorer.selectFile]);
 
   // Handle outline heading click
   const handleOutlineClick = useCallback((id: string, text: string) => {
@@ -465,6 +483,9 @@ function App() {
       // Create new cancel token for this event
       const token = { cancelled: false, path: filePath };
       loadingCancelTokenRef.current = token;
+
+      // Clear image preview when opening a file in editor
+      setImagePreviewPath(null);
 
       // Update workspace and file state
       workspaceManager.setCurrentFile(filePath);
@@ -594,6 +615,7 @@ function App() {
 
       // Reset all editor and UI state to initial values
       setEditorContent('');
+      setImagePreviewPath(null);
       outline.setHeadings('');
 
       // Reset file state
@@ -898,7 +920,9 @@ function App() {
               onOrderedList={handleOrderedList}
             />
           )}
-          {sourceMode ? (
+          {imagePreviewPath ? (
+            <ImageViewer path={imagePreviewPath} className="flex-1" />
+          ) : sourceMode ? (
             <SourceEditor
               ref={sourceEditorRef}
               defaultValue={content}

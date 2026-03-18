@@ -249,12 +249,31 @@ function FolderIcon() {
 
 // File Icon with extension-based colors (outlined style)
 function FileIcon({ extension }: { extension: string }) {
+  if (isImageFile(extension)) {
+    return <ImageIcon />;
+  }
+
+  if (isMarkdownFile(extension)) {
+    return <MarkdownIcon />;
+  }
+
   const colorClass = getFileColor(extension);
 
   return (
     <svg className={cn('w-4 h-4 flex-shrink-0', colorClass)} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
       <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" />
       <path d="M14 3v5h5" />
+    </svg>
+  );
+}
+
+// Image Icon (for image files)
+function ImageIcon() {
+  return (
+    <svg className="w-4 h-4 flex-shrink-0 text-purple-500/80" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <path d="M21 15l-5-5L5 21" />
     </svg>
   );
 }
@@ -267,4 +286,31 @@ function getFileColor(extension: string): string {
     txt: 'text-slate-500 dark:text-slate-400',
   };
   return colors[extension.toLowerCase()] || 'text-gray-500';
+}
+
+// Check if extension is an image
+export function isImageFile(extension: string): boolean {
+  const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico'];
+  return imageExtensions.includes(extension.toLowerCase());
+}
+
+// Check if extension is a markdown file
+function isMarkdownFile(extension: string): boolean {
+  const markdownExtensions = ['md', 'markdown', 'mdx'];
+  return markdownExtensions.includes(extension.toLowerCase());
+}
+
+// Markdown Icon (with MD text)
+function MarkdownIcon() {
+  return (
+    <div className="w-4 h-4 flex-shrink-0 relative">
+      <svg className="w-4 h-4 text-blue-500/80" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" />
+        <path d="M14 3v5h5" />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center text-[6px] font-bold text-blue-600/90 pt-0.5">
+        MD
+      </span>
+    </div>
+  );
 }
