@@ -579,29 +579,41 @@ function App() {
     });
   }, [outline.setHeadings, fileExplorer.setRootPath, fileExplorer.selectFile, cancelPendingSave, resetFileState]);
 
-  // Listen for file-new event to clear editor
+  // Listen for file-new event to reset to initial state
   useEffect(() => {
     return electrobun.on('file-new', () => {
+      // Cancel any pending operations
+      cancelPendingSave();
+
+      // Clear editor content based on current mode
       if (sourceMode) {
-        // In source mode, clear SourceEditor
-        if (sourceEditorRef.current?.isReady) {
-          sourceEditorRef.current.setValue('');
-          setEditorContent('');
-          outline.setHeadings('');
-        }
+        sourceEditorRef.current?.setValue('');
       } else {
-        // In preview mode, clear MilkdownEditor
-        if (editorRef.current?.isReady) {
-          editorRef.current.setMarkdown('');
-          setEditorContent('');
-          outline.setHeadings('');
-        }
+        editorRef.current?.setMarkdown('');
       }
-      // Reset workspace current file but keep root
+
+      // Reset all editor and UI state to initial values
+      setEditorContent('');
+      outline.setHeadings('');
+
+      // Reset file state
       workspaceManager.setCurrentFile(null);
       setCurrentFilePath(null);
+
+      // Reset file explorer to initial empty state
+      fileExplorer.setRootPath(null);
+      fileExplorer.selectFile(null);
+
+      // Focus editor after a short delay to ensure content is cleared
+      setTimeout(() => {
+        if (sourceMode) {
+          sourceEditorRef.current?.focus();
+        } else {
+          editorRef.current?.focus();
+        }
+      }, 0);
     });
-  }, [outline.setHeadings, sourceMode]);
+  }, [outline.setHeadings, sourceMode, cancelPendingSave, fileExplorer.setRootPath, fileExplorer.selectFile]);
 
   // Listen for settings dialog open event
   useEffect(() => {
@@ -778,18 +790,21 @@ function App() {
           break;
         case 'n':
           e.preventDefault();
+          // Reset to initial state (same as File -> New menu)
+          cancelPendingSave();
           updateContent('');
           setEditorContent('');
+          outline.setHeadings('');
           workspaceManager.setCurrentFile(null);
           setCurrentFilePath(null);
+          fileExplorer.setRootPath(null);
+          fileExplorer.selectFile(null);
           if (sourceMode) {
-            if (sourceEditorRef.current?.isReady) {
-              sourceEditorRef.current.setValue('');
-            }
+            sourceEditorRef.current?.setValue('');
+            sourceEditorRef.current?.focus();
           } else {
-            if (editorRef.current?.isReady) {
-              editorRef.current.setMarkdown('');
-            }
+            editorRef.current?.setMarkdown('');
+            editorRef.current?.focus();
           }
           break;
         case 'p':
@@ -817,7 +832,7 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleSave, handleSaveAs, handleOpen, updateContent, quickOpen.open, sidebar.toggle, clipboard, sourceMode]);
+  }, [handleSave, handleSaveAs, handleOpen, updateContent, quickOpen.open, sidebar.toggle, clipboard, sourceMode, cancelPendingSave, outline.setHeadings, fileExplorer.setRootPath, fileExplorer.selectFile]);
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
