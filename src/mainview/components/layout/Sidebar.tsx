@@ -72,25 +72,16 @@ export const Sidebar = memo(function Sidebar({
       {/* Sidebar Content */}
       <div
         ref={sidebarRef}
-        className="group relative flex flex-col h-full bg-muted/30 border-r border-border"
+        className="relative flex flex-col h-full bg-muted/30 border-r border-border"
         style={{ width: isOpen ? width - 4 : 0 }}
       >
         {/* Tab Header */}
-        <TabHeader activeTab={activeTab} onTabChange={onTabChange} />
+        <TabHeader activeTab={activeTab} onTabChange={onTabChange} onClose={onClose} />
 
         {/* Content Area */}
         <div className="flex-1 overflow-hidden">
           {children}
         </div>
-
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 p-1 rounded-md hover:bg-accent opacity-0 group-hover:opacity-100 transition-opacity z-10"
-          title="Close sidebar (Cmd/Ctrl+B)"
-        >
-          <CloseIcon />
-        </button>
       </div>
 
       {/* Resize Handle */}
@@ -112,14 +103,15 @@ export const Sidebar = memo(function Sidebar({
 interface TabHeaderProps {
   activeTab: SidebarTab;
   onTabChange: (tab: SidebarTab) => void;
+  onClose: () => void;
 }
 
-const TabHeader = memo(function TabHeader({ activeTab, onTabChange }: TabHeaderProps) {
+const TabHeader = memo(function TabHeader({ activeTab, onTabChange, onClose }: TabHeaderProps) {
   const handleFilesClick = useCallback(() => onTabChange('files'), [onTabChange]);
   const handleOutlineClick = useCallback(() => onTabChange('outline'), [onTabChange]);
 
   return (
-    <div className="flex items-center border-b border-border">
+    <div className="group/tabheader relative flex items-center border-b border-border">
       <TabButton
         active={activeTab === 'files'}
         onClick={handleFilesClick}
@@ -134,6 +126,14 @@ const TabHeader = memo(function TabHeader({ activeTab, onTabChange }: TabHeaderP
         label="Outline"
         className="flex-1 justify-center"
       />
+      {/* Close Button */}
+      <button
+        onClick={onClose}
+        className="absolute top-1/2 -translate-y-1/2 right-2 p-1 rounded-md hover:bg-accent opacity-0 group-hover/tabheader:opacity-100 transition-opacity z-10"
+        title="Close sidebar (Cmd/Ctrl+B)"
+      >
+        <CloseIcon />
+      </button>
     </div>
   );
 });
