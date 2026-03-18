@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import type { FileSystemNode, FileNode } from '@/shared/types';
 
@@ -5,8 +6,12 @@ interface FileTreeProps {
   nodes: FileSystemNode[];
   expandedPaths: Set<string>;
   selectedPath: string | null;
+  renamingNode: { path: string; name: string } | null;
   onToggleFolder: (path: string) => void;
   onFileClick: (file: FileNode) => void;
+  onContextMenu?: (node: FileSystemNode, event: React.MouseEvent) => void;
+  onRename?: (node: FileSystemNode, newName: string) => void;
+  onRenameCancel?: () => void;
   level: number;
 }
 
@@ -14,8 +19,12 @@ export function FileTree({
   nodes,
   expandedPaths,
   selectedPath,
+  renamingNode,
   onToggleFolder,
   onFileClick,
+  onContextMenu,
+  onRename,
+  onRenameCancel,
   level,
 }: FileTreeProps) {
   return (
@@ -26,8 +35,12 @@ export function FileTree({
           node={node}
           expandedPaths={expandedPaths}
           selectedPath={selectedPath}
+          renamingNode={renamingNode}
           onToggleFolder={onToggleFolder}
           onFileClick={onFileClick}
+          onContextMenu={onContextMenu}
+          onRename={onRename}
+          onRenameCancel={onRenameCancel}
           level={level}
         />
       ))}
@@ -39,8 +52,12 @@ interface FileTreeNodeProps {
   node: FileSystemNode;
   expandedPaths: Set<string>;
   selectedPath: string | null;
+  renamingNode: { path: string; name: string } | null;
   onToggleFolder: (path: string) => void;
   onFileClick: (file: FileNode) => void;
+  onContextMenu?: (node: FileSystemNode, event: React.MouseEvent) => void;
+  onRename?: (node: FileSystemNode, newName: string) => void;
+  onRenameCancel?: () => void;
   level: number;
 }
 
@@ -48,14 +65,25 @@ function FileTreeNode({
   node,
   expandedPaths,
   selectedPath,
+  renamingNode,
   onToggleFolder,
   onFileClick,
+  onContextMenu,
+  onRename,
+  onRenameCancel,
   level,
 }: FileTreeNodeProps) {
   const isExpanded = expandedPaths.has(node.path);
   const isSelected = selectedPath === node.path;
+  const isRenaming = renamingNode?.path === node.path;
   // Typora style: 12px per level, level 1 starts at 12px (under root folder icon)
   const paddingLeft = level * 12;
+
+  const handleContextMenu = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onContextMenu?.(node, event);
+  };
 
   if (node.type === 'folder') {
     return (
@@ -67,10 +95,20 @@ function FileTreeNode({
           )}
           style={{ paddingLeft }}
           onClick={() => onToggleFolder(node.path)}
+          onContextMenu={handleContextMenu}
         >
           <ChevronIcon expanded={isExpanded} />
           <FolderIcon />
-          <span className="truncate text-foreground/90">{node.name}</span>
+          {isRenaming ? (
+            <RenameInput
+              initialName={renamingNode.name}
+              isFile={false}
+              onSubmit={(newName) => onRename?.(node, newName)}
+              onCancel={onRenameCancel}
+            />
+          ) : (
+            <span className="truncate text-foreground/90">{node.name}</span>
+          )}
         </div>
 
         {isExpanded && node.children.length > 0 && (
@@ -78,8 +116,12 @@ function FileTreeNode({
             nodes={node.children}
             expandedPaths={expandedPaths}
             selectedPath={selectedPath}
+            renamingNode={renamingNode}
             onToggleFolder={onToggleFolder}
             onFileClick={onFileClick}
+            onContextMenu={onContextMenu}
+            onRename={onRename}
+            onRenameCancel={onRenameCancel}
             level={level + 1}
           />
         )}
@@ -96,13 +138,89 @@ function FileTreeNode({
       )}
       style={{ paddingLeft }}
       onClick={() => onFileClick(node)}
+      onContextMenu={handleContextMenu}
     >
       <span className="w-4" />
       <FileIcon extension={node.extension} />
-      <span className={cn('truncate', isSelected ? 'text-accent-foreground' : 'text-foreground/75')}>
-        {node.name}
-      </span>
+      {isRenaming ? (
+        <RenameInput
+          initialName={renamingNode.name}
+          isFile={true}
+          onSubmit={(newName) => onRename?.(node, newName)}
+          onCancel={onRenameCancel}
+        />
+      ) : (
+        <span className={cn('truncate', isSelected ? 'text-accent-foreground' : 'text-foreground/75')}>
+          {node.name}
+        </span>
+      )}
     </div>
+  );
+}
+
+// Rename input component
+interface RenameInputProps {
+  initialName: string;
+  isFile: boolean;
+  onSubmit: (newName: string) => void;
+  onCancel?: () => void;
+}
+
+function RenameInput({ initialName, isFile, onSubmit, onCancel }: RenameInputProps) {
+  const [value, setValue] = useState(initialName);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!input) return;
+
+    // Focus and select name part (without extension for files)
+    input.focus();
+    if (isFile) {
+      const dotIndex = initialName.lastIndexOf('.');
+      if (dotIndex > 0) {
+        input.setSelectionRange(0, dotIndex);
+      } else {
+        input.select();
+      }
+    } else {
+      input.select();
+    }
+  }, [initialName, isFile]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      const trimmed = value.trim();
+      if (trimmed && trimmed !== initialName) {
+        onSubmit(trimmed);
+      } else {
+        onCancel?.();
+      }
+    } else if (e.key === 'Escape') {
+      onCancel?.();
+    }
+  };
+
+  const handleBlur = () => {
+    const trimmed = value.trim();
+    if (trimmed && trimmed !== initialName) {
+      onSubmit(trimmed);
+    } else {
+      onCancel?.();
+    }
+  };
+
+  return (
+    <input
+      ref={inputRef}
+      type="text"
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onKeyDown={handleKeyDown}
+      onBlur={handleBlur}
+      className="flex-1 min-w-0 px-1 py-0 text-[12.5px] bg-background border border-primary rounded outline-none"
+      style={{ height: '18px', lineHeight: '16px' }}
+    />
   );
 }
 

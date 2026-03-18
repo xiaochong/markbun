@@ -1,7 +1,7 @@
 import { BrowserWindow, BrowserView, Updater, Utils, ApplicationMenu, ContextMenu, Screen } from 'electrobun/bun';
 import { setupMenu, type ViewMenuState } from './menu';
 import type { MarkBunRPC } from '../shared/types';
-import { readFile, writeFile, stat, mkdir, readdir, open } from 'fs/promises';
+import { readFile, writeFile, stat, mkdir, readdir, open, unlink, rename, rmdir, rm } from 'fs/promises';
 import { join, dirname, relative } from 'path';
 import { homedir } from 'os';
 import { readFolder } from './ipc/folders';
@@ -818,6 +818,158 @@ async function main() {
           } catch (error) {
             console.error('[RPC] Failed to update window bounds:', error);
             return { success: false };
+          }
+        },
+
+        // File Explorer context menu operations
+        createFile: async ({ folderPath, fileName }: { folderPath: string; fileName?: string }) => {
+          try {
+            // Generate unique filename
+            let baseName = fileName || 'Untitled.md';
+            if (!baseName.endsWith('.md')) {
+              baseName += '.md';
+            }
+
+            let targetPath = join(folderPath, baseName);
+            let counter = 1;
+
+            // Check for existing files and generate unique name
+            while (true) {
+              try {
+                await stat(targetPath);
+                // File exists, increment counter
+                const ext = baseName.endsWith('.md') ? '.md' : '';
+                const nameWithoutExt = baseName.slice(0, -ext.length) || 'Untitled';
+                const match = nameWithoutExt.match(/^(.*?)(?:\s*(\d+))?$/);
+                const base = match ? match[1] : 'Untitled';
+                targetPath = join(folderPath, `${base} ${counter}${ext}`);
+                counter++;
+              } catch {
+                // File doesn't exist, we can use this path
+                break;
+              }
+            }
+
+            // Create empty file
+            await writeFile(targetPath, '', 'utf-8');
+            return { success: true, path: targetPath };
+          } catch (error) {
+            console.error('[RPC] Failed to create file:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            };
+          }
+        },
+
+        createFolder: async ({ parentPath, folderName }: { parentPath: string; folderName?: string }) => {
+          try {
+            // Generate unique folder name
+            let baseName = folderName || 'New Folder';
+            let targetPath = join(parentPath, baseName);
+            let counter = 1;
+
+            // Check for existing folders and generate unique name
+            while (true) {
+              try {
+                await stat(targetPath);
+                // Folder exists, increment counter
+                const match = baseName.match(/^(.*?)(?:\s*(\d+))?$/);
+                const base = match ? match[1] : 'New Folder';
+                targetPath = join(parentPath, `${base} ${counter}`);
+                counter++;
+              } catch {
+                // Folder doesn't exist, we can use this path
+                break;
+              }
+            }
+
+            // Create folder
+            await mkdir(targetPath, { recursive: true });
+            return { success: true, path: targetPath };
+          } catch (error) {
+            console.error('[RPC] Failed to create folder:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            };
+          }
+        },
+
+        deleteFile: async ({ path }: { path: string }) => {
+          try {
+            // Check if it's a file or folder
+            const stats = await stat(path);
+            if (stats.isDirectory()) {
+              // Delete folder recursively
+              await rm(path, { recursive: true, force: true });
+            } else {
+              // Delete file
+              await unlink(path);
+            }
+            return { success: true };
+          } catch (error) {
+            console.error('[RPC] Failed to delete file:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            };
+          }
+        },
+
+        moveFile: async ({ sourcePath, targetFolderPath }: { sourcePath: string; targetFolderPath: string }) => {
+          try {
+            const fileName = sourcePath.split('/').pop() || '';
+            const targetPath = join(targetFolderPath, fileName);
+
+            // Check if target already exists
+            try {
+              await stat(targetPath);
+              return {
+                success: false,
+                error: 'A file with the same name already exists in the target folder',
+              };
+            } catch {
+              // Target doesn't exist, proceed with move
+            }
+
+            await rename(sourcePath, targetPath);
+            return { success: true, newPath: targetPath };
+          } catch (error) {
+            console.error('[RPC] Failed to move file:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            };
+          }
+        },
+
+        renameFile: async ({ path, newName }: { path: string; newName: string }) => {
+          try {
+            const parentPath = path.substring(0, path.lastIndexOf('/')) || '/';
+            const newPath = join(parentPath, newName);
+
+            // Check if target already exists and is not the same file
+            if (newPath !== path) {
+              try {
+                await stat(newPath);
+                return {
+                  success: false,
+                  error: 'A file or folder with that name already exists',
+                };
+              } catch {
+                // Target doesn't exist, proceed with rename
+              }
+            }
+
+            await rename(path, newPath);
+            return { success: true, newPath };
+          } catch (error) {
+            console.error('[RPC] Failed to rename file:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            };
           }
         },
       },

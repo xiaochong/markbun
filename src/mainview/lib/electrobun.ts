@@ -174,7 +174,7 @@ export const electrobun = {
   },
 
   async showConfirmationDialog(params: { title: string; message: string; detail?: string; confirmLabel?: string; cancelLabel?: string }) {
-    return await electroview.rpc.request.showConfirmationDialog(params);
+    return await electroview.rpc.request.showConfirmationDialog(params) as { confirmed: boolean };
   },
 
   // Phase 3: Settings
@@ -196,6 +196,27 @@ export const electrobun = {
 
   async updateWindowBounds(x: number, y: number, width: number, height: number) {
     return await electroview.rpc.request.updateWindowBounds({ x, y, width, height });
+  },
+
+  // File Explorer context menu operations
+  async createFile(params: { folderPath: string; fileName?: string }) {
+    return await electroview.rpc.request.createFile(params) as { success: boolean; path?: string; error?: string };
+  },
+
+  async createFolder(params: { parentPath: string; folderName?: string }) {
+    return await electroview.rpc.request.createFolder(params) as { success: boolean; path?: string; error?: string };
+  },
+
+  async deleteFile(params: { path: string }) {
+    return await electroview.rpc.request.deleteFile(params) as { success: boolean; error?: string };
+  },
+
+  async moveFile(params: { sourcePath: string; targetFolderPath: string }) {
+    return await electroview.rpc.request.moveFile(params) as { success: boolean; newPath?: string; error?: string };
+  },
+
+  async renameFile(params: { path: string; newName: string }) {
+    return await electroview.rpc.request.renameFile(params) as { success: boolean; newPath?: string; error?: string };
   },
 
   // Subscribe to messages from main process

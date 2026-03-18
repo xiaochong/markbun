@@ -186,6 +186,13 @@ export type MarkBunRPC = {
       saveFileWithPath: { params: { content: string; folderPath: string; fileName: string }; response: { success: boolean; fullPath?: string; error?: string } };
       fileExists: { params: { path: string }; response: { exists: boolean; isDirectory?: boolean } };
       showConfirmationDialog: { params: { title: string; message: string; detail?: string; confirmLabel?: string; cancelLabel?: string }; response: { confirmed: boolean } };
+
+      // File Explorer context menu operations
+      createFile: { params: { folderPath: string; fileName?: string }; response: { success: boolean; path?: string; error?: string } };
+      createFolder: { params: { parentPath: string; folderName?: string }; response: { success: boolean; path?: string; error?: string } };
+      deleteFile: { params: { path: string }; response: { success: boolean; error?: string } };
+      moveFile: { params: { sourcePath: string; targetFolderPath: string }; response: { success: boolean; newPath?: string; error?: string } };
+      renameFile: { params: { path: string; newName: string }; response: { success: boolean; newPath?: string; error?: string } };
     };
     messages: {
       fileOpened: { path: string; content: string };

@@ -855,6 +855,7 @@ function App() {
               onToggleFolder={fileExplorer.toggleFolder}
               onSelectFile={fileExplorer.selectFile}
               onFileClick={handleFileClick}
+              onRefresh={fileExplorer.refresh}
             />
           </div>
           {/* Outline - hidden when files tab is active */}
