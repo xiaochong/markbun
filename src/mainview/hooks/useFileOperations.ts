@@ -362,6 +362,15 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
     openSaveDialog();
   }, [openSaveDialog]);
 
+  // Clear file state (for new file or open folder)
+  const clearFile = useCallback(() => {
+    setFileState({
+      path: null,
+      content: '',
+      isDirty: false,
+    });
+  }, []);
+
   return {
     ...fileState,
     saveStatus,
@@ -374,5 +383,6 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
     handleSaveFromDialog,
     cancelPendingSave,
     resetFileState,
+    clearFile,
   };
 }

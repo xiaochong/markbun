@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { electrobun } from '@/lib/electrobun';
 import type { FileSystemNode, FileNode } from '@/shared/types';
 
@@ -91,9 +92,15 @@ export function useFileExplorer(options: UseFileExplorerOptions = {}): UseFileEx
     }
 
     // Set new root path and load the folder
-    setRootPathState(path);
-    loadFolder(path);
-    setExpandedPaths(new Set([path]));
+    // Use flushSync to immediately clear the old nodes for responsive UI
+    flushSync(() => {
+      setNodes([]);
+      setSelectedPath(null);
+      setRootPathState(path);
+      setExpandedPaths(new Set([path]));
+    });
+    // Then load the new folder (async, won't block UI)
+    void loadFolder(path);
   }, [loadFolder, rootPath]);
 
   const toggleFolder = useCallback(async (path: string) => {

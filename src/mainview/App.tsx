@@ -1,4 +1,5 @@
 import { useRef, useCallback, useEffect, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { cn } from '@/lib/utils';
 import { MilkdownEditor, MilkdownEditorRef, SourceEditor, SourceEditorRef } from './components/editor';
 import { Toolbar, StatusBar, TitleBar, Sidebar } from './components/layout';
@@ -187,6 +188,7 @@ function App() {
     handleSaveFromDialog,
     cancelPendingSave,
     resetFileState,
+    clearFile,
   } = useFileOperations({
     enableAutoSave: settings?.autoSave ?? true,
     autoSaveInterval: settings?.autoSaveInterval ?? 2000,
@@ -206,6 +208,51 @@ function App() {
       fileExplorerRef.current.selectFile(savedPath);
     },
   });
+
+  // Unified workspace reset function
+  const resetWorkspace = useCallback((options?: { skipEditorClear?: boolean }) => {
+    // Cancel any pending operations first
+    cancelPendingSave();
+
+    // Clear editor content
+    if (!options?.skipEditorClear) {
+      if (sourceMode) {
+        sourceEditorRef.current?.setValue('');
+      } else {
+        editorRef.current?.setMarkdown('');
+      }
+    }
+
+    // Use flushSync to force immediate state update
+    flushSync(() => {
+      setEditorContent('');
+      outline.setHeadings('');
+      workspaceManager.setCurrentFile(null);
+      setCurrentFilePath(null);
+      setImagePreviewPath(null);
+      clearFile();
+    });
+  }, [sourceMode, outline.setHeadings, cancelPendingSave, clearFile]);
+
+  // Handle open folder
+  const handleOpenFolder = useCallback(async () => {
+    resetWorkspace();
+
+    try {
+      const result = await electrobun.openFolder() as { success: boolean; path?: string; error?: string };
+
+      if (!result?.success || !result.path) {
+        return;
+      }
+
+      // Update workspace and file explorer
+      workspaceManager.setWorkspaceRoot(result.path);
+      fileExplorer.setRootPath(result.path);
+      fileExplorer.selectFile(null);
+    } catch (error) {
+      console.error('Failed to open folder:', error);
+    }
+  }, [resetWorkspace, fileExplorer.setRootPath, fileExplorer.selectFile]);
 
   // File loading cancel token to prevent race conditions
   const loadingCancelTokenRef = useRef<{ cancelled: boolean; path: string } | null>(null);
@@ -605,6 +652,22 @@ function App() {
     });
   }, [outline.setHeadings, fileExplorer.setRootPath, fileExplorer.selectFile, cancelPendingSave, resetFileState]);
 
+  // Listen for folder-opened event to set workspace root
+  useEffect(() => {
+    return electrobun.on('folder-opened', (data) => {
+      const { path: folderPath } = data as { path: string };
+
+      resetWorkspace();
+
+      // Update workspace root
+      workspaceManager.setWorkspaceRoot(folderPath);
+
+      // Set file explorer root (this will trigger async folder loading)
+      fileExplorer.setRootPath(folderPath);
+      fileExplorer.selectFile(null);
+    });
+  }, [resetWorkspace, fileExplorer.setRootPath, fileExplorer.selectFile]);
+
   // Listen for file-new event to reset to initial state
   useEffect(() => {
     return electrobun.on('file-new', () => {
@@ -813,7 +876,12 @@ function App() {
           break;
         case 'o':
           e.preventDefault();
-          handleOpen();
+          if (e.shiftKey) {
+            // Open folder - handled via native menu, but also support keyboard shortcut
+            void handleOpenFolder();
+          } else {
+            handleOpen();
+          }
           break;
         case 'n':
           e.preventDefault();
@@ -859,7 +927,7 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleSave, handleSaveAs, handleOpen, updateContent, quickOpen.open, sidebar.toggle, clipboard, sourceMode, cancelPendingSave, outline.setHeadings, fileExplorer.setRootPath, fileExplorer.selectFile]);
+  }, [handleSave, handleSaveAs, handleOpen, handleOpenFolder, updateContent, quickOpen.open, sidebar.toggle, clipboard, sourceMode, cancelPendingSave, outline.setHeadings, fileExplorer.setRootPath, fileExplorer.selectFile]);
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">

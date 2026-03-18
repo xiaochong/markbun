@@ -42,6 +42,7 @@ export function setupMenu(state: ViewMenuState = defaultState): void {
       submenu: [
         { label: 'New', action: 'file-new', accelerator: 'CmdOrCtrl+N' },
         { label: 'Open...', action: 'file-open', accelerator: 'CmdOrCtrl+O' },
+        { label: 'Open Folder...', action: 'file-open-folder', accelerator: 'CmdOrCtrl+Shift+O' },
         { label: 'Quick Open...', action: 'view-quick-open', accelerator: 'CmdOrCtrl+P' },
         { type: 'separator' },
         { label: 'Save', action: 'file-save', accelerator: 'CmdOrCtrl+S' },

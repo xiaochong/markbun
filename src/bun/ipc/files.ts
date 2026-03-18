@@ -149,3 +149,33 @@ export async function saveFileAs(content: string, suggestedName: string = 'Untit
 export function newFile(): void {
   currentFilePath = null;
 }
+
+// Open folder with native dialog
+export async function openFolder(): Promise<{ success: boolean; path?: string; error?: string }> {
+  try {
+    // @ts-ignore - Utils types
+    const chosenPaths = await Utils.openFileDialog({
+      startingFolder: join(homedir(), 'Desktop'),
+      canChooseFiles: false,
+      canChooseDirectory: true,
+      allowsMultipleSelection: false,
+    });
+
+    if (!chosenPaths || chosenPaths.length === 0) {
+      return { success: false };
+    }
+
+    const folderPath = chosenPaths[0];
+
+    return {
+      success: true,
+      path: folderPath,
+    };
+  } catch (error) {
+    console.error('Failed to open folder:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}

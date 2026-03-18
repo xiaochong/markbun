@@ -151,6 +151,7 @@ export type MarkBunRPC = {
     requests: {
       // File operations (Phase 1)
       openFile: { params: {}; response: { success: boolean; path?: string; content?: string; error?: string } };
+      openFolder: { params: {}; response: { success: boolean; path?: string; error?: string } };
       saveFile: { params: { content: string; path?: string }; response: { success: boolean; path?: string; error?: string } };
       saveFileAs: { params: { content: string }; response: { success: boolean; path?: string; error?: string } };
       getCurrentFile: { params: {}; response: string | null };
@@ -196,6 +197,7 @@ export type MarkBunRPC = {
     };
     messages: {
       fileOpened: { path: string; content: string };
+      folderOpened: { path: string };
       fileNew: {};
       fileSaveRequest: {};
       fileSaveAsRequest: {};

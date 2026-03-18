@@ -13,6 +13,10 @@ const rpc = Electroview.defineRPC<MarkBunRPC>({
         const listeners = (window as any).__electrobunListeners?.['file-opened'] || [];
         listeners.forEach((cb: (data: unknown) => void) => cb({ path, content }));
       },
+      folderOpened: ({ path }) => {
+        const listeners = (window as any).__electrobunListeners?.['folder-opened'] || [];
+        listeners.forEach((cb: (data: unknown) => void) => cb({ path }));
+      },
       fileNew: () => {
         const listeners = (window as any).__electrobunListeners?.['file-new'] || [];
         listeners.forEach((cb: () => void) => cb());
@@ -77,6 +81,10 @@ export const electrobun = {
   // File operations (call Bun process)
   async openFile() {
     return await electroview.rpc.request.openFile({});
+  },
+
+  async openFolder() {
+    return await electroview.rpc.request.openFolder({});
   },
 
   async saveFile(content: string, path?: string) {

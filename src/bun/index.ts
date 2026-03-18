@@ -229,6 +229,34 @@ async function saveFileAs(content: string): Promise<{ success: boolean; path?: s
   }
 }
 
+// Open folder dialog
+async function openFolder(): Promise<{ success: boolean; path?: string; error?: string }> {
+  try {
+    // @ts-ignore
+    const chosenPaths = await Utils.openFileDialog({
+      startingFolder: join(homedir(), 'Desktop'),
+      canChooseFiles: false,
+      canChooseDirectory: true,
+      allowsMultipleSelection: false,
+    });
+
+    if (!chosenPaths || chosenPaths.length === 0) {
+      return { success: false };
+    }
+
+    return {
+      success: true,
+      path: chosenPaths[0],
+    };
+  } catch (error) {
+    console.error('Failed to open folder:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
 // Check if Vite dev server is running for HMR
 async function getMainViewUrl(): Promise<string> {
   try {
@@ -281,6 +309,14 @@ async function main() {
             return await openFile();
           } catch (err) {
             console.error('RPC openFile error:', err);
+            return { success: false, error: String(err) };
+          }
+        },
+        openFolder: async () => {
+          try {
+            return await openFolder();
+          } catch (err) {
+            console.error('RPC openFolder error:', err);
             return { success: false, error: String(err) };
           }
         },
@@ -1175,6 +1211,23 @@ async function main() {
           }
         } catch (err) {
           console.error('Error in file-open handler:', err);
+        }
+        break;
+      }
+
+      case 'file-open-folder': {
+        try {
+          const result = await openFolder();
+          if (result?.success === true && result.path) {
+            // Update workspace root
+            currentWorkspaceRoot = result.path;
+            // @ts-ignore
+            win.webview.rpc.send.folderOpened({
+              path: result.path,
+            });
+          }
+        } catch (err) {
+          console.error('Error in file-open-folder handler:', err);
         }
         break;
       }
