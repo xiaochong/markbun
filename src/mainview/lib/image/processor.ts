@@ -148,11 +148,24 @@ export async function processMarkdownImages(markdown: string): Promise<string> {
  */
 export function restoreOriginalImagePaths(markdown: string): string {
   return markdown.replace(IMAGE_REGEX, (match, alt, url) => {
+    // Try the URL as-is first
     if (isBlobUrl(url)) {
       const originalPath = imageCache.getOriginalPath(url);
       if (originalPath) {
         return `![${alt}](${originalPath})`;
       }
+    }
+    // Try decoding the URL (Milkdown may encode URLs in markdown output)
+    try {
+      const decodedUrl = decodeURIComponent(url);
+      if (isBlobUrl(decodedUrl)) {
+        const originalPath = imageCache.getOriginalPath(decodedUrl);
+        if (originalPath) {
+          return `![${alt}](${originalPath})`;
+        }
+      }
+    } catch {
+      // decodeURIComponent may throw for invalid URLs, ignore
     }
     return match;
   });

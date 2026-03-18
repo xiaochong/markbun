@@ -23,6 +23,7 @@ import {
   hasLocalImages,
   loadLocalImage,
   isLocalFilePath,
+  restoreOriginalImagePaths,
 } from './lib/image';
 import type { FileNode, AppSettings, UIState } from '@/shared/types';
 
@@ -227,7 +228,7 @@ function App() {
   }, []);
 
   // Clipboard operations with blob URL handling
-  const clipboard = useClipboard(editorRef, currentFilePath);
+  const clipboard = useClipboard(editorRef, currentFilePath, sourceMode);
 
   // Handle editor content changes from Milkdown
   const handleEditorChange = useCallback((markdown: string) => {
@@ -348,12 +349,12 @@ function App() {
           // Load content into appropriate editor (use ref to get latest sourceMode)
           const isSourceMode = sourceModeRef.current;
           if (isSourceMode) {
-            // In source mode, load into SourceEditor
-            sourceEditorRef.current?.setValue(contentToLoad);
-            setEditorContent(contentToLoad);
-            outline.setHeadings(contentToLoad);
+            // In source mode, load original content (with original file paths, not blob URLs)
+            sourceEditorRef.current?.setValue(result.content);
+            setEditorContent(result.content);
+            outline.setHeadings(result.content);
           } else {
-            // In preview mode, load into MilkdownEditor
+            // In preview mode, load into MilkdownEditor (with blob URLs for image display)
             requestAnimationFrame(() => {
               editorRef.current?.setMarkdown(contentToLoad);
               setEditorContent(contentToLoad);
@@ -442,21 +443,25 @@ function App() {
 
         // Sync content between editors when switching modes
         if (newMode) {
-          // Switching to source mode: get content from Milkdown
+          // Switching to source mode: get content from Milkdown and restore original image paths
           const markdown = editorRef.current?.getMarkdown() ?? '';
+          const markdownWithOriginalPaths = restoreOriginalImagePaths(markdown);
           // Use setTimeout to ensure the source editor is ready
           setTimeout(() => {
-            sourceEditorRef.current?.setValue(markdown);
+            sourceEditorRef.current?.setValue(markdownWithOriginalPaths);
             sourceEditorRef.current?.focus();
           }, 0);
         } else {
           // Switching to preview mode: get content from source editor
           const markdown = sourceEditorRef.current?.getValue() ?? '';
-          // Use setTimeout to ensure the Milkdown editor is ready
-          setTimeout(() => {
-            editorRef.current?.setMarkdown(markdown);
-            editorRef.current?.focus();
-          }, 0);
+          // Process images to convert local paths to blob URLs
+          void processMarkdownImages(markdown).then((processedMarkdown) => {
+            // Use setTimeout to ensure the Milkdown editor is ready
+            setTimeout(() => {
+              editorRef.current?.setMarkdown(processedMarkdown);
+              editorRef.current?.focus();
+            }, 0);
+          });
         }
 
         return newMode;
@@ -540,12 +545,12 @@ function App() {
           // Load content into appropriate editor (use ref to get latest sourceMode)
           const currentIsSourceMode = sourceModeRef.current;
           if (currentIsSourceMode) {
-            // In source mode, load into SourceEditor
-            sourceEditorRef.current?.setValue(contentToLoad);
-            setEditorContent(contentToLoad);
-            outline.setHeadings(contentToLoad);
+            // In source mode, load original content (with original file paths, not blob URLs)
+            sourceEditorRef.current?.setValue(fileContent);
+            setEditorContent(fileContent);
+            outline.setHeadings(fileContent);
           } else {
-            // In preview mode, load into MilkdownEditor
+            // In preview mode, load into MilkdownEditor (with blob URLs for image display)
             requestAnimationFrame(() => {
               editorRef.current?.setMarkdown(contentToLoad);
               setEditorContent(contentToLoad);

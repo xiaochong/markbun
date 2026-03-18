@@ -3,9 +3,11 @@
  *
  * This hook provides unified clipboard handling that:
  * 1. Gets selected text from the editor or window selection
- * 2. Converts blob URLs back to original paths when copying
+ * 2. Converts blob URLs back to original paths when copying (preview mode only)
  * 3. Uses main process clipboard API for reliable clipboard access
- * 4. Processes markdown content including local images
+ * 4. Processes markdown content including local images (preview mode only)
+ *
+ * In source mode, copy/paste is pure text without any transformation.
  */
 
 import { useCallback, useRef } from 'react';
@@ -27,7 +29,16 @@ export interface ClipboardOperations {
 /**
  * Gets the currently selected text from editor or window
  */
-function getSelectedText(editorRef: React.RefObject<MilkdownEditorRef | null>): string | null {
+function getSelectedText(editorRef: React.RefObject<MilkdownEditorRef | null>, isSourceMode: boolean): string | null {
+  // In source mode, use window selection directly (pure text)
+  if (isSourceMode) {
+    const selection = window.getSelection();
+    if (selection && !selection.isCollapsed) {
+      return selection.toString();
+    }
+    return null;
+  }
+
   // Try editor selection first (more accurate for Milkdown)
   const editorSelection = editorRef.current?.getSelectedMarkdown?.();
   if (editorSelection) {
@@ -46,23 +57,30 @@ function getSelectedText(editorRef: React.RefObject<MilkdownEditorRef | null>): 
 /**
  * Converts text with blob URLs to original paths if needed
  */
-function prepareTextForClipboard(text: string): string {
+function prepareTextForClipboard(text: string, isSourceMode: boolean): string {
+  // In source mode, text is already in original form, no conversion needed
+  if (isSourceMode) {
+    return text;
+  }
   return prepareForClipboard(text);
 }
 
 export function useClipboard(
   editorRef: React.RefObject<MilkdownEditorRef | null>,
-  currentFilePath?: string | null
+  currentFilePath?: string | null,
+  isSourceMode: boolean = false
 ): ClipboardOperations {
   // Use ref to avoid stale closure issues
   const editorRefStable = useRef(editorRef);
   editorRefStable.current = editorRef;
+  const isSourceModeRef = useRef(isSourceMode);
+  isSourceModeRef.current = isSourceMode;
 
   const copy = useCallback(async (): Promise<boolean> => {
-    const selectedText = getSelectedText(editorRefStable.current);
+    const selectedText = getSelectedText(editorRefStable.current, isSourceModeRef.current);
     if (!selectedText) return false;
 
-    const textToCopy = prepareTextForClipboard(selectedText);
+    const textToCopy = prepareTextForClipboard(selectedText, isSourceModeRef.current);
 
     try {
       const result = await electrobun.writeToClipboard(textToCopy) as { success: boolean };
@@ -74,10 +92,10 @@ export function useClipboard(
   }, []);
 
   const cut = useCallback(async (): Promise<boolean> => {
-    const selectedText = getSelectedText(editorRefStable.current);
+    const selectedText = getSelectedText(editorRefStable.current, isSourceModeRef.current);
     if (!selectedText) return false;
 
-    const textToCopy = prepareTextForClipboard(selectedText);
+    const textToCopy = prepareTextForClipboard(selectedText, isSourceModeRef.current);
 
     try {
       const result = await electrobun.writeToClipboard(textToCopy) as { success: boolean };
@@ -93,7 +111,7 @@ export function useClipboard(
   }, []);
 
   const hasSelection = useCallback((): boolean => {
-    return getSelectedText(editorRefStable.current) !== null;
+    return getSelectedText(editorRefStable.current, isSourceModeRef.current) !== null;
   }, []);
 
   const paste = useCallback(async (): Promise<boolean> => {
@@ -101,17 +119,23 @@ export function useClipboard(
       const result = await electrobun.readFromClipboard() as { success: boolean; text?: string; error?: string };
 
       if (result.success && result.text) {
-        // Process markdown content for local images
-        const processedText = await processFromClipboard(result.text);
+        // In source mode, paste text as-is without processing using native clipboard
+        if (isSourceModeRef.current) {
+          document.execCommand('insertText', false, result.text);
+          return true;
+        }
+
+        // In preview mode, process markdown content for local images
+        const textToInsert = await processFromClipboard(result.text);
 
         // Insert text at current cursor position using Milkdown's API
         const editor = editorRefStable.current;
         if (editor?.current?.isReady) {
-          editor.current.insertText(processedText);
+          editor.current.insertText(textToInsert);
           return true;
         } else {
           // Editor not ready, fallback to execCommand
-          document.execCommand('insertText', false, processedText);
+          document.execCommand('insertText', false, textToInsert);
           return true;
         }
       }
