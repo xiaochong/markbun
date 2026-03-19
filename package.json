@@ -7,7 +7,7 @@
 		"dev": "electrobun dev --watch",
 		"dev:hmr": "concurrently \"bun run hmr\" \"bun run start\"",
 		"hmr": "vite --port 5173",
-		"build:canary": "vite build && electrobun build --env=canary",
+		"build:canary": "vite build && electrobun build --env=canary && bash scripts/patch-plist.sh && bash scripts/create-opener.sh",
 		"test": "bun test",
 		"test:watch": "bun test --watch",
 		"test:coverage": "bun test --coverage",

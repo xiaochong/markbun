@@ -1,7 +1,8 @@
-import { BrowserWindow, BrowserView, Updater, Utils, ApplicationMenu, ContextMenu, Screen } from 'electrobun/bun';
+import Electrobun, { BrowserWindow, BrowserView, Updater, Utils, ApplicationMenu, ContextMenu, Screen } from 'electrobun/bun';
 import { setupMenu, type ViewMenuState } from './menu';
 import type { MarkBunRPC } from '../shared/types';
-import { readFile, writeFile, stat, mkdir, readdir, open, unlink, rename, rmdir, rm } from 'fs/promises';
+import { readFile, writeFile, stat, mkdir, readdir, open, unlink, rename, rmdir, rm, access } from 'fs/promises';
+import { existsSync } from 'fs';
 import { join, dirname, relative } from 'path';
 import { homedir } from 'os';
 import { readFolder } from './ipc/folders';
@@ -15,6 +16,9 @@ const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`;
 
 // Current file state
 let currentFilePath: string | null = null;
+
+// File path pending open (from CLI argv or open-url event)
+let pendingOpenFilePath: string | null = null;
 
 // Current view menu state
 let currentWorkspaceRoot: string | null = null;
@@ -181,6 +185,18 @@ async function openFile(): Promise<{ success: boolean; path?: string; content?: 
   }
 }
 
+async function openFileByPath(filePath: string): Promise<{ success: boolean; path?: string; content?: string; error?: string }> {
+  try {
+    await access(filePath);
+    const content = await readFile(filePath, 'utf-8');
+    currentFilePath = filePath;
+    return { success: true, path: filePath, content };
+  } catch (error) {
+    console.error('Failed to open file by path:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
 async function saveFile(content: string, path?: string): Promise<{ success: boolean; path?: string; error?: string }> {
   try {
     const filePath = path || currentFilePath;
@@ -275,6 +291,37 @@ async function getMainViewUrl(): Promise<string> {
 
 // Create the main application window
 async function main() {
+  // FIRST: Check for pending file from MarkBun Opener (most reliable method)
+  // This file is written by the AppleScript opener before launching the app
+  const pendingFilePath = join(homedir(), 'Library', 'Application Support', 'dev.markbun.app', 'pending-open.txt');
+  try {
+    if (existsSync(pendingFilePath)) {
+      const filePath = (await readFile(pendingFilePath, 'utf-8')).trim();
+      // Delete the file immediately to prevent re-processing
+      await unlink(pendingFilePath);
+      if (filePath && existsSync(filePath)) {
+        console.log('[main] Found pending file from opener:', filePath);
+        pendingOpenFilePath = filePath;
+      }
+    }
+  } catch (err) {
+    console.error('[main] Failed to check pending file:', err);
+  }
+
+  // THIRD: Check if a file path was passed as a CLI argument
+  const MD_EXTENSIONS = ['.md', '.markdown', '.mdx'];
+  const argFilePath = process.argv.slice(2).find(arg =>
+    MD_EXTENSIONS.some(ext => arg.toLowerCase().endsWith(ext)) && !arg.startsWith('-')
+  );
+  if (argFilePath) {
+    try {
+      await access(argFilePath);
+      pendingOpenFilePath = argFilePath;
+    } catch {
+      // File doesn't exist, ignore
+    }
+  }
+
   // Load settings and UI state before setting up menu
   try {
     currentSettings = await loadSettings();
@@ -328,6 +375,19 @@ async function main() {
         },
         getCurrentFile: async () => {
           return currentFilePath;
+        },
+        getPendingFile: async () => {
+          if (!pendingOpenFilePath) return null;
+          const filePath = pendingOpenFilePath;
+          pendingOpenFilePath = null;
+          const result = await openFileByPath(filePath);
+          if (result.success && result.path && result.content !== undefined) {
+            await addRecentFile(result.path);
+            const dirSeparator = result.path.lastIndexOf('/');
+            currentWorkspaceRoot = dirSeparator > 0 ? result.path.substring(0, dirSeparator) : '/';
+            return { path: result.path, content: result.content };
+          }
+          return null;
         },
         readImageAsBase64: async ({ path }: { path: string }) => {
           try {
@@ -1372,6 +1432,30 @@ async function main() {
         // @ts-ignore
         win.webview.rpc.send.menuAction({ action });
         break;
+    }
+  });
+
+  // Handle open-url events (triggered by markbun:// URL scheme)
+  // When app is already running, handle URL directly
+  Electrobun.events.on('open-url', async (event: { data: { url: string } }) => {
+    console.log('[open-url] App running, processing URL:', event.data.url);
+    try {
+      const url = new URL(event.data.url);
+      if (url.hostname === 'open') {
+        const filePath = decodeURIComponent(url.searchParams.get('path') ?? '');
+        if (filePath) {
+          const result = await openFileByPath(filePath);
+          if (result.success && result.path && result.content !== undefined) {
+            await addRecentFile(result.path);
+            const dirSeparator = result.path.lastIndexOf('/');
+            currentWorkspaceRoot = dirSeparator > 0 ? result.path.substring(0, dirSeparator) : '/';
+            // @ts-ignore
+            win.webview.rpc.send.fileOpened({ path: result.path, content: result.content });
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[open-url] Failed to handle URL:', err);
     }
   });
 

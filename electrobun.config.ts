@@ -5,6 +5,7 @@ export default {
 		name: "MarkBun",
 		identifier: "dev.markbun.app",
 		version: "0.1.0",
+		urlSchemes: ["markbun"],
 	},
 	build: {
 		// Vite builds to dist/, we copy from there

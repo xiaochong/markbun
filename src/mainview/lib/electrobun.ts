@@ -99,6 +99,10 @@ export const electrobun = {
     return await electroview.rpc.request.getCurrentFile({});
   },
 
+  async getPendingFile() {
+    return await electroview.rpc.request.getPendingFile({});
+  },
+
   async readImageAsBase64(path: string) {
     return await electroview.rpc.request.readImageAsBase64({ path });
   },

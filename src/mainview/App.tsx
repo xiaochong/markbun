@@ -115,6 +115,18 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Check for a file passed via CLI or open-url on startup
+  useEffect(() => {
+    const checkPendingFile = async () => {
+      const result = await electrobun.getPendingFile() as { path: string; content: string } | null;
+      if (result) {
+        const listeners = (window as any).__electrobunListeners?.['file-opened'] || [];
+        listeners.forEach((cb: (data: unknown) => void) => cb(result));
+      }
+    };
+    void checkPendingFile();
+  }, []);
+
   // Debounced UI state save (UI state only, window state is managed by main process)
   const uiStateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingUIStateRef = useRef<{
