@@ -126,7 +126,7 @@ export function useCrepeEditor(
                 })
                 .catch((err) => {
                   console.error('[Mermaid] render error:', err);
-                  applyPreview('<div class="mermaid-error">图表语法错误，请检查 mermaid 语法</div>');
+                  applyPreview('<div class="mermaid-error">Mermaid syntax error</div>');
                 });
             });
 
