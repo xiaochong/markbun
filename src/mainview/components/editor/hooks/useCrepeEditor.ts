@@ -115,6 +115,7 @@ export function useCrepeEditor(
               mermaid.initialize({
                 startOnLoad: false,
                 theme: darkModeRef.current ? 'dark' : 'default',
+                suppressErrorRendering: true,
               });
               mermaid.render(id, code)
                 .then(({ svg }) => {
