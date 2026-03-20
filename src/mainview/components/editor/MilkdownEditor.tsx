@@ -25,7 +25,7 @@ export const MilkdownEditor = memo(forwardRef<MilkdownEditorRef, MilkdownEditorP
       setMarkdown,
       focus,
       getSelectedMarkdown,
-    } = useCrepeEditor(defaultValue, onChange, setIsReady);
+    } = useCrepeEditor(defaultValue, onChange, setIsReady, darkMode);
 
     // Theme loading hook
     useThemeLoader(darkMode);
@@ -68,6 +68,7 @@ export const MilkdownEditor = memo(forwardRef<MilkdownEditorRef, MilkdownEditorP
       insertTable: () => paragraph.insertTable(crepeRef),
       insertMathBlock: () => paragraph.insertMathBlock(crepeRef),
       insertCodeBlock: () => paragraph.insertCodeBlock(crepeRef),
+      insertMermaidBlock: () => paragraph.insertMermaidBlock(crepeRef),
       insertTaskList: () => paragraph.insertTaskList(crepeRef),
       insertHorizontalRule: () => paragraph.insertHorizontalRule(crepeRef),
       insertParagraphAbove: () => paragraph.insertParagraphAbove(crepeRef),

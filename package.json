@@ -30,6 +30,7 @@
 		"@milkdown/theme-nord": "^7.19.0",
 		"clsx": "^2.1.1",
 		"electrobun": "1.16.0",
+		"mermaid": "^11.13.0",
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",
 		"tailwind-merge": "^3.5.0",

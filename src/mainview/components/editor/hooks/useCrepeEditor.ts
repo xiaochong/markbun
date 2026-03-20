@@ -34,12 +34,15 @@ export interface UseCrepeEditorReturn {
 export function useCrepeEditor(
   defaultValue: string,
   onChange: ((markdown: string) => void) | undefined,
-  setIsReady: (ready: boolean) => void
+  setIsReady: (ready: boolean) => void,
+  darkMode: boolean = false
 ): UseCrepeEditorReturn {
   const crepeRef = useRef<Crepe | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const onChangeRef = useRef(onChange);
   const initialValueRef = useRef(defaultValue);
+  const darkModeRef = useRef(darkMode);
+  darkModeRef.current = darkMode;
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const dragCounterRef = useRef(0);
 
@@ -97,6 +100,37 @@ export function useCrepeEditor(
               return url;
             }
             return url;
+          },
+        } as any,
+      },
+      featureConfigs: {
+        [Crepe.Feature.CodeMirror]: {
+          renderPreview: (language: string, content: string, applyPreview: (value: null | string | HTMLElement) => void) => {
+            if (language.toLowerCase() !== 'mermaid' || !content.trim()) return null;
+
+            const code = content.trim();
+            const id = `mermaid-svg-${Math.random().toString(36).slice(2)}`;
+
+            import('mermaid').then(({ default: mermaid }) => {
+              mermaid.initialize({
+                startOnLoad: false,
+                theme: darkModeRef.current ? 'dark' : 'default',
+              });
+              mermaid.render(id, code)
+                .then(({ svg }) => {
+                  // WebKit (Electrobun) cannot auto-compute SVG height when width="100%"
+                  // and no explicit height attribute. Fix by removing width="100%" so
+                  // the SVG uses its intrinsic viewBox dimensions instead.
+                  const fixedSvg = svg.replace(/\swidth="100%"/, '');
+                  applyPreview(fixedSvg);
+                })
+                .catch((err) => {
+                  console.error('[Mermaid] render error:', err);
+                  applyPreview('<div class="mermaid-error">图表语法错误，请检查 mermaid 语法</div>');
+                });
+            });
+
+            return null;
           },
         } as any,
       },
@@ -305,8 +339,8 @@ export function useCrepeEditor(
           // Set data-lang attribute for CSS targeting
           (block as HTMLElement).dataset.lang = lang;
 
-          // If language changed from latex to something else, remove selected class
-          if (prevLang === 'latex' && lang !== 'latex') {
+          // If language changed from latex/mermaid to something else, remove selected class
+          if ((prevLang === 'latex' || prevLang === 'mermaid') && lang !== prevLang) {
             block.classList.remove('selected');
           }
         }
@@ -342,7 +376,7 @@ export function useCrepeEditor(
       // Check if we clicked inside a LaTeX code block
       if (codeBlock) {
         const lang = codeBlock.dataset.lang;
-        if (lang !== 'latex' && lang !== 'LaTeX') return;
+        if (lang !== 'latex' && lang !== 'LaTeX' && lang !== 'mermaid') return;
 
         // Don't handle clicks on the language button or picker
         if (target.closest('.language-button') || target.closest('.language-picker')) {
@@ -406,8 +440,12 @@ export function useCrepeEditor(
           }
         }
       } else {
-        // Clicked outside any code block - deselect all LaTeX code blocks
-        const selectedLatexBlocks = container.querySelectorAll('.milkdown-code-block[data-lang="latex"].selected, .milkdown-code-block[data-lang="LaTeX"].selected');
+        // Clicked outside any code block - deselect all LaTeX/mermaid code blocks
+        const selectedLatexBlocks = container.querySelectorAll(
+          '.milkdown-code-block[data-lang="latex"].selected, ' +
+          '.milkdown-code-block[data-lang="LaTeX"].selected, ' +
+          '.milkdown-code-block[data-lang="mermaid"].selected'
+        );
         selectedLatexBlocks.forEach((block) => {
           block.classList.remove('selected');
         });

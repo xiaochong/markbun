@@ -108,6 +108,12 @@ export function insertCodeBlock(
   return insertParsedMarkdown(crepeRef, '\n```\n\n```\n', true);
 }
 
+export function insertMermaidBlock(
+  crepeRef: React.RefObject<Crepe | null>
+): boolean {
+  return insertParsedMarkdown(crepeRef, '\n```mermaid\ngraph TD\n    A[开始] --> B[结束]\n```\n', true);
+}
+
 export function insertTaskList(
   crepeRef: React.RefObject<Crepe | null>
 ): boolean {

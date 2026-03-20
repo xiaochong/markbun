@@ -224,8 +224,13 @@ body {
 .milkdown-crepe-container .milkdown-code-block [class*="dragHandle"],
 .milkdown-crepe-container .milkdown-code-block [data-drag-handle],
 .milkdown-crepe-container .milkdown-code-block [class*="fold"]:not([class*="language"]):not([class*="lang"]),
-.milkdown-crepe-container .milkdown-code-block svg:not(.crepe-code-block svg) {
+.milkdown-crepe-container .milkdown-code-block svg:not(.crepe-code-block svg):not(.preview-panel svg) {
   display: none !important;
+}
+
+/* Mermaid preview SVG must always be visible */
+.milkdown-crepe-container .milkdown-code-block .preview-panel svg {
+  display: block !important;
 }
 
 /* Hide only the visual line inside language-picker, not the picker itself */
@@ -406,6 +411,79 @@ body {
 .milkdown-crepe-container .milkdown-code-block[data-lang="latex"]:not(.selected),
 .milkdown-crepe-container .milkdown-code-block[data-lang="LaTeX"]:not(.selected) {
   cursor: pointer;
+}
+
+/* ===========================================
+   Mermaid Code Block - Edit/Preview Mode
+   =========================================== */
+
+/* 非选中时：隐藏 CodeMirror，只显示 SVG 预览 */
+.milkdown-crepe-container .milkdown-code-block[data-lang="mermaid"]:not(.selected) .codemirror-host {
+  position: absolute !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* 隐藏 PREVIEW label 和 divider（非选中态） */
+.milkdown-crepe-container .milkdown-code-block[data-lang="mermaid"]:not(.selected) .preview-label,
+.milkdown-crepe-container .milkdown-code-block[data-lang="mermaid"]:not(.selected) .preview-divider {
+  display: none !important;
+}
+
+/* 选中时：显示 CodeMirror */
+.milkdown-crepe-container .milkdown-code-block[data-lang="mermaid"].selected .codemirror-host {
+  position: relative !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  height: auto !important;
+}
+
+/* 选中时：显示 PREVIEW label */
+.milkdown-crepe-container .milkdown-code-block[data-lang="mermaid"].selected .preview-label,
+.milkdown-crepe-container .milkdown-code-block[data-lang="mermaid"].selected .preview-divider {
+  display: block !important;
+}
+
+/* 隐藏预览切换按钮 */
+.milkdown-crepe-container .milkdown-code-block[data-lang="mermaid"] .preview-toggle-button {
+  display: none !important;
+}
+
+/* 非选中时：去除预览区域多余的 margin */
+.milkdown-crepe-container .milkdown-code-block[data-lang="mermaid"]:not(.selected) .preview-panel {
+  margin-top: 0 !important;
+}
+
+.milkdown-crepe-container .milkdown-code-block[data-lang="mermaid"]:not(.selected) .preview {
+  padding-top: 16px !important;
+}
+
+.milkdown-crepe-container .milkdown-code-block[data-lang="mermaid"].selected .preview {
+  padding-top: 0 !important;
+}
+
+/* 可点击手形光标 */
+.milkdown-crepe-container .milkdown-code-block[data-lang="mermaid"]:not(.selected) {
+  cursor: pointer;
+}
+
+/* SVG 容器样式 */
+.milkdown-crepe-container .milkdown-code-block[data-lang="mermaid"] .preview svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* 错误提示样式 */
+.milkdown-crepe-container .milkdown-code-block[data-lang="mermaid"] .mermaid-error {
+  color: var(--error-color, #d32f2f);
+  font-size: 12px;
+  padding: 8px;
+  background: var(--error-bg, #fdecea);
+  border-radius: 4px;
 }
 
 /* Hide the left border/line in code blocks */
@@ -1016,4 +1094,151 @@ body {
 /* Selection styling for source editor */
 .source-editor-container ::selection {
   background-color: hsl(var(--primary) / 0.3) !important;
+}
+
+/* ===========================================
+   Mermaid NodeView Styles
+   =========================================== */
+
+.milkdown-mermaid-container {
+  position: relative;
+  background-color: hsl(220 13% 96%);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  border: 1px solid hsl(var(--border));
+}
+
+.dark .milkdown-mermaid-container {
+  background-color: hsl(220 13% 18%);
+  border-color: hsl(220 10% 32%);
+}
+
+.milkdown-mermaid-controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+}
+
+.milkdown-mermaid-controls button {
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.milkdown-mermaid-controls button:hover {
+  background: hsl(var(--accent));
+}
+
+.milkdown-mermaid-viewer {
+  padding: 8px;
+  min-height: 50px;
+  overflow-x: auto;
+}
+
+.milkdown-mermaid-viewer svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.milkdown-mermaid-editor {
+  background-color: hsl(220 13% 92%);
+  padding: 12px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.dark .milkdown-mermaid-editor {
+  background-color: hsl(220 13% 14%);
+}
+
+.milkdown-mermaid-code {
+  display: block;
+  outline: none;
+  border: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: hsl(var(--foreground));
+}
+
+.milkdown-mermaid-error {
+  color: #d32f2f;
+  font-size: 12px;
+  padding: 8px 12px;
+  background: #fdecea;
+  border: 1px solid #ef9a9a;
+  border-radius: 4px;
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  white-space: pre-wrap;
+}
+
+.dark .milkdown-mermaid-error {
+  color: #f87171;
+  background: #450a0a;
+  border-color: #7f1d1d;
+}
+
+/* Mermaid preview SVG styles */
+.milkdown-crepe-container .preview svg {
+  display: block !important;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.milkdown-crepe-container .mermaid-error {
+  color: #d32f2f;
+  font-size: 12px;
+  padding: 8px;
+  background: #fdecea;
+  border-radius: 4px;
+}
+
+.dark .milkdown-crepe-container .mermaid-error {
+  color: #f87171;
+  background: #450a0a;
+}
+
+/* Fix mermaid edge label backgrounds: transparent instead of white
+   Edge labels have a rect that acts as background, make it transparent */
+.milkdown-crepe-container .milkdown-code-block .preview-panel .edgeLabels rect,
+.milkdown-crepe-container .milkdown-code-block .preview-panel g.edgeLabel rect,
+.milkdown-crepe-container .milkdown-code-block .preview-panel [class*="edgeLabel"] rect {
+  fill: transparent !important;
+}
+
+/* Mermaid edge label background - light gray like Typora */
+.milkdown-crepe-container .milkdown-code-block .preview-panel foreignObject .labelBkg {
+  background: rgba(200, 200, 200, 0.3) !important;
+}
+
+/* Fix mermaid foreignObject HTML content: prevent Tailwind/global CSS interference */
+.milkdown-crepe-container .milkdown-code-block .preview-panel foreignObject > div,
+.milkdown-crepe-container .milkdown-code-block .preview-panel foreignObject .label,
+.milkdown-crepe-container .milkdown-code-block .preview-panel foreignObject .nodeLabel,
+.milkdown-crepe-container .milkdown-code-block .preview-panel foreignObject .edgeLabel,
+.milkdown-crepe-container .milkdown-code-block .preview-panel foreignObject p {
+  font-family: "trebuchet ms", verdana, arial, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.4 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }

@@ -34,6 +34,7 @@ export interface MilkdownEditorRef {
   insertTable: () => boolean;
   insertMathBlock: () => boolean;
   insertCodeBlock: () => boolean;
+  insertMermaidBlock: () => boolean;
   insertTaskList: () => boolean;
   insertHorizontalRule: () => boolean;
   insertParagraphAbove: () => boolean;
