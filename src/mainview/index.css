@@ -417,6 +417,20 @@ body {
    Mermaid Code Block - Edit/Preview Mode
    =========================================== */
 
+/* Mermaid block: ensure clickable area even when empty */
+.milkdown-crepe-container .milkdown-code-block[data-lang="mermaid"]:not(.selected) {
+  cursor: pointer;
+  min-height: 60px;
+}
+
+.milkdown-crepe-container .milkdown-code-block[data-lang="mermaid"]:not(.selected) .preview-panel {
+  min-height: 60px;
+}
+
+.milkdown-crepe-container .milkdown-code-block[data-lang="mermaid"]:not(.selected) .preview {
+  min-height: 40px;
+}
+
 /* 非选中时：隐藏 CodeMirror，只显示 SVG 预览 */
 .milkdown-crepe-container .milkdown-code-block[data-lang="mermaid"]:not(.selected) .codemirror-host {
   position: absolute !important;
