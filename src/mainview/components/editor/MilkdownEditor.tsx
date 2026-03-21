@@ -60,6 +60,9 @@ export const MilkdownEditor = memo(forwardRef<MilkdownEditorRef, MilkdownEditorP
       toggleOrderedList: () => formatting.toggleOrderedList(crepeRef),
       // Extended formatting commands (GFM)
       toggleStrikethrough: () => formatting.toggleStrikethrough(crepeRef),
+      toggleHighlight: () => formatting.toggleHighlight(crepeRef),
+      toggleSuperscript: () => formatting.toggleSuperscript(crepeRef),
+      toggleSubscript: () => formatting.toggleSubscript(crepeRef),
 
       // Paragraph menu commands
       setParagraph: () => paragraph.setParagraph(crepeRef),

@@ -27,6 +27,9 @@ export interface MilkdownEditorRef {
   toggleOrderedList: () => boolean;
   // Extended formatting commands (GFM)
   toggleStrikethrough: () => boolean;
+  toggleHighlight: () => boolean;
+  toggleSuperscript: () => boolean;
+  toggleSubscript: () => boolean;
   // Paragraph menu commands
   setParagraph: () => boolean;
   increaseHeadingLevel: () => boolean;

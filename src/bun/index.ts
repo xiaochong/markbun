@@ -1408,6 +1408,9 @@ async function main() {
       case 'format-emphasis':
       case 'format-code':
       case 'format-strikethrough':
+      case 'format-highlight':
+      case 'format-superscript':
+      case 'format-subscript':
       case 'format-link':
       case 'format-image':
       // Paragraph menu actions

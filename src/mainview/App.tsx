@@ -764,6 +764,9 @@ function App() {
         'format-emphasis': () => editorRef.current?.toggleItalic(),
         'format-code': () => editorRef.current?.toggleCode(),
         'format-strikethrough': () => editorRef.current?.toggleStrikethrough(),
+        'format-highlight': () => editorRef.current?.toggleHighlight(),
+        'format-superscript': () => editorRef.current?.toggleSuperscript(),
+        'format-subscript': () => editorRef.current?.toggleSubscript(),
         'format-link': () => editorRef.current?.toggleLink(),
         'format-image': () => setShowImageDialog(true),
       };
@@ -921,6 +924,12 @@ function App() {
         case 'b':
           e.preventDefault();
           sidebar.toggle();
+          break;
+        case 'h':
+          if (e.shiftKey) {
+            e.preventDefault();
+            editorRef.current?.toggleHighlight();
+          }
           break;
         case 'c':
           e.preventDefault();
