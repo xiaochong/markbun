@@ -39,6 +39,50 @@ const inlineMarksParsersPlugin: MilkdownPlugin = (ctx) => async () => {
   ]);
 };
 
+// Split markdown lines into chunks of approximately `chunkSize` lines each,
+// but never break inside a fenced code block (``` or ~~~).
+// Breaking mid-fence causes the chunk parser to mis-interpret the indented
+// content inside the code block as indented-code-blocks, splitting it at
+// every blank line.
+function splitAtCodeBlockBoundaries(lines: string[], chunkSize: number): string[][] {
+  const chunks: string[][] = [];
+  let current: string[] = [];
+  let inCodeBlock = false;
+  let fenceChar = '';
+  let fenceLen = 0;
+
+  for (const line of lines) {
+    if (!inCodeBlock) {
+      const m = line.match(/^(`{3,}|~{3,})/);
+      if (m) {
+        inCodeBlock = true;
+        fenceChar = m[1][0];
+        fenceLen = m[1].length;
+      }
+    } else {
+      // A closing fence: same character, at least as many chars, optional trailing spaces
+      const m = line.match(/^(`+|~+)\s*$/);
+      if (m && m[1][0] === fenceChar && m[1].length >= fenceLen) {
+        inCodeBlock = false;
+      }
+    }
+
+    current.push(line);
+
+    // Only split when we are outside a code block
+    if (current.length >= chunkSize && !inCodeBlock) {
+      chunks.push(current);
+      current = [];
+    }
+  }
+
+  if (current.length > 0) {
+    chunks.push(current);
+  }
+
+  return chunks;
+}
+
 export interface UseCrepeEditorReturn {
   crepeRef: React.RefObject<Crepe | null>;
   containerRef: React.RefObject<HTMLDivElement | null>;
@@ -265,13 +309,17 @@ export function useCrepeEditor(
         return;
       }
 
-      // For large files, use chunked loading
-      // First, show the first chunk immediately
-      const firstChunk = lines.slice(0, CHUNK_SIZE_LINES).join('\n');
+      // For large files, use chunked loading.
+      // Split lines into chunks that never break inside a fenced code block,
+      // otherwise blank lines inside the code block get parsed as separate
+      // indented-code-blocks by each independent chunk parser.
+      const chunks = splitAtCodeBlockBoundaries(lines, CHUNK_SIZE_LINES);
+
       const view = editor.ctx.get(editorViewCtx);
       const parser = editor.ctx.get(parserCtx);
-      const firstDoc = parser(firstChunk);
 
+      // First chunk — show immediately
+      const firstDoc = parser(chunks[0].join('\n'));
       if (!firstDoc) return;
 
       const tr = view.state.tr.replaceWith(0, view.state.doc.content.size, firstDoc.content);
@@ -279,14 +327,13 @@ export function useCrepeEditor(
       view.dispatch(tr);
 
       // Then load remaining chunks using requestIdleCallback or setTimeout
-      const remainingLines = lines.slice(CHUNK_SIZE_LINES);
-      let currentIndex = 0;
+      let currentChunkIndex = 1;
 
       const loadNextChunk = () => {
-        if (currentIndex >= remainingLines.length) return;
+        if (currentChunkIndex >= chunks.length) return;
 
-        const chunkEnd = Math.min(currentIndex + CHUNK_SIZE_LINES, remainingLines.length);
-        const chunk = remainingLines.slice(currentIndex, chunkEnd).join('\n');
+        const chunk = chunks[currentChunkIndex].join('\n');
+        currentChunkIndex++;
 
         try {
           const chunkDoc = parser(chunk);
@@ -300,10 +347,8 @@ export function useCrepeEditor(
           console.error('Chunk load error:', e);
         }
 
-        currentIndex = chunkEnd;
-
         // Schedule next chunk
-        if (currentIndex < remainingLines.length) {
+        if (currentChunkIndex < chunks.length) {
           if ('requestIdleCallback' in window) {
             window.requestIdleCallback(() => loadNextChunk(), { timeout: 50 });
           } else {
@@ -333,7 +378,7 @@ export function useCrepeEditor(
       };
 
       // Schedule scroll reset after chunks should be loaded (approximate)
-      const estimatedLoadTime = Math.ceil(remainingLines.length / CHUNK_SIZE_LINES) * 60;
+      const estimatedLoadTime = Math.ceil((chunks.length - 1)) * 60;
       setTimeout(resetScrollToTop, estimatedLoadTime);
 
     } catch (e) {
