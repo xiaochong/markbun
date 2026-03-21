@@ -7,7 +7,8 @@
 
 export interface CacheEntry {
   blobUrl: string;
-  originalPath: string;
+  originalPath: string;  // 用户的原始路径（可能是相对路径）
+  resolvedPath: string;  // 解析后的绝对路径（用于缓存查找）
   lastAccessed: number;
 }
 
@@ -43,27 +44,45 @@ export class ImageCache {
 
   /**
    * Store a Blob URL in the cache
+   * @param resolvedPath - 解析后的绝对路径（用于缓存查找）
+   * @param blobUrl - Blob URL
+   * @param originalPath - 可选的原始路径（用户输入的路径）
    */
-  set(path: string, blobUrl: string): void {
+  set(resolvedPath: string, blobUrl: string, originalPath?: string): void {
     // Evict oldest entries if at capacity
     if (this.cache.size >= this.maxSize) {
       this.evictLRU();
     }
 
     // Remove old reverse mapping if exists
-    const oldEntry = this.cache.get(path);
+    const oldEntry = this.cache.get(resolvedPath);
     if (oldEntry) {
       this.blobUrlToPath.delete(oldEntry.blobUrl);
       URL.revokeObjectURL(oldEntry.blobUrl);
     }
 
-    this.cache.set(path, {
+    const actualOriginalPath = originalPath || resolvedPath;
+
+    this.cache.set(resolvedPath, {
       blobUrl,
-      originalPath: path,
+      originalPath: actualOriginalPath,
+      resolvedPath,
       lastAccessed: Date.now(),
     });
 
-    this.blobUrlToPath.set(blobUrl, path);
+    this.blobUrlToPath.set(blobUrl, actualOriginalPath);
+  }
+
+  /**
+   * Store a Blob URL with explicit original path
+   * @param resolvedPath - 解析后的绝对路径（用于缓存查找）
+   * @param blobUrl - Blob URL
+   * @param originalPath - 用户的原始路径（可能是相对路径）
+   * @returns The blob URL
+   */
+  setWithOriginalPath(resolvedPath: string, blobUrl: string, originalPath: string): string {
+    this.set(resolvedPath, blobUrl, originalPath);
+    return blobUrl;
   }
 
   /**
@@ -78,6 +97,31 @@ export class ImageCache {
 
     const blobUrl = this.dataUrlToBlobUrl(dataUrl);
     this.set(path, blobUrl);
+    return blobUrl;
+  }
+
+  /**
+   * Convert base64 data URL to Blob URL and cache with original path
+   * @param resolvedPath - 解析后的绝对路径（用于缓存查找）
+   * @param dataUrl - Base64 data URL
+   * @param originalPath - 用户的原始路径（可能是相对路径）
+   * @returns The blob URL
+   */
+  setFromBase64WithOriginalPath(resolvedPath: string, dataUrl: string, originalPath: string): string {
+    const cached = this.get(resolvedPath);
+    if (cached) {
+      // 缓存命中时，更新 blobUrlToPath 映射以使用最新的原始路径
+      this.blobUrlToPath.set(cached, originalPath);
+      // 同时更新缓存条目中的 originalPath
+      const entry = this.cache.get(resolvedPath);
+      if (entry) {
+        entry.originalPath = originalPath;
+      }
+      return cached;
+    }
+
+    const blobUrl = this.dataUrlToBlobUrl(dataUrl);
+    this.set(resolvedPath, blobUrl, originalPath);
     return blobUrl;
   }
 

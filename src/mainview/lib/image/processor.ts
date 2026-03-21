@@ -65,9 +65,10 @@ export function hasLocalImages(markdown: string): boolean {
  * Load a local image and return its blob URL
  *
  * @param imagePath - Absolute path to the image
+ * @param originalPath - 可选的原始路径（用户输入的路径，用于恢复）
  * @returns Blob URL or null if failed
  */
-export async function loadLocalImage(imagePath: string): Promise<string | null> {
+export async function loadLocalImage(imagePath: string, originalPath?: string): Promise<string | null> {
   // Check cache first
   const cached = imageCache.get(imagePath);
   if (cached) {
@@ -82,8 +83,13 @@ export async function loadLocalImage(imagePath: string): Promise<string | null> 
     };
 
     if (response.success && response.dataUrl) {
-      const blobUrl = imageCache.setFromBase64(imagePath, response.dataUrl);
-      return blobUrl;
+      if (originalPath) {
+        const blobUrl = imageCache.setFromBase64WithOriginalPath(imagePath, response.dataUrl, originalPath);
+        return blobUrl;
+      } else {
+        const blobUrl = imageCache.setFromBase64(imagePath, response.dataUrl);
+        return blobUrl;
+      }
     }
 
     console.error(`Failed to load image ${imagePath}:`, response.error);
@@ -117,7 +123,8 @@ export async function processMarkdownImages(markdown: string): Promise<string> {
   // Load all images in parallel
   const loadResults = await Promise.all(
     resolvedImages.map(async (img) => {
-      const blobUrl = await loadLocalImage(img.resolvedPath);
+      // 使用绝对路径加载图片，但传递原始路径用于缓存
+      const blobUrl = await loadLocalImage(img.resolvedPath, img.path);
       return {
         originalMatch: img.fullMatch,
         alt: img.alt,
