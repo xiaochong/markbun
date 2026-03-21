@@ -215,30 +215,58 @@ describe('toggleUnderline', () => {
 });
 
 describe('toggleHighlight', () => {
-  it('should return false for unsupported feature', () => {
+  it('should return false when editor is not initialized', () => {
+    const emptyRef = { current: null };
+    expect(toggleHighlight(emptyRef as any)).toBe(false);
+  });
+
+  it('should call editor action when initialized', () => {
     const ref = createMockCrepeRef();
-    expect(toggleHighlight(ref as any)).toBe(false);
+    const result = toggleHighlight(ref as any);
+    expect(ref.current.editor.action).toHaveBeenCalled();
+    expect(result).toBe(true);
   });
 });
 
 describe('toggleSuperscript', () => {
-  it('should return false for unsupported feature', () => {
+  it('should return false when editor is not initialized', () => {
+    const emptyRef = { current: null };
+    expect(toggleSuperscript(emptyRef as any)).toBe(false);
+  });
+
+  it('should call editor action when initialized', () => {
     const ref = createMockCrepeRef();
-    expect(toggleSuperscript(ref as any)).toBe(false);
+    const result = toggleSuperscript(ref as any);
+    expect(ref.current.editor.action).toHaveBeenCalled();
+    expect(result).toBe(true);
   });
 });
 
 describe('toggleSubscript', () => {
-  it('should return false for unsupported feature', () => {
+  it('should return false when editor is not initialized', () => {
+    const emptyRef = { current: null };
+    expect(toggleSubscript(emptyRef as any)).toBe(false);
+  });
+
+  it('should call editor action when initialized', () => {
     const ref = createMockCrepeRef();
-    expect(toggleSubscript(ref as any)).toBe(false);
+    const result = toggleSubscript(ref as any);
+    expect(ref.current.editor.action).toHaveBeenCalled();
+    expect(result).toBe(true);
   });
 });
 
 describe('insertInlineMath', () => {
-  it('should return false for unsupported feature', () => {
+  it('should return false when editor is not initialized', () => {
+    const emptyRef = { current: null };
+    expect(insertInlineMath(emptyRef as any)).toBe(false);
+  });
+
+  it('should call editor action when initialized', () => {
     const ref = createMockCrepeRef();
-    expect(insertInlineMath(ref as any)).toBe(false);
+    const result = insertInlineMath(ref as any);
+    expect(ref.current.editor.action).toHaveBeenCalled();
+    expect(result).toBe(true);
   });
 });
 
