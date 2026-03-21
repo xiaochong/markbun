@@ -25,15 +25,31 @@ describe('getDefaultSettings', () => {
     expect(defaults.general.autoSave).toBe(true);
   });
 
-  it('should have autoSave enabled by default', () => {
-    const defaults = getDefaultSettings();
-    expect(defaults.general.autoSave).toBe(true);
-  });
-
   it('should return valid settings object', () => {
     const defaults = getDefaultSettings();
     expect(typeof defaults).toBe('object');
     expect(defaults.__version).toBe(1);
+  });
+
+  it('should have backup settings with all required fields', () => {
+    const defaults = getDefaultSettings();
+    expect(defaults.backup).toBeDefined();
+    expect(typeof defaults.backup.enabled).toBe('boolean');
+    expect(typeof defaults.backup.maxVersions).toBe('number');
+    expect(typeof defaults.backup.retentionDays).toBe('number');
+    expect(typeof defaults.backup.recoveryInterval).toBe('number');
+  });
+
+  it('should have backup enabled by default', () => {
+    const defaults = getDefaultSettings();
+    expect(defaults.backup.enabled).toBe(true);
+  });
+
+  it('should have sensible backup defaults', () => {
+    const defaults = getDefaultSettings();
+    expect(defaults.backup.maxVersions).toBeGreaterThan(0);
+    expect(defaults.backup.retentionDays).toBeGreaterThan(0);
+    expect(defaults.backup.recoveryInterval).toBeGreaterThan(0);
   });
 });
 
@@ -148,5 +164,34 @@ describe('migrateSettings', () => {
     expect(migrated.general.autoSave).toBe(false);
     expect(migrated.editor.fontSize).toBe(20);
     expect(migrated.appearance.theme).toBe('dark');
+  });
+
+  it('should fill in missing backup field from defaults', () => {
+    const partial = {
+      __version: 1,
+      general: { autoSave: true, autoSaveInterval: 3000 },
+      editor: { fontSize: 14, lineHeight: 1.5 },
+      appearance: { theme: 'light', sidebarWidth: 280 },
+    } as any;
+    const migrated = migrateSettings(partial);
+    expect(migrated.backup).toBeDefined();
+    expect(typeof migrated.backup.enabled).toBe('boolean');
+    expect(typeof migrated.backup.maxVersions).toBe('number');
+  });
+
+  it('should keep custom backup values when migrating', () => {
+    const existing = {
+      __version: 1,
+      backup: {
+        enabled: false,
+        maxVersions: 5,
+        retentionDays: 7,
+        recoveryInterval: 60000,
+      },
+    };
+    const migrated = migrateSettings(existing);
+    expect(migrated.backup.enabled).toBe(false);
+    expect(migrated.backup.maxVersions).toBe(5);
+    expect(migrated.backup.retentionDays).toBe(7);
   });
 });

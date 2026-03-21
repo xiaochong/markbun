@@ -98,7 +98,7 @@ describe('saveUIState', () => {
 
   it('should handle different sidebar tabs', async () => {
     const state = getDefaultUIState();
-    const tabs = ['files', 'outline', 'search', 'settings'] as const;
+    const tabs = ['files', 'outline', 'search'] as const;
     for (const tab of tabs) {
       state.sidebarActiveTab = tab;
       const result = await saveUIState(state);
