@@ -93,7 +93,7 @@ export function setupMenu(state: ViewMenuState = defaultState): void {
         { type: 'separator' },
         { label: 'Paragraph', action: 'para-paragraph', accelerator: 'CmdOrCtrl+0' },
         { type: 'separator' },
-        { label: 'Increase Heading Level', action: 'para-increase-heading', accelerator: 'CmdOrCtrl+Plus' },
+        { label: 'Increase Heading Level', action: 'para-increase-heading', accelerator: 'CmdOrCtrl+=' },
         { label: 'Decrease Heading Level', action: 'para-decrease-heading', accelerator: 'CmdOrCtrl+Minus' },
         { type: 'separator' },
         // Block elements

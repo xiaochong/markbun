@@ -6,6 +6,7 @@ import { Crepe } from '@milkdown/crepe';
 import { paragraphSchema } from '@milkdown/preset-commonmark';
 import { wrapInHeadingCommand } from '@milkdown/preset-commonmark';
 import { editorViewCtx } from '@milkdown/kit/core';
+import { callCommand } from '@milkdown/utils';
 import { setBlockType } from '@milkdown/prose/commands';
 import { TextSelection } from '@milkdown/prose/state';
 import { insertParsedMarkdown } from '../utils/editorActions';
@@ -47,8 +48,7 @@ export function increaseHeadingLevel(
       }
     });
 
-    const newLevel = currentLevel > 0 ? Math.min(currentLevel + 1, 6) : 1;
-    const { callCommand } = require('@milkdown/utils');
+    const newLevel = currentLevel > 1 ? currentLevel - 1 : 1;
     return callCommand(wrapInHeadingCommand.key, newLevel)(ctx);
   });
 }
@@ -73,15 +73,16 @@ export function decreaseHeadingLevel(
       }
     });
 
-    if (currentLevel <= 1) {
+    if (currentLevel === 0) return false;
+
+    if (currentLevel >= 6) {
       // Convert to paragraph
       const paragraphType = paragraphSchema.type(ctx);
       if (!paragraphType) return false;
       return setBlockType(paragraphType)(state, view.dispatch.bind(view));
     }
 
-    const newLevel = currentLevel - 1;
-    const { callCommand } = require('@milkdown/utils');
+    const newLevel = currentLevel + 1;
     return callCommand(wrapInHeadingCommand.key, newLevel)(ctx);
   });
 }
