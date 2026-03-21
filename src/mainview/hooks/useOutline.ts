@@ -68,9 +68,19 @@ function parseHeadingsOptimized(markdown: string): ParsedHeading[] {
   const lines = markdown.split('\n');
   const headings: ParsedHeading[] = [];
   const totalLines = lines.length;
+  let inCodeBlock = false;
 
   for (let i = 0; i < totalLines; i++) {
     const line = lines[i];
+
+    // Track fenced code blocks (``` or ~~~)
+    if (line.trimStart().startsWith('```') || line.trimStart().startsWith('~~~')) {
+      inCodeBlock = !inCodeBlock;
+      continue;
+    }
+
+    // Skip lines inside code blocks
+    if (inCodeBlock) continue;
 
     // Fast skip: headings must start with #
     if (line.length === 0 || line[0] !== '#') continue;
