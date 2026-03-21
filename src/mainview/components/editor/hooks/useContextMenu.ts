@@ -11,6 +11,7 @@ declare global {
       text: string;
       hasBlobUrl: boolean;
     } | null;
+    __pendingTableCellText?: string | null;
   }
 }
 
@@ -75,32 +76,39 @@ export function useContextMenu(
         window.__pendingEditorSelection = null;
       }
 
-      // Use the click position to check if it's inside a table
-      const isInTableAtClick = editor.action((ctx) => {
+      // Use the click position to check if it's inside a table, and extract cell text
+      const tableClickInfo = editor.action((ctx) => {
         const view = ctx.get(editorViewCtx);
 
         // Get document position at click coordinates
         const coords = { left: e.clientX, top: e.clientY };
         const posAtCoords = view.posAtCoords(coords);
-        if (!posAtCoords) return false;
+        if (!posAtCoords) return { isInTable: false, cellText: null };
 
         const { pos } = posAtCoords;
         const $pos = view.state.doc.resolve(pos);
 
-        // Traverse up to find table node
+        let cellText: string | null = null;
+
+        // Traverse up to find table cell and table node
         for (let d = $pos.depth; d >= 0; d--) {
           const node = $pos.node(d);
+          if ((node.type.name === 'table_cell' || node.type.name === 'table_header') && cellText === null) {
+            cellText = node.textContent;
+          }
           if (node.type.name === 'table') {
-            return true;
+            return { isInTable: true, cellText };
           }
         }
-        return false;
+        return { isInTable: false, cellText: null };
       });
 
-      if (isInTableAtClick) {
+      if (tableClickInfo.isInTable) {
+        window.__pendingTableCellText = tableClickInfo.cellText;
         e.preventDefault();
         electrobun.showTableContextMenu();
       } else {
+        window.__pendingTableCellText = null;
         // Show our custom default menu instead of browser's native menu
         e.preventDefault();
         electrobun.showDefaultContextMenu();

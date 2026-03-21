@@ -826,6 +826,14 @@ function App() {
           editorRef.current?.focus();
           document.execCommand('redo');
           break;
+        case 'table-copy-cell': {
+          const cellText = window.__pendingTableCellText;
+          if (cellText) {
+            await electrobun.writeToClipboard(cellText);
+            window.__pendingTableCellText = null;
+          }
+          break;
+        }
         case 'editor-cut':
           await clipboard.cut();
           break;

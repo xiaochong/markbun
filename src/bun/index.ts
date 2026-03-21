@@ -419,6 +419,8 @@ async function main() {
         showTableContextMenu: async () => {
           // Show context menu for table operations
           ContextMenu.showContextMenu([
+            { label: 'Copy Cell', action: 'table-copy-cell' },
+            { type: 'separator' },
             { label: 'Insert Row Above', action: 'table-insert-row-above' },
             { label: 'Insert Row Below', action: 'table-insert-row-below' },
             { type: 'separator' },
