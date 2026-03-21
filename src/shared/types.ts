@@ -216,6 +216,7 @@ export type MarkBunRPC = {
       saveFileWithPath: { params: { content: string; folderPath: string; fileName: string }; response: { success: boolean; fullPath?: string; error?: string } };
       fileExists: { params: { path: string }; response: { exists: boolean; isDirectory?: boolean } };
       showConfirmationDialog: { params: { title: string; message: string; detail?: string; confirmLabel?: string; cancelLabel?: string }; response: { confirmed: boolean } };
+      showUnsavedChangesDialog: { params: { fileName?: string }; response: { action: 'save' | 'discard' | 'cancel' } };
 
       // File Explorer context menu operations
       createFile: { params: { folderPath: string; fileName?: string }; response: { success: boolean; path?: string; error?: string } };

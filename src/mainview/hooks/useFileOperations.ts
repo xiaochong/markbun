@@ -147,17 +147,6 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
   useEffect(() => {
     const unsubscribers: (() => void)[] = [];
 
-    // New file event (from menu)
-    unsubscribers.push(
-      electrobun.on('file-new', () => {
-        setFileState({
-          path: null,
-          content: '',
-          isDirty: false,
-        });
-      })
-    );
-
     // Save request event (from menu)
     unsubscribers.push(
       electrobun.on('file-save-request', () => {

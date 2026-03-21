@@ -248,6 +248,53 @@ function App() {
     },
   });
 
+  // Refs for unsaved-changes guard (avoid stale closures in callbacks)
+  const isDirtyRef = useRef(isDirty);
+  isDirtyRef.current = isDirty;
+  const autoSaveEnabledRef = useRef(settings?.autoSave ?? true);
+  autoSaveEnabledRef.current = settings?.autoSave ?? true;
+  const filePathRef2 = useRef(path);
+  filePathRef2.current = path;
+
+  // Check for unsaved changes before switching files or closing.
+  // Returns true = proceed, false = user cancelled the action.
+  const checkUnsavedChanges = useCallback(async (): Promise<boolean> => {
+    if (!isDirtyRef.current) return true;
+
+    if (autoSaveEnabledRef.current) {
+      // Auto-save is on: save immediately and proceed
+      await handleSave();
+      return true;
+    }
+
+    // Auto-save is off: ask the user
+    const fileName = filePathRef2.current
+      ? filePathRef2.current.split('/').pop()
+      : undefined;
+    const result = await electrobun.showUnsavedChangesDialog({ fileName });
+    if (result.action === 'cancel') return false;
+    if (result.action === 'save') await handleSave();
+    return true;
+  }, [handleSave]);
+
+  // Show native "unsaved changes" warning on exit when auto-save is disabled
+  useEffect(() => {
+    if (autoSaveEnabledRef.current) return; // auto-save handles its own beforeunload
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirtyRef.current) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  // Re-register when autoSave setting changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings?.autoSave]);
+
   // Unified workspace reset function
   const resetWorkspace = useCallback((options?: { skipEditorClear?: boolean }) => {
     // Cancel any pending operations first
@@ -275,6 +322,9 @@ function App() {
 
   // Handle open folder
   const handleOpenFolder = useCallback(async () => {
+    const shouldProceed = await checkUnsavedChanges();
+    if (!shouldProceed) return;
+
     resetWorkspace();
 
     try {
@@ -291,7 +341,7 @@ function App() {
     } catch (error) {
       console.error('Failed to open folder:', error);
     }
-  }, [resetWorkspace, fileExplorer.setRootPath, fileExplorer.selectFile]);
+  }, [checkUnsavedChanges, resetWorkspace, fileExplorer.setRootPath, fileExplorer.selectFile]);
 
   // File loading cancel token to prevent race conditions
   const loadingCancelTokenRef = useRef<{ cancelled: boolean; path: string } | null>(null);
@@ -350,6 +400,10 @@ function App() {
 
   // Open file by path
   const openFileByPath = useCallback(async (filePath: string) => {
+    // Guard: check for unsaved changes before switching
+    const shouldProceed = await checkUnsavedChanges();
+    if (!shouldProceed) return;
+
     // Set flag to ignore editor changes during file switch
     isSwitchingFileRef.current = true;
 
@@ -464,7 +518,7 @@ function App() {
         console.log('[FileLoad] File switch flag cleared:', filePath);
       }, 100);
     }
-  }, [fileExplorer.setRootPath, fileExplorer.selectFile, outline.setHeadings, cancelPendingSave, resetFileState, sourceMode]);
+  }, [checkUnsavedChanges, fileExplorer.setRootPath, fileExplorer.selectFile, outline.setHeadings, cancelPendingSave, resetFileState, sourceMode]);
 
   // Handle file click in file explorer
   const handleFileClick = useCallback((file: FileNode) => {
@@ -559,6 +613,10 @@ function App() {
   useEffect(() => {
     return electrobun.on('file-opened', async (data) => {
       const { path: filePath, content: fileContent } = data as { path: string; content: string };
+
+      // Guard: check for unsaved changes before switching
+      const shouldProceed = await checkUnsavedChanges();
+      if (!shouldProceed) return;
 
       // Set flag to ignore editor changes during file switch
       isSwitchingFileRef.current = true;
@@ -689,12 +747,16 @@ function App() {
 
       void loadContent();
     });
-  }, [outline.setHeadings, fileExplorer.setRootPath, fileExplorer.selectFile, cancelPendingSave, resetFileState]);
+  }, [checkUnsavedChanges, outline.setHeadings, fileExplorer.setRootPath, fileExplorer.selectFile, cancelPendingSave, resetFileState]);
 
   // Listen for folder-opened event to set workspace root
   useEffect(() => {
-    return electrobun.on('folder-opened', (data) => {
+    return electrobun.on('folder-opened', async (data) => {
       const { path: folderPath } = data as { path: string };
+
+      // Guard: check for unsaved changes before switching workspace
+      const shouldProceed = await checkUnsavedChanges();
+      if (!shouldProceed) return;
 
       resetWorkspace();
 
@@ -705,11 +767,15 @@ function App() {
       fileExplorer.setRootPath(folderPath);
       fileExplorer.selectFile(null);
     });
-  }, [resetWorkspace, fileExplorer.setRootPath, fileExplorer.selectFile]);
+  }, [checkUnsavedChanges, resetWorkspace, fileExplorer.setRootPath, fileExplorer.selectFile]);
 
   // Listen for file-new event to reset to initial state
   useEffect(() => {
-    return electrobun.on('file-new', () => {
+    return electrobun.on('file-new', async () => {
+      // Guard: check for unsaved changes before creating a new file
+      const shouldProceed = await checkUnsavedChanges();
+      if (!shouldProceed) return;
+
       // Cancel any pending operations
       cancelPendingSave();
 
@@ -725,7 +791,8 @@ function App() {
       setImagePreviewPath(null);
       outline.setHeadings('');
 
-      // Reset file state
+      // Reset file state (path / content / isDirty)
+      clearFile();
       workspaceManager.setCurrentFile(null);
       setCurrentFilePath(null);
 
@@ -742,7 +809,7 @@ function App() {
         }
       }, 0);
     });
-  }, [outline.setHeadings, sourceMode, cancelPendingSave, fileExplorer.setRootPath, fileExplorer.selectFile]);
+  }, [checkUnsavedChanges, outline.setHeadings, sourceMode, cancelPendingSave, clearFile, fileExplorer.setRootPath, fileExplorer.selectFile]);
 
   // Listen for settings dialog open event
   useEffect(() => {

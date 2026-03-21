@@ -193,6 +193,10 @@ export const electrobun = {
     return await electroview.rpc.request.showConfirmationDialog(params) as { confirmed: boolean };
   },
 
+  async showUnsavedChangesDialog(params: { fileName?: string } = {}) {
+    return await electroview.rpc.request.showUnsavedChangesDialog(params) as { action: 'save' | 'discard' | 'cancel' };
+  },
+
   // Phase 3: Settings
   async getSettings() {
     return await electroview.rpc.request.getSettings({});

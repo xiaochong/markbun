@@ -817,6 +817,28 @@ async function main() {
           }
         },
 
+        // Show unsaved changes dialog (3-button: Save / Don't Save / Cancel)
+        showUnsavedChangesDialog: async ({ fileName }: { fileName?: string }) => {
+          try {
+            const displayName = fileName ? `"${fileName}"` : '当前文件';
+            const { response } = await Utils.showMessageBox({
+              type: 'warning',
+              title: '未保存的更改',
+              message: `${displayName} 有未保存的更改`,
+              detail: '如果现在离开，未保存的更改将会丢失。',
+              buttons: ['取消', '不保存', '保存'],
+              defaultId: 2,
+              cancelId: 0,
+            });
+            // 0 = Cancel, 1 = Don't Save, 2 = Save
+            const actions = ['cancel', 'discard', 'save'] as const;
+            return { action: actions[response] };
+          } catch (error) {
+            console.error('Failed to show unsaved changes dialog:', error);
+            return { action: 'cancel' as const };
+          }
+        },
+
         // Show confirmation dialog for file overwrite
         showConfirmationDialog: async ({ title, message, detail, confirmLabel = 'Replace', cancelLabel = 'Cancel' }: { title: string; message: string; detail?: string; confirmLabel?: string; cancelLabel?: string }) => {
           try {

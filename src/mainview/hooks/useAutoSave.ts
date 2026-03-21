@@ -151,20 +151,14 @@ export function useAutoSave({
     return () => window.removeEventListener('blur', handleBlur);
   }, [enabled, isDirty, executeSave, clearAllTimers]);
 
-  // Save on beforeunload
+  // Save on beforeunload (auto-save enabled: save silently, no dialog)
   useEffect(() => {
     if (!enabled) return;
 
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    const handleBeforeUnload = () => {
       if (isDirty) {
-        // Try to save synchronously
         clearAllTimers();
         void executeSave();
-
-        // Show warning if there are unsaved changes
-        e.preventDefault();
-        e.returnValue = '';
-        return '';
       }
     };
 
