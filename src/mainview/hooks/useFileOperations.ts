@@ -13,6 +13,8 @@ interface UseFileOperationsOptions {
   enableAutoSave?: boolean;
   autoSaveInterval?: number;
   onSaveSuccess?: (path: string) => void;
+  backupEnabled?: boolean;
+  recoveryInterval?: number; // ms between periodic recovery writes (default 30 000)
 }
 
 interface SaveDialogState {
@@ -22,11 +24,22 @@ interface SaveDialogState {
 }
 
 export function useFileOperations(options: UseFileOperationsOptions = {}) {
-  const { enableAutoSave = true, autoSaveInterval = 2000, onSaveSuccess } = options;
+  const {
+    enableAutoSave = true,
+    autoSaveInterval = 2000,
+    onSaveSuccess,
+    backupEnabled = true,
+    recoveryInterval = 30000,
+  } = options;
 
   // Use ref to store callback to avoid dependency issues
   const onSaveSuccessRef = useRef(onSaveSuccess);
   onSaveSuccessRef.current = onSaveSuccess;
+
+  // Recovery write timer (separate from auto-save — always fires even if auto-save is off)
+  const recoveryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const backupEnabledRef = useRef(backupEnabled);
+  backupEnabledRef.current = backupEnabled;
 
   const [fileState, setFileState] = useState<FileState>({
     path: null,
@@ -46,6 +59,27 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
 
   // Track the file being saved to prevent saving to wrong file
   const savingFilePathRef = useRef<string | null>(null);
+
+  // Schedule a debounced recovery write (max once per `recoveryInterval` ms)
+  const scheduleRecoveryWrite = useCallback(() => {
+    if (!backupEnabledRef.current) return;
+    if (recoveryTimerRef.current) clearTimeout(recoveryTimerRef.current);
+    recoveryTimerRef.current = setTimeout(() => {
+      const state = fileStateRef.current;
+      if (state.path && state.isDirty) {
+        void electrobun.writeRecovery(state.content, state.path).catch(() => {
+          // Recovery writes are best-effort; do not surface errors
+        });
+      }
+    }, Math.min(recoveryInterval, 5000)); // debounce: fire after 5 s of inactivity, max once per interval
+  }, [recoveryInterval]);
+
+  // Cleanup recovery timer on unmount
+  useEffect(() => {
+    return () => {
+      if (recoveryTimerRef.current) clearTimeout(recoveryTimerRef.current);
+    };
+  }, []);
 
   // Auto-save callback
   const handleAutoSave = useCallback(async () => {
@@ -165,7 +199,12 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
     if (enableAutoSave && fileStateRef.current.path) {
       triggerAutoSave();
     }
-  }, [enableAutoSave, triggerAutoSave]);
+
+    // Schedule a recovery write (independent of auto-save, also covers auto-save=off)
+    if (fileStateRef.current.path) {
+      scheduleRecoveryWrite();
+    }
+  }, [enableAutoSave, triggerAutoSave, scheduleRecoveryWrite]);
 
   // Reset file state for file switching - clears dirty flag to prevent auto-save race
   const resetFileState = useCallback((newPath: string | null, newContent: string) => {

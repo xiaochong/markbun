@@ -50,6 +50,7 @@ describe('AppSettings', () => {
       lineHeight: 1.6,
       autoSave: true,
       autoSaveInterval: 2000,
+      backup: { enabled: true, maxVersions: 20, retentionDays: 30, recoveryInterval: 30000 },
     };
     expect(lightSettings.theme).toBe('light');
 

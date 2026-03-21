@@ -10,6 +10,8 @@ import { ImageInsertDialog } from './components/image-insert';
 import { ImageViewer } from './components/image-viewer';
 import { SettingsDialog } from './components/settings';
 import { SaveDialog } from './components/save-dialog';
+import { RecoveryDialog } from './components/recovery-dialog/RecoveryDialog';
+import { FileHistoryDialog } from './components/file-history/FileHistoryDialog';
 import { useFileOperations } from './hooks/useFileOperations';
 import { useTheme } from './hooks/useTheme';
 import { useSidebar } from './hooks/useSidebar';
@@ -26,7 +28,7 @@ import {
   isLocalFilePath,
   restoreOriginalImagePaths,
 } from './lib/image';
-import type { FileNode, AppSettings, UIState } from '@/shared/types';
+import type { FileNode, AppSettings, UIState, RecoveryInfo } from '@/shared/types';
 
 function App() {
   const editorRef = useRef<MilkdownEditorRef>(null);
@@ -53,6 +55,29 @@ function App() {
       }
     };
     void loadSettings();
+  }, []);
+
+  // Recovery dialog
+  const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
+  const [pendingRecoveries, setPendingRecoveries] = useState<RecoveryInfo[]>([]);
+
+  // File history dialog
+  const [showFileHistoryDialog, setShowFileHistoryDialog] = useState(false);
+
+  // Check for crash-recovery files on startup
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      try {
+        const result = await electrobun.checkRecovery() as { success: boolean; recoveries?: RecoveryInfo[] };
+        if (result.success && result.recoveries && result.recoveries.length > 0) {
+          setPendingRecoveries(result.recoveries);
+          setShowRecoveryDialog(true);
+        }
+      } catch {
+        // Recovery check is best-effort
+      }
+    }, 1200); // slight delay so the app is fully rendered first
+    return () => clearTimeout(timer);
   }, []);
 
   // Theme management from settings
@@ -204,6 +229,8 @@ function App() {
   } = useFileOperations({
     enableAutoSave: settings?.autoSave ?? true,
     autoSaveInterval: settings?.autoSaveInterval ?? 2000,
+    backupEnabled: settings?.backup?.enabled ?? true,
+    recoveryInterval: settings?.backup?.recoveryInterval ?? 30000,
     onSaveSuccess: (savedPath) => {
       // Set root path to the file's parent directory (so new files appear in file explorer)
       const parentDir = savedPath.substring(0, savedPath.lastIndexOf('/')) || '/';
@@ -724,6 +751,63 @@ function App() {
     });
   }, []);
 
+  // Listen for file history dialog open event
+  useEffect(() => {
+    return electrobun.on('open-file-history', () => {
+      setShowFileHistoryDialog(true);
+    });
+  }, []);
+
+  // Handle recovery restore — load the recovered content into the editor
+  const handleRecover = useCallback(async (content: string, recoveredPath: string) => {
+    resetFileState(recoveredPath, content);
+    // Set workspace before processMarkdownImages resolves relative paths
+    workspaceManager.setCurrentFile(recoveredPath);
+
+    if (sourceMode) {
+      sourceEditorRef.current?.setValue(content);
+      setEditorContent(content);
+      outline.setHeadings(content);
+    } else {
+      // Clear first to force ImageBlock components to fully re-render
+      if (editorRef.current?.isReady) editorRef.current.setMarkdown('');
+      const contentToLoad = hasLocalImages(content)
+        ? await processMarkdownImages(content)
+        : content;
+      requestAnimationFrame(() => {
+        editorRef.current?.setMarkdown(contentToLoad);
+        setEditorContent(contentToLoad);
+        outline.setHeadings(contentToLoad);
+      });
+    }
+  }, [resetFileState, sourceMode, outline.setHeadings]);
+
+  // Restore a version-backup content into the editor.
+  // Dirty state is updated naturally when the editor fires markdownUpdated after setMarkdown.
+  const handleRestoreVersion = useCallback(async (content: string) => {
+    if (!path) return;
+    // workspaceManager is already synced to `path` via useEffect — no need to re-set
+
+    if (sourceMode) {
+      sourceEditorRef.current?.setValue(content);
+      setEditorContent(content);
+      outline.setHeadings(content);
+      updateContent(content);
+    } else {
+      // Clear first to force ImageBlock components to fully re-render
+      if (editorRef.current?.isReady) editorRef.current.setMarkdown('');
+      const contentToLoad = hasLocalImages(content)
+        ? await processMarkdownImages(content)
+        : content;
+      requestAnimationFrame(() => {
+        editorRef.current?.setMarkdown(contentToLoad);
+        setEditorContent(contentToLoad);
+        outline.setHeadings(contentToLoad);
+      });
+      updateContent(content);
+    }
+  }, [path, sourceMode, updateContent, outline.setHeadings]);
+
   // Handle settings save
   const handleSettingsSave = useCallback(async (newSettings: AppSettings) => {
     setSettings(newSettings);
@@ -1090,6 +1174,22 @@ function App() {
         initialFolderPath={saveDialogState.initialFolderPath}
         onClose={closeSaveDialog}
         onSave={handleSaveFromDialog}
+      />
+
+      {/* Recovery Dialog */}
+      <RecoveryDialog
+        isOpen={showRecoveryDialog}
+        recoveries={pendingRecoveries}
+        onClose={() => setShowRecoveryDialog(false)}
+        onRecover={handleRecover}
+      />
+
+      {/* File History Dialog */}
+      <FileHistoryDialog
+        isOpen={showFileHistoryDialog}
+        filePath={path}
+        onClose={() => setShowFileHistoryDialog(false)}
+        onRestore={handleRestoreVersion}
       />
     </div>
   );

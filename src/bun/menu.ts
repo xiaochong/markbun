@@ -47,6 +47,8 @@ export function setupMenu(state: ViewMenuState = defaultState): void {
         { type: 'separator' },
         { label: 'Save', action: 'file-save', accelerator: 'CmdOrCtrl+S' },
         { label: 'Save As...', action: 'file-save-as', accelerator: 'CmdOrCtrl+Shift+S' },
+        { type: 'separator' },
+        { label: 'History...', action: 'file-history', accelerator: 'CmdOrCtrl+Alt+H' },
       ],
     },
     {

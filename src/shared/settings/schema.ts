@@ -14,6 +14,17 @@ export const settingsSchema = z.object({
     theme: z.enum(['light', 'dark', 'system']).default('system'),
     sidebarWidth: z.number().min(150).max(500).default(280),
   }),
+  backup: z.object({
+    enabled: z.boolean().default(true),
+    maxVersions: z.number().min(5).max(100).default(20),
+    retentionDays: z.number().min(1).max(365).default(30),
+    recoveryInterval: z.number().min(5000).max(120000).default(30000),
+  }).default({
+    enabled: true,
+    maxVersions: 20,
+    retentionDays: 30,
+    recoveryInterval: 30000,
+  }),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;
@@ -32,5 +43,11 @@ export const defaultSettings: Settings = {
   appearance: {
     theme: 'system',
     sidebarWidth: 280,
+  },
+  backup: {
+    enabled: true,
+    maxVersions: 20,
+    retentionDays: 30,
+    recoveryInterval: 30000,
   },
 };

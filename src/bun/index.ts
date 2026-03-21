@@ -9,6 +9,17 @@ import { readFolder } from './ipc/folders';
 import { getRecentFiles, addRecentFile, removeRecentFile, clearRecentFiles } from './ipc/recentFiles';
 import { loadSettings, saveSettings, type Settings } from './services/settings';
 import { loadUIState, saveUIState, type UIState } from './services/uiState';
+import {
+  atomicWrite,
+  writeRecoveryFile,
+  clearRecoveryFile,
+  scanRecoveries,
+  readRecoveryContent,
+  createVersionBackup,
+  getVersionBackups,
+  readVersionBackupContent,
+  deleteVersionBackup,
+} from './services/backup';
 import { spawn } from 'child_process';
 
 const DEV_SERVER_PORT = 5173;
@@ -204,7 +215,20 @@ async function saveFile(content: string, path?: string): Promise<{ success: bool
       return { success: false, error: 'No file path specified' };
     }
 
-    await writeFile(filePath, content, 'utf-8');
+    // Layer 2: write recovery file before touching the original
+    await writeRecoveryFile(filePath, content);
+
+    // Layer 3: snapshot the existing file before overwriting it
+    if (currentSettings?.backup) {
+      await createVersionBackup(filePath, currentSettings.backup);
+    }
+
+    // Layer 1: atomic write (write .tmp → rename)
+    await atomicWrite(filePath, content);
+
+    // Layer 2: clear recovery file now that the save succeeded
+    await clearRecoveryFile(filePath);
+
     currentFilePath = filePath;
     return { success: true, path: filePath };
   } catch (error) {
@@ -771,7 +795,7 @@ async function main() {
         saveFileWithPath: async ({ content, folderPath, fileName }: { content: string; folderPath: string; fileName: string }) => {
           try {
             const fullPath = join(folderPath, fileName);
-            await writeFile(fullPath, content, 'utf-8');
+            await atomicWrite(fullPath, content);
             currentFilePath = fullPath;
             return { success: true, fullPath };
           } catch (error) {
@@ -826,6 +850,7 @@ async function main() {
               lineHeight: currentSettings.editor.lineHeight,
               autoSave: currentSettings.general.autoSave,
               autoSaveInterval: currentSettings.general.autoSaveInterval,
+              backup: currentSettings.backup,
             };
             return { success: true, settings: appSettings };
           } catch (error) {
@@ -836,8 +861,9 @@ async function main() {
             };
           }
         },
-        saveSettings: async ({ settings }: { settings: { theme: 'light' | 'dark' | 'system'; fontSize: number; lineHeight: number; autoSave: boolean; autoSaveInterval: number } }) => {
+        saveSettings: async ({ settings }: { settings: { theme: 'light' | 'dark' | 'system'; fontSize: number; lineHeight: number; autoSave: boolean; autoSaveInterval: number; backup?: { enabled: boolean; maxVersions: number; retentionDays: number; recoveryInterval: number } } }) => {
           try {
+            const defaultBackup = { enabled: true, maxVersions: 20, retentionDays: 30, recoveryInterval: 30000 };
             currentSettings = {
               __version: 1,
               general: {
@@ -852,6 +878,7 @@ async function main() {
                 theme: settings.theme,
                 sidebarWidth: currentSettings?.appearance.sidebarWidth ?? 280,
               },
+              backup: settings.backup ?? currentSettings?.backup ?? defaultBackup,
             };
             const result = await saveSettings(currentSettings);
             return result;
@@ -1068,6 +1095,75 @@ async function main() {
               success: false,
               error: error instanceof Error ? error.message : 'Unknown error',
             };
+          }
+        },
+
+        // ── Backup & Recovery ──────────────────────────────────────────────
+
+        checkRecovery: async () => {
+          try {
+            const recoveries = await scanRecoveries();
+            return { success: true, recoveries };
+          } catch (error) {
+            return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+          }
+        },
+
+        clearRecovery: async ({ recoveryPath }: { recoveryPath: string }) => {
+          try {
+            if (existsSync(recoveryPath)) await unlink(recoveryPath);
+            return { success: true };
+          } catch (error) {
+            return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+          }
+        },
+
+        recoverFile: async ({ recoveryPath, targetPath }: { recoveryPath: string; targetPath?: string }) => {
+          try {
+            const data = await readRecoveryContent(recoveryPath);
+            if (!data) return { success: false, error: 'Recovery file not found or corrupt' };
+            return { success: true, path: targetPath ?? data.originalPath, content: data.content };
+          } catch (error) {
+            return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+          }
+        },
+
+        writeRecovery: async ({ content, filePath }: { content: string; filePath?: string }) => {
+          try {
+            const targetPath = filePath || currentFilePath;
+            if (!targetPath) return { success: false, error: 'No file path' };
+            await writeRecoveryFile(targetPath, content);
+            return { success: true };
+          } catch (error) {
+            return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+          }
+        },
+
+        getVersionBackups: async ({ filePath }: { filePath: string }) => {
+          try {
+            const backups = await getVersionBackups(filePath);
+            return { success: true, backups };
+          } catch (error) {
+            return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+          }
+        },
+
+        restoreVersionBackup: async ({ backupPath }: { backupPath: string }) => {
+          try {
+            const content = await readVersionBackupContent(backupPath);
+            if (content === null) return { success: false, error: 'Backup file not found' };
+            return { success: true, content };
+          } catch (error) {
+            return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+          }
+        },
+
+        deleteVersionBackup: async ({ backupPath }: { backupPath: string }) => {
+          try {
+            await deleteVersionBackup(backupPath);
+            return { success: true };
+          } catch (error) {
+            return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
           }
         },
       },
@@ -1348,6 +1444,11 @@ async function main() {
       case 'app-preferences':
         // @ts-ignore
         win.webview.rpc.send.openSettings({});
+        break;
+
+      case 'file-history':
+        // @ts-ignore
+        win.webview.rpc.send.openFileHistory({});
         break;
 
       case 'view-toggle-titlebar':

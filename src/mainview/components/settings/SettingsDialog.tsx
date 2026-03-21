@@ -1,6 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import type { AppSettings } from '@/shared/types';
+import type { AppSettings, BackupSettings } from '@/shared/types';
+
+const DEFAULT_BACKUP: BackupSettings = {
+  enabled: true,
+  maxVersions: 20,
+  retentionDays: 30,
+  recoveryInterval: 30000,
+};
 
 interface SettingsDialogProps {
   isOpen: boolean;
@@ -9,7 +16,7 @@ interface SettingsDialogProps {
   onSave: (settings: AppSettings) => void;
 }
 
-type SettingsTab = 'general' | 'editor' | 'appearance';
+type SettingsTab = 'general' | 'editor' | 'appearance' | 'backup';
 
 export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDialogProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
@@ -19,6 +26,7 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
     lineHeight: 1.65,
     autoSave: true,
     autoSaveInterval: 2000,
+    backup: DEFAULT_BACKUP,
   });
 
   // Sync form state with props when dialog opens
@@ -49,6 +57,7 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
     { id: 'general', label: 'General', icon: '⚙️' },
     { id: 'editor', label: 'Editor', icon: '📝' },
     { id: 'appearance', label: 'Appearance', icon: '🎨' },
+    { id: 'backup', label: 'Backup', icon: '📦' },
   ];
 
   return (
@@ -59,7 +68,7 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
       }}
       onKeyDown={handleKeyDown}
     >
-      <div className="flex w-[600px] h-[450px] bg-background rounded-lg shadow-xl overflow-hidden border">
+      <div className="flex w-[600px] h-[520px] bg-background rounded-lg shadow-xl overflow-hidden border">
         {/* Sidebar */}
         <div className="w-44 bg-muted/50 border-r flex flex-col">
           <div className="p-4 border-b">
@@ -203,6 +212,100 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
                     <p className="text-xs text-muted-foreground">
                       Choose your preferred color theme
                     </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            {activeTab === 'backup' && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-medium">Backup</h3>
+
+                <div className="space-y-4">
+                  {/* Version History toggle */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="text-sm font-medium">Version History</label>
+                      <p className="text-xs text-muted-foreground">
+                        Keep snapshots of each file before saving
+                      </p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={formState.backup?.enabled ?? true}
+                      onChange={(e) => handleChange('backup', { ...(formState.backup ?? DEFAULT_BACKUP), enabled: e.target.checked })}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                  </div>
+
+                  {(formState.backup?.enabled ?? true) && (
+                    <div className="space-y-4 pl-4 border-l-2 border-muted">
+                      {/* Max Versions */}
+                      <div className="space-y-1">
+                        <label className="text-sm font-medium">Max versions per file</label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="range"
+                            min="5"
+                            max="100"
+                            step="5"
+                            value={formState.backup?.maxVersions ?? 20}
+                            onChange={(e) => handleChange('backup', { ...(formState.backup ?? DEFAULT_BACKUP), maxVersions: Number(e.target.value) })}
+                            className="flex-1 h-2 bg-muted rounded-lg appearance-none cursor-pointer"
+                          />
+                          <span className="text-sm text-muted-foreground w-10 text-right">
+                            {formState.backup?.maxVersions ?? 20}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Retention Days */}
+                      <div className="space-y-1">
+                        <label className="text-sm font-medium">Keep for (days)</label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="range"
+                            min="1"
+                            max="365"
+                            step="1"
+                            value={formState.backup?.retentionDays ?? 30}
+                            onChange={(e) => handleChange('backup', { ...(formState.backup ?? DEFAULT_BACKUP), retentionDays: Number(e.target.value) })}
+                            className="flex-1 h-2 bg-muted rounded-lg appearance-none cursor-pointer"
+                          />
+                          <span className="text-sm text-muted-foreground w-10 text-right">
+                            {formState.backup?.retentionDays ?? 30}d
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Crash recovery interval */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">Crash recovery write interval</label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="range"
+                        min="5000"
+                        max="120000"
+                        step="5000"
+                        value={formState.backup?.recoveryInterval ?? 30000}
+                        onChange={(e) => handleChange('backup', { ...(formState.backup ?? DEFAULT_BACKUP), recoveryInterval: Number(e.target.value) })}
+                        className="flex-1 h-2 bg-muted rounded-lg appearance-none cursor-pointer"
+                      />
+                      <span className="text-sm text-muted-foreground w-12 text-right">
+                        {((formState.backup?.recoveryInterval ?? 30000) / 1000).toFixed(0)}s
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      How often to write a crash-recovery copy (even when auto-save is off)
+                    </p>
+                  </div>
+
+                  {/* Storage location info */}
+                  <div className="p-3 bg-muted/50 rounded-lg text-xs text-muted-foreground leading-relaxed">
+                    <p className="font-medium mb-1">Storage location</p>
+                    <p>Recovery: ~/.config/markbun/recovery/</p>
+                    <p>History: ~/.config/markbun/backups/</p>
                   </div>
                 </div>
               </div>

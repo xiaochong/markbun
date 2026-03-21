@@ -79,6 +79,12 @@ describe('saveSettings', () => {
         theme: 'system',
         sidebarWidth: 280,
       },
+      backup: {
+        enabled: true,
+        maxVersions: 20,
+        retentionDays: 30,
+        recoveryInterval: 30000,
+      },
     };
     const result = await saveSettings(validSettings);
     expect(result.success).toBe(true);

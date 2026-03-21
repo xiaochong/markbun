@@ -18,12 +18,40 @@ export interface FileInfo {
   lastModified: number;
 }
 
+// ============================================================================
+// Backup System Types
+// ============================================================================
+
+export interface BackupSettings {
+  enabled: boolean;
+  maxVersions: number;
+  retentionDays: number;
+  recoveryInterval: number; // ms between periodic recovery writes
+}
+
+export interface BackupEntry {
+  path: string;
+  timestamp: number;
+  size: number;
+}
+
+export interface RecoveryInfo {
+  originalPath: string;
+  recoveryPath: string;
+  lastModified: number;
+  preview: string; // first 200 chars of recovered content
+  size: number;
+}
+
+// ============================================================================
+
 export interface AppSettings {
   theme: 'light' | 'dark' | 'system';
   fontSize: number;
   lineHeight: number;
   autoSave: boolean;
   autoSaveInterval: number;
+  backup: BackupSettings;
 }
 
 export interface EditorStats {
@@ -195,6 +223,15 @@ export type MarkBunRPC = {
       deleteFile: { params: { path: string }; response: { success: boolean; error?: string } };
       moveFile: { params: { sourcePath: string; targetFolderPath: string }; response: { success: boolean; newPath?: string; error?: string } };
       renameFile: { params: { path: string; newName: string }; response: { success: boolean; newPath?: string; error?: string } };
+
+      // Backup & Recovery
+      checkRecovery: { params: {}; response: { success: boolean; recoveries?: RecoveryInfo[]; error?: string } };
+      clearRecovery: { params: { recoveryPath: string }; response: { success: boolean; error?: string } };
+      recoverFile: { params: { recoveryPath: string; targetPath?: string }; response: { success: boolean; path?: string; content?: string; error?: string } };
+      writeRecovery: { params: { content: string; filePath?: string }; response: { success: boolean; error?: string } };
+      getVersionBackups: { params: { filePath: string }; response: { success: boolean; backups?: BackupEntry[]; error?: string } };
+      restoreVersionBackup: { params: { backupPath: string }; response: { success: boolean; content?: string; error?: string } };
+      deleteVersionBackup: { params: { backupPath: string }; response: { success: boolean; error?: string } };
     };
     messages: {
       fileOpened: { path: string; content: string };
@@ -218,6 +255,9 @@ export type MarkBunRPC = {
 
       // Source mode toggle
       toggleSourceMode: {};
+
+      // File version history
+      openFileHistory: {};
     };
   }>;
   webview: RPCSchema<{

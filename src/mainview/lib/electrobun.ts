@@ -69,6 +69,10 @@ const rpc = Electroview.defineRPC<MarkBunRPC>({
         const listeners = (window as any).__electrobunListeners?.['toggle-source-mode'] || [];
         listeners.forEach((cb: () => void) => cb());
       },
+      openFileHistory: () => {
+        const listeners = (window as any).__electrobunListeners?.['open-file-history'] || [];
+        listeners.forEach((cb: () => void) => cb());
+      },
     },
   },
 });
@@ -208,6 +212,36 @@ export const electrobun = {
 
   async updateWindowBounds(x: number, y: number, width: number, height: number) {
     return await electroview.rpc.request.updateWindowBounds({ x, y, width, height });
+  },
+
+  // ── Backup & Recovery ───────────────────────────────────────────────────────
+
+  async checkRecovery() {
+    return await electroview.rpc.request.checkRecovery({});
+  },
+
+  async clearRecovery(recoveryPath: string) {
+    return await electroview.rpc.request.clearRecovery({ recoveryPath });
+  },
+
+  async recoverFile(recoveryPath: string, targetPath?: string) {
+    return await electroview.rpc.request.recoverFile({ recoveryPath, targetPath });
+  },
+
+  async writeRecovery(content: string, filePath?: string) {
+    return await electroview.rpc.request.writeRecovery({ content, filePath });
+  },
+
+  async getVersionBackups(filePath: string) {
+    return await electroview.rpc.request.getVersionBackups({ filePath });
+  },
+
+  async restoreVersionBackup(backupPath: string) {
+    return await electroview.rpc.request.restoreVersionBackup({ backupPath });
+  },
+
+  async deleteVersionBackup(backupPath: string) {
+    return await electroview.rpc.request.deleteVersionBackup({ backupPath });
   },
 
   // File Explorer context menu operations

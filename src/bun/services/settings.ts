@@ -96,6 +96,10 @@ function mergeWithDefaults(partial: Partial<Settings>): Settings {
       ...defaultSettings.appearance,
       ...partial.appearance,
     },
+    backup: {
+      ...defaultSettings.backup,
+      ...partial.backup,
+    },
   };
 }
 
