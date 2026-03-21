@@ -24,6 +24,7 @@ import {
 } from '../plugins/inlineMarksPlugin';
 import { editorViewCtx } from '@milkdown/kit/core';
 import { setBlockType } from '@milkdown/prose/commands';
+import { TextSelection, NodeSelection } from '@milkdown/kit/prose/state';
 import { execCommand, insertParsedMarkdown } from '../utils/editorActions';
 
 // ===== 简单格式化命令 =====
@@ -112,7 +113,6 @@ export function toggleCodeBlock(crepeRef: React.RefObject<Crepe | null>): boolea
     const endBlockPos = $to.after($to.depth);
 
     // Create the code block with the collected text
-    const { TextSelection } = require('@milkdown/prose/state');
     const codeBlockNode = codeBlockType.create(
       { language: '' },
       state.schema.text(codeContent)
@@ -189,10 +189,30 @@ export function toggleSubscript(crepeRef: React.RefObject<Crepe | null>): boolea
   return execCommand(crepeRef, toggleSubscriptCommand);
 }
 
-export function insertInlineMath(_crepeRef: React.RefObject<Crepe | null>): boolean {
-  // Inline math requires math plugin
-  console.warn('Inline math requires math plugin');
-  return false;
+export function insertInlineMath(crepeRef: React.RefObject<Crepe | null>): boolean {
+  const editor = crepeRef.current?.editor;
+  if (!editor?.ctx) return false;
+
+  try {
+    return editor.action((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      const { state } = view;
+      const mathInlineType = state.schema.nodes['math_inline'];
+      if (!mathInlineType) return false;
+
+      const { from, to } = state.selection;
+      const selectedText = from === to ? 'E=mc^2' : state.doc.textBetween(from, to);
+      const node = mathInlineType.create({ value: selectedText });
+      const tr = state.tr.replaceSelectionWith(node);
+      tr.setSelection(NodeSelection.create(tr.doc, from));
+      view.dispatch(tr);
+      view.focus();
+      return true;
+    });
+  } catch (e) {
+    console.error('insertInlineMath failed:', e);
+    return false;
+  }
 }
 
 export function insertComment(_crepeRef: React.RefObject<Crepe | null>): boolean {

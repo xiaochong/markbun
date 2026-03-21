@@ -63,6 +63,7 @@ export const MilkdownEditor = memo(forwardRef<MilkdownEditorRef, MilkdownEditorP
       toggleHighlight: () => formatting.toggleHighlight(crepeRef),
       toggleSuperscript: () => formatting.toggleSuperscript(crepeRef),
       toggleSubscript: () => formatting.toggleSubscript(crepeRef),
+      insertInlineMath: () => formatting.insertInlineMath(crepeRef),
 
       // Paragraph menu commands
       setParagraph: () => paragraph.setParagraph(crepeRef),

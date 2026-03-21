@@ -1411,6 +1411,7 @@ async function main() {
       case 'format-highlight':
       case 'format-superscript':
       case 'format-subscript':
+      case 'format-inline-math':
       case 'format-link':
       case 'format-image':
       // Paragraph menu actions

@@ -72,6 +72,7 @@ export function setupMenu(state: ViewMenuState = defaultState): void {
         { label: 'Highlight', action: 'format-highlight', accelerator: 'CmdOrCtrl+Shift+H' },
         { label: 'Superscript', action: 'format-superscript' },
         { label: 'Subscript', action: 'format-subscript' },
+        { label: 'Inline Formula', action: 'format-inline-math' },
         { type: 'separator' },
         { label: 'Code', action: 'format-code', accelerator: 'CmdOrCtrl+Shift+C' },
         { label: 'Hyperlink', action: 'format-link', accelerator: 'CmdOrCtrl+K' },

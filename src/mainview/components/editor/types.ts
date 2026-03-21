@@ -30,6 +30,7 @@ export interface MilkdownEditorRef {
   toggleHighlight: () => boolean;
   toggleSuperscript: () => boolean;
   toggleSubscript: () => boolean;
+  insertInlineMath: () => boolean;
   // Paragraph menu commands
   setParagraph: () => boolean;
   increaseHeadingLevel: () => boolean;

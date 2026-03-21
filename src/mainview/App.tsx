@@ -767,6 +767,7 @@ function App() {
         'format-highlight': () => editorRef.current?.toggleHighlight(),
         'format-superscript': () => editorRef.current?.toggleSuperscript(),
         'format-subscript': () => editorRef.current?.toggleSubscript(),
+        'format-inline-math': () => editorRef.current?.insertInlineMath(),
         'format-link': () => editorRef.current?.toggleLink(),
         'format-image': () => setShowImageDialog(true),
       };
