@@ -179,7 +179,7 @@ body {
 
 /* Override Crepe's default dark background */
 .dark .milkdown-crepe-container .milkdown {
-  background-color: hsl(220 13% 24%) !important;
+  background-color: hsl(var(--background)) !important;
 }
 
 /* ProseMirror editor background */
@@ -316,12 +316,6 @@ body {
 .milkdown-crepe-container .milkdown-code-block.selected:hover .language-button,
 .milkdown-crepe-container .milkdown-code-block:focus-within:hover .language-button {
   opacity: 1 !important;
-}
-
-/* Ensure CodeMirror content has no left padding that might show the line */
-.milkdown-crepe-container .milkdown-code-block .cm-content {
-  padding-left: 0 !important;
-  margin-left: 0 !important;
 }
 
 /* Hide any left-side indicators in Crepe code blocks */
@@ -500,16 +494,6 @@ body {
   border-radius: 4px;
 }
 
-/* Hide the left border/line in code blocks */
-.milkdown-crepe-container .milkdown-code-block .cm-editor {
-  border-left: none !important;
-}
-
-/* Remove any pseudo-element lines in code block */
-.milkdown-crepe-container .milkdown-code-block::before {
-  display: none !important;
-}
-
 /* Code block - unified style with better appearance */
 .milkdown-crepe-container .milkdown-code-block {
   border: none !important;
@@ -520,11 +504,6 @@ body {
 /* Light mode code block - light gray background */
 .milkdown-crepe-container .milkdown-code-block {
   background-color: hsl(220 13% 96%) !important;
-}
-
-/* Code block text color for light theme */
-.milkdown-crepe-container .milkdown-code-block .cm-content {
-  color: hsl(220 13% 20%) !important;
 }
 
 /* Dark mode code block - darker background */
@@ -619,16 +598,6 @@ body {
 /* Remove selected line background - no highlight when not editing */
 .milkdown-crepe-container .milkdown-code-block .cm-activeLine {
   background-color: transparent !important;
-}
-
-/* Code block editor background */
-.milkdown-crepe-container .milkdown-code-block .cm-editor {
-  background-color: transparent !important;
-}
-
-/* Code block text color */
-.milkdown-crepe-container .milkdown-code-block .cm-content {
-  color: hsl(var(--foreground)) !important;
 }
 
 /* Code block active line - no background highlight */
@@ -826,6 +795,7 @@ body {
   font-size: 14px !important;
   line-height: 1.65 !important;
   padding: 16px 20px !important;
+  color: hsl(var(--foreground)) !important;
 }
 
 /* Inline code - use SF Mono */
@@ -884,40 +854,50 @@ body {
 .milkdown-crepe-container .milkdown-table-block th {
   font-weight: 600;
   background-color: hsl(var(--muted));
-  border-bottom: 2px solid hsl(var(--border));
-  padding: 8px 12px;
+  border: 1px solid hsl(var(--border));
+  padding: 5px 13px;
   text-align: left;
+  white-space: nowrap;
 }
 
 .dark .milkdown-crepe-container .milkdown-table-block th {
-  background-color: hsl(220 10% 28%);
+  background-color: hsl(220 10% 26%);
 }
 
 /* Table cell styling */
 .milkdown-crepe-container .milkdown-table-block td {
-  padding: 8px 12px;
-  border-bottom: 1px solid hsl(var(--border) / 0.5);
+  padding: 5px 13px;
+  border: 1px solid hsl(var(--border));
+}
+
+/* 消除单元格内 p 的 margin，否则行高会虚高 */
+.milkdown-crepe-container .milkdown .ProseMirror .milkdown-table-block :is(th, td) p {
+  margin: 0 !important;
 }
 
 /* Table row hover effect */
-.milkdown-crepe-container .milkdown-table-block tr:hover {
+.milkdown-crepe-container .milkdown-table-block tr:hover td {
   background-color: hsl(var(--muted) / 0.5);
 }
 
-.dark .milkdown-crepe-container .milkdown-table-block tr:hover {
+.dark .milkdown-crepe-container .milkdown-table-block tr:hover td {
   background-color: hsl(220 10% 28% / 0.5);
 }
 
 /* Table border styling */
 .milkdown-crepe-container .milkdown-table-block {
-  border: 1px solid hsl(var(--border));
-  border-radius: 6px;
-  overflow: hidden;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+  margin: 0.8em 0;
 }
 
 .milkdown-crepe-container .milkdown-table-block table {
   border-collapse: collapse;
-  width: 100%;
+  width: auto;
+  min-width: 100%;
+  font-size: 15px;
+  line-height: 1.6;
 }
 
 /* Hide all table drag handles (= buttons) and add buttons (+ buttons) */

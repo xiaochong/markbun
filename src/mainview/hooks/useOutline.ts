@@ -15,8 +15,6 @@ export interface UseOutlineReturn {
 export function useOutline(): UseOutlineReturn {
   const [headings, setHeadingsState] = useState<OutlineNode[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const pendingMarkdownRef = useRef<string | null>(null);
-
   // Debounced parsing for large files to avoid blocking input
   const debouncedParse = useRef(
     debounce((markdown: string) => {
@@ -34,8 +32,6 @@ export function useOutline(): UseOutlineReturn {
       const parsed = parseHeadingsOptimized(markdown);
       setHeadingsState(buildHeadingTree(parsed));
     } else {
-      // Debounce for large files during editing
-      pendingMarkdownRef.current = markdown;
       debouncedParse(markdown);
     }
   }, [debouncedParse]);
