@@ -28,11 +28,13 @@
 		"@milkdown/plugin-history": "^7.19.0",
 		"@milkdown/react": "^7.19.0",
 		"@milkdown/theme-nord": "^7.19.0",
+		"@milkdown/utils": "^7.19.0",
 		"clsx": "^2.1.1",
 		"electrobun": "1.16.0",
 		"mermaid": "^11.13.0",
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",
+		"remark-breaks": "^4.0.0",
 		"tailwind-merge": "^3.5.0",
 		"zod": "^4.3.6"
 	},

@@ -2,6 +2,9 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 import { Crepe } from '@milkdown/crepe';
 import { useEditor } from '@milkdown/react';
 import { editorViewCtx, parserCtx, serializerCtx, schemaCtx, commandsCtx } from '@milkdown/kit/core';
+import { InitReady, remarkPluginsCtx, remarkStringifyOptionsCtx } from '@milkdown/core';
+import type { MilkdownPlugin } from '@milkdown/ctx';
+import remarkBreaks from 'remark-breaks';
 import { NodeSelection } from '@milkdown/kit/prose/state';
 import { clipboard } from '@milkdown/plugin-clipboard';
 import { history } from '@milkdown/plugin-history';
@@ -18,6 +21,11 @@ function extractBase64FromDataUrl(dataUrl: string): string {
 }
 
 const SCROLL_HIDE_DELAY = 800;
+// Insert remark-breaks BEFORE remarkLineBreak (commonmark preset) so single \n → <br> not <span>
+const breaksPlugin: MilkdownPlugin = (ctx) => async () => {
+  await ctx.wait(InitReady);
+  ctx.update(remarkPluginsCtx, (rp) => [{ plugin: remarkBreaks, options: {} }, ...rp]);
+};
 
 export interface UseCrepeEditorReturn {
   crepeRef: React.RefObject<Crepe | null>;
@@ -147,6 +155,18 @@ export function useCrepeEditor(
     crepe.editor.use(history);
     // Enable GFM (GitHub Flavored Markdown) for table support
     crepe.editor.use(gfm);
+    // Enable soft line breaks as hard line breaks (like Typora)
+    crepe.editor.use(breaksPlugin);
+    // Serialize hardbreaks back to plain \n (not \\ or trailing spaces)
+    crepe.editor.config((ctx) => {
+      ctx.update(remarkStringifyOptionsCtx, (options) => ({
+        ...options,
+        handlers: {
+          ...options.handlers,
+          break: () => '\n',
+        },
+      }));
+    });
 
     // Listen for content changes
     crepe.on((listener) => {
