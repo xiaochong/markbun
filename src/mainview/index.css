@@ -668,22 +668,22 @@ body {
 }
 
 /* ===========================================
-   Typography Overrides - Typora-like Styling
+   Typography Overrides - GitHub Theme
    =========================================== */
 
-/* Base editor font and spacing */
+/* --- 基础字体 & 间距 --- */
 .milkdown-crepe-container .milkdown .ProseMirror {
-  padding: 24px 32px !important;
+  padding: 30px 40px !important;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
 }
 
-/* Override Milkdown's font variables */
+/* Milkdown 内部字体变量（控制非 ProseMirror 区域，如 slash menu） */
 .milkdown-crepe-container .milkdown {
   --crepe-font-title: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
   --crepe-font-default: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
 }
 
-/* All headings use system font */
+/* --- 标题 --- */
 .milkdown-crepe-container .milkdown .ProseMirror h1,
 .milkdown-crepe-container .milkdown .ProseMirror h2,
 .milkdown-crepe-container .milkdown .ProseMirror h3,
@@ -691,82 +691,103 @@ body {
 .milkdown-crepe-container .milkdown .ProseMirror h5,
 .milkdown-crepe-container .milkdown .ProseMirror h6 {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
-}
-
-/* Headings - Compact sizes matching the right side */
-.milkdown-crepe-container .milkdown .ProseMirror h1,
-.milkdown-crepe-container .milkdown .ProseMirror h2,
-.milkdown-crepe-container .milkdown .ProseMirror h3,
-.milkdown-crepe-container .milkdown .ProseMirror h4,
-.milkdown-crepe-container .milkdown .ProseMirror h5,
-.milkdown-crepe-container .milkdown .ProseMirror h6 {
   font-weight: 600 !important;
-  line-height: 1.25 !important;
+  line-height: 1.4 !important;
   margin-top: 0.8em !important;
-  margin-bottom: 0.3em !important;
+  margin-bottom: 0.15em !important;
   color: hsl(var(--foreground)) !important;
 }
 
 .milkdown-crepe-container .milkdown .ProseMirror h1 {
-  font-size: 1.6em !important;
+  font-size: 2em !important;
+  font-weight: 700 !important;
   margin-top: 0 !important;
   margin-bottom: 0.5em !important;
-  font-weight: 700 !important;
 }
 
 .milkdown-crepe-container .milkdown .ProseMirror h2 {
-  font-size: 1.3em !important;
+  font-size: 1.5em !important;
   padding-bottom: 0.15em !important;
   border-bottom: 1px solid hsl(var(--border)) !important;
-  margin-top: 1em !important;
 }
 
-.milkdown-crepe-container .milkdown .ProseMirror h3 {
-  font-size: 1.1em !important;
-}
-
-.milkdown-crepe-container .milkdown .ProseMirror h4 {
-  font-size: 0.95em !important;
-}
-
-.milkdown-crepe-container .milkdown .ProseMirror h5 {
-  font-size: 0.85em !important;
-}
+.milkdown-crepe-container .milkdown .ProseMirror h3 { font-size: 1.25em !important; }
+.milkdown-crepe-container .milkdown .ProseMirror h4 { font-size: 1.1em !important; }
+.milkdown-crepe-container .milkdown .ProseMirror h5 { font-size: 1em !important; }
 
 .milkdown-crepe-container .milkdown .ProseMirror h6 {
-  font-size: 0.8em !important;
+  font-size: 0.9em !important;
   color: hsl(var(--muted-foreground)) !important;
 }
 
-/* Paragraph spacing - tighter */
+/* --- 段落 --- */
 .milkdown-crepe-container .milkdown .ProseMirror p {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
-  font-size: 15px !important;
-  line-height: 1.65 !important;
-  margin: 0.5em 0 !important;
+  font-size: 16px !important;
+  line-height: 1.7 !important;
+  margin: 0.8em 0 !important;
   padding: 0 !important;
 }
 
-/* Lists - compact */
+/* --- 列表 ---
+   Milkdown 列表 DOM 结构（自定义 NodeView）：
+   ul/ol > .milkdown-list-item-block > li.list-item(flex) > [.label-wrapper | .children > .content-dom > p]
+*/
 .milkdown-crepe-container .milkdown .ProseMirror ul,
 .milkdown-crepe-container .milkdown .ProseMirror ol {
-  margin: 0.4em 0 !important;
-  padding-left: 1.4em !important;
+  margin: 0.1em 0 !important;
+  padding-left: 0 !important; /* 缩进由 label-wrapper(16px) + gap(4px) 提供，不需要额外 padding */
 }
 
 .milkdown-crepe-container .milkdown .ProseMirror li {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
-  margin: 0.1em 0 !important;
-  line-height: 1.6 !important;
-  font-size: 15px !important;
+  margin: 0 !important;
+  font-size: 16px !important;
+  line-height: 1.7 !important;
 }
 
-/* Blockquote */
+/* li 内的 p 不继承段落 margin（否则每个列表项间距会变巨大）
+   需要 4 个 class 才能赢过基础 p 规则（3 个 class + !important） */
+.milkdown-crepe-container .milkdown .ProseMirror .milkdown-list-item-block p {
+  margin: 0 !important;
+}
+
+/* Milkdown 列表 NodeView 内部样式 */
+.milkdown-crepe-container .milkdown .milkdown-list-item-block {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.milkdown-crepe-container .milkdown .milkdown-list-item-block li {
+  gap: 4px !important; /* 默认 10px 太宽，bullet 与文字间距过大 */
+}
+
+.milkdown-crepe-container .milkdown .milkdown-list-item-block .label-wrapper {
+  height: 1.7em !important;
+  width: 16px !important;
+}
+
+.milkdown-crepe-container .milkdown .milkdown-list-item-block .label-wrapper .label {
+  height: 1.7em !important;
+  width: 16px !important;
+  padding: 0 !important;
+}
+
+/* 隐藏原始 SVG bullet，用 Unicode • 替代（颜色跟随主题，大小可控） */
+.milkdown-crepe-container .milkdown .milkdown-list-item-block .label-wrapper svg {
+  display: none !important;
+}
+
+.milkdown-crepe-container .milkdown .milkdown-list-item-block .label-wrapper .bullet::before {
+  content: "•";
+  font-size: 1.6em;
+  line-height: 1;
+  color: hsl(var(--foreground));
+}
+
+/* --- 引用块 --- */
 .milkdown-crepe-container .milkdown .ProseMirror blockquote {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
-  margin: 0.6em 0 !important;
-  padding: 0 0 0 0.8em !important;
-  border-left: 3px solid hsl(var(--border)) !important;
+  margin: 0.8em 0 !important;
+  padding: 0.2em 0 0.2em 1em !important;
+  border-left: 4px solid hsl(var(--border)) !important;
   color: hsl(var(--muted-foreground)) !important;
   background: transparent !important;
 }
@@ -776,8 +797,7 @@ body {
 }
 
 .milkdown-crepe-container .milkdown .ProseMirror blockquote p {
-  margin: 0.3em 0 !important;
-  font-size: 15px !important;
+  margin: 0.3em 0 !important; /* blockquote 内段落间距比正文更紧凑 */
 }
 
 /* Code blocks - Better spacing */
