@@ -205,7 +205,7 @@ export function deleteTableRow(
 
     for (let d = $from.depth; d >= 0; d--) {
       const node = $from.node(d);
-      if (node.type.name === 'table_row') {
+      if (node.type.name === 'table_row' || node.type.name === 'table_header_row') {
         rowNode = node;
         rowPos = $from.before(d);
         break;
@@ -275,7 +275,7 @@ export function insertTableColumnLeft(
         newCells.push(rowNode.child(cellIdx));
       }
 
-      newRows.push(state.schema.nodes.table_row.create(null, newCells));
+      newRows.push(rowNode.type.create(rowNode.attrs, newCells));
     }
 
     const newTable = tableNode.type.create(tableNode.attrs, newRows);
@@ -319,7 +319,7 @@ export function insertTableColumnRight(
         }
       }
 
-      newRows.push(state.schema.nodes.table_row.create(null, newCells));
+      newRows.push(rowNode.type.create(rowNode.attrs, newCells));
     }
 
     const newTable = tableNode.type.create(tableNode.attrs, newRows);
@@ -365,7 +365,7 @@ export function moveTableColumnLeft(
         }
       }
 
-      newRows.push(state.schema.nodes.table_row.create(null, newCells));
+      newRows.push(rowNode.type.create(rowNode.attrs, newCells));
     }
 
     const newTable = tableNode.type.create(tableNode.attrs, newRows);
@@ -413,7 +413,7 @@ export function moveTableColumnRight(
         }
       }
 
-      newRows.push(state.schema.nodes.table_row.create(null, newCells));
+      newRows.push(rowNode.type.create(rowNode.attrs, newCells));
     }
 
     const newTable = tableNode.type.create(tableNode.attrs, newRows);
@@ -454,7 +454,7 @@ export function deleteTableColumn(
 
     for (let d = $from.depth; d >= 0; d--) {
       const node = $from.node(d);
-      if (node.type.name === 'table_row') {
+      if (node.type.name === 'table_row' || node.type.name === 'table_header_row') {
         rowNode = node;
         break;
       }
@@ -502,7 +502,7 @@ export function deleteTableColumn(
         }
       }
 
-      newRows.push(state.schema.nodes.table_row.create(null, newCells));
+      newRows.push(currentRowNode.type.create(currentRowNode.attrs, newCells));
     }
 
     const newTable = tableNode.type.create(tableNode.attrs, newRows);

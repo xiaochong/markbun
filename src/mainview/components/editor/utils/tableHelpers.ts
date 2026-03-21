@@ -47,7 +47,7 @@ export function findCurrentCell(state: EditorState): TableCellInfo | null {
       const rowNode = $pos.node(d - 1);
       const tableNode = $pos.node(d - 2);
 
-      if (rowNode?.type.name === 'table_row' && tableNode?.type.name === 'table') {
+      if ((rowNode?.type.name === 'table_row' || rowNode?.type.name === 'table_header_row') && tableNode?.type.name === 'table') {
         // Find row index by iterating through table rows
         let rowIndex = -1;
         const rowStartPos = $pos.before(d - 1);
