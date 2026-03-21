@@ -17,6 +17,11 @@ import {
 } from '@milkdown/preset-commonmark';
 import { linkTooltipAPI } from '@milkdown/kit/component/link-tooltip';
 import { toggleStrikethroughCommand } from '@milkdown/preset-gfm';
+import {
+  toggleHighlightCommand,
+  toggleSuperscriptCommand,
+  toggleSubscriptCommand,
+} from '../plugins/inlineMarksPlugin';
 import { editorViewCtx } from '@milkdown/kit/core';
 import { setBlockType } from '@milkdown/prose/commands';
 import { execCommand, insertParsedMarkdown } from '../utils/editorActions';
@@ -172,23 +177,16 @@ export function toggleUnderline(_crepeRef: React.RefObject<Crepe | null>): boole
   return false;
 }
 
-export function toggleHighlight(_crepeRef: React.RefObject<Crepe | null>): boolean {
-  // Highlight is not a standard Markdown feature
-  // Would require custom mark plugin or GFM extension
-  console.warn('Highlight is not supported in standard Markdown');
-  return false;
+export function toggleHighlight(crepeRef: React.RefObject<Crepe | null>): boolean {
+  return execCommand(crepeRef, toggleHighlightCommand);
 }
 
-export function toggleSuperscript(_crepeRef: React.RefObject<Crepe | null>): boolean {
-  // Superscript is not a standard Markdown feature
-  console.warn('Superscript is not supported in standard Markdown');
-  return false;
+export function toggleSuperscript(crepeRef: React.RefObject<Crepe | null>): boolean {
+  return execCommand(crepeRef, toggleSuperscriptCommand);
 }
 
-export function toggleSubscript(_crepeRef: React.RefObject<Crepe | null>): boolean {
-  // Subscript is not a standard Markdown feature
-  console.warn('Subscript is not supported in standard Markdown');
-  return false;
+export function toggleSubscript(crepeRef: React.RefObject<Crepe | null>): boolean {
+  return execCommand(crepeRef, toggleSubscriptCommand);
 }
 
 export function insertInlineMath(_crepeRef: React.RefObject<Crepe | null>): boolean {

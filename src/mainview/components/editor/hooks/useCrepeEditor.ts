@@ -5,10 +5,13 @@ import { editorViewCtx, parserCtx, serializerCtx, schemaCtx, commandsCtx } from 
 import { InitReady, remarkPluginsCtx, remarkStringifyOptionsCtx } from '@milkdown/core';
 import type { MilkdownPlugin } from '@milkdown/ctx';
 import remarkBreaks from 'remark-breaks';
+import remarkHighlight from '../plugins/remarkHighlight';
+import remarkSuperSub from '../plugins/remarkSuperSub';
+import { inlineMarksPlugin } from '../plugins/inlineMarksPlugin';
 import { NodeSelection } from '@milkdown/kit/prose/state';
 import { clipboard } from '@milkdown/plugin-clipboard';
 import { history } from '@milkdown/plugin-history';
-import { gfm } from '@milkdown/preset-gfm';
+import { gfm, remarkGFMPlugin } from '@milkdown/preset-gfm';
 import { clipboardBlobConverter } from '../plugins/clipboardBlobConverter';
 import { electrobun } from '@/lib/electrobun';
 import { workspaceManager, loadLocalImage, imageCache } from '@/lib/image';
@@ -25,6 +28,15 @@ const SCROLL_HIDE_DELAY = 800;
 const breaksPlugin: MilkdownPlugin = (ctx) => async () => {
   await ctx.wait(InitReady);
   ctx.update(remarkPluginsCtx, (rp) => [{ plugin: remarkBreaks, options: {} }, ...rp]);
+};
+
+const inlineMarksParsersPlugin: MilkdownPlugin = (ctx) => async () => {
+  await ctx.wait(InitReady);
+  ctx.update(remarkPluginsCtx, (rp) => [
+    ...rp,
+    { plugin: remarkHighlight, options: {} },
+    { plugin: remarkSuperSub, options: {} },
+  ]);
 };
 
 export interface UseCrepeEditorReturn {
@@ -155,15 +167,33 @@ export function useCrepeEditor(
     crepe.editor.use(history);
     // Enable GFM (GitHub Flavored Markdown) for table support
     crepe.editor.use(gfm);
+    // Enable highlight (==text==), superscript (^text^), subscript (~text~)
+    crepe.editor.use(inlineMarksPlugin);
     // Enable soft line breaks as hard line breaks (like Typora)
     crepe.editor.use(breaksPlugin);
+    // Register remark parsers for highlight/superscript/subscript
+    crepe.editor.use(inlineMarksParsersPlugin);
     // Serialize hardbreaks back to plain \n (not \\ or trailing spaces)
     crepe.editor.config((ctx) => {
+      // Disable single-tilde strikethrough so ~text~ can be used as subscript
+      ctx.set(remarkGFMPlugin.options.key, { singleTilde: false });
       ctx.update(remarkStringifyOptionsCtx, (options) => ({
         ...options,
         handlers: {
           ...options.handlers,
           break: () => '\n',
+          highlight: (node: any, _parent: any, state: any, info: any) => {
+            const value = state.containerPhrasing(node, { ...info, before: '=', after: '=' });
+            return `==${value}==`;
+          },
+          superscript: (node: any, _parent: any, state: any, info: any) => {
+            const value = state.containerPhrasing(node, { ...info, before: '^', after: '^' });
+            return `^${value}^`;
+          },
+          subscript: (node: any, _parent: any, state: any, info: any) => {
+            const value = state.containerPhrasing(node, { ...info, before: '~', after: '~' });
+            return `~${value}~`;
+          },
         },
       }));
     });
