@@ -25,14 +25,17 @@ import { spawn } from 'child_process';
 const DEV_SERVER_PORT = 5173;
 const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`;
 
-// Current file state
-let currentFilePath: string | null = null;
+// Per-window file state
+interface WindowState {
+  filePath: string | null;
+  workspaceRoot: string | null;
+}
+
+// Track the focused window (for routing menu actions)
+let focusedWindow: { win: BrowserWindow; state: WindowState } | null = null;
 
 // File path pending open (from CLI argv or open-url event)
 let pendingOpenFilePath: string | null = null;
-
-// Current view menu state
-let currentWorkspaceRoot: string | null = null;
 
 // Helper to get desktop path for current platform
 function getDesktopPath(): string {
@@ -163,7 +166,7 @@ function updateViewMenuState(updates: Partial<ViewMenuState>) {
 }
 
 // File operations
-async function openFile(): Promise<{ success: boolean; path?: string; content?: string; error?: string }> {
+async function openFile(state: WindowState): Promise<{ success: boolean; path?: string; content?: string; error?: string }> {
   try {
     // @ts-ignore
     const chosenPaths = await Utils.openFileDialog({
@@ -180,7 +183,7 @@ async function openFile(): Promise<{ success: boolean; path?: string; content?: 
 
     const filePath = chosenPaths[0];
     const content = await readFile(filePath, 'utf-8');
-    currentFilePath = filePath;
+    state.filePath = filePath;
 
     return {
       success: true,
@@ -196,11 +199,11 @@ async function openFile(): Promise<{ success: boolean; path?: string; content?: 
   }
 }
 
-async function openFileByPath(filePath: string): Promise<{ success: boolean; path?: string; content?: string; error?: string }> {
+async function openFileByPath(filePath: string, state: WindowState): Promise<{ success: boolean; path?: string; content?: string; error?: string }> {
   try {
     await access(filePath);
     const content = await readFile(filePath, 'utf-8');
-    currentFilePath = filePath;
+    state.filePath = filePath;
     return { success: true, path: filePath, content };
   } catch (error) {
     console.error('Failed to open file by path:', error);
@@ -208,9 +211,9 @@ async function openFileByPath(filePath: string): Promise<{ success: boolean; pat
   }
 }
 
-async function saveFile(content: string, path?: string): Promise<{ success: boolean; path?: string; error?: string }> {
+async function saveFile(content: string, path: string | undefined, state: WindowState): Promise<{ success: boolean; path?: string; error?: string }> {
   try {
-    const filePath = path || currentFilePath;
+    const filePath = path || state.filePath;
     if (!filePath) {
       return { success: false, error: 'No file path specified' };
     }
@@ -229,7 +232,7 @@ async function saveFile(content: string, path?: string): Promise<{ success: bool
     // Layer 2: clear recovery file now that the save succeeded
     await clearRecoveryFile(filePath);
 
-    currentFilePath = filePath;
+    state.filePath = filePath;
     return { success: true, path: filePath };
   } catch (error) {
     console.error('Failed to save file:', error);
@@ -237,11 +240,11 @@ async function saveFile(content: string, path?: string): Promise<{ success: bool
   }
 }
 
-async function saveFileAs(content: string): Promise<{ success: boolean; path?: string; error?: string }> {
+async function saveFileAs(content: string, state: WindowState): Promise<{ success: boolean; path?: string; error?: string }> {
   try {
     // @ts-ignore
     const chosenPaths = await Utils.openFileDialog({
-      startingFolder: currentFilePath || join(homedir(), 'Desktop'),
+      startingFolder: state.filePath || join(homedir(), 'Desktop'),
       allowedFileTypes: 'md,markdown',
       canChooseFiles: true,
       canChooseDirectory: true,
@@ -261,7 +264,7 @@ async function saveFileAs(content: string): Promise<{ success: boolean; path?: s
     } catch {}
 
     await writeFile(filePath, content, 'utf-8');
-    currentFilePath = filePath;
+    state.filePath = filePath;
     return { success: true, path: filePath };
   } catch (error) {
     console.error('Failed to save file as:', error);
@@ -369,6 +372,10 @@ async function main() {
 
   const url = await getMainViewUrl();
 
+  // Create a new application window with independent per-window file state
+  async function createAppWindow(): Promise<{ win: BrowserWindow; state: WindowState }> {
+    const state: WindowState = { filePath: null, workspaceRoot: null };
+
   // Define RPC handlers
   // @ts-ignore - Type complexity with RPCSchema
   const rpc = BrowserView.defineRPC<MarkBunRPC>({
@@ -377,7 +384,7 @@ async function main() {
       requests: {
         openFile: async () => {
           try {
-            return await openFile();
+            return await openFile(state);
           } catch (err) {
             console.error('RPC openFile error:', err);
             return { success: false, error: String(err) };
@@ -392,23 +399,23 @@ async function main() {
           }
         },
         saveFile: async ({ content, path }: { content: string; path?: string }) => {
-          return await saveFile(content, path);
+          return await saveFile(content, path, state);
         },
         saveFileAs: async ({ content }: { content: string }) => {
-          return await saveFileAs(content);
+          return await saveFileAs(content, state);
         },
         getCurrentFile: async () => {
-          return currentFilePath;
+          return state.filePath;
         },
         getPendingFile: async () => {
           if (!pendingOpenFilePath) return null;
           const filePath = pendingOpenFilePath;
           pendingOpenFilePath = null;
-          const result = await openFileByPath(filePath);
+          const result = await openFileByPath(filePath, state);
           if (result.success && result.path && result.content !== undefined) {
             await addRecentFile(result.path);
             const dirSeparator = result.path.lastIndexOf('/');
-            currentWorkspaceRoot = dirSeparator > 0 ? result.path.substring(0, dirSeparator) : '/';
+            state.workspaceRoot = dirSeparator > 0 ? result.path.substring(0, dirSeparator) : '/';
             return { path: result.path, content: result.content };
           }
           return null;
@@ -577,7 +584,7 @@ async function main() {
               return { success: false, error: 'No file path provided' };
             }
             const content = await readFile(filePath, 'utf-8');
-            currentFilePath = filePath;
+            state.filePath = filePath;
             return {
               success: true,
               path: filePath,
@@ -668,7 +675,7 @@ async function main() {
         getWorkspaceRoot: async () => {
           return {
             success: true,
-            path: currentWorkspaceRoot ?? getDesktopPath(),
+            path: state.workspaceRoot ?? getDesktopPath(),
           };
         },
         saveDroppedImage: async ({ fileName, base64Data, workspaceRoot }: { fileName: string; base64Data: string; workspaceRoot: string }) => {
@@ -836,7 +843,7 @@ async function main() {
           try {
             const fullPath = join(folderPath, fileName);
             await atomicWrite(fullPath, content);
-            currentFilePath = fullPath;
+            state.filePath = fullPath;
             return { success: true, fullPath };
           } catch (error) {
             console.error('Failed to save file:', error);
@@ -1192,7 +1199,7 @@ async function main() {
 
         writeRecovery: async ({ content, filePath }: { content: string; filePath?: string }) => {
           try {
-            const targetPath = filePath || currentFilePath;
+            const targetPath = filePath || state.filePath;
             if (!targetPath) return { success: false, error: 'No file path' };
             await writeRecoveryFile(targetPath, content);
             return { success: true };
@@ -1234,10 +1241,24 @@ async function main() {
   });
 
   // Use saved window state or defaults
-  let windowX = currentUIState?.windowX ?? 200;
-  let windowY = currentUIState?.windowY ?? 200;
-  let windowWidth = currentUIState?.windowWidth ?? 1200;
-  let windowHeight = currentUIState?.windowHeight ?? 800;
+  // For subsequent windows, offset from the focused window; first window uses saved state
+  let windowX: number;
+  let windowY: number;
+  let windowWidth: number;
+  let windowHeight: number;
+  if (focusedWindow) {
+    // @ts-ignore
+    const frame = focusedWindow.win.getFrame ? focusedWindow.win.getFrame() : null;
+    windowX = (frame?.x ?? currentUIState?.windowX ?? 200) + 30;
+    windowY = (frame?.y ?? currentUIState?.windowY ?? 200) + 30;
+    windowWidth = frame?.width ?? currentUIState?.windowWidth ?? 1200;
+    windowHeight = frame?.height ?? currentUIState?.windowHeight ?? 800;
+  } else {
+    windowX = currentUIState?.windowX ?? 200;
+    windowY = currentUIState?.windowY ?? 200;
+    windowWidth = currentUIState?.windowWidth ?? 1200;
+    windowHeight = currentUIState?.windowHeight ?? 800;
+  }
 
 
   // Multi-monitor support: Check if the window is within any available display
@@ -1393,38 +1414,60 @@ async function main() {
     process.exit(0);
   });
 
-  // Handle context menu clicks
+  // Track this window as focused on creation
+  focusedWindow = { win, state };
+  // @ts-ignore
+  if (win.on) {
+    // @ts-ignore
+    win.on('focus', () => { focusedWindow = { win, state }; });
+  }
+
+    return { win, state };
+  } // end createAppWindow
+
+  // Create the first application window
+  const { win } = await createAppWindow();
+
+  // Handle context menu clicks (global - routes to focused window)
   ContextMenu.on('context-menu-clicked', (event: { data: { action: string } }) => {
     const action = event.data.action;
-    // Forward context menu actions to renderer
+    // Forward context menu actions to focused window's renderer
     // @ts-ignore
-    win.webview.rpc.send.menuAction({ action });
+    focusedWindow?.win.webview.rpc.send.menuAction({ action });
   });
 
   // Handle menu actions
   ApplicationMenu.on('application-menu-clicked', async (event: { data: { action: string } }) => {
     const action = event.data.action;
+    const fw = focusedWindow;
 
     switch (action) {
+      case 'window-new':
+        await createAppWindow();
+        break;
+
       case 'file-new':
-        currentFilePath = null;
-        // @ts-ignore
-        win.webview.rpc.send.fileNew({});
+        if (fw) {
+          fw.state.filePath = null;
+          // @ts-ignore
+          fw.win.webview.rpc.send.fileNew({});
+        }
         break;
 
       case 'file-open': {
+        if (!fw) break;
         try {
-          const result = await openFile();
+          const result = await openFile(fw.state);
           if (result?.success === true && result.content !== undefined) {
             // Add to recent files
             if (result.path) {
               await addRecentFile(result.path);
               // Update workspace root to file's directory
               const dirSeparator = result.path.lastIndexOf('/');
-              currentWorkspaceRoot = dirSeparator > 0 ? result.path.substring(0, dirSeparator) : '/';
+              fw.state.workspaceRoot = dirSeparator > 0 ? result.path.substring(0, dirSeparator) : '/';
             }
             // @ts-ignore
-            win.webview.rpc.send.fileOpened({
+            fw.win.webview.rpc.send.fileOpened({
               path: result.path || '',
               content: result.content,
             });
@@ -1436,13 +1479,14 @@ async function main() {
       }
 
       case 'file-open-folder': {
+        if (!fw) break;
         try {
           const result = await openFolder();
           if (result?.success === true && result.path) {
             // Update workspace root
-            currentWorkspaceRoot = result.path;
+            fw.state.workspaceRoot = result.path;
             // @ts-ignore
-            win.webview.rpc.send.folderOpened({
+            fw.win.webview.rpc.send.folderOpened({
               path: result.path,
             });
           }
@@ -1454,39 +1498,40 @@ async function main() {
 
       case 'file-save':
         // @ts-ignore
-        win.webview.rpc.send.fileSaveRequest({});
+        fw?.win.webview.rpc.send.fileSaveRequest({});
         break;
 
       case 'file-save-as':
         // @ts-ignore
-        win.webview.rpc.send.fileSaveAsRequest({});
+        fw?.win.webview.rpc.send.fileSaveAsRequest({});
         break;
 
       case 'view-toggle-theme':
         // @ts-ignore
-        win.webview.rpc.send.toggleTheme({});
+        fw?.win.webview.rpc.send.toggleTheme({});
         break;
 
       case 'view-toggle-devtools':
+        if (!fw) break;
         // @ts-ignore
-        win.webview.toggleDevTools();
+        fw.win.webview.toggleDevTools();
         // Trigger window resize to fix layout issues after DevTools toggle
         setTimeout(() => {
           try {
             // @ts-ignore
-            const frame = win.frame;
+            const frame = fw.win.frame;
             if (frame) {
               // Resize by 1px and back to force WebView relayout
               // @ts-ignore
-              win.frame = { ...frame, width: frame.width + 1 };
+              fw.win.frame = { ...frame, width: frame.width + 1 };
               setTimeout(() => {
                 // @ts-ignore
-                win.frame = frame;
+                fw.win.frame = frame;
               }, 50);
             }
             // Also trigger a resize event in the WebView
             // @ts-ignore
-            win.webview?.evaluateJavaScript?.(`
+            fw.win.webview?.evaluateJavaScript?.(`
               window.dispatchEvent(new Event('resize'));
               document.body.style.display = 'none';
               document.body.offsetHeight; // force reflow
@@ -1500,52 +1545,52 @@ async function main() {
 
       case 'app-about':
         // @ts-ignore
-        win.webview.rpc.send.showAbout({});
+        fw?.win.webview.rpc.send.showAbout({});
         break;
 
       case 'app-preferences':
         // @ts-ignore
-        win.webview.rpc.send.openSettings({});
+        fw?.win.webview.rpc.send.openSettings({});
         break;
 
       case 'file-history':
         // @ts-ignore
-        win.webview.rpc.send.openFileHistory({});
+        fw?.win.webview.rpc.send.openFileHistory({});
         break;
 
       case 'view-toggle-titlebar':
         updateViewMenuState({ showTitleBar: !viewMenuState.showTitleBar });
         // @ts-ignore
-        win.webview.rpc.send.toggleTitlebar({});
+        fw?.win.webview.rpc.send.toggleTitlebar({});
         break;
 
       case 'view-toggle-toolbar':
         updateViewMenuState({ showToolBar: !viewMenuState.showToolBar });
         // @ts-ignore
-        win.webview.rpc.send.toggleToolbar({});
+        fw?.win.webview.rpc.send.toggleToolbar({});
         break;
 
       case 'view-toggle-statusbar':
         updateViewMenuState({ showStatusBar: !viewMenuState.showStatusBar });
         // @ts-ignore
-        win.webview.rpc.send.toggleStatusbar({});
+        fw?.win.webview.rpc.send.toggleStatusbar({});
         break;
 
       case 'view-toggle-sidebar':
         updateViewMenuState({ showSidebar: !viewMenuState.showSidebar });
         // @ts-ignore
-        win.webview.rpc.send.toggleSidebar({});
+        fw?.win.webview.rpc.send.toggleSidebar({});
         break;
 
       case 'view-quick-open':
         // @ts-ignore
-        win.webview.rpc.send.openQuickOpen({});
+        fw?.win.webview.rpc.send.openQuickOpen({});
         break;
 
       case 'view-toggle-source-mode':
         updateViewMenuState({ sourceMode: !viewMenuState.sourceMode });
         // @ts-ignore
-        win.webview.rpc.send.toggleSourceMode({});
+        fw?.win.webview.rpc.send.toggleSourceMode({});
         break;
 
       // Table menu actions
@@ -1599,7 +1644,7 @@ async function main() {
       case 'para-insert-below':
       case 'para-horizontal-rule':
         // @ts-ignore
-        win.webview.rpc.send.menuAction({ action });
+        fw?.win.webview.rpc.send.menuAction({ action });
         break;
     }
   });
@@ -1613,13 +1658,15 @@ async function main() {
       if (url.hostname === 'open') {
         const filePath = decodeURIComponent(url.searchParams.get('path') ?? '');
         if (filePath) {
-          const result = await openFileByPath(filePath);
+          const fw = focusedWindow;
+          if (!fw) return;
+          const result = await openFileByPath(filePath, fw.state);
           if (result.success && result.path && result.content !== undefined) {
             await addRecentFile(result.path);
             const dirSeparator = result.path.lastIndexOf('/');
-            currentWorkspaceRoot = dirSeparator > 0 ? result.path.substring(0, dirSeparator) : '/';
+            fw.state.workspaceRoot = dirSeparator > 0 ? result.path.substring(0, dirSeparator) : '/';
             // @ts-ignore
-            win.webview.rpc.send.fileOpened({ path: result.path, content: result.content });
+            fw.win.webview.rpc.send.fileOpened({ path: result.path, content: result.content });
           }
         }
       }
