@@ -771,8 +771,9 @@ body {
   padding: 0 !important;
 }
 
-/* 隐藏原始 SVG bullet，用 Unicode • 替代（颜色跟随主题，大小可控） */
-.milkdown-crepe-container .milkdown .milkdown-list-item-block .label-wrapper svg {
+/* 隐藏 bullet 的 SVG，用 Unicode • 替代（颜色跟随主题，大小可控）
+   注意：只隐藏 .bullet 类的 SVG，保留 checkbox（.checked/.unchecked）的 SVG */
+.milkdown-crepe-container .milkdown .milkdown-list-item-block .label-wrapper .bullet svg {
   display: none !important;
 }
 
@@ -780,6 +781,15 @@ body {
   content: "•";
   font-size: 1.6em;
   line-height: 1;
+  color: hsl(var(--foreground));
+}
+
+/* Task list checkbox 样式 */
+.milkdown-crepe-container .milkdown .milkdown-list-item-block .label-wrapper .checked svg,
+.milkdown-crepe-container .milkdown .milkdown-list-item-block .label-wrapper .unchecked svg {
+  display: block !important;
+  width: 16px !important;
+  height: 16px !important;
   color: hsl(var(--foreground));
 }
 
