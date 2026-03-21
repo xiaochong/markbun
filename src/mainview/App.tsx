@@ -970,12 +970,10 @@ function App() {
       // Edit actions
       switch (action) {
         case 'editor-undo':
-          editorRef.current?.focus();
-          document.execCommand('undo');
+          editorRef.current?.undo();
           break;
         case 'editor-redo':
-          editorRef.current?.focus();
-          document.execCommand('redo');
+          editorRef.current?.redo();
           break;
         case 'table-copy-cell': {
           const cellText = window.__pendingTableCellText;

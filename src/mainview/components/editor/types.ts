@@ -55,6 +55,9 @@ export interface MilkdownEditorRef {
   deleteTableRow: () => boolean;
   deleteTableColumn: () => boolean;
   deleteTable: () => boolean;
+  // History
+  undo: () => boolean;
+  redo: () => boolean;
   // Selection
   hasSelection: () => boolean;
   // Insert image

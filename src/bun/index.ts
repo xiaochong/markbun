@@ -460,6 +460,25 @@ async function main() {
             { label: 'Delete Row', action: 'table-delete-row' },
             { label: 'Delete Column', action: 'table-delete-col' },
             { label: 'Delete Table', action: 'table-delete' },
+            { type: 'separator' },
+            {
+              label: 'Format',
+              submenu: [
+                { label: 'Strong', action: 'format-strong' },
+                { label: 'Emphasis', action: 'format-emphasis' },
+                { label: 'Code', action: 'format-code' },
+                { type: 'separator' },
+                { label: 'Inline Formula', action: 'format-inline-math' },
+                { label: 'Strikethrough', action: 'format-strikethrough' },
+                { label: 'Highlight', action: 'format-highlight' },
+                { label: 'Superscript', action: 'format-superscript' },
+                { label: 'Subscript', action: 'format-subscript' },
+                { type: 'separator' },
+                { label: 'Hyperlink', action: 'format-link' },
+                { type: 'separator' },
+                { label: 'Image', action: 'format-image' },
+              ],
+            },
           ]);
           return { success: true };
         },
@@ -474,6 +493,27 @@ async function main() {
             { label: 'Cut', action: 'editor-cut' },
             { label: 'Copy', action: 'editor-copy' },
             { label: 'Paste', action: 'editor-paste' },
+            { type: 'separator' },
+            { label: 'Insert Table', action: 'table-insert' },
+            { type: 'separator' },
+            {
+              label: 'Format',
+              submenu: [
+                { label: 'Strong', action: 'format-strong' },
+                { label: 'Emphasis', action: 'format-emphasis' },
+                { label: 'Code', action: 'format-code' },
+                { type: 'separator' },
+                { label: 'Inline Formula', action: 'format-inline-math' },
+                { label: 'Strikethrough', action: 'format-strikethrough' },
+                { label: 'Highlight', action: 'format-highlight' },
+                { label: 'Superscript', action: 'format-superscript' },
+                { label: 'Subscript', action: 'format-subscript' },
+                { type: 'separator' },
+                { label: 'Hyperlink', action: 'format-link' },
+                { type: 'separator' },
+                { label: 'Image', action: 'format-image' },
+              ],
+            },
           ]);
           return { success: true };
         },

@@ -2,7 +2,8 @@ import { forwardRef, useImperativeHandle, useState, useCallback, memo } from 're
 import { Milkdown } from '@milkdown/react';
 import type { MilkdownEditorProps, MilkdownEditorRef } from './types';
 import { useCrepeEditor, useThemeLoader, useContextMenu } from './hooks';
-import { hasSelection } from './utils/editorActions';
+import { hasSelection, execCommand } from './utils/editorActions';
+import { undoCommand, redoCommand } from '@milkdown/plugin-history';
 import * as formatting from './commands/formatting';
 import * as paragraph from './commands/paragraph';
 import * as table from './commands/table';
@@ -90,6 +91,10 @@ export const MilkdownEditor = memo(forwardRef<MilkdownEditorRef, MilkdownEditorP
       deleteTableRow: () => table.deleteTableRow(crepeRef),
       deleteTableColumn: () => table.deleteTableColumn(crepeRef),
       deleteTable: () => table.deleteTable(crepeRef),
+
+      // History
+      undo: () => execCommand(crepeRef, undoCommand),
+      redo: () => execCommand(crepeRef, redoCommand),
 
       // Selection
       hasSelection: () => hasSelection(crepeRef),
