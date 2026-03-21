@@ -99,7 +99,7 @@ export function insertTable(crepeRef: React.RefObject<Crepe | null>): boolean {
 export function insertMathBlock(
   crepeRef: React.RefObject<Crepe | null>
 ): boolean {
-  return insertParsedMarkdown(crepeRef, '\n$$\n\n$$\n', true);
+  return insertParsedMarkdown(crepeRef, '\n$$\nE=mc^2\n$$\n', true);
 }
 
 export function insertCodeBlock(
