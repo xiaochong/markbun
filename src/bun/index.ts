@@ -376,7 +376,9 @@ async function main() {
   }
 
   // Initialize i18n before building the menu
-  const systemLocale = process.env.LANG || process.env.LANGUAGE || process.env.LC_ALL || 'en';
+  // On Windows, LANG/LANGUAGE/LC_ALL are typically not set; fall back to Intl API which works cross-platform
+  const systemLocale = process.env.LANG || process.env.LANGUAGE || process.env.LC_ALL ||
+    Intl.DateTimeFormat().resolvedOptions().locale || 'en';
   const resolvedLanguage = resolveLanguage(currentSettings?.general?.language, systemLocale);
   await initI18n(resolvedLanguage);
 
