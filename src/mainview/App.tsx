@@ -124,39 +124,36 @@ function App() {
   const outline = useOutline();
   const quickOpen = useQuickOpen(handleQuickOpenSelect);
 
-  // Load UI state on mount (only once, not when sidebar changes)
+  // Load UI state then check for pending file on mount (sequential to avoid race condition:
+  // closeSidebar from pending file must override saved sidebar state)
   useEffect(() => {
-    const loadUIState = async () => {
-      const result = await electrobun.getUIState() as { success: boolean; state?: UIState };
-      if (result.success && result.state) {
-        setShowTitleBar(result.state.showTitleBar);
-        setShowToolbar(result.state.showToolBar);
-        setShowStatusBar(result.state.showStatusBar);
-        setSourceMode(result.state.sourceMode ?? false);
+    const init = async () => {
+      const uiResult = await electrobun.getUIState() as { success: boolean; state?: UIState };
+      if (uiResult.success && uiResult.state) {
+        setShowTitleBar(uiResult.state.showTitleBar);
+        setShowToolbar(uiResult.state.showToolBar);
+        setShowStatusBar(uiResult.state.showStatusBar);
+        setSourceMode(uiResult.state.sourceMode ?? false);
         // Use setIsOpen and setWidth directly to avoid triggering sidebar tab switch
-        sidebar.setIsOpen(result.state.showSidebar);
-        sidebar.setWidth(result.state.sidebarWidth);
+        sidebar.setIsOpen(uiResult.state.showSidebar);
+        sidebar.setWidth(uiResult.state.sidebarWidth);
         // Only set tab without opening sidebar
-        sidebar.setTab(result.state.sidebarActiveTab);
+        sidebar.setTab(uiResult.state.sidebarActiveTab);
       }
-    };
-    void loadUIState();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
-  // Check for a file passed via CLI or open-url on startup
-  useEffect(() => {
-    const checkPendingFile = async () => {
-      const result = await electrobun.getPendingFile() as { path: string; content: string; closeSidebar?: boolean } | null;
-      if (result) {
-        if (result.closeSidebar) {
+      // Check for a file passed via CLI, open-url, or help menu — after UI state so
+      // closeSidebar can override the saved sidebar state
+      const fileResult = await electrobun.getPendingFile() as { path: string; content: string; closeSidebar?: boolean } | null;
+      if (fileResult) {
+        if (fileResult.closeSidebar) {
           sidebar.setIsOpen(false);
         }
         const listeners = (window as any).__electrobunListeners?.['file-opened'] || [];
-        listeners.forEach((cb: (data: unknown) => void) => cb(result));
+        listeners.forEach((cb: (data: unknown) => void) => cb(fileResult));
       }
     };
-    void checkPendingFile();
+    void init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Debounced UI state save (UI state only, window state is managed by main process)
