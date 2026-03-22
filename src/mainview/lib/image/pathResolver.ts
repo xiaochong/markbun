@@ -81,6 +81,10 @@ export function resolveRelativePath(relativePath: string, baseDir: string): stri
     }
   }
 
+  // Windows drive letter (e.g. C:) — don't prepend /
+  if (resolved.length > 0 && /^[a-zA-Z]:$/.test(resolved[0])) {
+    return resolved.join('/');
+  }
   return '/' + resolved.join('/');
 }
 

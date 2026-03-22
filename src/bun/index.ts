@@ -1221,7 +1221,8 @@ async function main() {
             if (platform === 'darwin') {
               Bun.spawn(['open', '-R', path]);
             } else if (platform === 'win32') {
-              Bun.spawn(['explorer', `/select,"${path}"`]);
+              const winPath = path.replace(/\//g, '\\');
+              Bun.spawn(['explorer', `/select,${winPath}`]);
             } else {
               // Linux: open the containing folder
               const folder = path.includes('/') ? path.substring(0, path.lastIndexOf('/')) : path;

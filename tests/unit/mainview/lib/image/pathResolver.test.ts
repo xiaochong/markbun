@@ -122,6 +122,12 @@ describe('resolveRelativePath', () => {
   it('should handle nested paths', () => {
     expect(resolveRelativePath('./assets/images/image.png', '/home/user/docs')).toBe('/home/user/docs/assets/images/image.png');
   });
+
+  it('should resolve Windows paths without prepending /', () => {
+    expect(resolveRelativePath('./image.png', 'C:/Users/user/docs')).toBe('C:/Users/user/docs/image.png');
+    expect(resolveRelativePath('../image.png', 'C:/Users/user/docs')).toBe('C:/Users/user/image.png');
+    expect(resolveRelativePath('assets/img.png', 'D:/projects/notes')).toBe('D:/projects/notes/assets/img.png');
+  });
 });
 
 describe('resolveImagePath', () => {
@@ -141,6 +147,15 @@ describe('resolveImagePath', () => {
 
   it('should return as-is if cannot resolve', () => {
     expect(resolveImagePath('./image.png')).toBe('./image.png');
+  });
+
+  it('should handle Windows absolute paths unchanged', () => {
+    expect(resolveImagePath('C:/Users/user/image.png')).toBe('C:/Users/user/image.png');
+  });
+
+  it('should resolve relative paths against Windows current file', () => {
+    const result = resolveImagePath('./image.png', { currentFilePath: 'C:/Users/user/docs/file.md' });
+    expect(result).toBe('C:/Users/user/docs/image.png');
   });
 });
 
