@@ -1383,7 +1383,7 @@ async function main() {
   const win = new BrowserWindow({
     title: 'MarkBun',
     url,
-    ...(isDev ? { renderer: "cef" as const } : {}),
+    ...(isDev || process.platform === "linux" ? { renderer: "cef" as const } : {}),
     frame: {
       width: windowWidth,
       height: windowHeight,

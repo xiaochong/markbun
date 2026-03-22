@@ -23,7 +23,7 @@ export default {
 			bundleCEF: !isBuild,
 		},
 		linux: {
-			bundleCEF: false,
+			bundleCEF: true,
 			// icon: 'src/bun/assets/icon.png',
 		},
 		win: {
