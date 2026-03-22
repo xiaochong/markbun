@@ -3,6 +3,8 @@ import { cn } from '@/lib/utils';
 
 interface ToolbarProps {
   className?: string;
+  sourceMode?: boolean;
+  onToggleSourceMode?: () => void;
   onBold?: () => void;
   onItalic?: () => void;
   onStrikethrough?: () => void;
@@ -50,6 +52,8 @@ function ToolbarSeparator() {
 
 export function Toolbar({
   className,
+  sourceMode,
+  onToggleSourceMode,
   onBold,
   onItalic,
   onStrikethrough,
@@ -173,6 +177,16 @@ export function Toolbar({
           <rect x="3" y="17" width="4" height="4" rx="0.5" />
         </svg>
       </ToolbarButton>
+
+      {/* Source mode toggle - pushed to the right */}
+      <div className="ml-auto">
+        <ToolbarButton onClick={onToggleSourceMode} title={t('toolbar.sourceMode')} active={sourceMode}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+            <polyline points="16 18 22 12 16 6" />
+            <polyline points="8 6 2 12 8 18" />
+          </svg>
+        </ToolbarButton>
+      </div>
     </div>
   );
 }

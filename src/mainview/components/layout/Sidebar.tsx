@@ -65,7 +65,7 @@ export const Sidebar = memo(function Sidebar({
   return (
     <div
       className={cn(
-        'flex h-full flex-shrink-0 transition-all duration-200 ease-in-out',
+        'flex h-full flex-shrink-0 transition-all duration-200 ease-in-out overflow-hidden',
         isOpen ? 'translate-x-0' : '-translate-x-full w-0'
       )}
       style={{ width: isOpen ? width : 0 }}

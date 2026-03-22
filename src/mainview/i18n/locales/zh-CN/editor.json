@@ -14,7 +14,8 @@
     "table": "插入表格",
     "bulletList": "无序列表",
     "numberedList": "有序列表",
-    "taskList": "任务列表"
+    "taskList": "任务列表",
+    "sourceMode": "切换源码模式"
   },
   "statusBar": {
     "untitled": "未命名",

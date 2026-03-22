@@ -591,39 +591,41 @@ function App() {
     });
   }, [toggleTheme]);
 
-  // Listen for source mode toggle event from main process
-  useEffect(() => {
-    return electrobun.on('toggle-source-mode', () => {
-      setSourceMode(prev => {
-        const newMode = !prev;
+  const handleToggleSourceMode = useCallback(() => {
+    setSourceMode(prev => {
+      const newMode = !prev;
 
-        // Sync content between editors when switching modes
-        if (newMode) {
-          // Switching to source mode: get content from Milkdown and restore original image paths
-          const markdown = editorRef.current?.getMarkdown() ?? '';
-          const markdownWithOriginalPaths = restoreOriginalImagePaths(markdown);
-          // Use setTimeout to ensure the source editor is ready
+      // Sync content between editors when switching modes
+      if (newMode) {
+        // Switching to source mode: get content from Milkdown and restore original image paths
+        const markdown = editorRef.current?.getMarkdown() ?? '';
+        const markdownWithOriginalPaths = restoreOriginalImagePaths(markdown);
+        // Use setTimeout to ensure the source editor is ready
+        setTimeout(() => {
+          sourceEditorRef.current?.setValue(markdownWithOriginalPaths);
+          sourceEditorRef.current?.focus();
+        }, 0);
+      } else {
+        // Switching to preview mode: get content from source editor
+        const markdown = sourceEditorRef.current?.getValue() ?? '';
+        // Process images to convert local paths to blob URLs
+        void processMarkdownImages(markdown).then((processedMarkdown) => {
+          // Use setTimeout to ensure the Milkdown editor is ready
           setTimeout(() => {
-            sourceEditorRef.current?.setValue(markdownWithOriginalPaths);
-            sourceEditorRef.current?.focus();
+            editorRef.current?.setMarkdown(processedMarkdown);
+            editorRef.current?.focus();
           }, 0);
-        } else {
-          // Switching to preview mode: get content from source editor
-          const markdown = sourceEditorRef.current?.getValue() ?? '';
-          // Process images to convert local paths to blob URLs
-          void processMarkdownImages(markdown).then((processedMarkdown) => {
-            // Use setTimeout to ensure the Milkdown editor is ready
-            setTimeout(() => {
-              editorRef.current?.setMarkdown(processedMarkdown);
-              editorRef.current?.focus();
-            }, 0);
-          });
-        }
+        });
+      }
 
-        return newMode;
-      });
+      return newMode;
     });
   }, []);
+
+  // Listen for source mode toggle event from main process
+  useEffect(() => {
+    return electrobun.on('toggle-source-mode', handleToggleSourceMode);
+  }, [handleToggleSourceMode]);
 
   // Listen for file-opened event to set editor content directly
   useEffect(() => {
@@ -1191,9 +1193,11 @@ function App() {
 
         {/* Editor */}
         <main ref={containerRef} className="flex-1 flex flex-col overflow-hidden">
-          {/* Toolbar - only show in preview mode */}
-          {showToolbar && !sourceMode && (
+          {/* Toolbar */}
+          {showToolbar && (
             <Toolbar
+              sourceMode={sourceMode}
+              onToggleSourceMode={handleToggleSourceMode}
               onBold={handleBold}
               onItalic={handleItalic}
               onStrikethrough={handleStrikethrough}
