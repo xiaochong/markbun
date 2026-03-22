@@ -21,9 +21,11 @@ const defaultState: ViewMenuState = {
 };
 
 export function setupMenu(state: ViewMenuState = defaultState): void {
+  const isMac = process.platform === 'darwin';
+
   const menu: ApplicationMenuItemConfig[] = [
     // macOS requires the app menu as the first menu
-    {
+    ...(isMac ? [{
       label: 'MarkBun',
       submenu: [
         { label: 'About MarkBun', action: 'app-about' },
@@ -36,10 +38,14 @@ export function setupMenu(state: ViewMenuState = defaultState): void {
         { type: 'separator' },
         { label: 'Quit MarkBun', role: 'quit', accelerator: 'Cmd+Q' },
       ],
-    },
+    }] as ApplicationMenuItemConfig[] : []),
     {
       label: 'File',
       submenu: [
+        ...(!isMac ? [
+          { label: 'Preferences...', action: 'app-preferences', accelerator: 'Ctrl+,' },
+          { type: 'separator' },
+        ] as ApplicationMenuItemConfig[] : []),
         { label: 'New', action: 'file-new', accelerator: 'CmdOrCtrl+N' },
         { label: 'New Window', action: 'window-new', accelerator: 'CmdOrCtrl+Shift+N' },
         { type: 'separator' },
@@ -51,6 +57,10 @@ export function setupMenu(state: ViewMenuState = defaultState): void {
         { label: 'Save As...', action: 'file-save-as', accelerator: 'CmdOrCtrl+Shift+S' },
         { type: 'separator' },
         { label: 'History...', action: 'file-history', accelerator: 'CmdOrCtrl+Alt+H' },
+        ...(!isMac ? [
+          { type: 'separator' },
+          { label: 'Quit MarkBun', role: 'quit', accelerator: 'Alt+F4' },
+        ] as ApplicationMenuItemConfig[] : []),
       ],
     },
     {
@@ -154,7 +164,15 @@ export function setupMenu(state: ViewMenuState = defaultState): void {
         { type: 'separator' },
         { label: 'Source Mode', action: 'view-toggle-source-mode', accelerator: 'CmdOrCtrl+/', checked: state.sourceMode },
         { type: 'separator' },
-        { label: 'Toggle Developer Tools', action: 'view-toggle-devtools', accelerator: 'CmdOrCtrl+Option+I' },
+        { label: 'Toggle Developer Tools', action: 'view-toggle-devtools', accelerator: isMac ? 'CmdOrCtrl+Option+I' : 'CmdOrCtrl+Alt+I' },
+      ],
+    },
+    {
+      label: 'Help',
+      submenu: [
+        { label: 'Help', action: 'help-open' },
+        { type: 'separator' },
+        { label: 'About MarkBun', action: 'app-about' },
       ],
     },
   ];

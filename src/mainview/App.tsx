@@ -12,6 +12,7 @@ import { SettingsDialog } from './components/settings';
 import { SaveDialog } from './components/save-dialog';
 import { RecoveryDialog } from './components/recovery-dialog/RecoveryDialog';
 import { FileHistoryDialog } from './components/file-history/FileHistoryDialog';
+import { AboutDialog } from './components/about/AboutDialog';
 import { useFileOperations } from './hooks/useFileOperations';
 import { useTheme } from './hooks/useTheme';
 import { useSidebar } from './hooks/useSidebar';
@@ -63,6 +64,9 @@ function App() {
 
   // File history dialog
   const [showFileHistoryDialog, setShowFileHistoryDialog] = useState(false);
+
+  // About dialog
+  const [showAboutDialog, setShowAboutDialog] = useState(false);
 
   // Check for crash-recovery files on startup
   useEffect(() => {
@@ -143,8 +147,11 @@ function App() {
   // Check for a file passed via CLI or open-url on startup
   useEffect(() => {
     const checkPendingFile = async () => {
-      const result = await electrobun.getPendingFile() as { path: string; content: string } | null;
+      const result = await electrobun.getPendingFile() as { path: string; content: string; closeSidebar?: boolean } | null;
       if (result) {
+        if (result.closeSidebar) {
+          sidebar.setIsOpen(false);
+        }
         const listeners = (window as any).__electrobunListeners?.['file-opened'] || [];
         listeners.forEach((cb: (data: unknown) => void) => cb(result));
       }
@@ -825,6 +832,13 @@ function App() {
     });
   }, []);
 
+  // Listen for about dialog open event
+  useEffect(() => {
+    return electrobun.on('show-about', () => {
+      setShowAboutDialog(true);
+    });
+  }, []);
+
   // Handle recovery restore — load the recovered content into the editor
   const handleRecover = useCallback(async (content: string, recoveredPath: string) => {
     resetFileState(recoveredPath, content);
@@ -1255,6 +1269,12 @@ function App() {
         filePath={path}
         onClose={() => setShowFileHistoryDialog(false)}
         onRestore={handleRestoreVersion}
+      />
+
+      {/* About Dialog */}
+      <AboutDialog
+        isOpen={showAboutDialog}
+        onClose={() => setShowAboutDialog(false)}
       />
     </div>
   );

@@ -1,10 +1,11 @@
 import Electrobun, { BrowserWindow, BrowserView, Updater, Utils, ApplicationMenu, ContextMenu, Screen } from 'electrobun/bun';
 import { setupMenu, type ViewMenuState } from './menu';
 import type { MarkBunRPC } from '../shared/types';
-import { readFile, writeFile, stat, mkdir, readdir, open, unlink, rename, rmdir, rm, access } from 'fs/promises';
+import { readFile, writeFile, stat, mkdir, readdir, open, unlink, rename, rmdir, rm, access, mkdtemp } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join, dirname, relative } from 'path';
-import { homedir } from 'os';
+import { homedir, tmpdir } from 'os';
+import { HELP_CONTENT } from './assets/helpContent';
 import { readFolder } from './ipc/folders';
 import { getRecentFiles, addRecentFile, removeRecentFile, clearRecentFiles } from './ipc/recentFiles';
 import { loadSettings, saveSettings, type Settings } from './services/settings';
@@ -36,6 +37,9 @@ let focusedWindow: { win: BrowserWindow; state: WindowState } | null = null;
 
 // File path pending open (from CLI argv or open-url event)
 let pendingOpenFilePath: string | null = null;
+// Options for the next window created via pendingOpenFilePath
+let pendingCloseSidebar: boolean = false;
+let pendingSkipRecentFile: boolean = false;
 
 // Helper to get desktop path for current platform
 function getDesktopPath(): string {
@@ -318,21 +322,23 @@ async function getMainViewUrl(): Promise<string> {
 
 // Create the main application window
 async function main() {
-  // FIRST: Check for pending file from MarkBun Opener (most reliable method)
+  // FIRST: Check for pending file from MarkBun Opener (macOS only)
   // This file is written by the AppleScript opener before launching the app
-  const pendingFilePath = join(homedir(), 'Library', 'Application Support', 'dev.markbun.app', 'pending-open.txt');
-  try {
-    if (existsSync(pendingFilePath)) {
-      const filePath = (await readFile(pendingFilePath, 'utf-8')).trim();
-      // Delete the file immediately to prevent re-processing
-      await unlink(pendingFilePath);
-      if (filePath && existsSync(filePath)) {
-        console.log('[main] Found pending file from opener:', filePath);
-        pendingOpenFilePath = filePath;
+  if (process.platform === 'darwin') {
+    const pendingFilePath = join(homedir(), 'Library', 'Application Support', 'dev.markbun.app', 'pending-open.txt');
+    try {
+      if (existsSync(pendingFilePath)) {
+        const filePath = (await readFile(pendingFilePath, 'utf-8')).trim();
+        // Delete the file immediately to prevent re-processing
+        await unlink(pendingFilePath);
+        if (filePath && existsSync(filePath)) {
+          console.log('[main] Found pending file from opener:', filePath);
+          pendingOpenFilePath = filePath;
+        }
       }
+    } catch (err) {
+      console.error('[main] Failed to check pending file:', err);
     }
-  } catch (err) {
-    console.error('[main] Failed to check pending file:', err);
   }
 
   // THIRD: Check if a file path was passed as a CLI argument
@@ -410,13 +416,17 @@ async function main() {
         getPendingFile: async () => {
           if (!pendingOpenFilePath) return null;
           const filePath = pendingOpenFilePath;
+          const closeSidebar = pendingCloseSidebar;
+          const skipRecentFile = pendingSkipRecentFile;
           pendingOpenFilePath = null;
+          pendingCloseSidebar = false;
+          pendingSkipRecentFile = false;
           const result = await openFileByPath(filePath, state);
           if (result.success && result.path && result.content !== undefined) {
-            await addRecentFile(result.path);
+            if (!skipRecentFile) await addRecentFile(result.path);
             const dirSeparator = result.path.lastIndexOf('/');
             state.workspaceRoot = dirSeparator > 0 ? result.path.substring(0, dirSeparator) : '/';
-            return { path: result.path, content: result.content };
+            return { path: result.path, content: result.content, closeSidebar };
           }
           return null;
         },
@@ -1445,6 +1455,17 @@ async function main() {
       case 'window-new':
         await createAppWindow();
         break;
+
+      case 'help-open': {
+        const helpDir = await mkdtemp(join(tmpdir(), 'markbun-help-'));
+        const tmpPath = join(helpDir, 'MarkBun Help.md');
+        await writeFile(tmpPath, HELP_CONTENT, 'utf-8');
+        pendingOpenFilePath = tmpPath;
+        pendingCloseSidebar = true;
+        pendingSkipRecentFile = true;
+        await createAppWindow();
+        break;
+      }
 
       case 'file-new':
         if (fw) {

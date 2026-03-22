@@ -183,7 +183,7 @@ export type MarkBunRPC = {
       saveFile: { params: { content: string; path?: string }; response: { success: boolean; path?: string; error?: string } };
       saveFileAs: { params: { content: string }; response: { success: boolean; path?: string; error?: string } };
       getCurrentFile: { params: {}; response: string | null };
-      getPendingFile: { params: {}; response: { path: string; content: string } | null };
+      getPendingFile: { params: {}; response: { path: string; content: string; closeSidebar?: boolean } | null };
       readImageAsBase64: { params: { path: string }; response: { success: boolean; dataUrl?: string; error?: string } };
       showTableContextMenu: { params: {}; response: { success: boolean } };
       showDefaultContextMenu: { params: {}; response: { success: boolean } };
