@@ -1,0 +1,55 @@
+{
+  "about": {
+    "description": "軽量なMarkdown執筆アプリ",
+    "descriptionSub": "集中した執筆のために設計されました。",
+    "builtWith": "Electrobun · Bun · React で構築"
+  },
+  "save": {
+    "title": "ファイルを保存",
+    "fileNameLabel": "ファイル名",
+    "fileNamePlaceholder": "ファイル名を入力...",
+    "emptyFolder": "このディレクトリにフォルダはありません",
+    "errorLoad": "フォルダの読み込みに失敗しました",
+    "errorLoadContents": "フォルダの内容の読み込みに失敗しました",
+    "errorNoName": "ファイル名を入力してください"
+  },
+  "recovery": {
+    "title": "未保存の変更を回復",
+    "descSingle": "前回の終了時にファイルが正常に保存されませんでした。",
+    "descMultiple": "前回の終了時に{{count}}個のファイルが正常に保存されませんでした。",
+    "dismissAll": "すべて無視",
+    "dismiss": "無視",
+    "dismissSelected": "選択を無視",
+    "later": "後で"
+  },
+  "imageInsert": {
+    "title": "画像を挿入",
+    "tabLocal": "ローカルファイル",
+    "tabUrl": "URL",
+    "urlLabel": "画像URL",
+    "urlPlaceholder": "https://example.com/image.png",
+    "altLabel": "代替テキスト",
+    "altPlaceholder": "画像の説明",
+    "selectFile": "画像ファイルを選択...",
+    "selectedFile": "選択済み: {{path}}"
+  },
+  "move": {
+    "title": "移動先",
+    "description": "\"{{name}}\" の移動先フォルダを選択",
+    "noFolders": "利用可能なフォルダはありません"
+  },
+  "fileHistory": {
+    "titleWithFile": "履歴 — {{fileName}}",
+    "title": "ファイル履歴",
+    "versionCount": "{{count}}バージョン保存済み",
+    "loadingPreview": "プレビューを読み込み中...",
+    "empty": "履歴はまだありません。バージョンは保存のたびに自動的に保存されます。",
+    "selectPrompt": "プレビューするバージョンを選択",
+    "loadError": "このバージョンを読み込めませんでした。",
+    "restore": "このバージョンを復元",
+    "timeJustNow": "たった今",
+    "timeMinutes": "{{m}}分前",
+    "timeHours": "{{h}}時間前",
+    "timeDays": "{{d}}日前"
+  }
+}

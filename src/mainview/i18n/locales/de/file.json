@@ -1,0 +1,36 @@
+{
+  "explorer": {
+    "emptyFolder": "Leerer Ordner",
+    "noFolder": "Kein Ordner geöffnet",
+    "noFolderHint": "Datei öffnen, um den Ordner anzuzeigen"
+  },
+  "contextMenu": {
+    "newFile": "Neue Datei",
+    "newFolder": "Neuer Ordner",
+    "rename": "Umbenennen",
+    "moveTo": "Verschieben nach...",
+    "delete": "Löschen",
+    "refresh": "Aktualisieren",
+    "openInFinder": "Im Finder öffnen",
+    "openInExplorer": "Im Explorer anzeigen",
+    "openInFileManager": "Im Dateimanager öffnen"
+  },
+  "quickOpen": {
+    "placeholder": "Zum Suchen tippen...",
+    "noResults": "Keine Dateien gefunden",
+    "startTyping": "Tippen, um Dateien zu suchen",
+    "fileCount": "{{count}} Dateien",
+    "navigate": "↑↓ navigieren",
+    "open": "↵ öffnen",
+    "recent": "zuletzt",
+    "esc": "ESC"
+  },
+  "sidebar": {
+    "files": "Dateien",
+    "outline": "Gliederung",
+    "closeSidebar": "Seitenleiste schließen (Cmd/Ctrl+B)"
+  },
+  "titleBar": {
+    "untitled": "Ohne Titel"
+  }
+}

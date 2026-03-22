@@ -1,0 +1,55 @@
+{
+  "about": {
+    "description": "경량 Markdown 편집 앱",
+    "descriptionSub": "집중적인 글쓰기를 위해 설계되었습니다.",
+    "builtWith": "Electrobun · Bun · React로 제작"
+  },
+  "save": {
+    "title": "파일 저장",
+    "fileNameLabel": "파일 이름",
+    "fileNamePlaceholder": "파일 이름 입력...",
+    "emptyFolder": "이 디렉토리에 폴더가 없습니다",
+    "errorLoad": "폴더를 불러오지 못했습니다",
+    "errorLoadContents": "폴더 내용을 불러오지 못했습니다",
+    "errorNoName": "파일 이름을 입력해 주세요"
+  },
+  "recovery": {
+    "title": "저장되지 않은 변경사항 복구",
+    "descSingle": "마지막 종료 시 파일이 올바르게 저장되지 않았습니다.",
+    "descMultiple": "마지막 종료 시 {{count}}개의 파일이 올바르게 저장되지 않았습니다.",
+    "dismissAll": "모두 무시",
+    "dismiss": "무시",
+    "dismissSelected": "선택 무시",
+    "later": "나중에"
+  },
+  "imageInsert": {
+    "title": "이미지 삽입",
+    "tabLocal": "로컬 파일",
+    "tabUrl": "URL",
+    "urlLabel": "이미지 URL",
+    "urlPlaceholder": "https://example.com/image.png",
+    "altLabel": "대체 텍스트",
+    "altPlaceholder": "이미지 설명",
+    "selectFile": "이미지 파일 선택...",
+    "selectedFile": "선택됨: {{path}}"
+  },
+  "move": {
+    "title": "이동",
+    "description": "\"{{name}}\"의 대상 폴더 선택",
+    "noFolders": "사용 가능한 폴더가 없습니다"
+  },
+  "fileHistory": {
+    "titleWithFile": "기록 — {{fileName}}",
+    "title": "파일 기록",
+    "versionCount": "{{count}}개 버전 저장됨",
+    "loadingPreview": "미리보기 로딩 중...",
+    "empty": "기록이 없습니다. 버전은 저장 전에 자동으로 저장됩니다.",
+    "selectPrompt": "미리볼 버전 선택",
+    "loadError": "이 버전을 불러올 수 없습니다.",
+    "restore": "이 버전 복원",
+    "timeJustNow": "방금",
+    "timeMinutes": "{{m}}분 전",
+    "timeHours": "{{h}}시간 전",
+    "timeDays": "{{d}}일 전"
+  }
+}

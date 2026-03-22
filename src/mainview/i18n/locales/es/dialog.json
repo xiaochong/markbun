@@ -1,0 +1,55 @@
+{
+  "about": {
+    "description": "Una aplicación Markdown ligera",
+    "descriptionSub": "diseñada para escritura enfocada.",
+    "builtWith": "Desarrollado con Electrobun · Bun · React"
+  },
+  "save": {
+    "title": "Guardar Archivo",
+    "fileNameLabel": "Nombre del Archivo",
+    "fileNamePlaceholder": "Introducir nombre de archivo...",
+    "emptyFolder": "No hay carpetas en este directorio",
+    "errorLoad": "Error al cargar carpeta",
+    "errorLoadContents": "Error al cargar contenido de la carpeta",
+    "errorNoName": "Por favor, introduce un nombre de archivo"
+  },
+  "recovery": {
+    "title": "Recuperar cambios no guardados",
+    "descSingle": "Un archivo no se guardó correctamente en la última salida.",
+    "descMultiple": "{{count}} archivos no se guardaron correctamente en la última salida.",
+    "dismissAll": "Descartar todos",
+    "dismiss": "Descartar",
+    "dismissSelected": "Descartar seleccionados",
+    "later": "Más tarde"
+  },
+  "imageInsert": {
+    "title": "Insertar Imagen",
+    "tabLocal": "Archivo Local",
+    "tabUrl": "URL",
+    "urlLabel": "URL de Imagen",
+    "urlPlaceholder": "https://example.com/image.png",
+    "altLabel": "Texto Alternativo",
+    "altPlaceholder": "Descripción de la imagen",
+    "selectFile": "Seleccionar Archivo de Imagen...",
+    "selectedFile": "Seleccionado: {{path}}"
+  },
+  "move": {
+    "title": "Mover a",
+    "description": "Seleccionar carpeta de destino para \"{{name}}\"",
+    "noFolders": "No hay carpetas disponibles"
+  },
+  "fileHistory": {
+    "titleWithFile": "Historial — {{fileName}}",
+    "title": "Historial del Archivo",
+    "versionCount": "{{count}} versión(es) guardada(s)",
+    "loadingPreview": "Cargando vista previa...",
+    "empty": "Sin historial. Las versiones se guardan automáticamente antes de cada guardado.",
+    "selectPrompt": "Seleccionar una versión para vista previa",
+    "loadError": "No se pudo cargar esta versión.",
+    "restore": "Restaurar esta versión",
+    "timeJustNow": "ahora mismo",
+    "timeMinutes": "hace {{m}}m",
+    "timeHours": "hace {{h}}h",
+    "timeDays": "hace {{d}}d"
+  }
+}

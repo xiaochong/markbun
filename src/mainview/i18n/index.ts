@@ -15,6 +15,42 @@ import settingsZhCN from './locales/zh-CN/settings.json';
 import editorZhCN from './locales/zh-CN/editor.json';
 import fileZhCN from './locales/zh-CN/file.json';
 
+import commonDe from './locales/de/common.json';
+import dialogDe from './locales/de/dialog.json';
+import settingsDe from './locales/de/settings.json';
+import editorDe from './locales/de/editor.json';
+import fileDe from './locales/de/file.json';
+
+import commonFr from './locales/fr/common.json';
+import dialogFr from './locales/fr/dialog.json';
+import settingsFr from './locales/fr/settings.json';
+import editorFr from './locales/fr/editor.json';
+import fileFr from './locales/fr/file.json';
+
+import commonJa from './locales/ja/common.json';
+import dialogJa from './locales/ja/dialog.json';
+import settingsJa from './locales/ja/settings.json';
+import editorJa from './locales/ja/editor.json';
+import fileJa from './locales/ja/file.json';
+
+import commonKo from './locales/ko/common.json';
+import dialogKo from './locales/ko/dialog.json';
+import settingsKo from './locales/ko/settings.json';
+import editorKo from './locales/ko/editor.json';
+import fileKo from './locales/ko/file.json';
+
+import commonPt from './locales/pt/common.json';
+import dialogPt from './locales/pt/dialog.json';
+import settingsPt from './locales/pt/settings.json';
+import editorPt from './locales/pt/editor.json';
+import filePt from './locales/pt/file.json';
+
+import commonEs from './locales/es/common.json';
+import dialogEs from './locales/es/dialog.json';
+import settingsEs from './locales/es/settings.json';
+import editorEs from './locales/es/editor.json';
+import fileEs from './locales/es/file.json';
+
 i18next.use(initReactI18next).init({
   lng: 'en',
   fallbackLng: 'en',
@@ -37,6 +73,48 @@ i18next.use(initReactI18next).init({
       settings: settingsZhCN,
       editor: editorZhCN,
       file: fileZhCN,
+    },
+    de: {
+      common: commonDe,
+      dialog: dialogDe,
+      settings: settingsDe,
+      editor: editorDe,
+      file: fileDe,
+    },
+    fr: {
+      common: commonFr,
+      dialog: dialogFr,
+      settings: settingsFr,
+      editor: editorFr,
+      file: fileFr,
+    },
+    ja: {
+      common: commonJa,
+      dialog: dialogJa,
+      settings: settingsJa,
+      editor: editorJa,
+      file: fileJa,
+    },
+    ko: {
+      common: commonKo,
+      dialog: dialogKo,
+      settings: settingsKo,
+      editor: editorKo,
+      file: fileKo,
+    },
+    pt: {
+      common: commonPt,
+      dialog: dialogPt,
+      settings: settingsPt,
+      editor: editorPt,
+      file: filePt,
+    },
+    es: {
+      common: commonEs,
+      dialog: dialogEs,
+      settings: settingsEs,
+      editor: editorEs,
+      file: fileEs,
     },
   },
 });

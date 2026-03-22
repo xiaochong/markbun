@@ -1,0 +1,36 @@
+{
+  "explorer": {
+    "emptyFolder": "빈 폴더",
+    "noFolder": "열린 폴더 없음",
+    "noFolderHint": "파일을 열어 폴더 보기"
+  },
+  "contextMenu": {
+    "newFile": "새 파일",
+    "newFolder": "새 폴더",
+    "rename": "이름 바꾸기",
+    "moveTo": "이동...",
+    "delete": "삭제",
+    "refresh": "새로고침",
+    "openInFinder": "Finder에서 열기",
+    "openInExplorer": "탐색기에 표시",
+    "openInFileManager": "파일 관리자에서 열기"
+  },
+  "quickOpen": {
+    "placeholder": "파일 검색을 위해 입력...",
+    "noResults": "파일을 찾을 수 없습니다",
+    "startTyping": "입력하여 파일 검색",
+    "fileCount": "{{count}}개 파일",
+    "navigate": "↑↓ 탐색",
+    "open": "↵ 열기",
+    "recent": "최근",
+    "esc": "ESC"
+  },
+  "sidebar": {
+    "files": "파일",
+    "outline": "개요",
+    "closeSidebar": "사이드바 닫기 (Cmd/Ctrl+B)"
+  },
+  "titleBar": {
+    "untitled": "제목 없음"
+  }
+}

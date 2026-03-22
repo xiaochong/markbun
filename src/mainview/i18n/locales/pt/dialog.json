@@ -1,0 +1,55 @@
+{
+  "about": {
+    "description": "Um aplicativo de escrita Markdown leve",
+    "descriptionSub": "projetado para escrita focada.",
+    "builtWith": "Desenvolvido com Electrobun · Bun · React"
+  },
+  "save": {
+    "title": "Salvar Arquivo",
+    "fileNameLabel": "Nome do Arquivo",
+    "fileNamePlaceholder": "Digite o nome do arquivo...",
+    "emptyFolder": "Nenhuma pasta neste diretório",
+    "errorLoad": "Falha ao carregar pasta",
+    "errorLoadContents": "Falha ao carregar conteúdo da pasta",
+    "errorNoName": "Por favor, insira um nome de arquivo"
+  },
+  "recovery": {
+    "title": "Recuperar alterações não salvas",
+    "descSingle": "Um arquivo não foi salvo corretamente na última saída.",
+    "descMultiple": "{{count}} arquivos não foram salvos corretamente na última saída.",
+    "dismissAll": "Ignorar todos",
+    "dismiss": "Ignorar",
+    "dismissSelected": "Ignorar selecionados",
+    "later": "Mais tarde"
+  },
+  "imageInsert": {
+    "title": "Inserir Imagem",
+    "tabLocal": "Arquivo Local",
+    "tabUrl": "URL",
+    "urlLabel": "URL da Imagem",
+    "urlPlaceholder": "https://example.com/image.png",
+    "altLabel": "Texto Alternativo",
+    "altPlaceholder": "Descrição da imagem",
+    "selectFile": "Selecionar Arquivo de Imagem...",
+    "selectedFile": "Selecionado: {{path}}"
+  },
+  "move": {
+    "title": "Mover para",
+    "description": "Selecionar pasta de destino para \"{{name}}\"",
+    "noFolders": "Nenhuma pasta disponível"
+  },
+  "fileHistory": {
+    "titleWithFile": "Histórico — {{fileName}}",
+    "title": "Histórico do Arquivo",
+    "versionCount": "{{count}} versão(ões) salva(s)",
+    "loadingPreview": "Carregando visualização...",
+    "empty": "Nenhum histórico ainda. Versões são salvas automaticamente antes de cada salvamento.",
+    "selectPrompt": "Selecionar uma versão para visualizar",
+    "loadError": "Não foi possível carregar esta versão.",
+    "restore": "Restaurar esta versão",
+    "timeJustNow": "agora mesmo",
+    "timeMinutes": "há {{m}}m",
+    "timeHours": "há {{h}}h",
+    "timeDays": "há {{d}}d"
+  }
+}

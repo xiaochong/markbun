@@ -1,0 +1,35 @@
+{
+  "toolbar": {
+    "heading1": "제목 1 (Ctrl+1)",
+    "heading2": "제목 2 (Ctrl+2)",
+    "heading3": "제목 3 (Ctrl+3)",
+    "bold": "굵게 (Ctrl+B)",
+    "italic": "기울임 (Ctrl+I)",
+    "code": "코드 (Ctrl+`)",
+    "quote": "인용",
+    "link": "링크 (Ctrl+K)",
+    "strikethrough": "취소선 (Cmd+Shift+X)",
+    "highlight": "하이라이트 (Cmd+Shift+H)",
+    "image": "이미지 삽입",
+    "table": "표 삽입",
+    "bulletList": "글머리 기호 목록",
+    "numberedList": "번호 매기기 목록",
+    "taskList": "작업 목록",
+    "sourceMode": "소스 모드 전환"
+  },
+  "statusBar": {
+    "untitled": "제목 없음",
+    "words": "단어",
+    "characters": "문자",
+    "lines": "줄"
+  },
+  "imageViewer": {
+    "zoomIn": "확대",
+    "zoomOut": "축소",
+    "reset": "초기화"
+  },
+  "outline": {
+    "empty": "제목을 찾을 수 없습니다",
+    "emptyHint": "문서에 # 제목을 추가하세요"
+  }
+}

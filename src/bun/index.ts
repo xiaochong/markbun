@@ -949,7 +949,7 @@ async function main() {
             };
           }
         },
-        saveSettings: async ({ settings }: { settings: { theme: 'light' | 'dark' | 'system'; fontSize: number; lineHeight: number; autoSave: boolean; autoSaveInterval: number; language?: 'en' | 'zh-CN'; backup?: { enabled: boolean; maxVersions: number; retentionDays: number; recoveryInterval: number } } }) => {
+        saveSettings: async ({ settings }: { settings: { theme: 'light' | 'dark' | 'system'; fontSize: number; lineHeight: number; autoSave: boolean; autoSaveInterval: number; language?: 'en' | 'zh-CN' | 'de' | 'fr' | 'ja' | 'ko' | 'pt' | 'es'; backup?: { enabled: boolean; maxVersions: number; retentionDays: number; recoveryInterval: number } } }) => {
           try {
             const defaultBackup = { enabled: true, maxVersions: 20, retentionDays: 30, recoveryInterval: 30000 };
             currentSettings = {
@@ -1275,7 +1275,7 @@ async function main() {
         },
 
         // i18n
-        setLanguage: async ({ language }: { language: 'en' | 'zh-CN' }) => {
+        setLanguage: async ({ language }: { language: 'en' | 'zh-CN' | 'de' | 'fr' | 'ja' | 'ko' | 'pt' | 'es' }) => {
           try {
             if (currentSettings) {
               currentSettings.general.language = language;

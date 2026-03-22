@@ -1,0 +1,35 @@
+{
+  "toolbar": {
+    "heading1": "見出し1 (Ctrl+1)",
+    "heading2": "見出し2 (Ctrl+2)",
+    "heading3": "見出し3 (Ctrl+3)",
+    "bold": "太字 (Ctrl+B)",
+    "italic": "斜体 (Ctrl+I)",
+    "code": "コード (Ctrl+`)",
+    "quote": "引用",
+    "link": "リンク (Ctrl+K)",
+    "strikethrough": "取り消し線 (Cmd+Shift+X)",
+    "highlight": "ハイライト (Cmd+Shift+H)",
+    "image": "画像を挿入",
+    "table": "テーブルを挿入",
+    "bulletList": "箇条書きリスト",
+    "numberedList": "番号付きリスト",
+    "taskList": "タスクリスト",
+    "sourceMode": "ソースモードを切り替え"
+  },
+  "statusBar": {
+    "untitled": "無題",
+    "words": "単語",
+    "characters": "文字",
+    "lines": "行"
+  },
+  "imageViewer": {
+    "zoomIn": "拡大",
+    "zoomOut": "縮小",
+    "reset": "リセット"
+  },
+  "outline": {
+    "empty": "見出しが見つかりません",
+    "emptyHint": "ドキュメントに # 見出しを追加してください"
+  }
+}

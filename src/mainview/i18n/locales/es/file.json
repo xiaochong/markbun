@@ -1,0 +1,36 @@
+{
+  "explorer": {
+    "emptyFolder": "Carpeta vacía",
+    "noFolder": "No hay carpeta abierta",
+    "noFolderHint": "Abre un archivo para ver su carpeta"
+  },
+  "contextMenu": {
+    "newFile": "Nuevo Archivo",
+    "newFolder": "Nueva Carpeta",
+    "rename": "Renombrar",
+    "moveTo": "Mover a...",
+    "delete": "Eliminar",
+    "refresh": "Actualizar",
+    "openInFinder": "Abrir en Finder",
+    "openInExplorer": "Mostrar en Explorer",
+    "openInFileManager": "Abrir en Administrador de Archivos"
+  },
+  "quickOpen": {
+    "placeholder": "Escribe para buscar archivos...",
+    "noResults": "No se encontraron archivos",
+    "startTyping": "Comienza a escribir para buscar archivos",
+    "fileCount": "{{count}} archivos",
+    "navigate": "↑↓ para navegar",
+    "open": "↵ para abrir",
+    "recent": "reciente",
+    "esc": "ESC"
+  },
+  "sidebar": {
+    "files": "Archivos",
+    "outline": "Esquema",
+    "closeSidebar": "Cerrar barra lateral (Cmd/Ctrl+B)"
+  },
+  "titleBar": {
+    "untitled": "Sin Título"
+  }
+}

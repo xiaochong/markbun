@@ -1,10 +1,16 @@
-export const SUPPORTED_LANGUAGES = ['en', 'zh-CN'] as const;
+export const SUPPORTED_LANGUAGES = ['en', 'zh-CN', 'de', 'fr', 'ja', 'ko', 'pt', 'es'] as const;
 export type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
 export const DEFAULT_LANGUAGE: SupportedLanguage = 'en';
 
 export const LANGUAGE_LABELS: Record<SupportedLanguage, string> = {
   en: 'English',
   'zh-CN': '简体中文',
+  de: 'Deutsch',
+  fr: 'Français',
+  ja: '日本語',
+  ko: '한국어',
+  pt: 'Português',
+  es: 'Español',
 };
 
 // 系统语言 → 支持语言的映射
@@ -17,6 +23,27 @@ const LANGUAGE_MAPPING: Record<string, SupportedLanguage> = {
   'zh-CN': 'zh-CN',
   'zh-TW': 'zh-CN',
   'zh-HK': 'zh-CN',
+  de: 'de',
+  'de-DE': 'de',
+  'de-AT': 'de',
+  'de-CH': 'de',
+  fr: 'fr',
+  'fr-FR': 'fr',
+  'fr-CA': 'fr',
+  'fr-BE': 'fr',
+  'fr-CH': 'fr',
+  ja: 'ja',
+  'ja-JP': 'ja',
+  ko: 'ko',
+  'ko-KR': 'ko',
+  pt: 'pt',
+  'pt-BR': 'pt',
+  'pt-PT': 'pt',
+  es: 'es',
+  'es-ES': 'es',
+  'es-MX': 'es',
+  'es-AR': 'es',
+  'es-CO': 'es',
 };
 
 export function resolveLanguage(

@@ -206,11 +206,11 @@ export const electrobun = {
     return await electroview.rpc.request.getSettings({});
   },
 
-  async saveSettings(params: { theme: 'light' | 'dark' | 'system'; fontSize: number; lineHeight: number; autoSave: boolean; autoSaveInterval: number; language: 'en' | 'zh-CN' }) {
+  async saveSettings(params: { theme: 'light' | 'dark' | 'system'; fontSize: number; lineHeight: number; autoSave: boolean; autoSaveInterval: number; language: 'en' | 'zh-CN' | 'de' | 'fr' | 'ja' | 'ko' | 'pt' | 'es' }) {
     return await electroview.rpc.request.saveSettings({ settings: params });
   },
 
-  async setLanguage(language: 'en' | 'zh-CN') {
+  async setLanguage(language: 'en' | 'zh-CN' | 'de' | 'fr' | 'ja' | 'ko' | 'pt' | 'es') {
     return await electroview.rpc.request.setLanguage({ language });
   },
 

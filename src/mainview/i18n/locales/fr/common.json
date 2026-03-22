@@ -1,0 +1,27 @@
+{
+  "button": {
+    "ok": "OK",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "delete": "Supprimer",
+    "restore": "Restaurer",
+    "move": "Déplacer",
+    "insert": "Insérer",
+    "refresh": "Actualiser"
+  },
+  "status": {
+    "loading": "Chargement...",
+    "saving": "Enregistrement...",
+    "saved": "Enregistré",
+    "saveFailed": "Échec de l'enregistrement",
+    "restoring": "Restauration..."
+  },
+  "unit": {
+    "px": "px",
+    "ms": "ms",
+    "s": "s",
+    "days": "j"
+  }
+}

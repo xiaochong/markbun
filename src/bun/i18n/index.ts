@@ -3,6 +3,12 @@ import { resolveLanguage, DEFAULT_LANGUAGE, type SupportedLanguage } from '../..
 
 import menuEn from './locales/en/menu.json';
 import menuZhCN from './locales/zh-CN/menu.json';
+import menuDe from './locales/de/menu.json';
+import menuFr from './locales/fr/menu.json';
+import menuJa from './locales/ja/menu.json';
+import menuKo from './locales/ko/menu.json';
+import menuPt from './locales/pt/menu.json';
+import menuEs from './locales/es/menu.json';
 
 let initialized = false;
 
@@ -21,6 +27,12 @@ export async function initI18n(language: SupportedLanguage = DEFAULT_LANGUAGE): 
     resources: {
       en: { menu: menuEn },
       'zh-CN': { menu: menuZhCN },
+      de: { menu: menuDe },
+      fr: { menu: menuFr },
+      ja: { menu: menuJa },
+      ko: { menu: menuKo },
+      pt: { menu: menuPt },
+      es: { menu: menuEs },
     },
   });
 

@@ -1,0 +1,27 @@
+{
+  "button": {
+    "ok": "Aceptar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "delete": "Eliminar",
+    "restore": "Restaurar",
+    "move": "Mover",
+    "insert": "Insertar",
+    "refresh": "Actualizar"
+  },
+  "status": {
+    "loading": "Cargando...",
+    "saving": "Guardando...",
+    "saved": "Guardado",
+    "saveFailed": "Error al guardar",
+    "restoring": "Restaurando..."
+  },
+  "unit": {
+    "px": "px",
+    "ms": "ms",
+    "s": "s",
+    "days": "d"
+  }
+}

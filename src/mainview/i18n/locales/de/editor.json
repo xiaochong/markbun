@@ -1,0 +1,35 @@
+{
+  "toolbar": {
+    "heading1": "Überschrift 1 (Ctrl+1)",
+    "heading2": "Überschrift 2 (Ctrl+2)",
+    "heading3": "Überschrift 3 (Ctrl+3)",
+    "bold": "Fett (Ctrl+B)",
+    "italic": "Kursiv (Ctrl+I)",
+    "code": "Code (Ctrl+`)",
+    "quote": "Zitat",
+    "link": "Link (Ctrl+K)",
+    "strikethrough": "Durchgestrichen (Cmd+Shift+X)",
+    "highlight": "Hervorheben (Cmd+Shift+H)",
+    "image": "Bild einfügen",
+    "table": "Tabelle einfügen",
+    "bulletList": "Aufzählungsliste",
+    "numberedList": "Nummerierte Liste",
+    "taskList": "Aufgabenliste",
+    "sourceMode": "Quellmodus umschalten"
+  },
+  "statusBar": {
+    "untitled": "Ohne Titel",
+    "words": "Wörter",
+    "characters": "Zeichen",
+    "lines": "Zeilen"
+  },
+  "imageViewer": {
+    "zoomIn": "Vergrößern",
+    "zoomOut": "Verkleinern",
+    "reset": "Zurücksetzen"
+  },
+  "outline": {
+    "empty": "Keine Überschriften gefunden",
+    "emptyHint": "# Überschriften zum Dokument hinzufügen"
+  }
+}

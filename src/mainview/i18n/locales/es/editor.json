@@ -1,0 +1,35 @@
+{
+  "toolbar": {
+    "heading1": "Título 1 (Ctrl+1)",
+    "heading2": "Título 2 (Ctrl+2)",
+    "heading3": "Título 3 (Ctrl+3)",
+    "bold": "Negrita (Ctrl+B)",
+    "italic": "Cursiva (Ctrl+I)",
+    "code": "Código (Ctrl+`)",
+    "quote": "Cita",
+    "link": "Enlace (Ctrl+K)",
+    "strikethrough": "Tachado (Cmd+Shift+X)",
+    "highlight": "Resaltar (Cmd+Shift+H)",
+    "image": "Insertar Imagen",
+    "table": "Insertar Tabla",
+    "bulletList": "Lista con Viñetas",
+    "numberedList": "Lista Numerada",
+    "taskList": "Lista de Tareas",
+    "sourceMode": "Alternar Modo Fuente"
+  },
+  "statusBar": {
+    "untitled": "Sin Título",
+    "words": "palabras",
+    "characters": "caracteres",
+    "lines": "líneas"
+  },
+  "imageViewer": {
+    "zoomIn": "Acercar",
+    "zoomOut": "Alejar",
+    "reset": "Restablecer"
+  },
+  "outline": {
+    "empty": "No se encontraron títulos",
+    "emptyHint": "Añade títulos # a tu documento"
+  }
+}

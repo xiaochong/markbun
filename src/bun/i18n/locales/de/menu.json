@@ -1,0 +1,93 @@
+{
+  "app": {
+    "about": "Über MarkBun",
+    "preferences": "Einstellungen...",
+    "hide": "MarkBun ausblenden",
+    "hideOthers": "Andere ausblenden",
+    "showAll": "Alle einblenden",
+    "quit": "MarkBun beenden"
+  },
+  "file": {
+    "title": "Datei",
+    "new": "Neu",
+    "newWindow": "Neues Fenster",
+    "open": "Öffnen...",
+    "openFolder": "Ordner öffnen...",
+    "quickOpen": "Schnellöffnen...",
+    "save": "Speichern",
+    "saveAs": "Speichern unter...",
+    "history": "Verlauf..."
+  },
+  "edit": {
+    "title": "Bearbeiten",
+    "undo": "Rückgängig",
+    "redo": "Wiederholen",
+    "cut": "Ausschneiden",
+    "copy": "Kopieren",
+    "paste": "Einfügen",
+    "selectAll": "Alles auswählen"
+  },
+  "format": {
+    "title": "Format",
+    "strong": "Fett",
+    "emphasis": "Kursiv",
+    "code": "Code",
+    "inlineFormula": "Inline-Formel",
+    "strikethrough": "Durchgestrichen",
+    "highlight": "Hervorheben",
+    "superscript": "Hochgestellt",
+    "subscript": "Tiefgestellt",
+    "hyperlink": "Hyperlink",
+    "image": "Bild"
+  },
+  "paragraph": {
+    "title": "Absatz",
+    "heading1": "Überschrift 1",
+    "heading2": "Überschrift 2",
+    "heading3": "Überschrift 3",
+    "heading4": "Überschrift 4",
+    "heading5": "Überschrift 5",
+    "heading6": "Überschrift 6",
+    "paragraph": "Absatz",
+    "increaseHeading": "Überschriftsebene erhöhen",
+    "decreaseHeading": "Überschriftsebene verringern",
+    "table": "Tabelle",
+    "copyCell": "Zelle kopieren",
+    "insertTable": "Tabelle einfügen",
+    "insertRowAbove": "Zeile darüber einfügen",
+    "insertRowBelow": "Zeile darunter einfügen",
+    "insertColLeft": "Spalte links einfügen",
+    "insertColRight": "Spalte rechts einfügen",
+    "moveRowUp": "Zeile nach oben verschieben",
+    "moveRowDown": "Zeile nach unten verschieben",
+    "moveColLeft": "Spalte nach links verschieben",
+    "moveColRight": "Spalte nach rechts verschieben",
+    "deleteRow": "Zeile löschen",
+    "deleteCol": "Spalte löschen",
+    "deleteTable": "Tabelle löschen",
+    "mathBlock": "Mathematikblock",
+    "codeBlock": "Codeblock",
+    "quote": "Zitat",
+    "orderedList": "Geordnete Liste",
+    "unorderedList": "Ungeordnete Liste",
+    "taskList": "Aufgabenliste",
+    "insertAbove": "Absatz darüber einfügen",
+    "insertBelow": "Absatz darunter einfügen",
+    "horizontalRule": "Horizontale Linie"
+  },
+  "view": {
+    "title": "Ansicht",
+    "toggleDarkMode": "Dunkelmodus umschalten",
+    "showSidebar": "Seitenleiste anzeigen",
+    "showTitleBar": "Titelleiste anzeigen",
+    "showToolBar": "Werkzeugleiste anzeigen",
+    "showStatusBar": "Statusleiste anzeigen",
+    "sourceMode": "Quellmodus",
+    "toggleDevTools": "Entwicklertools umschalten"
+  },
+  "help": {
+    "title": "Hilfe",
+    "help": "Hilfe",
+    "about": "Über MarkBun"
+  }
+}

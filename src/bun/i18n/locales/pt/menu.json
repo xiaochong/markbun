@@ -1,0 +1,93 @@
+{
+  "app": {
+    "about": "Sobre o MarkBun",
+    "preferences": "Preferências...",
+    "hide": "Ocultar MarkBun",
+    "hideOthers": "Ocultar Outros",
+    "showAll": "Mostrar Todos",
+    "quit": "Sair do MarkBun"
+  },
+  "file": {
+    "title": "Arquivo",
+    "new": "Novo",
+    "newWindow": "Nova Janela",
+    "open": "Abrir...",
+    "openFolder": "Abrir Pasta...",
+    "quickOpen": "Abertura Rápida...",
+    "save": "Salvar",
+    "saveAs": "Salvar Como...",
+    "history": "Histórico..."
+  },
+  "edit": {
+    "title": "Editar",
+    "undo": "Desfazer",
+    "redo": "Refazer",
+    "cut": "Recortar",
+    "copy": "Copiar",
+    "paste": "Colar",
+    "selectAll": "Selecionar Tudo"
+  },
+  "format": {
+    "title": "Formatar",
+    "strong": "Negrito",
+    "emphasis": "Itálico",
+    "code": "Código",
+    "inlineFormula": "Fórmula Inline",
+    "strikethrough": "Tachado",
+    "highlight": "Realçar",
+    "superscript": "Sobrescrito",
+    "subscript": "Subscrito",
+    "hyperlink": "Hiperlink",
+    "image": "Imagem"
+  },
+  "paragraph": {
+    "title": "Parágrafo",
+    "heading1": "Título 1",
+    "heading2": "Título 2",
+    "heading3": "Título 3",
+    "heading4": "Título 4",
+    "heading5": "Título 5",
+    "heading6": "Título 6",
+    "paragraph": "Parágrafo",
+    "increaseHeading": "Aumentar Nível de Título",
+    "decreaseHeading": "Diminuir Nível de Título",
+    "table": "Tabela",
+    "copyCell": "Copiar Célula",
+    "insertTable": "Inserir Tabela",
+    "insertRowAbove": "Inserir Linha Acima",
+    "insertRowBelow": "Inserir Linha Abaixo",
+    "insertColLeft": "Inserir Coluna à Esquerda",
+    "insertColRight": "Inserir Coluna à Direita",
+    "moveRowUp": "Mover Linha para Cima",
+    "moveRowDown": "Mover Linha para Baixo",
+    "moveColLeft": "Mover Coluna para a Esquerda",
+    "moveColRight": "Mover Coluna para a Direita",
+    "deleteRow": "Excluir Linha",
+    "deleteCol": "Excluir Coluna",
+    "deleteTable": "Excluir Tabela",
+    "mathBlock": "Bloco Matemático",
+    "codeBlock": "Bloco de Código",
+    "quote": "Citação",
+    "orderedList": "Lista Ordenada",
+    "unorderedList": "Lista Não Ordenada",
+    "taskList": "Lista de Tarefas",
+    "insertAbove": "Inserir Parágrafo Acima",
+    "insertBelow": "Inserir Parágrafo Abaixo",
+    "horizontalRule": "Linha Horizontal"
+  },
+  "view": {
+    "title": "Visualizar",
+    "toggleDarkMode": "Alternar Modo Escuro",
+    "showSidebar": "Mostrar Barra Lateral",
+    "showTitleBar": "Mostrar Barra de Título",
+    "showToolBar": "Mostrar Barra de Ferramentas",
+    "showStatusBar": "Mostrar Barra de Status",
+    "sourceMode": "Modo Fonte",
+    "toggleDevTools": "Alternar Ferramentas do Desenvolvedor"
+  },
+  "help": {
+    "title": "Ajuda",
+    "help": "Ajuda",
+    "about": "Sobre o MarkBun"
+  }
+}

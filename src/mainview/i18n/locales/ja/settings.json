@@ -1,0 +1,43 @@
+{
+  "title": "設定",
+  "tabs": {
+    "general": "一般",
+    "editor": "エディタ",
+    "appearance": "外観",
+    "backup": "バックアップ",
+    "language": "言語"
+  },
+  "general": {
+    "autoSave": "自動保存",
+    "autoSaveDesc": "編集中に変更を自動的に保存する",
+    "autoSaveInterval": "自動保存間隔",
+    "autoSaveIntervalDesc": "入力中に変更を保存する頻度"
+  },
+  "editor": {
+    "fontSize": "フォントサイズ",
+    "lineHeight": "行の高さ",
+    "resetDefault": "デフォルトにリセット"
+  },
+  "appearance": {
+    "theme": "テーマ",
+    "themeDesc": "お好みのカラーテーマを選択",
+    "themeLight": "ライト",
+    "themeDark": "ダーク",
+    "themeSystem": "システム"
+  },
+  "backup": {
+    "versionHistory": "バージョン履歴",
+    "versionHistoryDesc": "保存前に各ファイルのスナップショットを保持",
+    "maxVersions": "ファイルあたりの最大バージョン数",
+    "retentionDays": "保持期間（日）",
+    "recoveryInterval": "クラッシュ回復書き込み間隔",
+    "recoveryIntervalDesc": "クラッシュ回復コピーを書き込む頻度",
+    "storageLocation": "ストレージの場所",
+    "recoveryPath": "回復: ~/.config/markbun/recovery/",
+    "historyPath": "履歴: ~/.config/markbun/backups/"
+  },
+  "language": {
+    "label": "言語",
+    "desc": "表示言語を選択"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "about": {
+    "description": "Eine leichtgewichtige Markdown-Schreib-App",
+    "descriptionSub": "für fokussiertes Schreiben.",
+    "builtWith": "Erstellt mit Electrobun · Bun · React"
+  },
+  "save": {
+    "title": "Datei speichern",
+    "fileNameLabel": "Dateiname",
+    "fileNamePlaceholder": "Dateinamen eingeben...",
+    "emptyFolder": "Keine Ordner in diesem Verzeichnis",
+    "errorLoad": "Ordner konnte nicht geladen werden",
+    "errorLoadContents": "Ordnerinhalt konnte nicht geladen werden",
+    "errorNoName": "Bitte Dateinamen eingeben"
+  },
+  "recovery": {
+    "title": "Nicht gespeicherte Änderungen wiederherstellen",
+    "descSingle": "Eine Datei wurde beim letzten Beenden nicht sauber gespeichert.",
+    "descMultiple": "{{count}} Dateien wurden beim letzten Beenden nicht sauber gespeichert.",
+    "dismissAll": "Alle verwerfen",
+    "dismiss": "Verwerfen",
+    "dismissSelected": "Auswahl verwerfen",
+    "later": "Später"
+  },
+  "imageInsert": {
+    "title": "Bild einfügen",
+    "tabLocal": "Lokale Datei",
+    "tabUrl": "URL",
+    "urlLabel": "Bild-URL",
+    "urlPlaceholder": "https://example.com/image.png",
+    "altLabel": "Alternativtext",
+    "altPlaceholder": "Beschreibung des Bildes",
+    "selectFile": "Bilddatei auswählen...",
+    "selectedFile": "Ausgewählt: {{path}}"
+  },
+  "move": {
+    "title": "Verschieben nach",
+    "description": "Zielordner für \"{{name}}\" auswählen",
+    "noFolders": "Keine Ordner verfügbar"
+  },
+  "fileHistory": {
+    "titleWithFile": "Verlauf — {{fileName}}",
+    "title": "Dateiverlauf",
+    "versionCount": "{{count}} Version(en) gespeichert",
+    "loadingPreview": "Vorschau wird geladen...",
+    "empty": "Noch kein Verlauf. Versionen werden automatisch vor jedem Speichern erstellt.",
+    "selectPrompt": "Version zur Vorschau auswählen",
+    "loadError": "Diese Version konnte nicht geladen werden.",
+    "restore": "Diese Version wiederherstellen",
+    "timeJustNow": "gerade eben",
+    "timeMinutes": "vor {{m}}m",
+    "timeHours": "vor {{h}}h",
+    "timeDays": "vor {{d}}T"
+  }
+}

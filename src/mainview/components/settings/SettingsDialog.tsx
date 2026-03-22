@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { electrobun } from '@/lib/electrobun';
-import { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from '../../../shared/i18n/config';
+import { SUPPORTED_LANGUAGES, LANGUAGE_LABELS, type SupportedLanguage } from '../../../shared/i18n/config';
 import type { AppSettings, BackupSettings } from '@/shared/types';
 
 const DEFAULT_BACKUP: BackupSettings = {
@@ -47,7 +47,7 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
   }, []);
 
   // Language change: apply immediately for live preview
-  const handleLanguageChange = useCallback(async (lang: 'en' | 'zh-CN') => {
+  const handleLanguageChange = useCallback(async (lang: SupportedLanguage) => {
     handleChange('language', lang);
     await i18n.changeLanguage(lang);
   }, [handleChange, i18n]);

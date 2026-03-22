@@ -5,7 +5,7 @@ export const settingsSchema = z.object({
   general: z.object({
     autoSave: z.boolean().default(true),
     autoSaveInterval: z.number().min(500).max(30000).default(2000),
-    language: z.enum(['en', 'zh-CN']).default('en'),
+    language: z.enum(['en', 'zh-CN', 'de', 'fr', 'ja', 'ko', 'pt', 'es']).default('en'),
   }),
   editor: z.object({
     fontSize: z.number().min(10).max(32).default(15),

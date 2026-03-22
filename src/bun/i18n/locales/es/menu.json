@@ -1,0 +1,93 @@
+{
+  "app": {
+    "about": "Acerca de MarkBun",
+    "preferences": "Preferencias...",
+    "hide": "Ocultar MarkBun",
+    "hideOthers": "Ocultar Otros",
+    "showAll": "Mostrar Todo",
+    "quit": "Salir de MarkBun"
+  },
+  "file": {
+    "title": "Archivo",
+    "new": "Nuevo",
+    "newWindow": "Nueva Ventana",
+    "open": "Abrir...",
+    "openFolder": "Abrir Carpeta...",
+    "quickOpen": "Apertura Rápida...",
+    "save": "Guardar",
+    "saveAs": "Guardar Como...",
+    "history": "Historial..."
+  },
+  "edit": {
+    "title": "Editar",
+    "undo": "Deshacer",
+    "redo": "Rehacer",
+    "cut": "Cortar",
+    "copy": "Copiar",
+    "paste": "Pegar",
+    "selectAll": "Seleccionar Todo"
+  },
+  "format": {
+    "title": "Formato",
+    "strong": "Negrita",
+    "emphasis": "Cursiva",
+    "code": "Código",
+    "inlineFormula": "Fórmula en Línea",
+    "strikethrough": "Tachado",
+    "highlight": "Resaltar",
+    "superscript": "Superíndice",
+    "subscript": "Subíndice",
+    "hyperlink": "Hipervínculo",
+    "image": "Imagen"
+  },
+  "paragraph": {
+    "title": "Párrafo",
+    "heading1": "Título 1",
+    "heading2": "Título 2",
+    "heading3": "Título 3",
+    "heading4": "Título 4",
+    "heading5": "Título 5",
+    "heading6": "Título 6",
+    "paragraph": "Párrafo",
+    "increaseHeading": "Aumentar Nivel de Título",
+    "decreaseHeading": "Disminuir Nivel de Título",
+    "table": "Tabla",
+    "copyCell": "Copiar Celda",
+    "insertTable": "Insertar Tabla",
+    "insertRowAbove": "Insertar Fila Arriba",
+    "insertRowBelow": "Insertar Fila Abajo",
+    "insertColLeft": "Insertar Columna a la Izquierda",
+    "insertColRight": "Insertar Columna a la Derecha",
+    "moveRowUp": "Mover Fila Arriba",
+    "moveRowDown": "Mover Fila Abajo",
+    "moveColLeft": "Mover Columna a la Izquierda",
+    "moveColRight": "Mover Columna a la Derecha",
+    "deleteRow": "Eliminar Fila",
+    "deleteCol": "Eliminar Columna",
+    "deleteTable": "Eliminar Tabla",
+    "mathBlock": "Bloque Matemático",
+    "codeBlock": "Bloque de Código",
+    "quote": "Cita",
+    "orderedList": "Lista Ordenada",
+    "unorderedList": "Lista No Ordenada",
+    "taskList": "Lista de Tareas",
+    "insertAbove": "Insertar Párrafo Arriba",
+    "insertBelow": "Insertar Párrafo Abajo",
+    "horizontalRule": "Línea Horizontal"
+  },
+  "view": {
+    "title": "Ver",
+    "toggleDarkMode": "Alternar Modo Oscuro",
+    "showSidebar": "Mostrar Barra Lateral",
+    "showTitleBar": "Mostrar Barra de Título",
+    "showToolBar": "Mostrar Barra de Herramientas",
+    "showStatusBar": "Mostrar Barra de Estado",
+    "sourceMode": "Modo Fuente",
+    "toggleDevTools": "Alternar Herramientas de Desarrollador"
+  },
+  "help": {
+    "title": "Ayuda",
+    "help": "Ayuda",
+    "about": "Acerca de MarkBun"
+  }
+}

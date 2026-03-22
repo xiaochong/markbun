@@ -1,0 +1,36 @@
+{
+  "explorer": {
+    "emptyFolder": "空のフォルダ",
+    "noFolder": "フォルダが開いていません",
+    "noFolderHint": "ファイルを開いてフォルダを表示"
+  },
+  "contextMenu": {
+    "newFile": "新規ファイル",
+    "newFolder": "新規フォルダ",
+    "rename": "名前を変更",
+    "moveTo": "移動先...",
+    "delete": "削除",
+    "refresh": "更新",
+    "openInFinder": "Finderで開く",
+    "openInExplorer": "エクスプローラーで表示",
+    "openInFileManager": "ファイルマネージャーで開く"
+  },
+  "quickOpen": {
+    "placeholder": "ファイルを検索するには入力...",
+    "noResults": "ファイルが見つかりません",
+    "startTyping": "入力してファイルを検索",
+    "fileCount": "{{count}}ファイル",
+    "navigate": "↑↓ で移動",
+    "open": "↵ で開く",
+    "recent": "最近",
+    "esc": "ESC"
+  },
+  "sidebar": {
+    "files": "ファイル",
+    "outline": "アウトライン",
+    "closeSidebar": "サイドバーを閉じる (Cmd/Ctrl+B)"
+  },
+  "titleBar": {
+    "untitled": "無題"
+  }
+}

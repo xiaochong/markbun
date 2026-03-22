@@ -1,0 +1,55 @@
+{
+  "about": {
+    "description": "Une application Markdown légère",
+    "descriptionSub": "conçue pour l'écriture concentrée.",
+    "builtWith": "Créé avec Electrobun · Bun · React"
+  },
+  "save": {
+    "title": "Enregistrer le fichier",
+    "fileNameLabel": "Nom du fichier",
+    "fileNamePlaceholder": "Entrer un nom de fichier...",
+    "emptyFolder": "Aucun dossier dans ce répertoire",
+    "errorLoad": "Échec du chargement du dossier",
+    "errorLoadContents": "Échec du chargement du contenu du dossier",
+    "errorNoName": "Veuillez entrer un nom de fichier"
+  },
+  "recovery": {
+    "title": "Récupérer les modifications non enregistrées",
+    "descSingle": "Un fichier n'a pas été enregistré correctement lors de la dernière fermeture.",
+    "descMultiple": "{{count}} fichiers n'ont pas été enregistrés correctement lors de la dernière fermeture.",
+    "dismissAll": "Tout ignorer",
+    "dismiss": "Ignorer",
+    "dismissSelected": "Ignorer la sélection",
+    "later": "Plus tard"
+  },
+  "imageInsert": {
+    "title": "Insérer une image",
+    "tabLocal": "Fichier local",
+    "tabUrl": "URL",
+    "urlLabel": "URL de l'image",
+    "urlPlaceholder": "https://example.com/image.png",
+    "altLabel": "Texte alternatif",
+    "altPlaceholder": "Description de l'image",
+    "selectFile": "Sélectionner un fichier image...",
+    "selectedFile": "Sélectionné : {{path}}"
+  },
+  "move": {
+    "title": "Déplacer vers",
+    "description": "Sélectionner le dossier de destination pour \"{{name}}\"",
+    "noFolders": "Aucun dossier disponible"
+  },
+  "fileHistory": {
+    "titleWithFile": "Historique — {{fileName}}",
+    "title": "Historique du fichier",
+    "versionCount": "{{count}} version(s) enregistrée(s)",
+    "loadingPreview": "Chargement de l'aperçu...",
+    "empty": "Aucun historique. Les versions sont enregistrées automatiquement avant chaque sauvegarde.",
+    "selectPrompt": "Sélectionner une version pour l'aperçu",
+    "loadError": "Impossible de charger cette version.",
+    "restore": "Restaurer cette version",
+    "timeJustNow": "à l'instant",
+    "timeMinutes": "il y a {{m}}m",
+    "timeHours": "il y a {{h}}h",
+    "timeDays": "il y a {{d}}j"
+  }
+}

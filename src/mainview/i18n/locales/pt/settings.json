@@ -1,0 +1,43 @@
+{
+  "title": "Configurações",
+  "tabs": {
+    "general": "Geral",
+    "editor": "Editor",
+    "appearance": "Aparência",
+    "backup": "Backup",
+    "language": "Idioma"
+  },
+  "general": {
+    "autoSave": "Salvamento Automático",
+    "autoSaveDesc": "Salvar alterações automaticamente ao editar",
+    "autoSaveInterval": "Intervalo de Salvamento",
+    "autoSaveIntervalDesc": "Com que frequência salvar alterações ao digitar"
+  },
+  "editor": {
+    "fontSize": "Tamanho da Fonte",
+    "lineHeight": "Altura da Linha",
+    "resetDefault": "Restaurar Padrão"
+  },
+  "appearance": {
+    "theme": "Tema",
+    "themeDesc": "Escolha seu tema de cores preferido",
+    "themeLight": "Claro",
+    "themeDark": "Escuro",
+    "themeSystem": "Sistema"
+  },
+  "backup": {
+    "versionHistory": "Histórico de Versões",
+    "versionHistoryDesc": "Manter snapshots de cada arquivo antes de salvar",
+    "maxVersions": "Máximo de versões por arquivo",
+    "retentionDays": "Manter por (dias)",
+    "recoveryInterval": "Intervalo de recuperação de falhas",
+    "recoveryIntervalDesc": "Com que frequência escrever uma cópia de recuperação de falhas",
+    "storageLocation": "Local de armazenamento",
+    "recoveryPath": "Recuperação: ~/.config/markbun/recovery/",
+    "historyPath": "Histórico: ~/.config/markbun/backups/"
+  },
+  "language": {
+    "label": "Idioma",
+    "desc": "Escolha o idioma de exibição"
+  }
+}
