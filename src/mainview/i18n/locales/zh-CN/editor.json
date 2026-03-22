@@ -8,8 +8,13 @@
     "code": "行内代码 (Ctrl+`)",
     "quote": "引用",
     "link": "链接 (Ctrl+K)",
+    "strikethrough": "删除线 (Cmd+Shift+X)",
+    "highlight": "高亮 (Cmd+Shift+H)",
+    "image": "插入图像",
+    "table": "插入表格",
     "bulletList": "无序列表",
-    "numberedList": "有序列表"
+    "numberedList": "有序列表",
+    "taskList": "任务列表"
   },
   "statusBar": {
     "untitled": "未命名",

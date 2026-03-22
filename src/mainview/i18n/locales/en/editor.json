@@ -8,8 +8,13 @@
     "code": "Code (Ctrl+`)",
     "quote": "Quote",
     "link": "Link (Ctrl+K)",
+    "strikethrough": "Strikethrough (Cmd+Shift+X)",
+    "highlight": "Highlight (Cmd+Shift+H)",
+    "image": "Insert Image",
+    "table": "Insert Table",
     "bulletList": "Bullet List",
-    "numberedList": "Numbered List"
+    "numberedList": "Numbered List",
+    "taskList": "Task List"
   },
   "statusBar": {
     "untitled": "Untitled",

@@ -1036,6 +1036,11 @@ function App() {
   const handleLink = useCallback(() => editorRef.current?.toggleLink(), []);
   const handleList = useCallback(() => editorRef.current?.toggleList(), []);
   const handleOrderedList = useCallback(() => editorRef.current?.toggleOrderedList(), []);
+  const handleStrikethrough = useCallback(() => editorRef.current?.toggleStrikethrough(), []);
+  const handleHighlight = useCallback(() => editorRef.current?.toggleHighlight(), []);
+  const handleImage = useCallback(() => setShowImageDialog(true), []);
+  const handleTable = useCallback(() => editorRef.current?.insertTable(), []);
+  const handleTaskList = useCallback(() => editorRef.current?.insertTaskList(), []);
 
   // Handle image insert - using new image module
   const handleImageInsert = useCallback(async (src: string, alt: string) => {
@@ -1191,12 +1196,17 @@ function App() {
             <Toolbar
               onBold={handleBold}
               onItalic={handleItalic}
+              onStrikethrough={handleStrikethrough}
+              onHighlight={handleHighlight}
               onHeading={handleHeading}
               onQuote={handleQuote}
               onCode={handleCode}
               onLink={handleLink}
+              onImage={handleImage}
+              onTable={handleTable}
               onList={handleList}
               onOrderedList={handleOrderedList}
+              onTaskList={handleTaskList}
             />
           )}
           {imagePreviewPath ? (
