@@ -1,0 +1,170 @@
+/* ==========================================
+   MarkBun Website — Shared CSS
+   Theme variables (RGB format for Tailwind /opacity support)
+   ========================================== */
+
+/* ---- Light Theme (default) ---- */
+:root {
+  --c-surface:                    255 255 255;
+  --c-surface-container:          255 255 255;
+  --c-surface-container-low:      249 250 251;
+  --c-surface-container-high:     243 244 246;
+  --c-surface-container-highest:  229 231 235;
+  --c-surface-container-lowest:   255 255 255;
+  --c-surface-variant:            243 244 246;
+  --c-surface-bright:             243 244 246;
+  --c-on-surface:                 17 24 39;
+  --c-on-surface-variant:         75 85 99;
+  --c-primary:                    79 70 229;
+  --c-primary-dim:                67 56 202;
+  --c-on-primary:                 255 255 255;
+  --c-on-primary-fixed:           255 255 255;
+  --c-secondary:                  99 102 241;
+  --c-secondary-dim:              79 70 229;
+  --c-tertiary:                   16 185 129;
+  --c-on-tertiary:                255 255 255;
+  --c-on-tertiary-fixed:          16 185 129;
+  --c-outline:                    209 213 219;
+  --c-outline-variant:            229 231 235;
+  --c-error:                      239 68 68;
+  --c-error-dim:                  220 38 38;
+
+  /* Gradient for primary CTA */
+  --gradient-cta: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  --text-gradient: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+
+  /* Grid pattern */
+  --grid-color: rgba(79, 70, 229, 0.05);
+}
+
+/* ---- Dark Theme ---- */
+.dark {
+  --c-surface:                    14 14 14;
+  --c-surface-container:          26 25 25;
+  --c-surface-container-low:      19 19 19;
+  --c-surface-container-high:     32 31 31;
+  --c-surface-container-highest:  38 38 38;
+  --c-surface-container-lowest:   0 0 0;
+  --c-surface-variant:            38 38 38;
+  --c-surface-bright:             44 44 44;
+  --c-on-surface:                 255 255 255;
+  --c-on-surface-variant:         173 170 170;
+  --c-primary:                    163 166 255;
+  --c-primary-dim:                96 99 238;
+  --c-on-primary:                 15 0 164;
+  --c-on-primary-fixed:           0 0 0;
+  --c-secondary:                  172 138 255;
+  --c-secondary-dim:              132 85 239;
+  --c-tertiary:                   197 255 201;
+  --c-on-tertiary:                0 105 44;
+  --c-on-tertiary-fixed:          0 74 29;
+  --c-outline:                    119 117 117;
+  --c-outline-variant:            73 72 71;
+  --c-error:                      255 110 132;
+  --c-error-dim:                  215 51 87;
+
+  --gradient-cta: linear-gradient(135deg, #6063ee 0%, #8455ef 100%);
+  --text-gradient: linear-gradient(135deg, #a3a6ff 0%, #ac8aff 100%);
+  --grid-color: rgba(73, 72, 71, 0.1);
+}
+
+/* ==========================================
+   Base styles
+   ========================================== */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: rgb(var(--c-surface));
+  color: rgb(var(--c-on-surface));
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ==========================================
+   Typography utilities
+   ========================================== */
+.text-gradient {
+  background: var(--text-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ==========================================
+   Background patterns
+   ========================================== */
+.bg-grid-pattern {
+  background-image:
+    linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ==========================================
+   Material Symbols
+   ========================================== */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+/* ==========================================
+   Custom gradient button
+   ========================================== */
+.btn-gradient {
+  background: var(--gradient-cta);
+  color: #fff;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.btn-gradient:hover { opacity: 0.92; }
+.btn-gradient:active { transform: scale(0.96); }
+
+/* ==========================================
+   Lang toggle hidden state
+   ========================================== */
+[data-lang]:not(.lang-active) { display: none !important; }
+
+/* ==========================================
+   Smooth transitions for theme switch
+   ========================================== */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+/* Preserve animation transitions */
+.transition-all { transition-property: all !important; }
+.transition-transform { transition-property: transform !important; }
+.transition-none { transition-property: none !important; }
+
+/* ==========================================
+   Scrollbar style
+   ========================================== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--c-outline));
+  border-radius: 3px;
+}
+
+/* ==========================================
+   Code block
+   ========================================== */
+.code-block {
+  font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+}
+
+/* ==========================================
+   Nav active underline
+   ========================================== */
+.nav-link-active {
+  font-weight: 600;
+  border-bottom: 2px solid rgb(var(--c-primary));
+  padding-bottom: 2px;
+}

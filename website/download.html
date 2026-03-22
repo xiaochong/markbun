@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>if(localStorage.getItem("mb-theme")==="dark")document.documentElement.classList.add("dark");</script>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Download MarkBun - Free Markdown Editor</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="css/style.css" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface":                    "rgb(var(--c-surface) / <alpha-value>)",
+                        "surface-container":          "rgb(var(--c-surface-container) / <alpha-value>)",
+                        "surface-container-low":      "rgb(var(--c-surface-container-low) / <alpha-value>)",
+                        "surface-container-high":     "rgb(var(--c-surface-container-high) / <alpha-value>)",
+                        "surface-container-highest":  "rgb(var(--c-surface-container-highest) / <alpha-value>)",
+                        "surface-container-lowest":   "rgb(var(--c-surface-container-lowest) / <alpha-value>)",
+                        "surface-variant":            "rgb(var(--c-surface-variant) / <alpha-value>)",
+                        "surface-bright":             "rgb(var(--c-surface-bright) / <alpha-value>)",
+                        "on-surface":                 "rgb(var(--c-on-surface) / <alpha-value>)",
+                        "on-surface-variant":         "rgb(var(--c-on-surface-variant) / <alpha-value>)",
+                        "primary":                    "rgb(var(--c-primary) / <alpha-value>)",
+                        "primary-dim":                "rgb(var(--c-primary-dim) / <alpha-value>)",
+                        "on-primary":                 "rgb(var(--c-on-primary) / <alpha-value>)",
+                        "on-primary-fixed":           "rgb(var(--c-on-primary-fixed) / <alpha-value>)",
+                        "secondary":                  "rgb(var(--c-secondary) / <alpha-value>)",
+                        "secondary-dim":              "rgb(var(--c-secondary-dim) / <alpha-value>)",
+                        "tertiary":                   "rgb(var(--c-tertiary) / <alpha-value>)",
+                        "on-tertiary":                "rgb(var(--c-on-tertiary) / <alpha-value>)",
+                        "outline":                    "rgb(var(--c-outline) / <alpha-value>)",
+                        "outline-variant":            "rgb(var(--c-outline-variant) / <alpha-value>)",
+                        "error":                      "rgb(var(--c-error) / <alpha-value>)",
+                        "error-dim":                  "rgb(var(--c-error-dim) / <alpha-value>)",
+                    },
+                    fontFamily: {
+                        "sans":  ["Inter", "system-ui", "sans-serif"],
+                        "mono":  ["JetBrains Mono", "ui-monospace", "monospace"],
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .btn-gradient {
+            background: linear-gradient(135deg, rgb(var(--c-primary-dim)) 0%, rgb(var(--c-secondary-dim)) 100%);
+        }
+        .nav-link-active {
+            color: rgb(var(--c-on-surface));
+            font-weight: 600;
+            border-bottom: 2px solid rgb(var(--c-primary));
+            padding-bottom: 0.25rem;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-sans selection:bg-primary/30">
+    <!-- Navigation -->
+    <header class="sticky top-0 z-50 w-full bg-surface-variant/60 backdrop-blur-md shadow-2xl shadow-black/40">
+        <nav class="flex justify-between items-center h-16 px-6 lg:px-12 max-w-screen-2xl mx-auto">
+            <div class="text-xl font-bold text-white flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">terminal</span>
+                MarkBun
+            </div>
+            <div class="hidden md:flex items-center gap-8 font-sans tracking-tight font-medium text-sm">
+                <a class="text-on-surface-variant hover:text-on-surface transition-colors" href="index.html" data-i18n="nav_features">Features</a>
+                <a class="nav-link-active" href="download.html" data-i18n="nav_download">Download</a>
+                <a class="text-on-surface-variant hover:text-on-surface transition-colors" href="about.html" data-i18n="nav_about">About</a>
+                <a class="text-on-surface-variant hover:text-on-surface transition-colors" href="https://github.com/nicholasgasior/markbun" target="_blank" data-i18n="nav_github">GitHub</a>
+            </div>
+            <button class="btn-gradient px-6 py-2 rounded-xl text-on-primary font-semibold text-sm scale-95 active:scale-90 transition-transform" data-i18n="nav_download_btn">
+                Download Free
+            </button>
+        </nav>
+    </header>
+
+    <main class="relative overflow-hidden">
+        <!-- Hero Section -->
+        <section class="relative py-24 px-6 lg:px-12 max-w-screen-2xl mx-auto flex flex-col items-center text-center">
+            <!-- Background glows -->
+            <div class="absolute top-0 -z-10 w-full h-full opacity-20 overflow-hidden pointer-events-none">
+                <div class="absolute top-[-10%] left-[20%] w-[500px] h-[500px] bg-primary/30 blur-[120px] rounded-full"></div>
+                <div class="absolute bottom-[-10%] right-[20%] w-[500px] h-[500px] bg-secondary/20 blur-[120px] rounded-full"></div>
+            </div>
+
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-tertiary/10 text-tertiary text-xs font-bold mb-8 uppercase tracking-widest border border-tertiary/20" data-i18n="dl_badge">
+                Current Stable Release
+            </div>
+            <h1 class="text-6xl md:text-8xl font-black text-on-surface tracking-tight mb-6" data-i18n="dl_title">
+                Download MarkBun
+            </h1>
+            <p class="text-xl md:text-2xl text-on-surface-variant max-w-2xl mb-4" data-i18n="dl_sub">
+                Free for everyone. Always.
+            </p>
+            <div class="flex items-center gap-3 bg-surface-container px-4 py-2 rounded-lg border border-outline-variant/15 text-on-surface-variant">
+                <span class="text-sm font-mono">v0.3.0</span>
+                <span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+                <span class="text-sm" data-i18n="dl_latest_build">Latest Build</span>
+            </div>
+        </section>
+
+        <!-- Platform Cards Section -->
+        <section class="py-12 px-6 lg:px-12 max-w-screen-2xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- macOS Card -->
+                <div class="bg-surface-container-low rounded-xl p-8 border border-outline-variant/15 flex flex-col items-start hover:bg-surface-container transition-all duration-300 group">
+                    <div class="w-14 h-14 rounded-xl bg-surface-container-highest flex items-center justify-center mb-6 text-on-surface group-hover:text-primary transition-colors">
+                        <span class="material-symbols-outlined text-4xl">desktop_mac</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-on-surface mb-2" data-i18n="dl_mac">macOS</h3>
+                    <p class="text-on-surface-variant text-sm mb-6 flex-grow" data-i18n="dl_mac_desc">
+                        Universal build supporting both Apple Silicon (M1/M2/M3) and Intel processors.
+                    </p>
+                    <div class="space-y-2 mb-8 w-full text-sm text-on-surface-variant/80">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-xs">check_circle</span>
+                            <span data-i18n="dl_mac_req1">Monterey 12.0+</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-xs">check_circle</span>
+                            <span data-i18n="dl_mac_req2">.dmg Installer</span>
+                        </div>
+                    </div>
+                    <button class="w-full btn-gradient text-on-primary py-4 rounded-xl font-bold flex items-center justify-center gap-3 active:scale-95 transition-transform" data-i18n="dl_mac_btn">
+                        <span class="material-symbols-outlined">download</span>
+                        Download .dmg
+                    </button>
+                </div>
+
+                <!-- Windows Card -->
+                <div class="bg-surface-container-low rounded-xl p-8 border border-outline-variant/15 flex flex-col items-start hover:bg-surface-container transition-all duration-300 group">
+                    <div class="w-14 h-14 rounded-xl bg-surface-container-highest flex items-center justify-center mb-6 text-on-surface group-hover:text-primary transition-colors">
+                        <span class="material-symbols-outlined text-4xl">desktop_windows</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-on-surface mb-2" data-i18n="dl_win">Windows</h3>
+                    <p class="text-on-surface-variant text-sm mb-6 flex-grow" data-i18n="dl_win_desc">
+                        Optimized for Windows 10 and 11. Available as an installer or portable zip.
+                    </p>
+                    <div class="space-y-2 mb-8 w-full text-sm text-on-surface-variant/80">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-xs">check_circle</span>
+                            <span data-i18n="dl_win_req1">Windows 10/11</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-xs">check_circle</span>
+                            <span data-i18n="dl_win_req2">.exe / .zip</span>
+                        </div>
+                    </div>
+                    <button class="w-full btn-gradient text-on-primary py-4 rounded-xl font-bold flex items-center justify-center gap-3 active:scale-95 transition-transform" data-i18n="dl_win_btn">
+                        <span class="material-symbols-outlined">download</span>
+                        Download .exe
+                    </button>
+                </div>
+
+                <!-- Linux Card -->
+                <div class="bg-surface-container-low rounded-xl p-8 border border-outline-variant/15 flex flex-col items-start hover:bg-surface-container transition-all duration-300 group">
+                    <div class="w-14 h-14 rounded-xl bg-surface-container-highest flex items-center justify-center mb-6 text-on-surface group-hover:text-primary transition-colors">
+                        <span class="material-symbols-outlined text-4xl">terminal</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-on-surface mb-2" data-i18n="dl_linux">Linux</h3>
+                    <p class="text-on-surface-variant text-sm mb-6 flex-grow" data-i18n="dl_linux_desc">
+                        Support for major distributions with standalone and package-based binaries.
+                    </p>
+                    <div class="space-y-2 mb-8 w-full text-sm text-on-surface-variant/80">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-xs">check_circle</span>
+                            <span data-i18n="dl_linux_req1">x64 Architecture</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-xs">check_circle</span>
+                            <span data-i18n="dl_linux_req2">.AppImage / .deb</span>
+                        </div>
+                    </div>
+                    <button class="w-full btn-gradient text-on-primary py-4 rounded-xl font-bold flex items-center justify-center gap-3 active:scale-95 transition-transform" data-i18n="dl_linux_btn">
+                        <span class="material-symbols-outlined">download</span>
+                        Download AppImage
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Installation Guide + Build From Source (Bento Layout) -->
+        <section class="py-24 px-6 lg:px-12 max-w-screen-2xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Installation Guide -->
+                <div class="lg:col-span-7 bg-surface-container-low rounded-xl p-8 lg:p-12 border border-outline-variant/15 relative overflow-hidden">
+                    <h2 class="text-3xl font-bold text-on-surface mb-8" data-i18n="dl_install_title">Installation Guide</h2>
+                    <div class="space-y-8">
+                        <!-- Step 1 -->
+                        <div class="flex gap-6">
+                            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-surface-container flex items-center justify-center border border-outline-variant/15 font-bold text-primary">1</div>
+                            <div>
+                                <h4 class="text-on-surface font-semibold mb-2" data-i18n="dl_step1_title">Download the file</h4>
+                                <p class="text-on-surface-variant text-sm leading-relaxed" data-i18n="dl_step1_desc">Choose the correct version for your operating system above and wait for the download to complete.</p>
+                            </div>
+                        </div>
+                        <!-- Step 2 -->
+                        <div class="flex gap-6">
+                            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-surface-container flex items-center justify-center border border-outline-variant/15 font-bold text-primary">2</div>
+                            <div>
+                                <h4 class="text-on-surface font-semibold mb-2" data-i18n="dl_step2_title">Run the Installer</h4>
+                                <p class="text-on-surface-variant text-sm leading-relaxed" data-i18n="dl_step2_desc">On macOS, drag MarkBun to your Applications folder. On Windows, double-click the .exe file.</p>
+                            </div>
+                        </div>
+                        <!-- Step 3 -->
+                        <div class="flex gap-6">
+                            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-surface-container flex items-center justify-center border border-outline-variant/15 font-bold text-primary">3</div>
+                            <div>
+                                <h4 class="text-on-surface font-semibold mb-2" data-i18n="dl_step3_title">Security Permissions</h4>
+                                <p class="text-on-surface-variant text-sm leading-relaxed" data-i18n="dl_step3_desc">If prompted, allow the application to run. MarkBun is code-signed for Windows and macOS.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Build From Source + Release Notes -->
+                <div class="lg:col-span-5 flex flex-col gap-8">
+                    <!-- Build from Source -->
+                    <div class="bg-surface-container-lowest rounded-xl p-8 border border-outline-variant/15 flex-grow">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold text-on-surface" data-i18n="dl_src_title">Build from Source</h3>
+                            <span class="material-symbols-outlined text-primary-dim">code</span>
+                        </div>
+                        <p class="text-sm text-on-surface-variant mb-6" data-i18n="dl_src_desc">Want to customize MarkBun? Build it directly using Bun runtime.</p>
+                        <div class="bg-surface-container-lowest rounded-lg p-5 border border-outline-variant/10 font-mono text-sm overflow-x-auto">
+                            <div class="space-y-1">
+                                <p class="text-on-surface-variant/50"><span class="text-primary">#</span> Clone the repo</p>
+                                <p class="text-on-surface">git clone https://github.com/nicholasgasior/markbun</p>
+                                <p class="text-on-surface">cd markbun</p>
+                                <p class="text-on-surface-variant/50 mt-4"><span class="text-primary">#</span> Install dependencies</p>
+                                <p class="text-on-surface">bun install</p>
+                                <p class="text-on-surface-variant/50 mt-4"><span class="text-primary">#</span> Build for production</p>
+                                <p class="text-on-surface">bun run build</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Release Notes -->
+                    <div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/15 flex items-center justify-between">
+                        <div>
+                            <h4 class="text-on-surface font-bold" data-i18n="dl_notes_title">Release Notes</h4>
+                            <p class="text-xs text-on-surface-variant" data-i18n="dl_notes_sub">See what's new in v0.3.0</p>
+                        </div>
+                        <a class="text-primary flex items-center gap-2 font-medium hover:underline text-sm" href="#">
+                            <span data-i18n="dl_notes_link">Full Changelog</span>
+                            <span class="material-symbols-outlined text-sm">arrow_outward</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section class="py-24 px-6 lg:px-12 max-w-4xl mx-auto">
+            <h2 class="text-3xl font-bold text-on-surface mb-12 text-center" data-i18n="dl_faq_title">Frequently Asked Questions</h2>
+            <div class="space-y-6">
+                <!-- FAQ 1 -->
+                <div class="bg-surface-container rounded-xl p-6 border border-outline-variant/15">
+                    <h4 class="text-on-surface font-bold mb-2" data-i18n="dl_faq1_q">Is MarkBun really free?</h4>
+                    <p class="text-on-surface-variant text-sm" data-i18n="dl_faq1_a">Yes. MarkBun is an open-source project and will always be free to download and use. No subscriptions, no hidden fees.</p>
+                </div>
+                <!-- FAQ 2 -->
+                <div class="bg-surface-container rounded-xl p-6 border border-outline-variant/15">
+                    <h4 class="text-on-surface font-bold mb-2" data-i18n="dl_faq2_q">Is it safe to download?</h4>
+                    <p class="text-on-surface-variant text-sm" data-i18n="dl_faq2_a">Absolutely. All binaries are built directly from the public GitHub repository. We use automated CI/CD pipelines to ensure integrity and security.</p>
+                </div>
+                <!-- FAQ 3 -->
+                <div class="bg-surface-container rounded-xl p-6 border border-outline-variant/15">
+                    <h4 class="text-on-surface font-bold mb-2" data-i18n="dl_faq3_q">How often are updates released?</h4>
+                    <p class="text-on-surface-variant text-sm" data-i18n="dl_faq3_a">We typically release stable updates every 2-4 weeks, with frequent alpha/beta builds available on our GitHub Issues page for testers.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Community CTA Section -->
+        <section class="py-24 px-6 lg:px-12">
+            <div class="max-w-screen-2xl mx-auto bg-gradient-to-br from-primary/15 to-secondary/15 rounded-xl p-12 text-center border border-primary/10 relative overflow-hidden">
+                <div class="relative z-10">
+                    <h2 class="text-4xl font-bold text-on-surface mb-4" data-i18n="dl_community_title">Stay in the loop</h2>
+                    <p class="text-on-surface-variant max-w-xl mx-auto mb-8" data-i18n="dl_community_desc">Join our developer community to get notified about new features, security patches, and performance boosts.</p>
+                    <div class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                        <input type="email" class="bg-surface-container-lowest border border-outline-variant/20 rounded-xl px-6 py-4 flex-grow text-on-surface focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" data-i18n-ph="dl_community_ph" placeholder="email@example.com"/>
+                        <button class="bg-on-surface text-surface px-8 py-4 rounded-xl font-bold hover:bg-opacity-90 transition-all whitespace-nowrap" data-i18n="dl_community_btn">Subscribe</button>
+                    </div>
+                </div>
+                <!-- Abstract visual elements -->
+                <div class="absolute -top-12 -right-12 w-48 h-48 bg-primary/20 blur-[60px] rounded-full"></div>
+                <div class="absolute -bottom-12 -left-12 w-48 h-48 bg-secondary/20 blur-[60px] rounded-full"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-surface w-full pt-20 pb-10 border-t border-outline-variant/15">
+        <div class="max-w-screen-2xl mx-auto px-6 lg:px-12 grid grid-cols-1 md:grid-cols-4 gap-12">
+            <div class="col-span-1 md:col-span-1">
+                <div class="text-lg font-bold text-on-surface mb-6">MarkBun</div>
+                <p class="text-on-surface-variant text-sm leading-relaxed mb-6">
+                    The precision instrument for markdown writing. Carved from obsidian, built for the future.
+                </p>
+                <div class="flex gap-4">
+                    <span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer">public</span>
+                    <span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer">forum</span>
+                </div>
+            </div>
+            <div class="col-span-1">
+                <h4 class="text-on-surface font-bold text-sm mb-6 uppercase tracking-widest" data-i18n="footer_product">Product</h4>
+                <ul class="space-y-4 text-sm font-sans">
+                    <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="index.html" data-i18n="footer_features">Features</a></li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="download.html" data-i18n="footer_download">Download</a></li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#" data-i18n="footer_changelog">Changelog</a></li>
+                </ul>
+            </div>
+            <div class="col-span-1">
+                <h4 class="text-on-surface font-bold text-sm mb-6 uppercase tracking-widest" data-i18n="footer_resources">Resources</h4>
+                <ul class="space-y-4 text-sm font-sans">
+                    <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="about.html" data-i18n="footer_about">About</a></li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="https://github.com/nicholasgasior/markbun" target="_blank" data-i18n="footer_github">GitHub</a></li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#" data-i18n="footer_license">License</a></li>
+                </ul>
+            </div>
+            <div class="col-span-1">
+                <h4 class="text-on-surface font-bold text-sm mb-6 uppercase tracking-widest" data-i18n="footer_community">Community</h4>
+                <ul class="space-y-4 text-sm font-sans">
+                    <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="https://github.com/nicholasgasior/markbun/issues" target="_blank" data-i18n="footer_issues">GitHub Issues</a></li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#" data-i18n="footer_twitter">Twitter</a></li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#" data-i18n="footer_discussions">Discussions</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-screen-2xl mx-auto px-6 lg:px-12 mt-20 text-center">
+            <p class="text-on-surface-variant text-sm font-sans opacity-80">
+                Made with love using Bun + React. &copy; 2024 MarkBun. Open source under MIT License.
+            </p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

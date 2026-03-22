@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>if(localStorage.getItem("mb-theme")==="dark")document.documentElement.classList.add("dark");</script>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>About MarkBun - The Obsidian Architect of Markdown</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface":                    "rgb(var(--c-surface) / <alpha-value>)",
+                        "surface-container":          "rgb(var(--c-surface-container) / <alpha-value>)",
+                        "surface-container-low":      "rgb(var(--c-surface-container-low) / <alpha-value>)",
+                        "surface-container-high":     "rgb(var(--c-surface-container-high) / <alpha-value>)",
+                        "surface-container-highest":  "rgb(var(--c-surface-container-highest) / <alpha-value>)",
+                        "surface-container-lowest":   "rgb(var(--c-surface-container-lowest) / <alpha-value>)",
+                        "surface-variant":            "rgb(var(--c-surface-variant) / <alpha-value>)",
+                        "surface-bright":             "rgb(var(--c-surface-bright) / <alpha-value>)",
+                        "on-surface":                 "rgb(var(--c-on-surface) / <alpha-value>)",
+                        "on-surface-variant":         "rgb(var(--c-on-surface-variant) / <alpha-value>)",
+                        "primary":                    "rgb(var(--c-primary) / <alpha-value>)",
+                        "primary-dim":                "rgb(var(--c-primary-dim) / <alpha-value>)",
+                        "on-primary":                 "rgb(var(--c-on-primary) / <alpha-value>)",
+                        "on-primary-fixed":           "rgb(var(--c-on-primary-fixed) / <alpha-value>)",
+                        "secondary":                  "rgb(var(--c-secondary) / <alpha-value>)",
+                        "secondary-dim":              "rgb(var(--c-secondary-dim) / <alpha-value>)",
+                        "tertiary":                   "rgb(var(--c-tertiary) / <alpha-value>)",
+                        "on-tertiary":                "rgb(var(--c-on-tertiary) / <alpha-value>)",
+                        "outline":                    "rgb(var(--c-outline) / <alpha-value>)",
+                        "outline-variant":            "rgb(var(--c-outline-variant) / <alpha-value>)",
+                        "error":                      "rgb(var(--c-error) / <alpha-value>)",
+                        "error-dim":                  "rgb(var(--c-error-dim) / <alpha-value>)",
+                    },
+                    fontFamily: {
+                        "sans":  ["Inter", "system-ui", "sans-serif"],
+                        "mono":  ["JetBrains Mono", "ui-monospace", "monospace"],
+                    },
+                },
+            },
+        };
+    </script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body class="bg-surface text-on-surface font-sans selection:bg-primary/30">
+    <!-- Top Navigation -->
+    <header class="sticky top-0 z-50 w-full bg-surface-variant/60 backdrop-blur-md shadow-2xl shadow-black/40">
+        <nav class="flex justify-between items-center h-16 px-6 lg:px-12 max-w-screen-2xl mx-auto">
+            <div class="text-xl font-bold text-white flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary" data-icon="edit_note">edit_note</span>
+                MarkBun
+            </div>
+            <div class="hidden md:flex items-center gap-8 font-inter tracking-tight font-medium text-sm">
+                <a class="text-on-surface-variant hover:text-white transition-colors" href="index.html">Features</a>
+                <a class="text-on-surface-variant hover:text-white transition-colors" href="download.html">Download</a>
+                <a class="nav-link-active text-white font-semibold border-b-2 border-primary pb-1" href="about.html">About</a>
+                <a class="text-on-surface-variant hover:text-white transition-colors" href="https://github.com">GitHub</a>
+            </div>
+            <button class="bg-gradient-to-r from-primary-dim to-secondary-dim text-on-primary px-6 py-2 rounded-xl font-medium hover:scale-95 active:scale-90 transition-transform">
+                Download Free
+            </button>
+        </nav>
+    </header>
+
+    <main class="max-w-screen-xl mx-auto px-6 lg:px-12 py-20">
+        <!-- Hero Section -->
+        <section class="mb-32">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-on-tertiary text-tertiary text-xs font-bold mb-6 tracking-widest uppercase">
+                <span class="material-symbols-outlined text-sm" data-icon="verified">verified</span>
+                <span data-i18n="about_badge">Open Source Philosophy</span>
+            </div>
+            <h1 class="text-6xl md:text-8xl font-extrabold tracking-tighter mb-8 leading-[0.9]">
+                <span data-i18n="about_title_a">Engineered for</span><br/>
+                <span class="text-gradient" data-i18n="about_title_b">Pure Expression.</span>
+            </h1>
+            <p class="text-xl text-on-surface-variant max-w-2xl leading-relaxed" data-i18n="about_desc">
+                MarkBun was born from a simple frustration: powerful writing tools shouldn't be locked behind subscriptions or proprietary formats. We built a precision instrument for the obsidian age.
+            </p>
+        </section>
+
+        <!-- Project Origins & Asymmetric Grid -->
+        <section class="grid grid-cols-1 md:grid-cols-12 gap-12 mb-32">
+            <!-- Left Large Card -->
+            <div class="md:col-span-7 bg-surface-container-low p-10 rounded-xl relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <span class="material-symbols-outlined text-9xl" data-icon="history_edu">history_edu</span>
+                </div>
+                <h2 class="text-3xl font-bold mb-6 flex items-center gap-3">
+                    <span class="material-symbols-outlined text-primary" data-icon="architecture">architecture</span>
+                    <span data-i18n="about_origin_title">Project Origins</span>
+                </h2>
+                <div class="space-y-4 text-on-surface-variant text-lg leading-relaxed">
+                    <p>
+                        <strong class="text-on-surface" data-i18n="about_origin_p1">MarkBun = Mark(down) + (Electro)bun.</strong>
+                    </p>
+                    <p data-i18n="about_origin_p2">
+                        Inspired by the seamless editing experience of Typora but committed to the ethos of open-source freedom. We wanted an editor that felt as fast as a terminal but as elegant as a high-end publication.
+                    </p>
+                    <p data-i18n="about_origin_p3">
+                        By leveraging <span class="text-primary font-semibold">Bun</span> and <span class="text-secondary font-semibold">Native WebView</span>, we bypassed the bloat of traditional Electron apps, resulting in an editor that launches instantly and respects your system's resources.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right Stacked Cards -->
+            <div class="md:col-span-5 flex flex-col justify-center gap-6">
+                <div class="p-8 rounded-xl bg-surface-container border border-outline-variant/15">
+                    <span class="material-symbols-outlined text-secondary text-3xl mb-4" data-icon="rocket_launch">rocket_launch</span>
+                    <h3 class="text-xl font-bold mb-2" data-i18n="about_speed_title">The Speed Mandate</h3>
+                    <p class="text-on-surface-variant" data-i18n="about_speed_desc">Built on Bun, the JavaScript runtime designed for speed. Zero-lag Markdown rendering even in 100k+ word documents.</p>
+                </div>
+                <div class="p-8 rounded-xl bg-surface-container-high border border-outline-variant/15">
+                    <span class="material-symbols-outlined text-tertiary text-3xl mb-4" data-icon="auto_awesome">auto_awesome</span>
+                    <h3 class="text-xl font-bold mb-2" data-i18n="about_live_title">Live Preview</h3>
+                    <p class="text-on-surface-variant" data-i18n="about_live_desc">A distraction-free interface that blends the source code and visual output into a single, cohesive canvas.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Core Values -->
+        <section class="mb-32">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4" data-i18n="about_values_title">Our Core Values</h2>
+                <p class="text-on-surface-variant" data-i18n="about_values_desc">The pillars that define every line of code we write.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Card 1 -->
+                <div class="p-8 rounded-xl bg-surface-container-low flex flex-col h-full border border-outline-variant/15 hover:border-primary/40 transition-colors">
+                    <span class="material-symbols-outlined text-primary text-4xl mb-6" data-icon="lock">lock</span>
+                    <h3 class="text-2xl font-bold mb-4" data-i18n="about_v1_title">Local-First</h3>
+                    <p class="text-on-surface-variant mb-6" data-i18n="about_v1_desc">Your data belongs to you. No cloud required, no proprietary syncing engines, just your files on your hard drive.</p>
+                    <div class="mt-auto pt-4 flex items-center gap-2 text-primary font-medium text-sm">
+                        <span class="material-symbols-outlined text-sm" data-icon="check_circle">check_circle</span>
+                        <span data-i18n="about_v1_tag">No proprietary lock-in</span>
+                    </div>
+                </div>
+                <!-- Card 2 -->
+                <div class="p-8 rounded-xl bg-surface-container-low flex flex-col h-full border border-outline-variant/15 hover:border-secondary/40 transition-colors">
+                    <span class="material-symbols-outlined text-secondary text-4xl mb-6" data-icon="visibility_off">visibility_off</span>
+                    <h3 class="text-2xl font-bold mb-4" data-i18n="about_v2_title">No Telemetry</h3>
+                    <p class="text-on-surface-variant mb-6" data-i18n="about_v2_desc">We don't track your keystrokes, your document titles, or your usage patterns. MarkBun is a silent partner in your work.</p>
+                    <div class="mt-auto pt-4 flex items-center gap-2 text-secondary font-medium text-sm">
+                        <span class="material-symbols-outlined text-sm" data-icon="verified_user">verified_user</span>
+                        <span data-i18n="about_v2_tag">Privacy by design</span>
+                    </div>
+                </div>
+                <!-- Card 3 -->
+                <div class="p-8 rounded-xl bg-surface-container-low flex flex-col h-full border border-outline-variant/15 hover:border-tertiary/40 transition-colors">
+                    <span class="material-symbols-outlined text-tertiary text-4xl mb-6" data-icon="code">code</span>
+                    <h3 class="text-2xl font-bold mb-4" data-i18n="about_v3_title">Transparency</h3>
+                    <p class="text-on-surface-variant mb-6" data-i18n="about_v3_desc">The development process is fully transparent on GitHub. Anyone can inspect, audit, or contribute to the source code.</p>
+                    <div class="mt-auto pt-4 flex items-center gap-2 text-tertiary font-medium text-sm">
+                        <span class="material-symbols-outlined text-sm" data-icon="account_tree">account_tree</span>
+                        <span data-i18n="about_v3_tag">Community driven</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Technical Architecture -->
+        <section class="mb-32 bg-surface-container-lowest rounded-xl p-12 border border-outline-variant/5">
+            <div class="flex flex-col lg:flex-row gap-16">
+                <!-- Left Text -->
+                <div class="lg:w-1/2">
+                    <h2 class="text-4xl font-bold mb-8" data-i18n="about_arch_title">Technical Architecture</h2>
+                    <p class="text-on-surface-variant text-lg mb-8 leading-relaxed" data-i18n="about_arch_desc">
+                        MarkBun utilizes a dual-process architecture to ensure maximum performance and security. By decoupling the main logic from the rendering layer, we achieve a level of responsiveness that Electron-based editors struggle to match.
+                    </p>
+                    <ul class="space-y-6">
+                        <li class="flex gap-4">
+                            <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-primary" data-icon="developer_board">developer_board</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-on-surface mb-1" data-i18n="about_arch_main">Main Process (Bun)</h4>
+                                <p class="text-sm text-on-surface-variant" data-i18n="about_arch_main_d">Handles file I/O, OS integration, and window management with the extreme performance of the Zig-based Bun runtime.</p>
+                            </div>
+                        </li>
+                        <li class="flex gap-4">
+                            <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-secondary" data-icon="layers">layers</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-on-surface mb-1" data-i18n="about_arch_render">Renderer (WebView + React/Milkdown)</h4>
+                                <p class="text-sm text-on-surface-variant" data-i18n="about_arch_render_d">A lightweight native WebView instance hosting a React-powered UI and the Milkdown framework for WYSIWYG editing.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Right Code Block -->
+                <div class="lg:w-1/2 bg-surface-container p-8 rounded-xl font-mono text-xs overflow-hidden relative border border-outline-variant/15 shadow-inner">
+                    <div class="flex items-center gap-2 mb-4 border-b border-outline-variant/20 pb-4">
+                        <div class="w-3 h-3 rounded-full bg-error-dim"></div>
+                        <div class="w-3 h-3 rounded-full bg-secondary"></div>
+                        <div class="w-3 h-3 rounded-full bg-tertiary"></div>
+                        <span class="ml-4 text-on-surface-variant opacity-50 uppercase tracking-widest">architecture.stack.json</span>
+                    </div>
+                    <pre class="whitespace-pre-wrap">
+<span class="text-primary">{</span>
+  <span class="text-primary">"core"</span><span class="text-on-surface">: {</span>
+    <span class="text-primary">"runtime"</span><span class="text-on-surface">: </span><span class="text-secondary">"Bun (1.16.0+)"</span><span class="text-on-surface">,</span>
+    <span class="text-primary">"language"</span><span class="text-on-surface">: </span><span class="text-secondary">"TypeScript"</span><span class="text-on-surface">,</span>
+    <span class="text-primary">"shell"</span><span class="text-on-surface">: </span><span class="text-secondary">"Electrobun"</span>
+  <span class="text-on-surface">},</span>
+  <span class="text-primary">"ui"</span><span class="text-on-surface">: {</span>
+    <span class="text-primary">"framework"</span><span class="text-on-surface">: </span><span class="text-secondary">"React 18"</span><span class="text-on-surface">,</span>
+    <span class="text-primary">"styling"</span><span class="text-on-surface">: </span><span class="text-secondary">"Tailwind CSS"</span><span class="text-on-surface">,</span>
+    <span class="text-primary">"editor"</span><span class="text-on-surface">: </span><span class="text-secondary">"Milkdown"</span>
+  <span class="text-on-surface">},</span>
+  <span class="text-primary">"security"</span><span class="text-on-surface">: {</span>
+    <span class="text-primary">"isolation"</span><span class="text-on-surface">: </span><span class="text-tertiary">true</span><span class="text-on-surface">,</span>
+    <span class="text-primary">"ipc_bridge"</span><span class="text-on-surface">: </span><span class="text-secondary">"Secure Context"</span><span class="text-on-surface">,</span>
+    <span class="text-primary">"telemetry"</span><span class="text-on-surface">: </span><span class="text-tertiary">null</span>
+  <span class="text-on-surface">}</span>
+<span class="text-primary">}</span>
+                    </pre>
+                    <div class="absolute bottom-4 right-4 text-[80px] opacity-5 select-none font-bold text-on-surface">MB</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- License + Contributing -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20">
+            <!-- License -->
+            <div class="bg-surface-container-low p-10 rounded-xl border border-outline-variant/15 group hover:bg-surface-container transition-colors">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold" data-i18n="about_lic_title">MIT License</h2>
+                    <span class="material-symbols-outlined text-primary text-3xl" data-icon="policy">policy</span>
+                </div>
+                <p class="text-on-surface-variant mb-8 leading-relaxed" data-i18n="about_lic_desc">
+                    MarkBun is released under the MIT License. You are free to use, modify, and distribute the software for both personal and commercial projects. Freedom is not just a feature; it's our foundation.
+                </p>
+                <a class="inline-flex items-center gap-2 text-primary font-semibold hover:underline" href="#">
+                    <span data-i18n="about_lic_link">Read the License terms</span>
+                    <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+                </a>
+            </div>
+
+            <!-- Contributing -->
+            <div class="bg-surface-container-low p-10 rounded-xl border border-outline-variant/15 group hover:bg-surface-container transition-colors">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold" data-i18n="about_contrib_title">Contributing</h2>
+                    <span class="material-symbols-outlined text-tertiary text-3xl" data-icon="groups">groups</span>
+                </div>
+                <p class="text-on-surface-variant mb-8 leading-relaxed" data-i18n="about_contrib_desc">
+                    We welcome contributions of all kinds. Whether you are fixing bugs, proposing new features, or improving documentation, your help makes MarkBun better for everyone.
+                </p>
+                <a class="inline-flex items-center gap-2 text-tertiary font-semibold hover:underline" href="#">
+                    <span data-i18n="about_contrib_link">GitHub Contribution Guide</span>
+                    <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+                </a>
+            </div>
+        </section>
+
+        <!-- Contact/Community -->
+        <section class="text-center py-20 border-t border-outline-variant/10">
+            <h2 class="text-3xl font-bold mb-6" data-i18n="about_contact_title">Need help or want to discuss?</h2>
+            <p class="text-on-surface-variant mb-10 max-w-xl mx-auto" data-i18n="about_contact_desc">
+                Our community is built around transparency. For support, feature requests, or just to say hi, join us on our GitHub discussion board.
+            </p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <button class="bg-surface-container border border-outline-variant/30 hover:border-primary px-8 py-3 rounded-xl font-medium transition-all flex items-center gap-3">
+                    <span class="material-symbols-outlined" data-icon="forum">forum</span>
+                    <span data-i18n="about_disc_btn">GitHub Discussions</span>
+                </button>
+                <button class="bg-surface-container border border-outline-variant/30 hover:border-error px-8 py-3 rounded-xl font-medium transition-all flex items-center gap-3">
+                    <span class="material-symbols-outlined" data-icon="bug_report">bug_report</span>
+                    <span data-i18n="about_issue_btn">Report an Issue</span>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-surface border-t border-outline-variant/15 w-full pt-20 pb-10">
+        <div class="max-w-screen-2xl mx-auto px-6 lg:px-12 grid grid-cols-1 md:grid-cols-4 gap-12">
+            <div class="col-span-1">
+                <div class="text-lg font-bold text-white mb-4">MarkBun</div>
+                <p class="text-on-surface-variant font-inter text-sm leading-relaxed mb-6">
+                    The precision instrument for markdown writing. Carved from obsidian, built for the future.
+                </p>
+                <div class="flex gap-4">
+                    <span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer" data-icon="public">public</span>
+                    <span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer" data-icon="forum">forum</span>
+                </div>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-6 text-sm uppercase tracking-widest">Product</h4>
+                <ul class="space-y-4 font-inter text-sm text-on-surface-variant">
+                    <li><a class="hover:text-primary transition-colors" href="index.html">Features</a></li>
+                    <li><a class="hover:text-primary transition-colors" href="download.html">Download</a></li>
+                    <li><a class="hover:text-primary transition-colors" href="#">Changelog</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-6 text-sm uppercase tracking-widest">Resources</h4>
+                <ul class="space-y-4 font-inter text-sm text-on-surface-variant">
+                    <li><a class="hover:text-primary transition-colors" href="about.html">About</a></li>
+                    <li><a class="hover:text-primary transition-colors" href="https://github.com">GitHub</a></li>
+                    <li><a class="hover:text-primary transition-colors" href="#">License</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-6 text-sm uppercase tracking-widest">Community</h4>
+                <ul class="space-y-4 font-inter text-sm text-on-surface-variant">
+                    <li><a class="hover:text-primary transition-colors" href="#">GitHub Issues</a></li>
+                    <li><a class="hover:text-primary transition-colors" href="#">Twitter</a></li>
+                    <li><a class="hover:text-primary transition-colors" href="#">Discussions</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-screen-2xl mx-auto px-6 lg:px-12 mt-20 pt-8 border-t border-outline-variant/5 text-center md:text-left">
+            <p class="font-inter text-sm text-on-surface-variant opacity-80">
+                Made with ❤️ using Bun + React. © 2024 MarkBun. Open source under MIT License.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Main Script -->
+    <script src="js/main.js"></script>
+</body>
+</html>

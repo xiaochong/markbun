@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>if(localStorage.getItem("mb-theme")==="dark")document.documentElement.classList.add("dark");</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Features — MarkBun Markdown Editor</title>
+  <meta name="description" content="Explore MarkBun's powerful features: WYSIWYG editing, data safety, rich content support, and more." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface":                    "rgb(var(--c-surface) / <alpha-value>)",
+            "surface-container":          "rgb(var(--c-surface-container) / <alpha-value>)",
+            "surface-container-low":      "rgb(var(--c-surface-container-low) / <alpha-value>)",
+            "surface-container-high":     "rgb(var(--c-surface-container-high) / <alpha-value>)",
+            "surface-container-highest":  "rgb(var(--c-surface-container-highest) / <alpha-value>)",
+            "surface-container-lowest":   "rgb(var(--c-surface-container-lowest) / <alpha-value>)",
+            "surface-variant":            "rgb(var(--c-surface-variant) / <alpha-value>)",
+            "surface-bright":             "rgb(var(--c-surface-bright) / <alpha-value>)",
+            "on-surface":                 "rgb(var(--c-on-surface) / <alpha-value>)",
+            "on-surface-variant":         "rgb(var(--c-on-surface-variant) / <alpha-value>)",
+            "primary":                    "rgb(var(--c-primary) / <alpha-value>)",
+            "primary-dim":                "rgb(var(--c-primary-dim) / <alpha-value>)",
+            "on-primary":                 "rgb(var(--c-on-primary) / <alpha-value>)",
+            "on-primary-fixed":           "rgb(var(--c-on-primary-fixed) / <alpha-value>)",
+            "secondary":                  "rgb(var(--c-secondary) / <alpha-value>)",
+            "secondary-dim":              "rgb(var(--c-secondary-dim) / <alpha-value>)",
+            "tertiary":                   "rgb(var(--c-tertiary) / <alpha-value>)",
+            "on-tertiary":                "rgb(var(--c-on-tertiary) / <alpha-value>)",
+            "outline":                    "rgb(var(--c-outline) / <alpha-value>)",
+            "outline-variant":            "rgb(var(--c-outline-variant) / <alpha-value>)",
+            "error":                      "rgb(var(--c-error) / <alpha-value>)",
+            "error-dim":                  "rgb(var(--c-error-dim) / <alpha-value>)",
+          },
+          fontFamily: {
+            "sans":  ["Inter", "system-ui", "sans-serif"],
+            "mono":  ["JetBrains Mono", "ui-monospace", "monospace"],
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Shared styles -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="bg-surface text-on-surface font-sans antialiased selection:bg-primary/20">
+
+<!-- ========================================================
+     NAVIGATION
+     ======================================================== -->
+<header class="sticky top-0 z-50 w-full bg-surface-variant/70 backdrop-blur-md border-b border-outline-variant/20 shadow-sm">
+  <nav class="flex items-center justify-between h-16 px-6 lg:px-12 max-w-screen-2xl mx-auto gap-4">
+    <!-- Logo -->
+    <a href="index.html" class="text-xl font-bold text-on-surface flex items-center gap-2 shrink-0">
+      <span class="material-symbols-outlined text-primary" style="font-variation-settings:'FILL' 1">edit_note</span>
+      MarkBun
+    </a>
+
+    <!-- Desktop nav links -->
+    <div class="hidden md:flex items-center gap-8 text-sm font-medium">
+      <a href="features.html" class="nav-link-active text-on-surface transition-colors" data-i18n="nav_features">Features</a>
+      <a href="download.html" class="text-on-surface-variant hover:text-on-surface transition-colors" data-i18n="nav_download">Download</a>
+      <a href="about.html"    class="text-on-surface-variant hover:text-on-surface transition-colors" data-i18n="nav_about">About</a>
+      <a href="#"             class="text-on-surface-variant hover:text-on-surface transition-colors" data-i18n="nav_github">GitHub</a>
+    </div>
+
+    <!-- Right controls -->
+    <div class="flex items-center gap-2">
+      <!-- Lang toggle -->
+      <button id="lang-toggle" class="hidden md:inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold border border-outline-variant/40 text-on-surface-variant hover:text-on-surface hover:border-outline transition-colors">
+        <span id="lang-btn">中文</span>
+      </button>
+      <!-- Theme toggle -->
+      <button id="theme-toggle" class="w-9 h-9 rounded-lg border border-outline-variant/40 flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:border-outline transition-colors" aria-label="Toggle theme">
+        <span id="theme-btn-light" class="material-symbols-outlined text-[18px]">light_mode</span>
+        <span id="theme-btn-dark"  class="material-symbols-outlined text-[18px] hidden">dark_mode</span>
+      </button>
+      <!-- CTA -->
+      <a href="download.html" class="hidden md:inline-flex btn-gradient px-5 py-2 rounded-xl text-sm font-semibold text-white" data-i18n="nav_cta">Download Free</a>
+      <!-- Mobile menu -->
+      <button id="mobile-menu-btn" class="md:hidden w-9 h-9 rounded-lg border border-outline-variant/40 flex items-center justify-center text-on-surface-variant">
+        <span class="material-symbols-outlined text-[20px]">menu</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile menu -->
+  <div id="mobile-menu" class="hidden md:hidden border-t border-outline-variant/20 px-6 py-4 flex flex-col gap-4 bg-surface-container-low">
+    <a href="features.html" class="nav-link-active text-on-surface text-sm font-medium" data-i18n="nav_features">Features</a>
+    <a href="download.html" class="text-on-surface-variant text-sm font-medium" data-i18n="nav_download">Download</a>
+    <a href="about.html"    class="text-on-surface-variant text-sm font-medium" data-i18n="nav_about">About</a>
+    <a href="#"             class="text-on-surface-variant text-sm font-medium" data-i18n="nav_github">GitHub</a>
+    <div class="flex gap-3 pt-2">
+      <button id="lang-toggle-m" class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-outline-variant/40 text-on-surface-variant">中文</button>
+      <a href="download.html" class="btn-gradient px-5 py-2 rounded-xl text-sm font-semibold text-white" data-i18n="nav_cta">Download Free</a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ========================================================
+     HERO
+     ======================================================== -->
+<section class="relative pt-20 pb-16 overflow-hidden bg-grid-pattern">
+  <div class="absolute inset-0 bg-gradient-to-b from-surface via-surface/50 to-surface pointer-events-none"></div>
+  <!-- Ambient blobs -->
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-primary/10 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
+
+  <div class="max-w-screen-xl mx-auto px-6 relative z-10 text-center">
+    <!-- Badge -->
+    <span class="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-6 border border-primary/20" data-i18n="feat_hero_badge">Professional Markdown Editor</span>
+
+    <!-- Headline -->
+    <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
+      <span class="bg-gradient-to-b from-on-surface to-on-surface/60 bg-clip-text text-transparent" data-i18n="feat_hero_title">Powerful features, zero cost</span>
+    </h1>
+
+    <p class="max-w-2xl mx-auto text-on-surface-variant text-lg md:text-xl mb-12" data-i18n="feat_hero_desc">
+      Everything you need for professional markdown editing, from WYSIWYG rendering to data safety, all completely free.
+    </p>
+  </div>
+</section>
+
+<!-- ========================================================
+     SECTION 1: Writing Experience
+     ======================================================== -->
+<section class="py-20 bg-surface-container-low border-y border-outline-variant/20">
+  <div class="max-w-screen-xl mx-auto px-6">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl md:text-4xl font-bold mb-4" data-i18n="feat_s1_title">Writing Experience</h2>
+      <p class="text-on-surface-variant max-w-2xl mx-auto" data-i18n="feat_s1_desc">A refined editing experience that adapts to your workflow, not the other way around.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+      <!-- WYSIWYG Mode -->
+      <div class="md:col-span-8 p-8 rounded-2xl bg-surface-container border border-outline-variant/20 hover:border-primary/30 transition-all">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary">visibility</span>
+          </div>
+          <h3 class="text-xl font-bold" data-i18n="feat_s1_wysiwyg">WYSIWYG Mode</h3>
+        </div>
+        <p class="text-on-surface-variant mb-6" data-i18n="feat_s1_wysiwyg_d">See your formatting instantly as you type. No preview pane needed.</p>
+        <!-- Code block mockup -->
+        <div class="rounded-xl bg-surface-container-lowest border border-outline-variant/20 p-5 font-mono text-sm">
+          <div class="flex items-center gap-2 mb-3 text-on-surface-variant text-xs">
+            <span class="w-3 h-3 rounded-full bg-error/60"></span>
+            <span class="w-3 h-3 rounded-full bg-tertiary/60"></span>
+            <span class="w-3 h-3 rounded-full bg-primary/60"></span>
+            <span class="ml-2">preview.md</span>
+          </div>
+          <div class="space-y-2 text-on-surface">
+            <div><span class="text-primary font-bold">#</span> <span class="font-bold text-lg">Project Overview</span></div>
+            <div class="text-on-surface-variant">This is a <span class="bg-primary/10 text-primary px-1 rounded">WYSIWYG</span> editor.</div>
+            <div class="p-3 rounded-lg bg-surface-container border border-outline-variant/15 mt-3">
+              <div class="text-xs text-on-surface-variant mb-1">// Code block</div>
+              <div class="text-secondary">const</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Source Mode -->
+      <div class="md:col-span-4 p-8 rounded-2xl bg-surface-container border border-outline-variant/20 hover:border-secondary/30 transition-all">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-secondary">code</span>
+          </div>
+          <h3 class="text-xl font-bold" data-i18n="feat_s1_src">Source Mode</h3>
+        </div>
+        <p class="text-on-surface-variant mb-6" data-i18n="feat_s1_src_d">Switch to raw markdown for precise control.</p>
+        <div class="rounded-xl bg-surface-container-lowest border border-outline-variant/20 p-4 font-mono text-sm">
+          <div class="text-on-surface space-y-1">
+            <div><span class="text-primary">#</span> Header 1</div>
+            <div><span class="text-primary">**</span>bold text<span class="text-primary">**</span></div>
+            <div><span class="text-secondary">-</span> list item</div>
+            <div><span class="text-secondary">-</span> another item</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Outline Navigation -->
+      <div class="md:col-span-6 p-8 rounded-2xl bg-surface-container border border-outline-variant/20 hover:border-tertiary/30 transition-all">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-lg bg-tertiary/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-tertiary">format_list_bulleted</span>
+          </div>
+          <h3 class="text-xl font-bold" data-i18n="feat_s1_slash">Outline Navigation</h3>
+        </div>
+        <p class="text-on-surface-variant mb-4" data-i18n="feat_s1_slash_d">A live document outline in the sidebar parses your headings and lets you jump to any section instantly.</p>
+        <div class="space-y-1 p-3 rounded-lg bg-surface-container-lowest border border-outline-variant/20 font-mono text-xs">
+          <div class="flex items-center gap-2 text-on-surface-variant"><span class="opacity-40">H1</span><span>Introduction</span></div>
+          <div class="flex items-center gap-2 text-primary bg-primary/8 px-1 rounded"><span class="opacity-60">H2</span><span class="font-semibold">Getting Started</span></div>
+          <div class="flex items-center gap-2 text-on-surface-variant pl-3"><span class="opacity-40">H3</span><span>Installation</span></div>
+          <div class="flex items-center gap-2 text-on-surface-variant pl-3"><span class="opacity-40">H3</span><span>Configuration</span></div>
+        </div>
+      </div>
+
+      <!-- Standard Markdown -->
+      <div class="md:col-span-6 p-8 rounded-2xl bg-surface-container border border-outline-variant/20 hover:border-primary/30 transition-all">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary">check_circle</span>
+          </div>
+          <h3 class="text-xl font-bold" data-i18n="feat_s1_md">Standard Markdown</h3>
+        </div>
+        <p class="text-on-surface-variant mb-4" data-i18n="feat_s1_md_d">Full CommonMark and GitHub Flavored Markdown support.</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="px-3 py-1 rounded-full bg-surface-container-lowest border border-outline-variant/20 text-xs">GFM</span>
+          <span class="px-3 py-1 rounded-full bg-surface-container-lowest border border-outline-variant/20 text-xs">Tables</span>
+          <span class="px-3 py-1 rounded-full bg-surface-container-lowest border border-outline-variant/20 text-xs">Task Lists</span>
+          <span class="px-3 py-1 rounded-full bg-surface-container-lowest border border-outline-variant/20 text-xs">Strikethrough</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================
+     SECTION 2: Rich Content (Bento Grid)
+     ======================================================== -->
+<section class="py-20">
+  <div class="max-w-screen-xl mx-auto px-6">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl md:text-4xl font-bold mb-4" data-i18n="feat_s2_title">Rich Content</h2>
+      <p class="text-on-surface-variant max-w-2xl mx-auto" data-i18n="feat_s2_desc">Go beyond text with advanced content types for technical writing and documentation.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 auto-rows-[180px]">
+      <!-- Advanced Tables (Large) -->
+      <div class="md:col-span-2 md:row-span-2 p-8 rounded-2xl bg-surface-container border border-outline-variant/20 hover:border-primary/30 transition-all flex flex-col">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary">table</span>
+          </div>
+          <h3 class="text-xl font-bold" data-i18n="feat_s2_tables">Advanced Tables</h3>
+        </div>
+        <p class="text-on-surface-variant mb-6" data-i18n="feat_s2_tables_d">Create complex tables with alignment, spanning, and inline editing.</p>
+        <!-- Table mockup -->
+        <div class="flex-1 rounded-xl bg-surface-container-lowest border border-outline-variant/20 overflow-hidden">
+          <div class="grid grid-cols-3 text-xs">
+            <div class="p-3 bg-surface-container-high font-semibold border-b border-r border-outline-variant/20">Feature</div>
+            <div class="p-3 bg-surface-container-high font-semibold border-b border-r border-outline-variant/20">Status</div>
+            <div class="p-3 bg-surface-container-high font-semibold border-b border-outline-variant/20">Version</div>
+            <div class="p-3 border-b border-r border-outline-variant/10 text-on-surface-variant">Tables</div>
+            <div class="p-3 border-b border-r border-outline-variant/10"><span class="text-tertiary">✓</span></div>
+            <div class="p-3 border-b border-outline-variant/10 text-on-surface-variant">v0.1</div>
+            <div class="p-3 border-b border-r border-outline-variant/10 text-on-surface-variant">KaTeX</div>
+            <div class="p-3 border-b border-r border-outline-variant/10"><span class="text-tertiary">✓</span></div>
+            <div class="p-3 border-b border-outline-variant/10 text-on-surface-variant">v0.2</div>
+            <div class="p-3 border-r border-outline-variant/10 text-on-surface-variant">Mermaid</div>
+            <div class="p-3 border-r border-outline-variant/10"><span class="text-tertiary">✓</span></div>
+            <div class="p-3 text-on-surface-variant">v0.3</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Math KaTeX -->
+      <div class="md:col-span-2 p-6 rounded-2xl bg-surface-container border border-outline-variant/20 hover:border-secondary/30 transition-all">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-secondary">functions</span>
+          </div>
+          <h3 class="text-xl font-bold" data-i18n="feat_s2_math">Math KaTeX</h3>
+        </div>
+        <p class="text-on-surface-variant text-sm mb-4" data-i18n="feat_s2_math_d">Render mathematical expressions beautifully.</p>
+        <div class="flex items-center justify-center h-16 rounded-xl bg-surface-container-lowest border border-outline-variant/20">
+          <span class="text-2xl font-serif">E = mc²</span>
+        </div>
+      </div>
+
+      <!-- Diagrams -->
+      <div class="p-6 rounded-2xl bg-surface-container border border-outline-variant/20 hover:border-tertiary/30 transition-all">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-lg bg-tertiary/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-tertiary">account_tree</span>
+          </div>
+          <h3 class="text-lg font-bold" data-i18n="feat_s2_diagrams">Diagrams</h3>
+        </div>
+        <p class="text-on-surface-variant text-sm" data-i18n="feat_s2_diagrams_d">Mermaid support for flowcharts and graphs.</p>
+      </div>
+
+      <!-- Task Lists -->
+      <div class="p-6 rounded-2xl bg-surface-container border border-outline-variant/20 hover:border-primary/30 transition-all">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary">checklist</span>
+          </div>
+          <h3 class="text-lg font-bold" data-i18n="feat_s2_tasks">Task Lists</h3>
+        </div>
+        <p class="text-on-surface-variant text-sm" data-i18n="feat_s2_tasks_d">Interactive checkboxes for task management.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================
+     SECTION 3 & 4: Image & File Management
+     ======================================================== -->
+<section class="py-20 bg-surface-container-low border-y border-outline-variant/20">
+  <div class="max-w-screen-xl mx-auto px-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <!-- Image Management -->
+      <div>
+        <h2 class="text-2xl md:text-3xl font-bold mb-6" data-i18n="feat_s3_title">Image Management</h2>
+        <p class="text-on-surface-variant mb-8" data-i18n="feat_s3_desc">Seamlessly work with images in your documents.</p>
+
+        <div class="space-y-4">
+          <!-- Drag & Drop -->
+          <div class="flex items-start gap-4 p-5 rounded-xl bg-surface-container border border-outline-variant/20">
+            <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-primary">upload_file</span>
+            </div>
+            <div>
+              <h4 class="font-bold mb-1" data-i18n="feat_s3_drag">Drag & Drop</h4>
+              <p class="text-on-surface-variant text-sm" data-i18n="feat_s3_drag_d">Drop images directly into the editor. Automatic upload and linking.</p>
+            </div>
+          </div>
+
+          <!-- Auto Copy -->
+          <div class="flex items-start gap-4 p-5 rounded-xl bg-surface-container border border-outline-variant/20">
+            <div class="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-secondary">folder_copy</span>
+            </div>
+            <div>
+              <h4 class="font-bold mb-1" data-i18n="feat_s3_copy">Auto-Copy to Assets</h4>
+              <p class="text-on-surface-variant text-sm" data-i18n="feat_s3_copy_d">Images automatically copied to local assets folder for portability.</p>
+            </div>
+          </div>
+
+          <!-- Fullscreen Viewer -->
+          <div class="flex items-start gap-4 p-5 rounded-xl bg-surface-container border border-outline-variant/20">
+            <div class="w-12 h-12 rounded-lg bg-tertiary/10 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-tertiary">fullscreen</span>
+            </div>
+            <div>
+              <h4 class="font-bold mb-1" data-i18n="feat_s3_fullscreen">Fullscreen Viewer</h4>
+              <p class="text-on-surface-variant text-sm" data-i18n="feat_s3_fullscreen_d">Click any image to view in fullscreen with zoom support.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- File Management -->
+      <div>
+        <h2 class="text-2xl md:text-3xl font-bold mb-6" data-i18n="feat_s4_title">File Management</h2>
+        <p class="text-on-surface-variant mb-8" data-i18n="feat_s4_desc">Organize and navigate your markdown files efficiently.</p>
+
+        <!-- File tree mockup -->
+        <div class="rounded-xl bg-surface-container border border-outline-variant/20 overflow-hidden">
+          <!-- Title bar -->
+          <div class="h-9 bg-surface-container-high flex items-center px-4 gap-1.5 border-b border-outline-variant/15">
+            <div class="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
+            <div class="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
+            <div class="w-3 h-3 rounded-full bg-[#27c93f]"></div>
+            <div class="ml-4 text-[10px] text-on-surface-variant uppercase tracking-widest font-mono">Explorer</div>
+          </div>
+          <div class="p-4 font-mono text-sm">
+            <div class="flex items-center gap-2 text-on-surface mb-2">
+              <span class="material-symbols-outlined text-[16px] text-primary">folder_open</span>
+              <span>my-project/</span>
+            </div>
+            <div class="pl-6 space-y-1">
+              <div class="flex items-center gap-2 text-on-surface-variant">
+                <span class="material-symbols-outlined text-[16px]">description</span>
+                <span>README.md</span>
+              </div>
+              <div class="flex items-center gap-2 text-on-surface-variant">
+                <span class="material-symbols-outlined text-[16px]">description</span>
+                <span>guide.md</span>
+              </div>
+              <div class="flex items-center gap-2 text-on-surface">
+                <span class="material-symbols-outlined text-[16px] text-primary">folder</span>
+                <span>docs/</span>
+              </div>
+              <div class="pl-6 flex items-center gap-2 text-on-surface-variant">
+                <span class="material-symbols-outlined text-[16px]">description</span>
+                <span>api.md</span>
+              </div>
+              <div class="flex items-center gap-2 text-on-surface">
+                <span class="material-symbols-outlined text-[16px] text-primary">folder</span>
+                <span>assets/</span>
+              </div>
+            </div>
+          </div>
+          <!-- Quick Open hint -->
+          <div class="px-4 py-3 bg-surface-container-high border-t border-outline-variant/15 flex items-center justify-between">
+            <span class="text-xs text-on-surface-variant" data-i18n="feat_s4_quickopen">Quick Open</span>
+            <span class="px-2 py-1 rounded bg-surface-container text-xs text-on-surface-variant border border-outline-variant/20">⌘ P</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================
+     SECTION 5: Data Safety
+     ======================================================== -->
+<section class="py-20 relative overflow-hidden">
+  <div class="absolute inset-0 bg-gradient-to-b from-surface-container-low/50 via-transparent to-surface-container-low/50 pointer-events-none"></div>
+  <div class="max-w-screen-xl mx-auto px-6 relative z-10">
+    <div class="text-center mb-12">
+      <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-error/10 text-error text-xs font-semibold mb-4 border border-error/20">
+        <span class="material-symbols-outlined text-[16px]">shield</span>
+        <span data-i18n="feat_s5_badge">Three-Layer Protection</span>
+      </span>
+      <h2 class="text-3xl md:text-4xl font-bold mb-4" data-i18n="feat_s5_title">Data Safety</h2>
+      <p class="text-on-surface-variant max-w-2xl mx-auto" data-i18n="feat_s5_desc">Your work is precious. We protect it with multiple safeguards.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Atomic Write -->
+      <div class="p-8 rounded-2xl bg-surface-container border border-outline-variant/20 text-center">
+        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-6">
+          <span class="material-symbols-outlined text-primary text-2xl">sync_saved_locally</span>
+        </div>
+        <h3 class="text-xl font-bold mb-3" data-i18n="feat_s5_atomic">Atomic Write</h3>
+        <p class="text-on-surface-variant text-sm" data-i18n="feat_s5_atomic_d">Files are written to temporary location first, then renamed. Never corrupt your documents.</p>
+      </div>
+
+      <!-- Crash Recovery -->
+      <div class="p-8 rounded-2xl bg-surface-container border border-outline-variant/20 text-center">
+        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-secondary/20 to-secondary/5 flex items-center justify-center mx-auto mb-6">
+          <span class="material-symbols-outlined text-secondary text-2xl">restart_alt</span>
+        </div>
+        <h3 class="text-xl font-bold mb-3" data-i18n="feat_s5_crash">Crash Recovery</h3>
+        <p class="text-on-surface-variant text-sm" data-i18n="feat_s5_crash_d">Automatic recovery files detect and restore unsaved changes after unexpected shutdowns.</p>
+      </div>
+
+      <!-- Version History -->
+      <div class="p-8 rounded-2xl bg-surface-container border border-outline-variant/20 text-center">
+        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-tertiary/20 to-tertiary/5 flex items-center justify-center mx-auto mb-6">
+          <span class="material-symbols-outlined text-tertiary text-2xl">history</span>
+        </div>
+        <h3 class="text-xl font-bold mb-3" data-i18n="feat_s5_hist">Version History</h3>
+        <p class="text-on-surface-variant text-sm" data-i18n="feat_s5_hist_d">Automatic backups stored locally. Browse and restore previous versions anytime.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================
+     SECTION 6 & 7: Customization & Localization
+     ======================================================== -->
+<section class="py-20 bg-surface-container-low border-y border-outline-variant/20">
+  <div class="max-w-screen-xl mx-auto px-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <!-- Customization -->
+      <div>
+        <h2 class="text-2xl md:text-3xl font-bold mb-6" data-i18n="feat_s6_title">Customization</h2>
+        <p class="text-on-surface-variant mb-8" data-i18n="feat_s6_desc">Make MarkBun yours with extensive customization options.</p>
+
+        <div class="space-y-6">
+          <!-- Typography Control -->
+          <div class="p-5 rounded-xl bg-surface-container border border-outline-variant/20">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="material-symbols-outlined text-primary">text_fields</span>
+              <span class="font-bold" data-i18n="feat_s6_typo">Typography Control</span>
+            </div>
+            <div class="flex gap-4">
+              <div class="flex-1">
+                <label class="text-xs text-on-surface-variant mb-2 block" data-i18n="feat_s6_fontsize">Font Size</label>
+                <div class="h-2 rounded-full bg-surface-container-high overflow-hidden">
+                  <div class="h-full w-2/3 bg-primary rounded-full"></div>
+                </div>
+              </div>
+              <div class="flex-1">
+                <label class="text-xs text-on-surface-variant mb-2 block" data-i18n="feat_s6_lineheight">Line Height</label>
+                <div class="h-2 rounded-full bg-surface-container-high overflow-hidden">
+                  <div class="h-full w-1/2 bg-secondary rounded-full"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interface Themes -->
+          <div class="p-5 rounded-xl bg-surface-container border border-outline-variant/20">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="material-symbols-outlined text-secondary">palette</span>
+              <span class="font-bold" data-i18n="feat_s6_themes">Interface Themes</span>
+            </div>
+            <div class="flex gap-2">
+              <button class="px-4 py-2 rounded-lg bg-surface-container-high border border-outline-variant/30 text-sm">Dark</button>
+              <button class="px-4 py-2 rounded-lg bg-surface-container-lowest border border-outline-variant/30 text-sm">Light</button>
+              <button class="px-4 py-2 rounded-lg bg-surface-container-high border border-primary/50 text-sm text-primary">System</button>
+            </div>
+          </div>
+
+          <!-- Sidebar Width -->
+          <div class="p-5 rounded-xl bg-surface-container border border-outline-variant/20">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="material-symbols-outlined text-tertiary">dock_to_left</span>
+              <span class="font-bold" data-i18n="feat_s6_sidebar">Sidebar Width</span>
+            </div>
+            <div class="h-2 rounded-full bg-surface-container-high overflow-hidden">
+              <div class="h-full w-3/4 bg-tertiary rounded-full"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Localization -->
+      <div>
+        <h2 class="text-2xl md:text-3xl font-bold mb-6" data-i18n="feat_s7_title">Localization</h2>
+        <p class="text-on-surface-variant mb-8" data-i18n="feat_s7_desc">MarkBun speaks your language. Full i18n support for global users.</p>
+
+        <div class="p-6 rounded-xl bg-surface-container border border-outline-variant/20">
+          <div class="flex items-center gap-3 mb-6">
+            <span class="material-symbols-outlined text-primary">translate</span>
+            <span class="font-bold" data-i18n="feat_s7_languages">Supported Languages</span>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container-lowest border border-outline-variant/20">
+              <span>🇺🇸</span>
+              <span class="text-sm">English</span>
+            </div>
+            <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container-lowest border border-outline-variant/20">
+              <span>🇨🇳</span>
+              <span class="text-sm">简体中文</span>
+            </div>
+            <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container-lowest border border-outline-variant/20">
+              <span>🇩🇪</span>
+              <span class="text-sm">Deutsch</span>
+            </div>
+            <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container-lowest border border-outline-variant/20">
+              <span>🇫🇷</span>
+              <span class="text-sm">Français</span>
+            </div>
+            <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container-lowest border border-outline-variant/20">
+              <span>🇯🇵</span>
+              <span class="text-sm">日本語</span>
+            </div>
+            <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container-lowest border border-outline-variant/20">
+              <span>🇰🇷</span>
+              <span class="text-sm">한국어</span>
+            </div>
+            <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container-lowest border border-outline-variant/20">
+              <span>🇵🇹</span>
+              <span class="text-sm">Português</span>
+            </div>
+            <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-container-lowest border border-outline-variant/20">
+              <span>🇪🇸</span>
+              <span class="text-sm">Español</span>
+            </div>
+          </div>
+          <p class="mt-4 text-xs text-on-surface-variant" data-i18n="feat_s7_note">More languages coming soon. Contribute translations on GitHub.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================
+     CTA SECTION
+     ======================================================== -->
+<section class="py-20 px-6">
+  <div class="max-w-4xl mx-auto rounded-[2rem] btn-gradient p-12 md:p-16 text-center relative overflow-hidden">
+    <div class="absolute inset-0 bg-grid-pattern opacity-20 pointer-events-none"></div>
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] bg-white/10 blur-[80px] rounded-full pointer-events-none"></div>
+
+    <h2 class="text-3xl md:text-4xl font-extrabold mb-6 text-white relative" data-i18n="feat_cta_title">Ready to experience MarkBun?</h2>
+    <p class="text-white/80 text-lg mb-10 relative max-w-xl mx-auto" data-i18n="feat_cta_desc">Download now and join thousands of writers who choose MarkBun for their markdown editing needs.</p>
+
+    <div class="flex flex-wrap items-center justify-center gap-4 relative">
+      <a href="download.html" class="px-8 py-4 rounded-xl bg-white text-primary font-bold hover:bg-white/90 transition-colors shadow-lg" data-i18n="feat_cta_download">Download Free</a>
+      <a href="#" class="px-8 py-4 rounded-xl bg-white/10 text-white font-bold hover:bg-white/20 transition-colors border border-white/20" data-i18n="feat_cta_changelog">View Changelog</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ========================================================
+     FOOTER
+     ======================================================== -->
+<footer class="bg-surface-container-low border-t border-outline-variant/20 pt-16 pb-10">
+  <div class="max-w-screen-2xl mx-auto px-6 lg:px-12 grid grid-cols-1 md:grid-cols-4 gap-12">
+    <div>
+      <div class="text-lg font-bold mb-4 flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings:'FILL' 1">edit_note</span>
+        MarkBun
+      </div>
+      <p class="text-on-surface-variant text-sm leading-relaxed mb-6" data-i18n="footer_tagline">The precision instrument for markdown writing. Built for the future.</p>
+      <div class="flex gap-3">
+        <a href="#" class="w-9 h-9 rounded-lg border border-outline-variant/30 flex items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary/40 transition-colors">
+          <span class="material-symbols-outlined text-[18px]">public</span>
+        </a>
+        <a href="#" class="w-9 h-9 rounded-lg border border-outline-variant/30 flex items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary/40 transition-colors">
+          <span class="material-symbols-outlined text-[18px]">forum</span>
+        </a>
+      </div>
+    </div>
+    <div>
+      <h4 class="font-bold text-sm mb-5 uppercase tracking-widest" data-i18n="footer_product">Product</h4>
+      <ul class="space-y-3 text-sm text-on-surface-variant">
+        <li><a href="features.html" class="hover:text-primary transition-colors" data-i18n="footer_features">Features</a></li>
+        <li><a href="download.html" class="hover:text-primary transition-colors" data-i18n="footer_download">Download</a></li>
+        <li><a href="#" class="hover:text-primary transition-colors" data-i18n="footer_changelog">Changelog</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="font-bold text-sm mb-5 uppercase tracking-widest" data-i18n="footer_resources">Resources</h4>
+      <ul class="space-y-3 text-sm text-on-surface-variant">
+        <li><a href="about.html" class="hover:text-primary transition-colors" data-i18n="footer_about">About</a></li>
+        <li><a href="#"          class="hover:text-primary transition-colors" data-i18n="footer_github">GitHub</a></li>
+        <li><a href="#"          class="hover:text-primary transition-colors" data-i18n="footer_license">License</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="font-bold text-sm mb-5 uppercase tracking-widest" data-i18n="footer_community">Community</h4>
+      <ul class="space-y-3 text-sm text-on-surface-variant">
+        <li><a href="#" class="hover:text-primary transition-colors" data-i18n="footer_issues">GitHub Issues</a></li>
+        <li><a href="#" class="hover:text-primary transition-colors" data-i18n="footer_twitter">Twitter</a></li>
+        <li><a href="#" class="hover:text-primary transition-colors" data-i18n="footer_discussions">Discussions</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="max-w-screen-2xl mx-auto px-6 lg:px-12 mt-12 pt-6 border-t border-outline-variant/15 text-center">
+    <p class="text-on-surface-variant text-xs opacity-70" data-i18n="footer_copy">Made with ♥ using Bun + React. © 2024 MarkBun. Open source under MIT License.</p>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>if(localStorage.getItem("mb-theme")==="dark")document.documentElement.classList.add("dark");</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MarkBun — The Free, Open-Source Markdown Editor You Deserve</title>
+  <meta name="description" content="MarkBun brings distraction-free WYSIWYG markdown editing to everyone — completely free, forever." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface":                    "rgb(var(--c-surface) / <alpha-value>)",
+            "surface-container":          "rgb(var(--c-surface-container) / <alpha-value>)",
+            "surface-container-low":      "rgb(var(--c-surface-container-low) / <alpha-value>)",
+            "surface-container-high":     "rgb(var(--c-surface-container-high) / <alpha-value>)",
+            "surface-container-highest":  "rgb(var(--c-surface-container-highest) / <alpha-value>)",
+            "surface-container-lowest":   "rgb(var(--c-surface-container-lowest) / <alpha-value>)",
+            "surface-variant":            "rgb(var(--c-surface-variant) / <alpha-value>)",
+            "surface-bright":             "rgb(var(--c-surface-bright) / <alpha-value>)",
+            "on-surface":                 "rgb(var(--c-on-surface) / <alpha-value>)",
+            "on-surface-variant":         "rgb(var(--c-on-surface-variant) / <alpha-value>)",
+            "primary":                    "rgb(var(--c-primary) / <alpha-value>)",
+            "primary-dim":                "rgb(var(--c-primary-dim) / <alpha-value>)",
+            "on-primary":                 "rgb(var(--c-on-primary) / <alpha-value>)",
+            "on-primary-fixed":           "rgb(var(--c-on-primary-fixed) / <alpha-value>)",
+            "secondary":                  "rgb(var(--c-secondary) / <alpha-value>)",
+            "secondary-dim":              "rgb(var(--c-secondary-dim) / <alpha-value>)",
+            "tertiary":                   "rgb(var(--c-tertiary) / <alpha-value>)",
+            "on-tertiary":                "rgb(var(--c-on-tertiary) / <alpha-value>)",
+            "on-tertiary-fixed":          "rgb(var(--c-on-tertiary-fixed) / <alpha-value>)",
+            "outline":                    "rgb(var(--c-outline) / <alpha-value>)",
+            "outline-variant":            "rgb(var(--c-outline-variant) / <alpha-value>)",
+            "error":                      "rgb(var(--c-error) / <alpha-value>)",
+            "error-dim":                  "rgb(var(--c-error-dim) / <alpha-value>)",
+          },
+          fontFamily: {
+            "sans":  ["Inter", "system-ui", "sans-serif"],
+            "mono":  ["JetBrains Mono", "ui-monospace", "monospace"],
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Shared styles -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="bg-surface text-on-surface font-sans antialiased selection:bg-primary/20">
+
+<!-- ========================================================
+     NAVIGATION
+     ======================================================== -->
+<header class="sticky top-0 z-50 w-full bg-surface-variant/70 backdrop-blur-md border-b border-outline-variant/20 shadow-sm">
+  <nav class="flex items-center justify-between h-16 px-6 lg:px-12 max-w-screen-2xl mx-auto gap-4">
+    <!-- Logo -->
+    <a href="index.html" class="text-xl font-bold text-on-surface flex items-center gap-2 shrink-0">
+      <span class="material-symbols-outlined text-primary" style="font-variation-settings:'FILL' 1">edit_note</span>
+      MarkBun
+    </a>
+
+    <!-- Desktop nav links -->
+    <div class="hidden md:flex items-center gap-8 text-sm font-medium">
+      <a href="features.html" class="text-on-surface-variant hover:text-on-surface transition-colors" data-i18n="nav_features">Features</a>
+      <a href="download.html" class="text-on-surface-variant hover:text-on-surface transition-colors" data-i18n="nav_download">Download</a>
+      <a href="about.html"    class="text-on-surface-variant hover:text-on-surface transition-colors" data-i18n="nav_about">About</a>
+      <a href="#"             class="text-on-surface-variant hover:text-on-surface transition-colors" data-i18n="nav_github">GitHub</a>
+    </div>
+
+    <!-- Right controls -->
+    <div class="flex items-center gap-2">
+      <!-- Lang toggle -->
+      <button id="lang-toggle" class="hidden md:inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold border border-outline-variant/40 text-on-surface-variant hover:text-on-surface hover:border-outline transition-colors">
+        <span id="lang-btn">中文</span>
+      </button>
+      <!-- Theme toggle -->
+      <button id="theme-toggle" class="w-9 h-9 rounded-lg border border-outline-variant/40 flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:border-outline transition-colors" aria-label="Toggle theme">
+        <span id="theme-btn-light" class="material-symbols-outlined text-[18px]">light_mode</span>
+        <span id="theme-btn-dark"  class="material-symbols-outlined text-[18px] hidden">dark_mode</span>
+      </button>
+      <!-- CTA -->
+      <a href="download.html" class="hidden md:inline-flex btn-gradient px-5 py-2 rounded-xl text-sm font-semibold text-white" data-i18n="nav_cta">Download Free</a>
+      <!-- Mobile menu -->
+      <button id="mobile-menu-btn" class="md:hidden w-9 h-9 rounded-lg border border-outline-variant/40 flex items-center justify-center text-on-surface-variant">
+        <span class="material-symbols-outlined text-[20px]">menu</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile menu -->
+  <div id="mobile-menu" class="hidden md:hidden border-t border-outline-variant/20 px-6 py-4 flex flex-col gap-4 bg-surface-container-low">
+    <a href="features.html" class="text-on-surface-variant text-sm font-medium" data-i18n="nav_features">Features</a>
+    <a href="download.html" class="text-on-surface-variant text-sm font-medium" data-i18n="nav_download">Download</a>
+    <a href="about.html"    class="text-on-surface-variant text-sm font-medium" data-i18n="nav_about">About</a>
+    <a href="#"             class="text-on-surface-variant text-sm font-medium" data-i18n="nav_github">GitHub</a>
+    <div class="flex gap-3 pt-2">
+      <button id="lang-toggle-m" class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-outline-variant/40 text-on-surface-variant">中文</button>
+      <a href="download.html" class="btn-gradient px-5 py-2 rounded-xl text-sm font-semibold text-white" data-i18n="nav_cta">Download Free</a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ========================================================
+     HERO
+     ======================================================== -->
+<section class="relative pt-24 pb-32 overflow-hidden bg-grid-pattern">
+  <div class="absolute inset-0 bg-gradient-to-b from-surface via-surface/50 to-surface pointer-events-none"></div>
+  <!-- Ambient blobs -->
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-primary/10 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
+
+  <div class="max-w-screen-xl mx-auto px-6 relative z-10 text-center">
+    <!-- Badge -->
+    <span class="inline-flex items-center px-3 py-1 rounded-full bg-tertiary/10 text-tertiary text-xs font-semibold mb-6 border border-tertiary/20" data-i18n="home_badge">v0.3.0 is now available</span>
+
+    <!-- Headline -->
+    <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-4 leading-tight">
+      <span data-i18n="home_h1_a">The Free, Open-Source</span><br/>
+      <span class="text-gradient" data-i18n="home_h1_b">Markdown Editor</span><br/>
+      <span data-i18n="home_h1_c">You Deserve</span>
+    </h1>
+
+    <h2 class="text-xl md:text-2xl font-medium text-on-surface-variant mb-8" data-i18n="home_tagline">Free &amp; Open-Source, Write Without Limits</h2>
+
+    <p class="max-w-2xl mx-auto text-on-surface-variant text-lg md:text-xl mb-12" data-i18n="home_desc">
+      MarkBun brings distraction-free WYSIWYG markdown editing to everyone — completely free, forever. Carved for focus, built for speed.
+    </p>
+
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+      <a href="download.html" class="w-full sm:w-auto px-8 py-4 rounded-xl btn-gradient font-bold text-lg text-white shadow-lg shadow-primary/20" data-i18n="home_dl_btn">Download Free</a>
+      <a href="#" class="w-full sm:w-auto px-8 py-4 rounded-xl border border-outline-variant/30 text-on-surface font-bold text-lg hover:border-outline hover:bg-surface-container-high/50 transition-all flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined text-[20px]">code</span>
+        <span data-i18n="home_gh_btn">View on GitHub</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Editor mockup -->
+  <div class="max-w-5xl mx-auto mt-20 px-6">
+    <div class="relative rounded-xl overflow-hidden bg-surface-container shadow-2xl border border-outline-variant/20">
+      <!-- Title bar -->
+      <div class="h-9 bg-surface-container-high flex items-center px-4 gap-1.5 border-b border-outline-variant/15">
+        <div class="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
+        <div class="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
+        <div class="w-3 h-3 rounded-full bg-[#27c93f]"></div>
+        <div class="ml-4 text-[10px] text-on-surface-variant uppercase tracking-widest font-mono" data-i18n="home_mockup_label">Untitled.md — MarkBun</div>
+      </div>
+      <div class="flex h-[460px]">
+        <!-- Sidebar -->
+        <div class="w-14 bg-surface-container-low border-r border-outline-variant/15 flex flex-col items-center py-5 gap-5">
+          <span class="material-symbols-outlined text-primary text-[22px]" style="font-variation-settings:'FILL' 1">folder</span>
+          <span class="material-symbols-outlined text-on-surface-variant text-[22px]">search</span>
+          <span class="material-symbols-outlined text-on-surface-variant text-[22px]">extension</span>
+          <div class="mt-auto">
+            <span class="material-symbols-outlined text-on-surface-variant text-[22px]">settings</span>
+          </div>
+        </div>
+        <!-- Editor content -->
+        <div class="flex-1 p-10 overflow-hidden">
+          <div class="max-w-xl">
+            <div class="text-2xl font-bold mb-4 text-on-surface font-mono"># Getting Started with MarkBun</div>
+            <p class="text-on-surface-variant mb-4 font-mono text-sm leading-relaxed">
+              MarkBun is a <strong class="text-on-surface">**WYSIWYG**</strong> editor that doesn't hide the power of Markdown.<br/>
+              Just type and see the results instantly.
+            </p>
+            <div class="p-4 rounded-lg bg-surface-container-lowest border border-outline-variant/20 font-mono text-sm text-primary mb-5">
+              const hello = "MarkBun World";<br/>
+              console.log(hello);
+            </div>
+            <p class="text-on-surface-variant leading-relaxed text-sm">
+              Supports Tables, KaTeX formula <em>E=mc²</em>, and Mermaid diagrams.<br/>
+              All powered by Bun and Milkdown.
+            </p>
+            <!-- Task list preview -->
+            <div class="mt-5 space-y-2">
+              <div class="flex items-center gap-2 text-sm text-on-surface-variant">
+                <div class="w-4 h-4 rounded border border-primary/40 bg-primary/10 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-primary text-[12px]" style="font-variation-settings:'FILL' 1">check</span>
+                </div>
+                <span class="line-through opacity-60">Write the introduction</span>
+              </div>
+              <div class="flex items-center gap-2 text-sm text-on-surface-variant">
+                <div class="w-4 h-4 rounded border border-outline-variant/40"></div>
+                <span>Add code examples</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================
+     FEATURES GRID
+     ======================================================== -->
+<section class="py-24 bg-surface-container-low border-y border-outline-variant/20">
+  <div class="max-w-screen-xl mx-auto px-6">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl md:text-4xl font-bold mb-4" data-i18n="home_feat_title">Precision Tools for Modern Writers</h2>
+      <p class="text-on-surface-variant" data-i18n="home_feat_sub">Everything you need, nothing you don't. Pure focus.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Card 1 -->
+      <div class="p-8 rounded-xl bg-surface-container border border-outline-variant/20 hover:border-tertiary/40 transition-all group">
+        <div class="w-12 h-12 rounded-lg bg-tertiary/10 flex items-center justify-center mb-6">
+          <span class="material-symbols-outlined text-tertiary">volunteer_activism</span>
+        </div>
+        <h3 class="text-xl font-bold mb-3" data-i18n="feat_c1_title">Free Forever</h3>
+        <p class="text-on-surface-variant leading-relaxed" data-i18n="feat_c1_desc">No subscriptions, no "pro" tiers, no hidden costs. Open source and free for the community.</p>
+      </div>
+      <!-- Card 2 -->
+      <div class="p-8 rounded-xl bg-surface-container border border-outline-variant/20 hover:border-primary/40 transition-all group">
+        <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-6">
+          <span class="material-symbols-outlined text-primary">bolt</span>
+        </div>
+        <h3 class="text-xl font-bold mb-3" data-i18n="feat_c2_title">Blazing Fast</h3>
+        <p class="text-on-surface-variant leading-relaxed" data-i18n="feat_c2_desc">Built with Bun and Vite for near-instant startup times and zero lag even in massive documents.</p>
+      </div>
+      <!-- Card 3 -->
+      <div class="p-8 rounded-xl bg-surface-container border border-outline-variant/20 hover:border-secondary/40 transition-all group">
+        <div class="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center mb-6">
+          <span class="material-symbols-outlined text-secondary">visibility</span>
+        </div>
+        <h3 class="text-xl font-bold mb-3" data-i18n="feat_c3_title">True WYSIWYG</h3>
+        <p class="text-on-surface-variant leading-relaxed" data-i18n="feat_c3_desc">The editing experience is the preview experience. Seamlessly transition between modes.</p>
+      </div>
+      <!-- Card 4 -->
+      <div class="p-8 rounded-xl bg-surface-container border border-outline-variant/20 hover:border-error/40 transition-all group">
+        <div class="w-12 h-12 rounded-lg bg-error/10 flex items-center justify-center mb-6">
+          <span class="material-symbols-outlined text-error">shield</span>
+        </div>
+        <h3 class="text-xl font-bold mb-3" data-i18n="feat_c4_title">Your Data is Safe</h3>
+        <p class="text-on-surface-variant leading-relaxed" data-i18n="feat_c4_desc">Local-first architecture. We never touch your files or upload them to a cloud server.</p>
+      </div>
+      <!-- Card 5 -->
+      <div class="p-8 rounded-xl bg-surface-container border border-outline-variant/20 hover:border-primary/40 transition-all group">
+        <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-6">
+          <span class="material-symbols-outlined text-primary">devices</span>
+        </div>
+        <h3 class="text-xl font-bold mb-3" data-i18n="feat_c5_title">Cross-Platform</h3>
+        <p class="text-on-surface-variant leading-relaxed" data-i18n="feat_c5_desc">Running natively on macOS, Windows, and Linux with a consistent, premium experience.</p>
+      </div>
+      <!-- Card 6 -->
+      <div class="p-8 rounded-xl bg-surface-container border border-outline-variant/20 hover:border-on-surface/20 transition-all group">
+        <div class="w-12 h-12 rounded-lg bg-surface-bright flex items-center justify-center mb-6">
+          <span class="material-symbols-outlined text-on-surface">weight</span>
+        </div>
+        <h3 class="text-xl font-bold mb-3" data-i18n="feat_c6_title">Lightweight</h3>
+        <p class="text-on-surface-variant leading-relaxed" data-i18n="feat_c6_desc">Minimal memory footprint. MarkBun is designed to stay out of your way while you work.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================
+     EDITOR SHOWCASE
+     ======================================================== -->
+<section class="py-32 overflow-hidden">
+  <div class="max-w-screen-xl mx-auto px-6">
+    <div class="flex flex-col lg:flex-row items-center gap-16">
+      <div class="lg:w-1/2">
+        <h2 class="text-4xl font-extrabold mb-8 leading-tight">
+          <span data-i18n="home_showcase_title">Everything you expect from</span><br/>
+          <span class="text-gradient" data-i18n="home_showcase_accent">top-tier editors.</span>
+        </h2>
+        <ul class="space-y-6">
+          <li class="flex items-start gap-4">
+            <div class="mt-1 w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-primary text-[14px]" style="font-variation-settings:'FILL' 1">check</span>
+            </div>
+            <div>
+              <h4 class="font-bold text-lg" data-i18n="home_showcase_f1_title">WYSIWYG Editing</h4>
+              <p class="text-on-surface-variant" data-i18n="home_showcase_f1_desc">Real-time rendering of your markdown as you type.</p>
+            </div>
+          </li>
+          <li class="flex items-start gap-4">
+            <div class="mt-1 w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-primary text-[14px]" style="font-variation-settings:'FILL' 1">check</span>
+            </div>
+            <div>
+              <h4 class="font-bold text-lg" data-i18n="home_showcase_f2_title">Source Mode &amp; Focus Mode</h4>
+              <p class="text-on-surface-variant" data-i18n="home_showcase_f2_desc">Switch to raw markdown or hide the UI for deep focus sessions.</p>
+            </div>
+          </li>
+          <li class="flex items-start gap-4">
+            <div class="mt-1 w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-primary text-[14px]" style="font-variation-settings:'FILL' 1">check</span>
+            </div>
+            <div>
+              <h4 class="font-bold text-lg" data-i18n="home_showcase_f3_title">Tables &amp; KaTeX Support</h4>
+              <p class="text-on-surface-variant" data-i18n="home_showcase_f3_desc">First-class support for complex tables and mathematical notation.</p>
+            </div>
+          </li>
+          <li class="flex items-start gap-4">
+            <div class="mt-1 w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-primary text-[14px]" style="font-variation-settings:'FILL' 1">check</span>
+            </div>
+            <div>
+              <h4 class="font-bold text-lg" data-i18n="home_showcase_f4_title">Mermaid Diagrams</h4>
+              <p class="text-on-surface-variant" data-i18n="home_showcase_f4_desc">Visualize flows, charts, and diagrams directly in your docs.</p>
+            </div>
+          </li>
+        </ul>
+        <div class="mt-10">
+          <a href="features.html" class="inline-flex items-center gap-2 text-primary font-semibold hover:underline">
+            <span data-i18n="nav_features">Features</span>
+            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Screenshot placeholder / visual -->
+      <div class="lg:w-1/2 relative">
+        <div class="absolute -top-10 -right-10 w-64 h-64 bg-primary/10 blur-[100px] rounded-full pointer-events-none"></div>
+        <div class="relative rounded-2xl p-5 bg-surface-container-high border border-outline-variant/20 rotate-1 shadow-2xl">
+          <!-- Mermaid diagram mock -->
+          <div class="rounded-xl bg-surface-container-lowest p-6 font-mono text-xs">
+            <div class="text-on-surface-variant mb-3">```mermaid</div>
+            <div class="text-secondary">graph TD</div>
+            <div class="text-primary pl-4">A[Open File] --&gt; B{Edit Mode?}</div>
+            <div class="text-tertiary pl-4">B --&gt;|WYSIWYG| C[Milkdown]</div>
+            <div class="text-on-surface-variant pl-4">B --&gt;|Source| D[CodeMirror]</div>
+            <div class="text-on-surface-variant mb-3">```</div>
+            <!-- Rendered graph preview -->
+            <div class="mt-4 p-4 rounded-lg bg-surface-container border border-outline-variant/15 flex flex-col items-center gap-2">
+              <div class="px-4 py-2 rounded bg-primary/20 text-primary text-xs font-bold">Open File</div>
+              <div class="w-px h-4 bg-outline-variant/40"></div>
+              <div class="px-4 py-2 rounded-full border border-primary/30 text-primary text-xs">Edit Mode?</div>
+              <div class="flex gap-8">
+                <div class="flex flex-col items-center gap-2">
+                  <div class="w-px h-4 bg-tertiary/40"></div>
+                  <div class="px-3 py-1.5 rounded bg-tertiary/15 text-tertiary text-xs font-bold">Milkdown</div>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                  <div class="w-px h-4 bg-on-surface-variant/30"></div>
+                  <div class="px-3 py-1.5 rounded bg-surface-bright text-on-surface-variant text-xs font-bold">CodeMirror</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================
+     OPEN SOURCE
+     ======================================================== -->
+<section class="py-24 bg-surface-container-low border-y border-outline-variant/20">
+  <div class="max-w-screen-xl mx-auto px-6 flex flex-col items-center text-center">
+    <span class="material-symbols-outlined text-6xl text-primary mb-6">hub</span>
+    <h2 class="text-3xl md:text-5xl font-extrabold mb-6" data-i18n="home_oss_title">Built in the open, for everyone.</h2>
+    <p class="max-w-2xl text-on-surface-variant text-lg mb-10 leading-relaxed" data-i18n="home_oss_desc">
+      MarkBun is licensed under MIT. We believe in transparency and community-driven development. No paywalls, no proprietary lock-ins.
+    </p>
+    <div class="flex flex-col sm:flex-row items-center gap-4">
+      <div class="px-6 py-3 rounded-xl bg-surface-container border border-outline-variant/20 flex items-center gap-3 shadow-sm">
+        <span class="material-symbols-outlined text-yellow-500" style="font-variation-settings:'FILL' 1">star</span>
+        <span class="font-bold">1.2k+ <span data-i18n="home_oss_stars">GitHub Stars</span></span>
+      </div>
+      <div class="px-6 py-3 rounded-xl bg-surface-container border border-outline-variant/20 flex items-center gap-3 shadow-sm">
+        <span class="material-symbols-outlined text-tertiary">verified_user</span>
+        <span class="font-bold" data-i18n="home_oss_license">MIT Licensed</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================
+     TECH STACK
+     ======================================================== -->
+<section class="py-24 max-w-screen-xl mx-auto px-6">
+  <h3 class="text-center text-on-surface-variant text-xs font-bold uppercase tracking-[0.2em] mb-12" data-i18n="home_tech_label">Powered by cutting-edge tech</h3>
+  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+    <div class="flex items-center justify-center p-5 rounded-xl bg-surface-container-low border border-outline-variant/20 hover:border-primary/30 transition-colors">
+      <span class="font-mono text-primary font-bold text-sm">Electrobun</span>
+    </div>
+    <div class="flex items-center justify-center p-5 rounded-xl bg-surface-container-low border border-outline-variant/20 hover:border-primary/30 transition-colors">
+      <span class="font-mono text-on-surface font-bold text-sm">Milkdown</span>
+    </div>
+    <div class="flex items-center justify-center p-5 rounded-xl bg-surface-container-low border border-outline-variant/20 hover:border-primary/30 transition-colors">
+      <span class="font-mono text-secondary font-bold text-sm">React 18</span>
+    </div>
+    <div class="flex items-center justify-center p-5 rounded-xl bg-surface-container-low border border-outline-variant/20 hover:border-primary/30 transition-colors">
+      <span class="font-mono text-tertiary font-bold text-sm">Bun</span>
+    </div>
+    <div class="flex items-center justify-center p-5 rounded-xl bg-surface-container-low border border-outline-variant/20 hover:border-primary/30 transition-colors">
+      <span class="font-mono text-primary font-bold text-sm">Vite 6</span>
+    </div>
+    <div class="flex items-center justify-center p-5 rounded-xl bg-surface-container-low border border-outline-variant/20 hover:border-primary/30 transition-colors">
+      <span class="font-mono text-on-surface-variant font-bold text-sm">Tailwind</span>
+    </div>
+    <div class="flex items-center justify-center p-5 rounded-xl bg-surface-container-low border border-outline-variant/20 hover:border-primary/30 transition-colors">
+      <span class="font-mono text-error font-bold text-sm">CodeMirror</span>
+    </div>
+    <div class="flex items-center justify-center p-5 rounded-xl bg-surface-container-low border border-outline-variant/20 hover:border-primary/30 transition-colors">
+      <span class="font-mono text-on-surface font-bold text-sm">KaTeX</span>
+    </div>
+    <div class="flex items-center justify-center p-5 rounded-xl bg-surface-container-low border border-outline-variant/20 hover:border-primary/30 transition-colors">
+      <span class="font-mono text-primary font-bold text-sm">Mermaid</span>
+    </div>
+    <div class="flex items-center justify-center p-5 rounded-xl bg-surface-container-low border border-outline-variant/20 hover:border-primary/30 transition-colors">
+      <span class="font-mono text-on-surface-variant font-bold text-sm">i18next</span>
+    </div>
+    <div class="flex items-center justify-center p-5 rounded-xl bg-surface-container-low border border-outline-variant/20 hover:border-primary/30 transition-colors">
+      <span class="font-mono text-secondary font-bold text-sm">Zod</span>
+    </div>
+    <div class="flex items-center justify-center p-5 rounded-xl bg-surface-container-low border border-outline-variant/20 hover:border-primary/30 transition-colors">
+      <span class="font-mono text-on-surface font-bold text-sm">TypeScript</span>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================
+     DOWNLOAD CTA
+     ======================================================== -->
+<section class="py-24 px-6">
+  <div class="max-w-4xl mx-auto rounded-[2rem] bg-surface-container-high p-12 md:p-20 text-center border border-primary/15 relative overflow-hidden">
+    <div class="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none"></div>
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] bg-primary/8 blur-[80px] rounded-full pointer-events-none"></div>
+    <h2 class="text-4xl md:text-5xl font-extrabold mb-6 relative" data-i18n="home_cta_title">Ready to write without limits?</h2>
+    <p class="text-on-surface-variant text-lg mb-12 relative" data-i18n="home_cta_desc">Join thousands of writers using MarkBun today. v0.3.0 stable release.</p>
+    <div class="flex flex-wrap items-center justify-center gap-4 relative">
+      <a href="download.html" class="px-6 py-3 rounded-xl bg-on-surface text-surface font-bold flex items-center gap-2 hover:opacity-90 transition-opacity shadow-lg">
+        <span class="material-symbols-outlined text-[20px]">desktop_mac</span>
+        macOS
+      </a>
+      <a href="download.html" class="px-6 py-3 rounded-xl bg-surface-container-highest text-on-surface font-bold flex items-center gap-2 hover:bg-surface-bright transition-colors border border-outline-variant/30">
+        <span class="material-symbols-outlined text-[20px]">window</span>
+        Windows
+      </a>
+      <a href="download.html" class="px-6 py-3 rounded-xl bg-surface-container-highest text-on-surface font-bold flex items-center gap-2 hover:bg-surface-bright transition-colors border border-outline-variant/30">
+        <span class="material-symbols-outlined text-[20px]">terminal</span>
+        Linux
+      </a>
+    </div>
+    <p class="mt-8 text-xs text-on-surface-variant uppercase tracking-[0.3em] font-bold relative" data-i18n="home_cta_version">Version v0.3.0 • Open Source MIT</p>
+  </div>
+</section>
+
+</main>
+
+<!-- ========================================================
+     FOOTER
+     ======================================================== -->
+<footer class="bg-surface-container-low border-t border-outline-variant/20 pt-16 pb-10">
+  <div class="max-w-screen-2xl mx-auto px-6 lg:px-12 grid grid-cols-1 md:grid-cols-4 gap-12">
+    <div>
+      <div class="text-lg font-bold mb-4 flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings:'FILL' 1">edit_note</span>
+        MarkBun
+      </div>
+      <p class="text-on-surface-variant text-sm leading-relaxed mb-6" data-i18n="footer_tagline">The precision instrument for markdown writing. Built for the future.</p>
+      <div class="flex gap-3">
+        <a href="#" class="w-9 h-9 rounded-lg border border-outline-variant/30 flex items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary/40 transition-colors">
+          <span class="material-symbols-outlined text-[18px]">public</span>
+        </a>
+        <a href="#" class="w-9 h-9 rounded-lg border border-outline-variant/30 flex items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary/40 transition-colors">
+          <span class="material-symbols-outlined text-[18px]">forum</span>
+        </a>
+      </div>
+    </div>
+    <div>
+      <h4 class="font-bold text-sm mb-5 uppercase tracking-widest" data-i18n="footer_product">Product</h4>
+      <ul class="space-y-3 text-sm text-on-surface-variant">
+        <li><a href="features.html" class="hover:text-primary transition-colors" data-i18n="footer_features">Features</a></li>
+        <li><a href="download.html" class="hover:text-primary transition-colors" data-i18n="footer_download">Download</a></li>
+        <li><a href="#" class="hover:text-primary transition-colors" data-i18n="footer_changelog">Changelog</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="font-bold text-sm mb-5 uppercase tracking-widest" data-i18n="footer_resources">Resources</h4>
+      <ul class="space-y-3 text-sm text-on-surface-variant">
+        <li><a href="about.html" class="hover:text-primary transition-colors" data-i18n="footer_about">About</a></li>
+        <li><a href="#"          class="hover:text-primary transition-colors" data-i18n="footer_github">GitHub</a></li>
+        <li><a href="#"          class="hover:text-primary transition-colors" data-i18n="footer_license">License</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="font-bold text-sm mb-5 uppercase tracking-widest" data-i18n="footer_community">Community</h4>
+      <ul class="space-y-3 text-sm text-on-surface-variant">
+        <li><a href="#" class="hover:text-primary transition-colors" data-i18n="footer_issues">GitHub Issues</a></li>
+        <li><a href="#" class="hover:text-primary transition-colors" data-i18n="footer_twitter">Twitter</a></li>
+        <li><a href="#" class="hover:text-primary transition-colors" data-i18n="footer_discussions">Discussions</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="max-w-screen-2xl mx-auto px-6 lg:px-12 mt-12 pt-6 border-t border-outline-variant/15 text-center">
+    <p class="text-on-surface-variant text-xs opacity-70" data-i18n="footer_copy">Made with ♥ using Bun + React. © 2024 MarkBun. Open source under MIT License.</p>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>
