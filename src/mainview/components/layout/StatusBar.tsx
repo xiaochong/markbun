@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { countWords, countCharacters, countLines } from '@/lib/utils';
 
@@ -16,14 +17,17 @@ export function StatusBar({
   content = '',
   onSaveStatus,
 }: StatusBarProps) {
+  const { t: te } = useTranslation('editor');
+  const { t: tc } = useTranslation('common');
+
   const words = countWords(content);
   const chars = countCharacters(content);
   const lines = countLines(content);
 
   const saveStatusText = {
-    saving: 'Saving...',
-    saved: 'Saved',
-    error: 'Save failed',
+    saving: tc('status.saving'),
+    saved: tc('status.saved'),
+    error: tc('status.saveFailed'),
   }[onSaveStatus || 'saved'];
 
   return (
@@ -34,17 +38,17 @@ export function StatusBar({
       <div className="flex items-center gap-4">
         {/* File info */}
         <span className="truncate max-w-[200px]">
-          {filePath ? filePath.split('/').pop() : 'Untitled'}
+          {filePath ? filePath.split('/').pop() : te('statusBar.untitled')}
         </span>
         {isDirty && <span className="text-primary">●</span>}
       </div>
 
       <div className="flex items-center gap-4">
         {/* Stats */}
-        <span>{words} words</span>
-        <span>{chars} characters</span>
-        <span>{lines} lines</span>
-        
+        <span>{words} {te('statusBar.words')}</span>
+        <span>{chars} {te('statusBar.characters')}</span>
+        <span>{lines} {te('statusBar.lines')}</span>
+
         {/* Save status */}
         {onSaveStatus && (
           <span className={cn(

@@ -1,5 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
+import { electrobun } from '@/lib/electrobun';
+import { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from '../../../shared/i18n/config';
 import type { AppSettings, BackupSettings } from '@/shared/types';
 
 const DEFAULT_BACKUP: BackupSettings = {
@@ -16,9 +19,11 @@ interface SettingsDialogProps {
   onSave: (settings: AppSettings) => void;
 }
 
-type SettingsTab = 'general' | 'editor' | 'appearance' | 'backup';
+type SettingsTab = 'general' | 'editor' | 'appearance' | 'backup' | 'language';
 
 export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDialogProps) {
+  const { t: ts, i18n } = useTranslation('settings');
+  const { t: tc } = useTranslation('common');
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   const [formState, setFormState] = useState<AppSettings>({
     theme: 'system',
@@ -27,6 +32,7 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
     autoSave: true,
     autoSaveInterval: 2000,
     backup: DEFAULT_BACKUP,
+    language: 'en',
   });
 
   // Sync form state with props when dialog opens
@@ -39,6 +45,12 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
   const handleChange = useCallback(<K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
     setFormState(prev => ({ ...prev, [key]: value }));
   }, []);
+
+  // Language change: apply immediately for live preview
+  const handleLanguageChange = useCallback(async (lang: 'en' | 'zh-CN') => {
+    handleChange('language', lang);
+    await i18n.changeLanguage(lang);
+  }, [handleChange, i18n]);
 
   const handleSave = useCallback(() => {
     onSave(formState);
@@ -54,10 +66,11 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
   if (!isOpen) return null;
 
   const tabs: { id: SettingsTab; label: string; icon: string }[] = [
-    { id: 'general', label: 'General', icon: '⚙️' },
-    { id: 'editor', label: 'Editor', icon: '📝' },
-    { id: 'appearance', label: 'Appearance', icon: '🎨' },
-    { id: 'backup', label: 'Backup', icon: '📦' },
+    { id: 'general', label: ts('tabs.general'), icon: '⚙️' },
+    { id: 'editor', label: ts('tabs.editor'), icon: '📝' },
+    { id: 'appearance', label: ts('tabs.appearance'), icon: '🎨' },
+    { id: 'backup', label: ts('tabs.backup'), icon: '📦' },
+    { id: 'language', label: ts('tabs.language'), icon: '🌐' },
   ];
 
   return (
@@ -72,7 +85,7 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
         {/* Sidebar */}
         <div className="w-44 bg-muted/50 border-r flex flex-col">
           <div className="p-4 border-b">
-            <h2 className="font-semibold text-sm">Settings</h2>
+            <h2 className="font-semibold text-sm">{ts('title')}</h2>
           </div>
           <nav className="flex-1 p-2">
             {tabs.map(tab => (
@@ -98,14 +111,14 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
           <div className="flex-1 p-6 overflow-y-auto">
             {activeTab === 'general' && (
               <div className="space-y-6">
-                <h3 className="text-lg font-medium">General</h3>
+                <h3 className="text-lg font-medium">{ts('tabs.general')}</h3>
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <label className="text-sm font-medium">Auto Save</label>
+                      <label className="text-sm font-medium">{ts('general.autoSave')}</label>
                       <p className="text-xs text-muted-foreground">
-                        Automatically save changes while editing
+                        {ts('general.autoSaveDesc')}
                       </p>
                     </div>
                     <input
@@ -118,7 +131,7 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
 
                   {formState.autoSave && (
                     <div className="space-y-2 pl-4 border-l-2 border-muted">
-                      <label className="text-sm font-medium">Auto Save Interval</label>
+                      <label className="text-sm font-medium">{ts('general.autoSaveInterval')}</label>
                       <div className="flex items-center gap-3">
                         <input
                           type="range"
@@ -130,11 +143,11 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
                           className="flex-1 h-2 bg-muted rounded-lg appearance-none cursor-pointer"
                         />
                         <span className="text-sm text-muted-foreground w-16 text-right">
-                          {formState.autoSaveInterval}ms
+                          {formState.autoSaveInterval}{tc('unit.ms')}
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        How often to save changes while typing
+                        {ts('general.autoSaveIntervalDesc')}
                       </p>
                     </div>
                   )}
@@ -144,11 +157,11 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
 
             {activeTab === 'editor' && (
               <div className="space-y-6">
-                <h3 className="text-lg font-medium">Editor</h3>
+                <h3 className="text-lg font-medium">{ts('tabs.editor')}</h3>
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Font Size</label>
+                    <label className="text-sm font-medium">{ts('editor.fontSize')}</label>
                     <div className="flex items-center gap-3">
                       <input
                         type="range"
@@ -160,13 +173,13 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
                         className="flex-1 h-2 bg-muted rounded-lg appearance-none cursor-pointer"
                       />
                       <span className="text-sm text-muted-foreground w-12 text-right">
-                        {formState.fontSize}px
+                        {formState.fontSize}{tc('unit.px')}
                       </span>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Line Height</label>
+                    <label className="text-sm font-medium">{ts('editor.lineHeight')}</label>
                     <div className="flex items-center gap-3">
                       <input
                         type="range"
@@ -188,45 +201,46 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
 
             {activeTab === 'appearance' && (
               <div className="space-y-6">
-                <h3 className="text-lg font-medium">Appearance</h3>
+                <h3 className="text-lg font-medium">{ts('tabs.appearance')}</h3>
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Theme</label>
+                    <label className="text-sm font-medium">{ts('appearance.theme')}</label>
                     <div className="flex gap-2">
                       {(['light', 'dark', 'system'] as const).map((theme) => (
                         <button
                           key={theme}
                           onClick={() => handleChange('theme', theme)}
                           className={cn(
-                            'px-4 py-2 text-sm rounded-md border transition-colors capitalize',
+                            'px-4 py-2 text-sm rounded-md border transition-colors',
                             formState.theme === theme
                               ? 'bg-primary text-primary-foreground border-primary'
                               : 'bg-background hover:bg-muted border-border'
                           )}
                         >
-                          {theme}
+                          {ts(`appearance.theme${theme.charAt(0).toUpperCase()}${theme.slice(1)}` as any)}
                         </button>
                       ))}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Choose your preferred color theme
+                      {ts('appearance.themeDesc')}
                     </p>
                   </div>
                 </div>
               </div>
             )}
+
             {activeTab === 'backup' && (
               <div className="space-y-6">
-                <h3 className="text-lg font-medium">Backup</h3>
+                <h3 className="text-lg font-medium">{ts('tabs.backup')}</h3>
 
                 <div className="space-y-4">
                   {/* Version History toggle */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <label className="text-sm font-medium">Version History</label>
+                      <label className="text-sm font-medium">{ts('backup.versionHistory')}</label>
                       <p className="text-xs text-muted-foreground">
-                        Keep snapshots of each file before saving
+                        {ts('backup.versionHistoryDesc')}
                       </p>
                     </div>
                     <input
@@ -241,7 +255,7 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
                     <div className="space-y-4 pl-4 border-l-2 border-muted">
                       {/* Max Versions */}
                       <div className="space-y-1">
-                        <label className="text-sm font-medium">Max versions per file</label>
+                        <label className="text-sm font-medium">{ts('backup.maxVersions')}</label>
                         <div className="flex items-center gap-3">
                           <input
                             type="range"
@@ -260,7 +274,7 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
 
                       {/* Retention Days */}
                       <div className="space-y-1">
-                        <label className="text-sm font-medium">Keep for (days)</label>
+                        <label className="text-sm font-medium">{ts('backup.retentionDays')}</label>
                         <div className="flex items-center gap-3">
                           <input
                             type="range"
@@ -272,7 +286,7 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
                             className="flex-1 h-2 bg-muted rounded-lg appearance-none cursor-pointer"
                           />
                           <span className="text-sm text-muted-foreground w-10 text-right">
-                            {formState.backup?.retentionDays ?? 30}d
+                            {formState.backup?.retentionDays ?? 30}{tc('unit.days')}
                           </span>
                         </div>
                       </div>
@@ -281,7 +295,7 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
 
                   {/* Crash recovery interval */}
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Crash recovery write interval</label>
+                    <label className="text-sm font-medium">{ts('backup.recoveryInterval')}</label>
                     <div className="flex items-center gap-3">
                       <input
                         type="range"
@@ -293,19 +307,56 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
                         className="flex-1 h-2 bg-muted rounded-lg appearance-none cursor-pointer"
                       />
                       <span className="text-sm text-muted-foreground w-12 text-right">
-                        {((formState.backup?.recoveryInterval ?? 30000) / 1000).toFixed(0)}s
+                        {((formState.backup?.recoveryInterval ?? 30000) / 1000).toFixed(0)}{tc('unit.s')}
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      How often to write a crash-recovery copy (even when auto-save is off)
+                      {ts('backup.recoveryIntervalDesc')}
                     </p>
                   </div>
 
                   {/* Storage location info */}
                   <div className="p-3 bg-muted/50 rounded-lg text-xs text-muted-foreground leading-relaxed">
-                    <p className="font-medium mb-1">Storage location</p>
-                    <p>Recovery: ~/.config/markbun/recovery/</p>
-                    <p>History: ~/.config/markbun/backups/</p>
+                    <p className="font-medium mb-1">{ts('backup.storageLocation')}</p>
+                    <p>{ts('backup.recoveryPath')}</p>
+                    <p>{ts('backup.historyPath')}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'language' && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-medium">{ts('tabs.language')}</h3>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">{ts('language.label')}</label>
+                    <div className="flex flex-col gap-2">
+                      {SUPPORTED_LANGUAGES.map((lang) => (
+                        <button
+                          key={lang}
+                          onClick={() => void handleLanguageChange(lang)}
+                          className={cn(
+                            'flex items-center gap-3 px-4 py-3 text-sm rounded-md border transition-colors text-left',
+                            formState.language === lang
+                              ? 'bg-primary text-primary-foreground border-primary'
+                              : 'bg-background hover:bg-muted border-border'
+                          )}
+                        >
+                          <span className="font-medium">{LANGUAGE_LABELS[lang]}</span>
+                          <span className={cn(
+                            'text-xs',
+                            formState.language === lang ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                          )}>
+                            {lang}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {ts('language.desc')}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -318,13 +369,13 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
               onClick={onClose}
               className="px-4 py-2 text-sm font-medium rounded-md hover:bg-muted transition-colors"
             >
-              Cancel
+              {tc('button.cancel')}
             </button>
             <button
               onClick={handleSave}
               className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
             >
-              Save
+              {tc('button.save')}
             </button>
           </div>
         </div>

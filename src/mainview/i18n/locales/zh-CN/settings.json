@@ -1,0 +1,42 @@
+{
+  "title": "设置",
+  "tabs": {
+    "general": "通用",
+    "editor": "编辑器",
+    "appearance": "外观",
+    "backup": "备份",
+    "language": "语言"
+  },
+  "general": {
+    "autoSave": "自动保存",
+    "autoSaveDesc": "编辑时自动保存更改",
+    "autoSaveInterval": "自动保存间隔",
+    "autoSaveIntervalDesc": "输入时保存更改的频率"
+  },
+  "editor": {
+    "fontSize": "字体大小",
+    "lineHeight": "行高"
+  },
+  "appearance": {
+    "theme": "主题",
+    "themeDesc": "选择您偏好的颜色主题",
+    "themeLight": "浅色",
+    "themeDark": "深色",
+    "themeSystem": "跟随系统"
+  },
+  "backup": {
+    "versionHistory": "版本历史",
+    "versionHistoryDesc": "在每次保存前保留文件快照",
+    "maxVersions": "每个文件最多版本数",
+    "retentionDays": "保留天数",
+    "recoveryInterval": "崩溃恢复写入间隔",
+    "recoveryIntervalDesc": "写入崩溃恢复副本的频率（即使自动保存关闭时也生效）",
+    "storageLocation": "存储位置",
+    "recoveryPath": "恢复：~/.config/markbun/recovery/",
+    "historyPath": "历史：~/.config/markbun/backups/"
+  },
+  "language": {
+    "label": "语言",
+    "desc": "选择界面显示语言"
+  }
+}

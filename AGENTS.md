@@ -479,6 +479,35 @@ bun test --coverage
 - Documentation updates
 - Style changes (CSS)
 
+## i18n 国际化
+
+两个环境各自独立的 i18n 实例（均使用 i18next）：
+
+| 环境 | 翻译文件 | 命名空间 |
+|------|---------|----------|
+| 渲染进程 | `src/mainview/i18n/locales/{lang}/` | common, dialog, settings, editor, file |
+| 主进程（菜单）| `src/bun/i18n/locales/{lang}/` | menu |
+
+共享配置：`src/shared/i18n/config.ts`（`SUPPORTED_LANGUAGES`、`LANGUAGE_LABELS`、`resolveLanguage()`）
+
+渲染进程初始化：`src/mainview/i18n/index.ts` — 静态 import 所有翻译 JSON
+主进程初始化：`src/bun/i18n/index.ts` — 导出 `initI18n / changeLanguage / t`
+
+**渲染进程组件**用 `useTranslation('namespace')` 取 `t`；**主进程**直接 `import { t } from './i18n'`。
+
+### 添加新语言（如 `ja`）
+
+1. `src/shared/i18n/config.ts` — 加入 `SUPPORTED_LANGUAGES` 和 `LANGUAGE_LABELS`
+2. 复制 `src/mainview/i18n/locales/en/` → `ja/` 并翻译（5 个文件）
+3. 复制 `src/bun/i18n/locales/en/menu.json` → `ja/menu.json` 并翻译
+4. `src/mainview/i18n/index.ts` — 添加 import 和 resources 条目
+5. `src/bun/i18n/index.ts` — 添加 import 和 resources 条目
+6. `bun run typecheck` 验证
+
+新语言会自动出现在设置页语言列表（由 `SUPPORTED_LANGUAGES` 驱动）。
+
+---
+
 ## Common Tasks
 
 ### Add a New Menu Item

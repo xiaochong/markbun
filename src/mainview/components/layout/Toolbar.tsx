@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 interface ToolbarProps {
@@ -53,52 +54,54 @@ export function Toolbar({
   onList,
   onOrderedList,
 }: ToolbarProps) {
+  const { t } = useTranslation('editor');
+
   return (
     <div className={cn(
       'flex items-center gap-0.5 px-2 py-1 border-b bg-background',
       className
     )}>
       {/* Headings */}
-      <ToolbarButton onClick={() => onHeading?.(1)} title="Heading 1 (Ctrl+1)">
+      <ToolbarButton onClick={() => onHeading?.(1)} title={t('toolbar.heading1')}>
         H1
       </ToolbarButton>
-      <ToolbarButton onClick={() => onHeading?.(2)} title="Heading 2 (Ctrl+2)">
+      <ToolbarButton onClick={() => onHeading?.(2)} title={t('toolbar.heading2')}>
         H2
       </ToolbarButton>
-      <ToolbarButton onClick={() => onHeading?.(3)} title="Heading 3 (Ctrl+3)">
+      <ToolbarButton onClick={() => onHeading?.(3)} title={t('toolbar.heading3')}>
         H3
       </ToolbarButton>
-      
+
       <ToolbarSeparator />
-      
+
       {/* Text formatting */}
-      <ToolbarButton onClick={onBold} title="Bold (Ctrl+B)">
+      <ToolbarButton onClick={onBold} title={t('toolbar.bold')}>
         <strong>B</strong>
       </ToolbarButton>
-      <ToolbarButton onClick={onItalic} title="Italic (Ctrl+I)">
+      <ToolbarButton onClick={onItalic} title={t('toolbar.italic')}>
         <em>I</em>
       </ToolbarButton>
-      <ToolbarButton onClick={onCode} title="Code (Ctrl+`)">
+      <ToolbarButton onClick={onCode} title={t('toolbar.code')}>
         {'<>'}
       </ToolbarButton>
-      
+
       <ToolbarSeparator />
-      
+
       {/* Blocks */}
-      <ToolbarButton onClick={onQuote} title="Quote">
+      <ToolbarButton onClick={onQuote} title={t('toolbar.quote')}>
         "
       </ToolbarButton>
-      <ToolbarButton onClick={onLink} title="Link (Ctrl+K)">
+      <ToolbarButton onClick={onLink} title={t('toolbar.link')}>
         🔗
       </ToolbarButton>
-      
+
       <ToolbarSeparator />
-      
+
       {/* Lists */}
-      <ToolbarButton onClick={onList} title="Bullet List">
+      <ToolbarButton onClick={onList} title={t('toolbar.bulletList')}>
         •
       </ToolbarButton>
-      <ToolbarButton onClick={onOrderedList} title="Numbered List">
+      <ToolbarButton onClick={onOrderedList} title={t('toolbar.numberedList')}>
         1.
       </ToolbarButton>
     </div>

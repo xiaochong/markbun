@@ -1,0 +1,93 @@
+{
+  "app": {
+    "about": "关于 MarkBun",
+    "preferences": "偏好设置...",
+    "hide": "隐藏 MarkBun",
+    "hideOthers": "隐藏其他",
+    "showAll": "显示全部",
+    "quit": "退出 MarkBun"
+  },
+  "file": {
+    "title": "文件",
+    "new": "新建",
+    "newWindow": "新建窗口",
+    "open": "打开...",
+    "openFolder": "打开文件夹...",
+    "quickOpen": "快速打开...",
+    "save": "保存",
+    "saveAs": "另存为...",
+    "history": "历史记录..."
+  },
+  "edit": {
+    "title": "编辑",
+    "undo": "撤销",
+    "redo": "重做",
+    "cut": "剪切",
+    "copy": "复制",
+    "paste": "粘贴",
+    "selectAll": "全选"
+  },
+  "format": {
+    "title": "格式",
+    "strong": "加粗",
+    "emphasis": "斜体",
+    "code": "行内代码",
+    "inlineFormula": "行内公式",
+    "strikethrough": "删除线",
+    "highlight": "高亮",
+    "superscript": "上标",
+    "subscript": "下标",
+    "hyperlink": "超链接",
+    "image": "图片"
+  },
+  "paragraph": {
+    "title": "段落",
+    "heading1": "标题 1",
+    "heading2": "标题 2",
+    "heading3": "标题 3",
+    "heading4": "标题 4",
+    "heading5": "标题 5",
+    "heading6": "标题 6",
+    "paragraph": "正文",
+    "increaseHeading": "提升标题级别",
+    "decreaseHeading": "降低标题级别",
+    "table": "表格",
+    "copyCell": "复制单元格",
+    "insertTable": "插入表格",
+    "insertRowAbove": "在上方插入行",
+    "insertRowBelow": "在下方插入行",
+    "insertColLeft": "在左侧插入列",
+    "insertColRight": "在右侧插入列",
+    "moveRowUp": "上移行",
+    "moveRowDown": "下移行",
+    "moveColLeft": "左移列",
+    "moveColRight": "右移列",
+    "deleteRow": "删除行",
+    "deleteCol": "删除列",
+    "deleteTable": "删除表格",
+    "mathBlock": "数学块",
+    "codeBlock": "代码块",
+    "quote": "引用",
+    "orderedList": "有序列表",
+    "unorderedList": "无序列表",
+    "taskList": "任务列表",
+    "insertAbove": "在上方插入段落",
+    "insertBelow": "在下方插入段落",
+    "horizontalRule": "分隔线"
+  },
+  "view": {
+    "title": "视图",
+    "toggleDarkMode": "切换深色模式",
+    "showSidebar": "显示侧栏",
+    "showTitleBar": "显示标题栏",
+    "showToolBar": "显示工具栏",
+    "showStatusBar": "显示状态栏",
+    "sourceMode": "源码模式",
+    "toggleDevTools": "切换开发者工具"
+  },
+  "help": {
+    "title": "帮助",
+    "help": "帮助",
+    "about": "关于 MarkBun"
+  }
+}

@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import type { OutlineNode } from '@/shared/types';
 
@@ -9,12 +10,14 @@ interface OutlineProps {
 }
 
 export const Outline = memo(function Outline({ headings, activeId, onHeadingClick }: OutlineProps) {
+  const { t } = useTranslation('editor');
+
   if (headings.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-40 text-sm text-muted-foreground">
         <ListIcon className="w-8 h-8 mb-2 opacity-50" />
-        <p>No headings found</p>
-        <p className="text-xs mt-1">Add # headings to your document</p>
+        <p>{t('outline.empty')}</p>
+        <p className="text-xs mt-1">{t('outline.emptyHint')}</p>
       </div>
     );
   }

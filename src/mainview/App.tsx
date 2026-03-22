@@ -21,6 +21,7 @@ import { useOutline } from './hooks/useOutline';
 import { useQuickOpen } from './hooks/useQuickOpen';
 import { useClipboard } from './hooks/useClipboard';
 import { electrobun } from './lib/electrobun';
+import i18n from './i18n';
 import {
   workspaceManager,
   processMarkdownImages,
@@ -53,6 +54,10 @@ function App() {
       const result = await electrobun.getSettings() as { success: boolean; settings?: AppSettings };
       if (result.success && result.settings) {
         setSettings(result.settings);
+        // Apply saved language
+        if (result.settings.language) {
+          void i18n.changeLanguage(result.settings.language);
+        }
       }
     };
     void loadSettings();
@@ -889,12 +894,16 @@ function App() {
   // Handle settings save
   const handleSettingsSave = useCallback(async (newSettings: AppSettings) => {
     setSettings(newSettings);
+    // Notify main process about language change (for menu rebuild)
+    if (newSettings.language !== settings?.language) {
+      void electrobun.setLanguage(newSettings.language);
+    }
     // The RPC expects { settings: params }, but our lib wraps it
     const result = await electrobun.saveSettings(newSettings) as { success: boolean; error?: string };
     if (!result.success) {
       console.error('Failed to save settings:', result.error);
     }
-  }, []);
+  }, [settings?.language]);
 
   // Listen for visibility toggle events
   useEffect(() => {

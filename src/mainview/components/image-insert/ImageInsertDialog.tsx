@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { electrobun } from '@/lib/electrobun';
 
 interface ImageInsertDialogProps {
@@ -8,6 +9,8 @@ interface ImageInsertDialogProps {
 }
 
 export function ImageInsertDialog({ isOpen, onClose, onInsert }: ImageInsertDialogProps) {
+  const { t: tc } = useTranslation('common');
+  const { t: td } = useTranslation('dialog');
   const [activeTab, setActiveTab] = useState<'local' | 'url'>('local');
   const [imageUrl, setImageUrl] = useState('');
   const [altText, setAltText] = useState('');
@@ -65,7 +68,7 @@ export function ImageInsertDialog({ isOpen, onClose, onInsert }: ImageInsertDial
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="w-full max-w-md rounded-lg bg-background p-6 shadow-lg border border-border">
-        <h2 className="text-lg font-semibold mb-4 text-foreground">Insert Image</h2>
+        <h2 className="text-lg font-semibold mb-4 text-foreground">{td('imageInsert.title')}</h2>
 
         {/* Tabs */}
         <div className="flex border-b border-border mb-4">
@@ -77,7 +80,7 @@ export function ImageInsertDialog({ isOpen, onClose, onInsert }: ImageInsertDial
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            Local File
+            {td('imageInsert.tabLocal')}
           </button>
           <button
             onClick={() => setActiveTab('url')}
@@ -87,7 +90,7 @@ export function ImageInsertDialog({ isOpen, onClose, onInsert }: ImageInsertDial
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            URL
+            {td('imageInsert.tabUrl')}
           </button>
         </div>
 
@@ -99,24 +102,24 @@ export function ImageInsertDialog({ isOpen, onClose, onInsert }: ImageInsertDial
                 onClick={handleSelectLocalFile}
                 className="w-full px-4 py-2 text-sm font-medium text-foreground bg-secondary hover:bg-secondary/80 rounded-md transition-colors"
               >
-                Select Image File...
+                {td('imageInsert.selectFile')}
               </button>
               {selectedPath && (
                 <p className="mt-2 text-sm text-muted-foreground truncate">
-                  Selected: {selectedPath}
+                  {td('imageInsert.selectedFile', { path: selectedPath })}
                 </p>
               )}
             </div>
           ) : (
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">
-                Image URL
+                {td('imageInsert.urlLabel')}
               </label>
               <input
                 type="text"
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="https://example.com/image.png"
+                placeholder={td('imageInsert.urlPlaceholder')}
                 className="w-full px-3 py-2 text-sm text-foreground bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
@@ -124,13 +127,13 @@ export function ImageInsertDialog({ isOpen, onClose, onInsert }: ImageInsertDial
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
-              Alt Text
+              {td('imageInsert.altLabel')}
             </label>
             <input
               type="text"
               value={altText}
               onChange={(e) => setAltText(e.target.value)}
-              placeholder="Description of the image"
+              placeholder={td('imageInsert.altPlaceholder')}
               className="w-full px-3 py-2 text-sm text-foreground bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
@@ -142,14 +145,14 @@ export function ImageInsertDialog({ isOpen, onClose, onInsert }: ImageInsertDial
             onClick={handleClose}
             className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            Cancel
+            {tc('button.cancel')}
           </button>
           <button
             onClick={handleInsert}
             disabled={activeTab === 'local' ? !selectedPath : !imageUrl.trim()}
             className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            Insert
+            {tc('button.insert')}
           </button>
         </div>
       </div>

@@ -73,6 +73,10 @@ const rpc = Electroview.defineRPC<MarkBunRPC>({
         const listeners = (window as any).__electrobunListeners?.['open-file-history'] || [];
         listeners.forEach((cb: () => void) => cb());
       },
+      languageChanged: ({ language }) => {
+        const listeners = (window as any).__electrobunListeners?.['language-changed'] || [];
+        listeners.forEach((cb: (data: unknown) => void) => cb({ language }));
+      },
     },
   },
 });
@@ -202,8 +206,16 @@ export const electrobun = {
     return await electroview.rpc.request.getSettings({});
   },
 
-  async saveSettings(params: { theme: 'light' | 'dark' | 'system'; fontSize: number; lineHeight: number; autoSave: boolean; autoSaveInterval: number }) {
+  async saveSettings(params: { theme: 'light' | 'dark' | 'system'; fontSize: number; lineHeight: number; autoSave: boolean; autoSaveInterval: number; language: 'en' | 'zh-CN' }) {
     return await electroview.rpc.request.saveSettings({ settings: params });
+  },
+
+  async setLanguage(language: 'en' | 'zh-CN') {
+    return await electroview.rpc.request.setLanguage({ language });
+  },
+
+  async getSystemLanguage() {
+    return await electroview.rpc.request.getSystemLanguage({});
   },
 
   async getUIState() {

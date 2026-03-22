@@ -1,9 +1,14 @@
+import { useTranslation } from 'react-i18next';
+
 interface AboutDialogProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 export function AboutDialog({ isOpen, onClose }: AboutDialogProps) {
+  const { t: tc } = useTranslation('common');
+  const { t: td } = useTranslation('dialog');
+
   if (!isOpen) return null;
 
   return (
@@ -25,12 +30,12 @@ export function AboutDialog({ isOpen, onClose }: AboutDialogProps) {
             <p className="text-xs text-muted-foreground mt-0.5">Version 0.3.0</p>
           </div>
           <p className="text-sm text-center text-muted-foreground leading-relaxed">
-            A lightweight Markdown writing app
+            {td('about.description')}
             <br />
-            designed for focused writing.
+            {td('about.descriptionSub')}
           </p>
           <p className="text-xs text-muted-foreground">
-            Built with Electrobun · Bun · React
+            {td('about.builtWith')}
           </p>
         </div>
 
@@ -40,7 +45,7 @@ export function AboutDialog({ isOpen, onClose }: AboutDialogProps) {
             onClick={onClose}
             className="px-6 py-1.5 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
-            OK
+            {tc('button.ok')}
           </button>
         </div>
       </div>

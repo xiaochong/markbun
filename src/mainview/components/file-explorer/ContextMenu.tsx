@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import type { FileSystemNode } from '@/shared/types';
 
@@ -27,31 +28,6 @@ interface ContextMenuProps {
   onAction: (action: ContextMenuAction, node: FileSystemNode | null) => void;
 }
 
-const FILE_ITEMS: ContextMenuItem[] = [
-  { id: 'new-file', label: 'New File', icon: <FilePlusIcon /> },
-  { id: 'new-folder', label: 'New Folder', icon: <FolderPlusIcon /> },
-  { separator: true } as ContextMenuItem,
-  { id: 'rename', label: 'Rename', icon: <EditIcon /> },
-  { id: 'move', label: 'Move to...', icon: <MoveIcon /> },
-  { separator: true } as ContextMenuItem,
-  { id: 'delete', label: 'Delete', icon: <TrashIcon />, danger: true },
-];
-
-const FOLDER_ITEMS: ContextMenuItem[] = [
-  { id: 'new-file', label: 'New File', icon: <FilePlusIcon /> },
-  { id: 'new-folder', label: 'New Folder', icon: <FolderPlusIcon /> },
-  { separator: true } as ContextMenuItem,
-  { id: 'rename', label: 'Rename', icon: <EditIcon /> },
-  { id: 'delete', label: 'Delete', icon: <TrashIcon />, danger: true },
-];
-
-const ROOT_ITEMS: ContextMenuItem[] = [
-  { id: 'new-file', label: 'New File', icon: <FilePlusIcon /> },
-  { id: 'new-folder', label: 'New Folder', icon: <FolderPlusIcon /> },
-  { separator: true } as ContextMenuItem,
-  { id: 'refresh', label: 'Refresh', icon: <RefreshIcon /> },
-];
-
 export function ContextMenu({
   node,
   x,
@@ -60,14 +36,41 @@ export function ContextMenu({
   onClose,
   onAction,
 }: ContextMenuProps) {
+  const { t } = useTranslation('file');
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Build menu items inside the component so labels are translated
+  const fileItems: ContextMenuItem[] = [
+    { id: 'new-file', label: t('contextMenu.newFile'), icon: <FilePlusIcon /> },
+    { id: 'new-folder', label: t('contextMenu.newFolder'), icon: <FolderPlusIcon /> },
+    { separator: true } as ContextMenuItem,
+    { id: 'rename', label: t('contextMenu.rename'), icon: <EditIcon /> },
+    { id: 'move', label: t('contextMenu.moveTo'), icon: <MoveIcon /> },
+    { separator: true } as ContextMenuItem,
+    { id: 'delete', label: t('contextMenu.delete'), icon: <TrashIcon />, danger: true },
+  ];
+
+  const folderItems: ContextMenuItem[] = [
+    { id: 'new-file', label: t('contextMenu.newFile'), icon: <FilePlusIcon /> },
+    { id: 'new-folder', label: t('contextMenu.newFolder'), icon: <FolderPlusIcon /> },
+    { separator: true } as ContextMenuItem,
+    { id: 'rename', label: t('contextMenu.rename'), icon: <EditIcon /> },
+    { id: 'delete', label: t('contextMenu.delete'), icon: <TrashIcon />, danger: true },
+  ];
+
+  const rootItems: ContextMenuItem[] = [
+    { id: 'new-file', label: t('contextMenu.newFile'), icon: <FilePlusIcon /> },
+    { id: 'new-folder', label: t('contextMenu.newFolder'), icon: <FolderPlusIcon /> },
+    { separator: true } as ContextMenuItem,
+    { id: 'refresh', label: t('contextMenu.refresh'), icon: <RefreshIcon /> },
+  ];
 
   // Get menu items based on node type
   const getMenuItems = useCallback((): ContextMenuItem[] => {
-    if (!node) return ROOT_ITEMS;
-    if (node.type === 'file') return FILE_ITEMS;
-    return FOLDER_ITEMS;
-  }, [node]);
+    if (!node) return rootItems;
+    if (node.type === 'file') return fileItems;
+    return folderItems;
+  }, [node, fileItems, folderItems, rootItems]);
 
   // Handle click outside to close
   useEffect(() => {

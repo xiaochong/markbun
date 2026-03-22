@@ -1,0 +1,93 @@
+{
+  "app": {
+    "about": "About MarkBun",
+    "preferences": "Preferences...",
+    "hide": "Hide MarkBun",
+    "hideOthers": "Hide Others",
+    "showAll": "Show All",
+    "quit": "Quit MarkBun"
+  },
+  "file": {
+    "title": "File",
+    "new": "New",
+    "newWindow": "New Window",
+    "open": "Open...",
+    "openFolder": "Open Folder...",
+    "quickOpen": "Quick Open...",
+    "save": "Save",
+    "saveAs": "Save As...",
+    "history": "History..."
+  },
+  "edit": {
+    "title": "Edit",
+    "undo": "Undo",
+    "redo": "Redo",
+    "cut": "Cut",
+    "copy": "Copy",
+    "paste": "Paste",
+    "selectAll": "Select All"
+  },
+  "format": {
+    "title": "Format",
+    "strong": "Strong",
+    "emphasis": "Emphasis",
+    "code": "Code",
+    "inlineFormula": "Inline Formula",
+    "strikethrough": "Strikethrough",
+    "highlight": "Highlight",
+    "superscript": "Superscript",
+    "subscript": "Subscript",
+    "hyperlink": "Hyperlink",
+    "image": "Image"
+  },
+  "paragraph": {
+    "title": "Paragraph",
+    "heading1": "Heading 1",
+    "heading2": "Heading 2",
+    "heading3": "Heading 3",
+    "heading4": "Heading 4",
+    "heading5": "Heading 5",
+    "heading6": "Heading 6",
+    "paragraph": "Paragraph",
+    "increaseHeading": "Increase Heading Level",
+    "decreaseHeading": "Decrease Heading Level",
+    "table": "Table",
+    "copyCell": "Copy Cell",
+    "insertTable": "Insert Table",
+    "insertRowAbove": "Insert Row Above",
+    "insertRowBelow": "Insert Row Below",
+    "insertColLeft": "Insert Column Left",
+    "insertColRight": "Insert Column Right",
+    "moveRowUp": "Move Row Up",
+    "moveRowDown": "Move Row Down",
+    "moveColLeft": "Move Column Left",
+    "moveColRight": "Move Column Right",
+    "deleteRow": "Delete Row",
+    "deleteCol": "Delete Column",
+    "deleteTable": "Delete Table",
+    "mathBlock": "Math Block",
+    "codeBlock": "Code Block",
+    "quote": "Quote",
+    "orderedList": "Ordered List",
+    "unorderedList": "Unordered List",
+    "taskList": "Task List",
+    "insertAbove": "Insert Paragraph Above",
+    "insertBelow": "Insert Paragraph Below",
+    "horizontalRule": "Horizontal Rule"
+  },
+  "view": {
+    "title": "View",
+    "toggleDarkMode": "Toggle Dark Mode",
+    "showSidebar": "Show Sidebar",
+    "showTitleBar": "Show Title Bar",
+    "showToolBar": "Show Tool Bar",
+    "showStatusBar": "Show Status Bar",
+    "sourceMode": "Source Mode",
+    "toggleDevTools": "Toggle Developer Tools"
+  },
+  "help": {
+    "title": "Help",
+    "help": "Help",
+    "about": "About MarkBun"
+  }
+}

@@ -1,4 +1,5 @@
-import { useEffect, useRef, useCallback, memo, useMemo } from 'react';
+import { useEffect, useRef, useCallback, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import type { SidebarTab } from '@/shared/types';
 
@@ -107,6 +108,7 @@ interface TabHeaderProps {
 }
 
 const TabHeader = memo(function TabHeader({ activeTab, onTabChange, onClose }: TabHeaderProps) {
+  const { t } = useTranslation('file');
   const handleFilesClick = useCallback(() => onTabChange('files'), [onTabChange]);
   const handleOutlineClick = useCallback(() => onTabChange('outline'), [onTabChange]);
 
@@ -116,21 +118,21 @@ const TabHeader = memo(function TabHeader({ activeTab, onTabChange, onClose }: T
         active={activeTab === 'files'}
         onClick={handleFilesClick}
         icon={<FilesIcon />}
-        label="Files"
+        label={t('sidebar.files')}
         className="flex-1 justify-center"
       />
       <TabButton
         active={activeTab === 'outline'}
         onClick={handleOutlineClick}
         icon={<OutlineIcon />}
-        label="Outline"
+        label={t('sidebar.outline')}
         className="flex-1 justify-center"
       />
       {/* Close Button */}
       <button
         onClick={onClose}
         className="absolute top-1/2 -translate-y-1/2 right-2 p-1 rounded-md hover:bg-accent opacity-0 group-hover/tabheader:opacity-100 transition-opacity z-10"
-        title="Close sidebar (Cmd/Ctrl+B)"
+        title={t('sidebar.closeSidebar')}
       >
         <CloseIcon />
       </button>

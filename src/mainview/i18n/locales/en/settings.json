@@ -1,0 +1,42 @@
+{
+  "title": "Settings",
+  "tabs": {
+    "general": "General",
+    "editor": "Editor",
+    "appearance": "Appearance",
+    "backup": "Backup",
+    "language": "Language"
+  },
+  "general": {
+    "autoSave": "Auto Save",
+    "autoSaveDesc": "Automatically save changes while editing",
+    "autoSaveInterval": "Auto Save Interval",
+    "autoSaveIntervalDesc": "How often to save changes while typing"
+  },
+  "editor": {
+    "fontSize": "Font Size",
+    "lineHeight": "Line Height"
+  },
+  "appearance": {
+    "theme": "Theme",
+    "themeDesc": "Choose your preferred color theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System"
+  },
+  "backup": {
+    "versionHistory": "Version History",
+    "versionHistoryDesc": "Keep snapshots of each file before saving",
+    "maxVersions": "Max versions per file",
+    "retentionDays": "Keep for (days)",
+    "recoveryInterval": "Crash recovery write interval",
+    "recoveryIntervalDesc": "How often to write a crash-recovery copy (even when auto-save is off)",
+    "storageLocation": "Storage location",
+    "recoveryPath": "Recovery: ~/.config/markbun/recovery/",
+    "historyPath": "History: ~/.config/markbun/backups/"
+  },
+  "language": {
+    "label": "Language",
+    "desc": "Choose the display language"
+  }
+}

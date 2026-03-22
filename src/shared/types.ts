@@ -52,6 +52,7 @@ export interface AppSettings {
   autoSave: boolean;
   autoSaveInterval: number;
   backup: BackupSettings;
+  language: 'en' | 'zh-CN';
 }
 
 export interface EditorStats {
@@ -233,6 +234,10 @@ export type MarkBunRPC = {
       getVersionBackups: { params: { filePath: string }; response: { success: boolean; backups?: BackupEntry[]; error?: string } };
       restoreVersionBackup: { params: { backupPath: string }; response: { success: boolean; content?: string; error?: string } };
       deleteVersionBackup: { params: { backupPath: string }; response: { success: boolean; error?: string } };
+
+      // i18n
+      setLanguage: { params: { language: 'en' | 'zh-CN' }; response: { success: boolean; error?: string } };
+      getSystemLanguage: { params: {}; response: { success: boolean; language?: string; error?: string } };
     };
     messages: {
       fileOpened: { path: string; content: string };
@@ -259,6 +264,9 @@ export type MarkBunRPC = {
 
       // File version history
       openFileHistory: {};
+
+      // i18n
+      languageChanged: { language: 'en' | 'zh-CN' };
     };
   }>;
   webview: RPCSchema<{

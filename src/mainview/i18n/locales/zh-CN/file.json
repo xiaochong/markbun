@@ -1,0 +1,33 @@
+{
+  "explorer": {
+    "emptyFolder": "空文件夹",
+    "noFolder": "未打开文件夹",
+    "noFolderHint": "打开文件以查看其所在文件夹"
+  },
+  "contextMenu": {
+    "newFile": "新建文件",
+    "newFolder": "新建文件夹",
+    "rename": "重命名",
+    "moveTo": "移动到...",
+    "delete": "删除",
+    "refresh": "刷新"
+  },
+  "quickOpen": {
+    "placeholder": "输入以搜索文件...",
+    "noResults": "未找到文件",
+    "startTyping": "开始输入以搜索文件",
+    "fileCount": "{{count}} 个文件",
+    "navigate": "↑↓ 导航",
+    "open": "↵ 打开",
+    "recent": "最近",
+    "esc": "ESC"
+  },
+  "sidebar": {
+    "files": "文件",
+    "outline": "大纲",
+    "closeSidebar": "关闭侧栏 (Cmd/Ctrl+B)"
+  },
+  "titleBar": {
+    "untitled": "未命名"
+  }
+}

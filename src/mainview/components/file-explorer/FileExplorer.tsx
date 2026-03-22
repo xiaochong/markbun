@@ -1,4 +1,5 @@
 import {memo, useCallback, useRef, useState} from 'react';
+import { useTranslation } from 'react-i18next';
 import {electrobun} from '@/lib/electrobun';
 import {FileTree} from './FileTree';
 import {ContextMenu, type ContextMenuAction} from './ContextMenu';
@@ -30,6 +31,8 @@ export const FileExplorer = memo(function FileExplorer({
   onFileClick,
   onRefresh,
 }: FileExplorerProps) {
+  const { t } = useTranslation('file');
+
   // Context menu state
   const [contextMenu, setContextMenu] = useState<{
     isOpen: boolean;
@@ -282,13 +285,13 @@ export const FileExplorer = memo(function FileExplorer({
               {rootPath ? (
                 <>
                   <FolderOpenIcon className="w-6 h-6 mx-auto mb-2 opacity-40" />
-                  <p>Empty folder</p>
+                  <p>{t('explorer.emptyFolder')}</p>
                 </>
               ) : (
                 <>
                   <FolderClosedIcon className="w-6 h-6 mx-auto mb-2 opacity-40" />
-                  <p>No folder open</p>
-                  <p className="text-[10px] mt-1 opacity-60">Open a file to view its folder</p>
+                  <p>{t('explorer.noFolder')}</p>
+                  <p className="text-[10px] mt-1 opacity-60">{t('explorer.noFolderHint')}</p>
                 </>
               )}
             </div>

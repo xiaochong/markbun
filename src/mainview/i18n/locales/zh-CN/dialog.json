@@ -1,0 +1,55 @@
+{
+  "about": {
+    "description": "轻量级 Markdown 写作应用",
+    "descriptionSub": "专注于写作体验。",
+    "builtWith": "基于 Electrobun · Bun · React 构建"
+  },
+  "save": {
+    "title": "保存文件",
+    "fileNameLabel": "文件名",
+    "fileNamePlaceholder": "输入文件名...",
+    "emptyFolder": "此目录下没有文件夹",
+    "errorLoad": "加载文件夹失败",
+    "errorLoadContents": "加载文件夹内容失败",
+    "errorNoName": "请输入文件名"
+  },
+  "recovery": {
+    "title": "恢复未保存的更改",
+    "descSingle": "上次退出时有一个文件未能正常保存。",
+    "descMultiple": "上次退出时有 {{count}} 个文件未能正常保存。",
+    "dismissAll": "全部忽略",
+    "dismiss": "忽略",
+    "dismissSelected": "忽略所选",
+    "later": "稍后"
+  },
+  "imageInsert": {
+    "title": "插入图片",
+    "tabLocal": "本地文件",
+    "tabUrl": "URL",
+    "urlLabel": "图片 URL",
+    "urlPlaceholder": "https://example.com/image.png",
+    "altLabel": "替代文本",
+    "altPlaceholder": "图片描述",
+    "selectFile": "选择图片文件...",
+    "selectedFile": "已选择：{{path}}"
+  },
+  "move": {
+    "title": "移动到",
+    "description": "为「{{name}}」选择目标文件夹",
+    "noFolders": "没有可用的文件夹"
+  },
+  "fileHistory": {
+    "titleWithFile": "历史记录 — {{fileName}}",
+    "title": "文件历史",
+    "versionCount": "已保存 {{count}} 个版本",
+    "loadingPreview": "加载预览中...",
+    "empty": "暂无历史记录。每次保存前会自动创建版本快照。",
+    "selectPrompt": "选择一个版本以预览",
+    "loadError": "无法加载此版本。",
+    "restore": "恢复此版本",
+    "timeJustNow": "刚刚",
+    "timeMinutes": "{{m}} 分钟前",
+    "timeHours": "{{h}} 小时前",
+    "timeDays": "{{d}} 天前"
+  }
+}

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { electrobun } from '@/lib/electrobun';
 import { cn } from '@/lib/utils';
 
@@ -8,6 +9,7 @@ interface ImageViewerProps {
 }
 
 export function ImageViewer({ path, className }: ImageViewerProps) {
+  const { t } = useTranslation('editor');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -110,7 +112,7 @@ export function ImageViewer({ path, className }: ImageViewerProps) {
           <button
             onClick={handleZoomOut}
             className="p-1.5 rounded hover:bg-accent transition-colors"
-            title="Zoom Out"
+            title={t('imageViewer.zoomOut')}
           >
             <ZoomOutIcon className="w-4 h-4" />
           </button>
@@ -120,7 +122,7 @@ export function ImageViewer({ path, className }: ImageViewerProps) {
           <button
             onClick={handleZoomIn}
             className="p-1.5 rounded hover:bg-accent transition-colors"
-            title="Zoom In"
+            title={t('imageViewer.zoomIn')}
           >
             <ZoomInIcon className="w-4 h-4" />
           </button>
@@ -128,7 +130,7 @@ export function ImageViewer({ path, className }: ImageViewerProps) {
           <button
             onClick={handleReset}
             className="p-1.5 rounded hover:bg-accent transition-colors"
-            title="Reset"
+            title={t('imageViewer.reset')}
           >
             <ResetIcon className="w-4 h-4" />
           </button>

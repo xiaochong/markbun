@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { electrobun } from '@/lib/electrobun';
 import type { RecoveryInfo } from '@/shared/types';
@@ -31,6 +32,8 @@ function fileName(path: string) {
 }
 
 export function RecoveryDialog({ isOpen, recoveries, onClose, onRecover }: RecoveryDialogProps) {
+  const { t: tc } = useTranslation('common');
+  const { t: td } = useTranslation('dialog');
   const [selected, setSelected] = useState<RecoveryInfo | null>(recoveries[0] ?? null);
   const [isRestoring, setIsRestoring] = useState(false);
 
@@ -83,11 +86,11 @@ export function RecoveryDialog({ isOpen, recoveries, onClose, onRecover }: Recov
       <div className="w-[580px] max-h-[80vh] bg-background rounded-lg shadow-xl overflow-hidden border flex flex-col">
         {/* Header */}
         <div className="px-5 py-4 border-b bg-muted/30">
-          <h2 className="text-base font-semibold">Recover unsaved changes</h2>
+          <h2 className="text-base font-semibold">{td('recovery.title')}</h2>
           <p className="text-xs text-muted-foreground mt-0.5">
             {recoveries.length === 1
-              ? 'A file was not saved cleanly on last exit.'
-              : `${recoveries.length} files were not saved cleanly on last exit.`}
+              ? td('recovery.descSingle')
+              : td('recovery.descMultiple', { count: recoveries.length })}
           </p>
         </div>
 
@@ -133,14 +136,14 @@ export function RecoveryDialog({ isOpen, recoveries, onClose, onRecover }: Recov
                 onClick={handleDismissAll}
                 className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
-                Dismiss all
+                {td('recovery.dismissAll')}
               </button>
             )}
             <button
               onClick={handleDismiss}
               className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              {recoveries.length === 1 ? 'Dismiss' : 'Dismiss selected'}
+              {recoveries.length === 1 ? td('recovery.dismiss') : td('recovery.dismissSelected')}
             </button>
           </div>
           <div className="flex gap-2">
@@ -148,7 +151,7 @@ export function RecoveryDialog({ isOpen, recoveries, onClose, onRecover }: Recov
               onClick={onClose}
               className="px-4 py-1.5 text-sm rounded-md hover:bg-muted transition-colors"
             >
-              Later
+              {td('recovery.later')}
             </button>
             <button
               onClick={handleRestore}
@@ -160,7 +163,7 @@ export function RecoveryDialog({ isOpen, recoveries, onClose, onRecover }: Recov
                   : 'bg-primary text-primary-foreground hover:bg-primary/90',
               )}
             >
-              {isRestoring ? 'Restoring…' : 'Restore'}
+              {isRestoring ? tc('status.restoring') : tc('button.restore')}
             </button>
           </div>
         </div>

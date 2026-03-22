@@ -1,4 +1,5 @@
 import { useRef, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import type { QuickOpenItem } from '@/shared/types';
 
@@ -25,6 +26,7 @@ export function QuickOpen({
   onSelectNext,
   onSelectPrevious,
 }: QuickOpenProps) {
+  const { t } = useTranslation('file');
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -89,11 +91,11 @@ export function QuickOpen({
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type to search files..."
+            placeholder={t('quickOpen.placeholder')}
             className="flex-1 bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
           />
           <kbd className="px-2 py-0.5 text-xs bg-muted rounded text-muted-foreground">
-            ESC
+            {t('quickOpen.esc')}
           </kbd>
         </div>
 
@@ -101,7 +103,7 @@ export function QuickOpen({
         <div ref={listRef} className="max-h-[400px] overflow-y-auto">
           {items.length === 0 ? (
             <div className="px-4 py-8 text-center text-muted-foreground">
-              {query.trim() ? 'No files found' : 'Start typing to search files'}
+              {query.trim() ? t('quickOpen.noResults') : t('quickOpen.startTyping')}
             </div>
           ) : (
             items.map((item, index) => (
@@ -111,6 +113,7 @@ export function QuickOpen({
                 isSelected={index === selectedIndex}
                 query={query}
                 onClick={() => onSelect(item.path)}
+                recentLabel={t('quickOpen.recent')}
               />
             ))
           )}
@@ -118,10 +121,10 @@ export function QuickOpen({
 
         {/* Footer */}
         <div className="flex items-center justify-between px-4 py-2 text-xs text-muted-foreground border-t border-border bg-muted/30">
-          <span>{items.length} files</span>
+          <span>{t('quickOpen.fileCount', { count: items.length })}</span>
           <span className="flex items-center gap-2">
-            <kbd className="px-1.5 py-0.5 bg-muted rounded">↑↓</kbd> to navigate
-            <kbd className="px-1.5 py-0.5 bg-muted rounded">↵</kbd> to open
+            <kbd className="px-1.5 py-0.5 bg-muted rounded">↑↓</kbd> {t('quickOpen.navigate')}
+            <kbd className="px-1.5 py-0.5 bg-muted rounded">↵</kbd> {t('quickOpen.open')}
           </span>
         </div>
       </div>
@@ -135,9 +138,10 @@ interface QuickOpenItemProps {
   isSelected: boolean;
   query: string;
   onClick: () => void;
+  recentLabel: string;
 }
 
-function QuickOpenItem({ item, isSelected, query, onClick }: QuickOpenItemProps) {
+function QuickOpenItem({ item, isSelected, query, onClick, recentLabel }: QuickOpenItemProps) {
   const highlightedName = useHighlight(item.name, query);
 
   return (
@@ -160,7 +164,7 @@ function QuickOpenItem({ item, isSelected, query, onClick }: QuickOpenItemProps)
           'px-1.5 py-0.5 text-[10px] rounded',
           isSelected ? 'bg-accent-foreground/20' : 'bg-muted'
         )}>
-          recent
+          {recentLabel}
         </span>
       )}
     </button>

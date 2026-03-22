@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import type { FileSystemNode, FolderNode } from '@/shared/types';
 
@@ -25,6 +26,8 @@ export function MoveDialog({
   onClose,
   onMove,
 }: MoveDialogProps) {
+  const { t: tc } = useTranslation('common');
+  const { t: td } = useTranslation('dialog');
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
   const [folderList, setFolderList] = useState<FolderItem[]>([]);
@@ -141,9 +144,9 @@ export function MoveDialog({
       <div className="w-[400px] max-w-[90vw] bg-popover border border-border rounded-lg shadow-xl">
         {/* Header */}
         <div className="px-4 py-3 border-b border-border">
-          <h3 className="text-sm font-medium">Move to</h3>
+          <h3 className="text-sm font-medium">{td('move.title')}</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Select destination folder for "{sourceNode.name}"
+            {td('move.description', { name: sourceNode.name })}
           </p>
         </div>
 
@@ -185,7 +188,7 @@ export function MoveDialog({
 
           {folderList.length === 0 && (
             <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-              No folders available
+              {td('move.noFolders')}
             </div>
           )}
         </div>
@@ -196,7 +199,7 @@ export function MoveDialog({
             onClick={onClose}
             className="px-3 py-1.5 text-[13px] rounded-md hover:bg-accent transition-colors"
           >
-            Cancel
+            {tc('button.cancel')}
           </button>
           <button
             onClick={() => {
@@ -212,7 +215,7 @@ export function MoveDialog({
                 : 'bg-muted text-muted-foreground cursor-not-allowed'
             )}
           >
-            Move
+            {tc('button.move')}
           </button>
         </div>
       </div>

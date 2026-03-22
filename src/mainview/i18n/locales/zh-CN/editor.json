@@ -1,0 +1,29 @@
+{
+  "toolbar": {
+    "heading1": "标题 1 (Ctrl+1)",
+    "heading2": "标题 2 (Ctrl+2)",
+    "heading3": "标题 3 (Ctrl+3)",
+    "bold": "加粗 (Ctrl+B)",
+    "italic": "斜体 (Ctrl+I)",
+    "code": "行内代码 (Ctrl+`)",
+    "quote": "引用",
+    "link": "链接 (Ctrl+K)",
+    "bulletList": "无序列表",
+    "numberedList": "有序列表"
+  },
+  "statusBar": {
+    "untitled": "未命名",
+    "words": "词",
+    "characters": "字符",
+    "lines": "行"
+  },
+  "imageViewer": {
+    "zoomIn": "放大",
+    "zoomOut": "缩小",
+    "reset": "重置"
+  },
+  "outline": {
+    "empty": "未找到标题",
+    "emptyHint": "在文档中添加 # 标题"
+  }
+}

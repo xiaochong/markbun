@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { electrobun } from '@/lib/electrobun';
 import type { BackupEntry } from '@/shared/types';
@@ -21,17 +22,6 @@ function formatDate(ts: number) {
   });
 }
 
-function relativeTime(ts: number) {
-  const diff = Date.now() - ts;
-  const m = Math.floor(diff / 60_000);
-  if (m < 1) return 'just now';
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  return `${d}d ago`;
-}
-
 function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -45,6 +35,8 @@ function fileName(path: string) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function FileHistoryDialog({ isOpen, filePath, onClose, onRestore }: FileHistoryDialogProps) {
+  const { t: tc } = useTranslation('common');
+  const { t: td } = useTranslation('dialog');
   const [backups, setBackups] = useState<BackupEntry[]>([]);
   const [selected, setSelected] = useState<BackupEntry | null>(null);
   const [previewContent, setPreviewContent] = useState<string | null>(null);
@@ -52,6 +44,18 @@ export function FileHistoryDialog({ isOpen, filePath, onClose, onRestore }: File
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [deletingPaths, setDeletingPaths] = useState<Set<string>>(new Set());
+
+  // relative time using i18n strings
+  const relativeTime = useCallback((ts: number): string => {
+    const diff = Date.now() - ts;
+    const m = Math.floor(diff / 60_000);
+    if (m < 1) return td('fileHistory.timeJustNow');
+    if (m < 60) return td('fileHistory.timeMinutes', { m });
+    const h = Math.floor(m / 60);
+    if (h < 24) return td('fileHistory.timeHours', { h });
+    const d = Math.floor(h / 24);
+    return td('fileHistory.timeDays', { d });
+  }, [td]);
 
   // Load backup list whenever dialog opens for a new file
   useEffect(() => {
@@ -130,7 +134,9 @@ export function FileHistoryDialog({ isOpen, filePath, onClose, onRestore }: File
 
   if (!isOpen) return null;
 
-  const title = filePath ? `History — ${fileName(filePath)}` : 'File History';
+  const title = filePath
+    ? td('fileHistory.titleWithFile', { fileName: fileName(filePath) })
+    : td('fileHistory.title');
 
   return (
     <div
@@ -145,7 +151,7 @@ export function FileHistoryDialog({ isOpen, filePath, onClose, onRestore }: File
             <h2 className="text-sm font-semibold">{title}</h2>
             {backups.length > 0 && (
               <p className="text-xs text-muted-foreground mt-0.5">
-                {backups.length} version{backups.length !== 1 ? 's' : ''} saved
+                {td('fileHistory.versionCount', { count: backups.length })}
               </p>
             )}
           </div>
@@ -165,13 +171,13 @@ export function FileHistoryDialog({ isOpen, filePath, onClose, onRestore }: File
           <div className="w-52 border-r flex flex-col bg-muted/10">
             {isLoadingBackups ? (
               <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
-                Loading…
+                {tc('status.loading')}
               </div>
             ) : backups.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-2 p-4 text-center">
                 <span className="text-2xl">🕐</span>
                 <p className="text-xs text-muted-foreground">
-                  No history yet. Versions are saved automatically before each save.
+                  {td('fileHistory.empty')}
                 </p>
               </div>
             ) : (
@@ -220,15 +226,15 @@ export function FileHistoryDialog({ isOpen, filePath, onClose, onRestore }: File
           <div className="flex-1 flex flex-col min-w-0">
             {selected === null ? (
               <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
-                Select a version to preview
+                {td('fileHistory.selectPrompt')}
               </div>
             ) : isLoadingPreview ? (
               <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
-                Loading preview…
+                {td('fileHistory.loadingPreview')}
               </div>
             ) : previewContent === null ? (
               <div className="flex-1 flex items-center justify-center text-sm text-destructive">
-                Could not load this version.
+                {td('fileHistory.loadError')}
               </div>
             ) : (
               <pre className="flex-1 overflow-auto p-4 text-xs font-mono leading-relaxed whitespace-pre-wrap break-words text-foreground">
@@ -244,7 +250,7 @@ export function FileHistoryDialog({ isOpen, filePath, onClose, onRestore }: File
             onClick={onClose}
             className="px-4 py-1.5 text-sm rounded-md hover:bg-muted transition-colors"
           >
-            Close
+            {tc('button.close')}
           </button>
           <button
             onClick={() => { void handleRestore(); }}
@@ -256,7 +262,7 @@ export function FileHistoryDialog({ isOpen, filePath, onClose, onRestore }: File
                 : 'bg-primary text-primary-foreground hover:bg-primary/90',
             )}
           >
-            {isRestoring ? 'Restoring…' : 'Restore this version'}
+            {isRestoring ? tc('status.restoring') : td('fileHistory.restore')}
           </button>
         </div>
       </div>

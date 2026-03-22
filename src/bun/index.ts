@@ -1,5 +1,7 @@
 import Electrobun, { BrowserWindow, BrowserView, Updater, Utils, ApplicationMenu, ContextMenu, Screen } from 'electrobun/bun';
 import { setupMenu, type ViewMenuState } from './menu';
+import { initI18n, changeLanguage, t } from './i18n';
+import { resolveLanguage } from '../shared/i18n/config';
 import type { MarkBunRPC } from '../shared/types';
 import { readFile, writeFile, stat, mkdir, readdir, open, unlink, rename, rmdir, rm, access, mkdtemp } from 'fs/promises';
 import { existsSync } from 'fs';
@@ -166,7 +168,7 @@ let currentUIState: UIState | null = null;
 // Helper to update view menu state and refresh menu
 function updateViewMenuState(updates: Partial<ViewMenuState>) {
   viewMenuState = { ...viewMenuState, ...updates };
-  setupMenu(viewMenuState);
+  setupMenu(viewMenuState, t);
 }
 
 // File operations
@@ -373,8 +375,13 @@ async function main() {
     console.error('[Bun Main] Failed to load settings:', error);
   }
 
+  // Initialize i18n before building the menu
+  const systemLocale = process.env.LANG || process.env.LANGUAGE || process.env.LC_ALL || 'en';
+  const resolvedLanguage = resolveLanguage(currentSettings?.general?.language, systemLocale);
+  await initI18n(resolvedLanguage);
+
   // Setup application menu FIRST (before creating window)
-  setupMenu(viewMenuState);
+  setupMenu(viewMenuState, t);
 
   const url = await getMainViewUrl();
 
@@ -460,40 +467,40 @@ async function main() {
         showTableContextMenu: async () => {
           // Show context menu for table operations
           ContextMenu.showContextMenu([
-            { label: 'Copy Cell', action: 'table-copy-cell' },
+            { label: t('paragraph.copyCell'), action: 'table-copy-cell' },
             { type: 'separator' },
-            { label: 'Insert Row Above', action: 'table-insert-row-above' },
-            { label: 'Insert Row Below', action: 'table-insert-row-below' },
+            { label: t('paragraph.insertRowAbove'), action: 'table-insert-row-above' },
+            { label: t('paragraph.insertRowBelow'), action: 'table-insert-row-below' },
             { type: 'separator' },
-            { label: 'Insert Column Left', action: 'table-insert-col-left' },
-            { label: 'Insert Column Right', action: 'table-insert-col-right' },
+            { label: t('paragraph.insertColLeft'), action: 'table-insert-col-left' },
+            { label: t('paragraph.insertColRight'), action: 'table-insert-col-right' },
             { type: 'separator' },
-            { label: 'Move Row Up', action: 'table-move-row-up' },
-            { label: 'Move Row Down', action: 'table-move-row-down' },
+            { label: t('paragraph.moveRowUp'), action: 'table-move-row-up' },
+            { label: t('paragraph.moveRowDown'), action: 'table-move-row-down' },
             { type: 'separator' },
-            { label: 'Move Column Left', action: 'table-move-col-left' },
-            { label: 'Move Column Right', action: 'table-move-col-right' },
+            { label: t('paragraph.moveColLeft'), action: 'table-move-col-left' },
+            { label: t('paragraph.moveColRight'), action: 'table-move-col-right' },
             { type: 'separator' },
-            { label: 'Delete Row', action: 'table-delete-row' },
-            { label: 'Delete Column', action: 'table-delete-col' },
-            { label: 'Delete Table', action: 'table-delete' },
+            { label: t('paragraph.deleteRow'), action: 'table-delete-row' },
+            { label: t('paragraph.deleteCol'), action: 'table-delete-col' },
+            { label: t('paragraph.deleteTable'), action: 'table-delete' },
             { type: 'separator' },
             {
-              label: 'Format',
+              label: t('format.title'),
               submenu: [
-                { label: 'Strong', action: 'format-strong' },
-                { label: 'Emphasis', action: 'format-emphasis' },
-                { label: 'Code', action: 'format-code' },
+                { label: t('format.strong'), action: 'format-strong' },
+                { label: t('format.emphasis'), action: 'format-emphasis' },
+                { label: t('format.code'), action: 'format-code' },
                 { type: 'separator' },
-                { label: 'Inline Formula', action: 'format-inline-math' },
-                { label: 'Strikethrough', action: 'format-strikethrough' },
-                { label: 'Highlight', action: 'format-highlight' },
-                { label: 'Superscript', action: 'format-superscript' },
-                { label: 'Subscript', action: 'format-subscript' },
+                { label: t('format.inlineFormula'), action: 'format-inline-math' },
+                { label: t('format.strikethrough'), action: 'format-strikethrough' },
+                { label: t('format.highlight'), action: 'format-highlight' },
+                { label: t('format.superscript'), action: 'format-superscript' },
+                { label: t('format.subscript'), action: 'format-subscript' },
                 { type: 'separator' },
-                { label: 'Hyperlink', action: 'format-link' },
+                { label: t('format.hyperlink'), action: 'format-link' },
                 { type: 'separator' },
-                { label: 'Image', action: 'format-image' },
+                { label: t('format.image'), action: 'format-image' },
               ],
             },
           ]);
@@ -504,31 +511,31 @@ async function main() {
           // Note: We use custom actions instead of roles to handle copy/paste in the renderer
           // This ensures blob URLs are properly converted to original paths
           ContextMenu.showContextMenu([
-            { label: 'Undo', action: 'editor-undo' },
-            { label: 'Redo', action: 'editor-redo' },
+            { label: t('edit.undo'), action: 'editor-undo' },
+            { label: t('edit.redo'), action: 'editor-redo' },
             { type: 'separator' },
-            { label: 'Cut', action: 'editor-cut' },
-            { label: 'Copy', action: 'editor-copy' },
-            { label: 'Paste', action: 'editor-paste' },
+            { label: t('edit.cut'), action: 'editor-cut' },
+            { label: t('edit.copy'), action: 'editor-copy' },
+            { label: t('edit.paste'), action: 'editor-paste' },
             { type: 'separator' },
-            { label: 'Insert Table', action: 'table-insert' },
+            { label: t('paragraph.insertTable'), action: 'table-insert' },
             { type: 'separator' },
             {
-              label: 'Format',
+              label: t('format.title'),
               submenu: [
-                { label: 'Strong', action: 'format-strong' },
-                { label: 'Emphasis', action: 'format-emphasis' },
-                { label: 'Code', action: 'format-code' },
+                { label: t('format.strong'), action: 'format-strong' },
+                { label: t('format.emphasis'), action: 'format-emphasis' },
+                { label: t('format.code'), action: 'format-code' },
                 { type: 'separator' },
-                { label: 'Inline Formula', action: 'format-inline-math' },
-                { label: 'Strikethrough', action: 'format-strikethrough' },
-                { label: 'Highlight', action: 'format-highlight' },
-                { label: 'Superscript', action: 'format-superscript' },
-                { label: 'Subscript', action: 'format-subscript' },
+                { label: t('format.inlineFormula'), action: 'format-inline-math' },
+                { label: t('format.strikethrough'), action: 'format-strikethrough' },
+                { label: t('format.highlight'), action: 'format-highlight' },
+                { label: t('format.superscript'), action: 'format-superscript' },
+                { label: t('format.subscript'), action: 'format-subscript' },
                 { type: 'separator' },
-                { label: 'Hyperlink', action: 'format-link' },
+                { label: t('format.hyperlink'), action: 'format-link' },
                 { type: 'separator' },
-                { label: 'Image', action: 'format-image' },
+                { label: t('format.image'), action: 'format-image' },
               ],
             },
           ]);
@@ -930,6 +937,7 @@ async function main() {
               autoSave: currentSettings.general.autoSave,
               autoSaveInterval: currentSettings.general.autoSaveInterval,
               backup: currentSettings.backup,
+              language: currentSettings.general.language ?? 'en',
             };
             return { success: true, settings: appSettings };
           } catch (error) {
@@ -940,7 +948,7 @@ async function main() {
             };
           }
         },
-        saveSettings: async ({ settings }: { settings: { theme: 'light' | 'dark' | 'system'; fontSize: number; lineHeight: number; autoSave: boolean; autoSaveInterval: number; backup?: { enabled: boolean; maxVersions: number; retentionDays: number; recoveryInterval: number } } }) => {
+        saveSettings: async ({ settings }: { settings: { theme: 'light' | 'dark' | 'system'; fontSize: number; lineHeight: number; autoSave: boolean; autoSaveInterval: number; language?: 'en' | 'zh-CN'; backup?: { enabled: boolean; maxVersions: number; retentionDays: number; recoveryInterval: number } } }) => {
           try {
             const defaultBackup = { enabled: true, maxVersions: 20, retentionDays: 30, recoveryInterval: 30000 };
             currentSettings = {
@@ -948,6 +956,7 @@ async function main() {
               general: {
                 autoSave: settings.autoSave,
                 autoSaveInterval: settings.autoSaveInterval,
+                language: settings.language ?? currentSettings?.general.language ?? 'en',
               },
               editor: {
                 fontSize: settings.fontSize,
@@ -998,9 +1007,8 @@ async function main() {
               showSidebar: currentUIState.showSidebar,
               sourceMode: currentUIState.sourceMode,
             };
-            setupMenu(viewMenuState);
+            setupMenu(viewMenuState, t);
             const result = await saveUIState(currentUIState);
-            return result;
             return result;
           } catch (error) {
             console.error('[RPC] Failed to save UI state:', error);
@@ -1241,6 +1249,32 @@ async function main() {
           try {
             await deleteVersionBackup(backupPath);
             return { success: true };
+          } catch (error) {
+            return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+          }
+        },
+
+        // i18n
+        setLanguage: async ({ language }: { language: 'en' | 'zh-CN' }) => {
+          try {
+            if (currentSettings) {
+              currentSettings.general.language = language;
+              await saveSettings(currentSettings);
+            }
+            await changeLanguage(language);
+            setupMenu(viewMenuState, t);
+            return { success: true };
+          } catch (error) {
+            return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+          }
+        },
+
+        getSystemLanguage: async () => {
+          try {
+            const locale = process.env.LANG || process.env.LANGUAGE || process.env.LC_ALL || 'en';
+            // 提取语言代码部分，去除 .UTF-8 等后缀
+            const language = locale.split('.')[0].replace('_', '-');
+            return { success: true, language };
           } catch (error) {
             return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
           }

@@ -1,0 +1,33 @@
+{
+  "explorer": {
+    "emptyFolder": "Empty folder",
+    "noFolder": "No folder open",
+    "noFolderHint": "Open a file to view its folder"
+  },
+  "contextMenu": {
+    "newFile": "New File",
+    "newFolder": "New Folder",
+    "rename": "Rename",
+    "moveTo": "Move to...",
+    "delete": "Delete",
+    "refresh": "Refresh"
+  },
+  "quickOpen": {
+    "placeholder": "Type to search files...",
+    "noResults": "No files found",
+    "startTyping": "Start typing to search files",
+    "fileCount": "{{count}} files",
+    "navigate": "↑↓ to navigate",
+    "open": "↵ to open",
+    "recent": "recent",
+    "esc": "ESC"
+  },
+  "sidebar": {
+    "files": "Files",
+    "outline": "Outline",
+    "closeSidebar": "Close sidebar (Cmd/Ctrl+B)"
+  },
+  "titleBar": {
+    "untitled": "Untitled"
+  }
+}

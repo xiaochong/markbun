@@ -1,0 +1,55 @@
+{
+  "about": {
+    "description": "A lightweight Markdown writing app",
+    "descriptionSub": "designed for focused writing.",
+    "builtWith": "Built with Electrobun · Bun · React"
+  },
+  "save": {
+    "title": "Save File",
+    "fileNameLabel": "File Name",
+    "fileNamePlaceholder": "Enter file name...",
+    "emptyFolder": "No folders in this directory",
+    "errorLoad": "Failed to load folder",
+    "errorLoadContents": "Failed to load folder contents",
+    "errorNoName": "Please enter a file name"
+  },
+  "recovery": {
+    "title": "Recover unsaved changes",
+    "descSingle": "A file was not saved cleanly on last exit.",
+    "descMultiple": "{{count}} files were not saved cleanly on last exit.",
+    "dismissAll": "Dismiss all",
+    "dismiss": "Dismiss",
+    "dismissSelected": "Dismiss selected",
+    "later": "Later"
+  },
+  "imageInsert": {
+    "title": "Insert Image",
+    "tabLocal": "Local File",
+    "tabUrl": "URL",
+    "urlLabel": "Image URL",
+    "urlPlaceholder": "https://example.com/image.png",
+    "altLabel": "Alt Text",
+    "altPlaceholder": "Description of the image",
+    "selectFile": "Select Image File...",
+    "selectedFile": "Selected: {{path}}"
+  },
+  "move": {
+    "title": "Move to",
+    "description": "Select destination folder for \"{{name}}\"",
+    "noFolders": "No folders available"
+  },
+  "fileHistory": {
+    "titleWithFile": "History — {{fileName}}",
+    "title": "File History",
+    "versionCount": "{{count}} version(s) saved",
+    "loadingPreview": "Loading preview...",
+    "empty": "No history yet. Versions are saved automatically before each save.",
+    "selectPrompt": "Select a version to preview",
+    "loadError": "Could not load this version.",
+    "restore": "Restore this version",
+    "timeJustNow": "just now",
+    "timeMinutes": "{{m}}m ago",
+    "timeHours": "{{h}}h ago",
+    "timeDays": "{{d}}d ago"
+  }
+}
