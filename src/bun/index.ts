@@ -434,8 +434,7 @@ async function main() {
           const result = await openFileByPath(filePath, state);
           if (result.success && result.path && result.content !== undefined) {
             if (!skipRecentFile) await addRecentFile(result.path);
-            const dirSeparator = result.path.lastIndexOf('/');
-            state.workspaceRoot = dirSeparator > 0 ? result.path.substring(0, dirSeparator) : '/';
+            state.workspaceRoot = dirname(result.path);
             return { path: result.path, content: result.content, closeSidebar };
           }
           return null;
@@ -1540,8 +1539,7 @@ async function main() {
             if (result.path) {
               await addRecentFile(result.path);
               // Update workspace root to file's directory
-              const dirSeparator = result.path.lastIndexOf('/');
-              fw.state.workspaceRoot = dirSeparator > 0 ? result.path.substring(0, dirSeparator) : '/';
+              fw.state.workspaceRoot = dirname(result.path);
             }
             // @ts-ignore
             fw.win.webview.rpc.send.fileOpened({
@@ -1740,8 +1738,7 @@ async function main() {
           const result = await openFileByPath(filePath, fw.state);
           if (result.success && result.path && result.content !== undefined) {
             await addRecentFile(result.path);
-            const dirSeparator = result.path.lastIndexOf('/');
-            fw.state.workspaceRoot = dirSeparator > 0 ? result.path.substring(0, dirSeparator) : '/';
+            fw.state.workspaceRoot = dirname(result.path);
             // @ts-ignore
             fw.win.webview.rpc.send.fileOpened({ path: result.path, content: result.content });
           }
