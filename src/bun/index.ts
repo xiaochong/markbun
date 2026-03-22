@@ -545,10 +545,26 @@ async function main() {
         },
         writeToClipboard: async ({ text }: { text: string }) => {
           try {
-            // Use pbcopy on macOS to write to clipboard
-            const proc = spawn('pbcopy', { stdio: ['pipe', 'inherit', 'inherit'] });
-            proc.stdin.write(text);
-            proc.stdin.end();
+            const platform = process.platform;
+            if (platform === 'win32') {
+              // clip.exe reads from stdin, but requires UTF-16LE on some versions;
+              // PowerShell Set-Clipboard handles Unicode cleanly.
+              const escaped = text.replace(/'/g, "''");
+              const proc = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', `Set-Clipboard -Value '${escaped}'`], { stdio: ['ignore', 'ignore', 'ignore'] });
+              await new Promise<void>((resolve) => {
+                proc.on('close', () => resolve());
+                proc.on('error', () => resolve());
+              });
+            } else if (platform === 'linux') {
+              const proc = spawn('xclip', ['-selection', 'clipboard'], { stdio: ['pipe', 'ignore', 'ignore'] });
+              proc.stdin.write(text);
+              proc.stdin.end();
+            } else {
+              // macOS
+              const proc = spawn('pbcopy', { stdio: ['pipe', 'inherit', 'inherit'] });
+              proc.stdin.write(text);
+              proc.stdin.end();
+            }
             return { success: true };
           } catch (error) {
             console.error('Failed to write to clipboard:', error);
@@ -560,9 +576,21 @@ async function main() {
         },
         readFromClipboard: async () => {
           try {
-            // Use pbpaste on macOS to read from clipboard
+            const platform = process.platform;
+            let cmd: string;
+            let args: string[];
+            if (platform === 'win32') {
+              cmd = 'powershell.exe';
+              args = ['-NoProfile', '-NonInteractive', '-Command', 'Get-Clipboard'];
+            } else if (platform === 'linux') {
+              cmd = 'xclip';
+              args = ['-selection', 'clipboard', '-o'];
+            } else {
+              cmd = 'pbpaste';
+              args = [];
+            }
             const result = await new Promise<{ success: boolean; text?: string; error?: string }>((resolve) => {
-              const proc = spawn('pbpaste', { stdio: ['inherit', 'pipe', 'pipe'] });
+              const proc = spawn(cmd, args, { stdio: ['ignore', 'pipe', 'pipe'] });
               let output = '';
               let errorOutput = '';
 
@@ -578,7 +606,7 @@ async function main() {
                 if (code === 0) {
                   resolve({ success: true, text: output });
                 } else {
-                  resolve({ success: false, error: errorOutput || `pbpaste exited with code ${code}` });
+                  resolve({ success: false, error: errorOutput || `${cmd} exited with code ${code}` });
                 }
               });
 
