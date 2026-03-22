@@ -225,6 +225,7 @@ export type MarkBunRPC = {
       deleteFile: { params: { path: string }; response: { success: boolean; error?: string } };
       moveFile: { params: { sourcePath: string; targetFolderPath: string }; response: { success: boolean; newPath?: string; error?: string } };
       renameFile: { params: { path: string; newName: string }; response: { success: boolean; newPath?: string; error?: string } };
+      openInFinder: { params: { path: string }; response: { success: boolean; error?: string } };
 
       // Backup & Recovery
       checkRecovery: { params: {}; response: { success: boolean; recoveries?: RecoveryInfo[]; error?: string } };

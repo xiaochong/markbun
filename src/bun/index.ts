@@ -1185,6 +1185,25 @@ async function main() {
           }
         },
 
+        openInFinder: async ({ path }: { path: string }) => {
+          try {
+            const platform = process.platform;
+            if (platform === 'darwin') {
+              Bun.spawn(['open', '-R', path]);
+            } else if (platform === 'win32') {
+              Bun.spawn(['explorer', `/select,"${path}"`]);
+            } else {
+              // Linux: open the containing folder
+              const folder = path.includes('/') ? path.substring(0, path.lastIndexOf('/')) : path;
+              Bun.spawn(['xdg-open', folder]);
+            }
+            return { success: true };
+          } catch (error) {
+            console.error('[RPC] Failed to open in finder:', error);
+            return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+          }
+        },
+
         // ── Backup & Recovery ──────────────────────────────────────────────
 
         checkRecovery: async () => {

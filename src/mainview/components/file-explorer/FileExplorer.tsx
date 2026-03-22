@@ -190,8 +190,19 @@ export const FileExplorer = memo(function FileExplorer({
         onRefresh?.();
         break;
       }
+
+      case 'open-in-finder': {
+        const targetPath = node ? node.path : (rootPath || '');
+        if (!targetPath) return;
+        try {
+          await electrobun.openInFinder({ path: targetPath });
+        } catch (err) {
+          console.error('Error opening in finder:', err);
+        }
+        break;
+      }
     }
-  }, [getParentFolderPath, onRefresh, onToggleFolder, onSelectFile, selectedPath]);
+  }, [getParentFolderPath, onRefresh, onToggleFolder, onSelectFile, selectedPath, rootPath]);
 
   // Handle move operation
   const handleMove = useCallback(async (targetFolderPath: string) => {

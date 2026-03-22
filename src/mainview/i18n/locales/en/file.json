@@ -10,7 +10,10 @@
     "rename": "Rename",
     "moveTo": "Move to...",
     "delete": "Delete",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "openInFinder": "Open in Finder",
+    "openInExplorer": "Show in Explorer",
+    "openInFileManager": "Open in File Manager"
   },
   "quickOpen": {
     "placeholder": "Type to search files...",

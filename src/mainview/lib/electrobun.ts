@@ -281,6 +281,10 @@ export const electrobun = {
     return await electroview.rpc.request.renameFile(params) as { success: boolean; newPath?: string; error?: string };
   },
 
+  async openInFinder(params: { path: string }) {
+    return await electroview.rpc.request.openInFinder(params) as { success: boolean; error?: string };
+  },
+
   // Subscribe to messages from main process
   on(event: string, callback: (data?: unknown) => void): () => void {
     const win = window as any;

@@ -10,7 +10,10 @@
     "rename": "重命名",
     "moveTo": "移动到...",
     "delete": "删除",
-    "refresh": "刷新"
+    "refresh": "刷新",
+    "openInFinder": "在 Finder 中显示",
+    "openInExplorer": "在资源管理器中显示",
+    "openInFileManager": "在文件管理器中打开"
   },
   "quickOpen": {
     "placeholder": "输入以搜索文件...",

@@ -9,7 +9,8 @@ export type ContextMenuAction =
   | 'rename'
   | 'delete'
   | 'move'
-  | 'refresh';
+  | 'refresh'
+  | 'open-in-finder';
 
 interface ContextMenuItem {
   id: ContextMenuAction;
@@ -39,6 +40,14 @@ export function ContextMenu({
   const { t } = useTranslation('file');
   const menuRef = useRef<HTMLDivElement>(null);
 
+  // Detect platform for "Open in Finder/Explorer/File Manager" label
+  const openInFinderLabel = (() => {
+    const p = navigator.platform.toLowerCase();
+    if (p.includes('mac')) return t('contextMenu.openInFinder');
+    if (p.includes('win')) return t('contextMenu.openInExplorer');
+    return t('contextMenu.openInFileManager');
+  })();
+
   // Build menu items inside the component so labels are translated
   const fileItems: ContextMenuItem[] = [
     { id: 'new-file', label: t('contextMenu.newFile'), icon: <FilePlusIcon /> },
@@ -46,6 +55,7 @@ export function ContextMenu({
     { separator: true } as ContextMenuItem,
     { id: 'rename', label: t('contextMenu.rename'), icon: <EditIcon /> },
     { id: 'move', label: t('contextMenu.moveTo'), icon: <MoveIcon /> },
+    { id: 'open-in-finder', label: openInFinderLabel, icon: <FinderIcon /> },
     { separator: true } as ContextMenuItem,
     { id: 'delete', label: t('contextMenu.delete'), icon: <TrashIcon />, danger: true },
   ];
@@ -55,6 +65,8 @@ export function ContextMenu({
     { id: 'new-folder', label: t('contextMenu.newFolder'), icon: <FolderPlusIcon /> },
     { separator: true } as ContextMenuItem,
     { id: 'rename', label: t('contextMenu.rename'), icon: <EditIcon /> },
+    { id: 'open-in-finder', label: openInFinderLabel, icon: <FinderIcon /> },
+    { separator: true } as ContextMenuItem,
     { id: 'delete', label: t('contextMenu.delete'), icon: <TrashIcon />, danger: true },
   ];
 
@@ -62,6 +74,7 @@ export function ContextMenu({
     { id: 'new-file', label: t('contextMenu.newFile'), icon: <FilePlusIcon /> },
     { id: 'new-folder', label: t('contextMenu.newFolder'), icon: <FolderPlusIcon /> },
     { separator: true } as ContextMenuItem,
+    { id: 'open-in-finder', label: openInFinderLabel, icon: <FinderIcon /> },
     { id: 'refresh', label: t('contextMenu.refresh'), icon: <RefreshIcon /> },
   ];
 
@@ -215,6 +228,15 @@ function EditIcon() {
   return (
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
       <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+    </svg>
+  );
+}
+
+function FinderIcon() {
+  return (
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+      <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+      <path d="M9 13h6M12 10v6" />
     </svg>
   );
 }
