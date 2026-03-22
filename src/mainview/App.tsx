@@ -29,6 +29,7 @@ import {
   loadLocalImage,
   isLocalFilePath,
   restoreOriginalImagePaths,
+  getDirectoryPath,
 } from './lib/image';
 import type { FileNode, AppSettings, UIState, RecoveryInfo } from '@/shared/types';
 
@@ -249,7 +250,7 @@ function App() {
     recoveryInterval: settings?.backup?.recoveryInterval ?? 30000,
     onSaveSuccess: (savedPath) => {
       // Set root path to the file's parent directory (so new files appear in file explorer)
-      const parentDir = savedPath.substring(0, savedPath.lastIndexOf('/')) || '/';
+      const parentDir = getDirectoryPath(savedPath);
       // Check current rootPath using ref to avoid stale closure
       const currentRoot = fileExplorerRef.current.rootPath;
       if (currentRoot === parentDir) {
@@ -459,8 +460,7 @@ function App() {
         workspaceManager.setCurrentFile(result.path);
 
         // Auto-set file explorer root to the file's parent directory
-        const parentDir = result.path.substring(0, result.path.lastIndexOf('/')) || '/';
-        fileExplorer.setRootPath(parentDir);
+        fileExplorer.setRootPath(getDirectoryPath(result.path));
 
         // Update selected file in file explorer (highlight current file)
         fileExplorer.selectFile(result.path);
@@ -659,8 +659,7 @@ function App() {
       setCurrentFilePath(filePath);
 
       // Auto-set file explorer root to the file's parent directory
-      const parentDir = filePath.substring(0, filePath.lastIndexOf('/')) || '/';
-      fileExplorer.setRootPath(parentDir);
+      fileExplorer.setRootPath(getDirectoryPath(filePath));
 
       // Update selected file in file explorer (highlight current file)
       fileExplorer.selectFile(filePath);

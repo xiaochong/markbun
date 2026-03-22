@@ -1,6 +1,7 @@
 import {memo, useCallback, useRef, useState} from 'react';
 import { useTranslation } from 'react-i18next';
 import {electrobun} from '@/lib/electrobun';
+import { getDirectoryPath, getFileName } from '@/lib/image';
 import {FileTree} from './FileTree';
 import {ContextMenu, type ContextMenuAction} from './ContextMenu';
 import {MoveDialog} from './MoveDialog';
@@ -91,8 +92,7 @@ export const FileExplorer = memo(function FileExplorer({
     if (!node) return rootPath || '';
     if (node.type === 'folder') return node.path;
     // For files, get parent directory
-    const lastSlash = node.path.lastIndexOf('/');
-    return lastSlash > 0 ? node.path.substring(0, lastSlash) : rootPath || '';
+    return getDirectoryPath(node.path) || rootPath || '';
   }, [rootPath]);
 
   // Handle context menu actions
@@ -268,8 +268,8 @@ export const FileExplorer = memo(function FileExplorer({
     setRenamingNode(null);
   }, []);
 
-  // Get root directory name from path
-  const rootName = rootPath ? rootPath.split('/').pop() || rootPath : null;
+  // Get root directory name from path (handles both / and \ separators)
+  const rootName = rootPath ? getFileName(rootPath) || rootPath : null;
 
   return (
     <>

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { electrobun } from '@/lib/electrobun';
-import { restoreOriginalImagePaths } from '@/lib/image';
+import { restoreOriginalImagePaths, getDirectoryPath } from '@/lib/image';
 import { useAutoSave } from './useAutoSave';
 
 interface FileState {
@@ -316,7 +316,7 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
     setSaveDialogState({
       isOpen: true,
       defaultFileName,
-      initialFolderPath: state.path ? state.path.substring(0, state.path.lastIndexOf('/')) : undefined,
+      initialFolderPath: state.path ? getDirectoryPath(state.path) : undefined,
     });
   }, []);
 

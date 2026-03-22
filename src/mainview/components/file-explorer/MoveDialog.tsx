@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
+import { getDirectoryPath } from '@/lib/image';
 import type { FileSystemNode, FolderNode } from '@/shared/types';
 
 interface MoveDialogProps {
@@ -207,7 +208,7 @@ export function MoveDialog({
                 onMove(selectedPath);
               }
             }}
-            disabled={!selectedPath || selectedPath === (sourceNode.type === 'folder' ? sourceNode.path : sourceNode.path.substring(0, sourceNode.path.lastIndexOf('/')))}
+            disabled={!selectedPath || selectedPath === (sourceNode.type === 'folder' ? sourceNode.path : getDirectoryPath(sourceNode.path))}
             className={cn(
               'px-3 py-1.5 text-[13px] rounded-md transition-colors',
               selectedPath
