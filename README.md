@@ -91,7 +91,7 @@ bun run dev:hmr
 bun run build
 
 # Build for production release
-bun run build:prod
+bun run build:stable
 ```
 
 ## How HMR Works

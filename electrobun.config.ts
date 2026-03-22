@@ -24,11 +24,11 @@ export default {
 		},
 		linux: {
 			bundleCEF: true,
-			// icon: 'src/bun/assets/icon.png',
+			icon: "icon.iconset/icon_256x256.png",
 		},
 		win: {
 			bundleCEF: false,
-			// icon: 'src/bun/assets/icon.ico',
+			icon: "icon.iconset/icon_256x256.png",
 		},
 	},
 } satisfies ElectrobunConfig;
