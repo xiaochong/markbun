@@ -1,5 +1,8 @@
 import type { ElectrobunConfig } from "electrobun";
 
+// CEF is only needed in dev mode for debugging; exclude from release builds to reduce package size
+const isBuild = process.argv.some(arg => arg === "build");
+
 export default {
 	app: {
 		name: "MarkBun",
@@ -17,7 +20,7 @@ export default {
 		// Ignore Vite output in watch mode — HMR handles view rebuilds separately
 		watchIgnore: ["dist/**"],
 		mac: {
-			bundleCEF: true
+			bundleCEF: !isBuild,
 		},
 		linux: {
 			bundleCEF: false,

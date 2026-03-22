@@ -384,6 +384,7 @@ async function main() {
   setupMenu(viewMenuState, t);
 
   const url = await getMainViewUrl();
+  const isDev = await Updater.localInfo.channel().then(ch => ch === 'dev').catch(() => false);
 
   // Create a new application window with independent per-window file state
   async function createAppWindow(): Promise<{ win: BrowserWindow; state: WindowState }> {
@@ -1382,7 +1383,7 @@ async function main() {
   const win = new BrowserWindow({
     title: 'MarkBun',
     url,
-    renderer: "cef",
+    ...(isDev ? { renderer: "cef" as const } : {}),
     frame: {
       width: windowWidth,
       height: windowHeight,
