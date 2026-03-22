@@ -157,7 +157,18 @@ export function SettingsDialog({ isOpen, settings, onClose, onSave }: SettingsDi
 
             {activeTab === 'editor' && (
               <div className="space-y-6">
-                <h3 className="text-lg font-medium">{ts('tabs.editor')}</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">{ts('tabs.editor')}</h3>
+                  <button
+                    onClick={() => {
+                      handleChange('fontSize', 15);
+                      handleChange('lineHeight', 1.65);
+                    }}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {ts('editor.resetDefault')}
+                  </button>
+                </div>
 
                 <div className="space-y-4">
                   <div className="space-y-2">

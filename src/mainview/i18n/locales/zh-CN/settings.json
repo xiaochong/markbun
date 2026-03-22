@@ -15,7 +15,8 @@
   },
   "editor": {
     "fontSize": "字体大小",
-    "lineHeight": "行高"
+    "lineHeight": "行高",
+    "resetDefault": "恢复默认"
   },
   "appearance": {
     "theme": "主题",

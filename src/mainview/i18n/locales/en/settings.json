@@ -15,7 +15,8 @@
   },
   "editor": {
     "fontSize": "Font Size",
-    "lineHeight": "Line Height"
+    "lineHeight": "Line Height",
+    "resetDefault": "Reset to Default"
   },
   "appearance": {
     "theme": "Theme",

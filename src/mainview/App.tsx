@@ -63,6 +63,13 @@ function App() {
     void loadSettings();
   }, []);
 
+  useEffect(() => {
+    if (settings) {
+      document.documentElement.style.setProperty('--editor-font-size', `${settings.fontSize}px`);
+      document.documentElement.style.setProperty('--editor-line-height', String(settings.lineHeight));
+    }
+  }, [settings?.fontSize, settings?.lineHeight]);
+
   // Recovery dialog
   const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
   const [pendingRecoveries, setPendingRecoveries] = useState<RecoveryInfo[]>([]);

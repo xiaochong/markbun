@@ -6,6 +6,8 @@
 :root {
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-mono: 'SF Mono', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+  --editor-font-size: 15px;
+  --editor-line-height: 1.65;
   
   /* Light theme (default) */
   --background: 0 0% 100%;
@@ -691,8 +693,8 @@ body {
 
 /* --- 段落 --- */
 .milkdown-crepe-container .milkdown .ProseMirror p {
-  font-size: 16px !important;
-  line-height: 1.7 !important;
+  font-size: var(--editor-font-size) !important;
+  line-height: var(--editor-line-height) !important;
   margin: 0.8em 0 !important;
   padding: 0 !important;
 }
@@ -709,8 +711,8 @@ body {
 
 .milkdown-crepe-container .milkdown .ProseMirror li {
   margin: 0 !important;
-  font-size: 16px !important;
-  line-height: 1.7 !important;
+  font-size: var(--editor-font-size) !important;
+  line-height: var(--editor-line-height) !important;
 }
 
 /* li 内的 p 不继承段落 margin（否则每个列表项间距会变巨大）
@@ -792,8 +794,8 @@ body {
 
 .milkdown-crepe-container .milkdown-code-block .cm-content {
   font-family: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, Monaco, 'Courier New', monospace !important;
-  font-size: 14px !important;
-  line-height: 1.65 !important;
+  font-size: var(--editor-font-size) !important;
+  line-height: var(--editor-line-height) !important;
   padding: 16px 20px !important;
   color: hsl(var(--foreground)) !important;
 }
