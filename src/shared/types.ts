@@ -236,9 +236,15 @@ export type MarkBunRPC = {
       restoreVersionBackup: { params: { backupPath: string }; response: { success: boolean; content?: string; error?: string } };
       deleteVersionBackup: { params: { backupPath: string }; response: { success: boolean; error?: string } };
 
+      // Export
+      saveExportedFile: { params: { content: string; isBase64: boolean; defaultName: string; extension: string }; response: { success: boolean; path?: string; error?: string } };
+
       // i18n
       setLanguage: { params: { language: 'en' | 'zh-CN' | 'de' | 'fr' | 'ja' | 'ko' | 'pt' | 'es' }; response: { success: boolean; error?: string } };
       getSystemLanguage: { params: {}; response: { success: boolean; language?: string; error?: string } };
+
+      // External links
+      openExternal: { params: { url: string }; response: { success: boolean; error?: string } };
     };
     messages: {
       fileOpened: { path: string; content: string };

@@ -512,23 +512,102 @@ bun test --coverage
 
 ### Add a New Menu Item
 
-1. Edit `src/bun/menu.ts`:
+添加新菜单项需要**三个环节**（主进程菜单定义 → Bun 转发 → Web 处理）：
+
+#### 1. 添加菜单定义（主进程）
+
+编辑 `src/bun/menu.ts`：
 ```typescript
 {
-  label: "View",
+  label: t('file.export'),  // 使用翻译 key
   submenu: [
-    { label: "Toggle Sidebar", action: "view-toggle-sidebar" },
+    { label: t('file.exportHTML'), action: 'file-export-html' },  // action 命名要唯一
+    { label: t('file.exportImage'), action: 'file-export-image' },
+    { label: t('file.exportPDF'), action: 'file-export-pdf' },
   ],
 }
 ```
 
-2. Handle in renderer `src/renderer/App.tsx`:
-```typescript
-electrobun.on("menu-action", (action) => {
-  if (action === "view-toggle-sidebar") {
-    setSidebarOpen(prev => !prev);
+#### 2. 添加翻译（所有语言）
+
+编辑 `src/bun/i18n/locales/{en,zh-CN,de,es,fr,ja,ko,pt}/menu.json`：
+```json
+{
+  "file": {
+    "export": "Export",
+    "exportHTML": "Export as HTML",
+    "exportImage": "Export as Image",
+    "exportPDF": "Export as PDF"
   }
-});
+}
+```
+
+#### 3. 注册 Bun 转发（关键！漏了会导致点击无响应）
+
+编辑 `src/bun/index.ts`，找到 `ApplicationMenu.on('application-menu-clicked', ...)` 的 switch 语句，添加 case：
+
+```typescript
+// 大约在 1740-1792 行附近
+switch (action) {
+  // ... 已有 case ...
+
+  // 添加新 case（放在最后一个 case 块中）
+  case 'file-export-html':
+  case 'file-export-image':
+  case 'file-export-pdf':
+    // @ts-ignore
+    fw?.win.webview.rpc.send.menuAction({ action });
+    break;
+}
+```
+
+#### 4. Web 端处理（App.tsx）
+
+编辑 `src/mainview/App.tsx`，在 `menuAction` useEffect 中添加处理：
+
+```typescript
+useEffect(() => {
+  return electrobun.on('menuAction', async (data) => {
+    const { action } = data as { action: string };
+
+    // 可以按功能分组处理
+    switch (action) {
+      case 'file-export-html':
+        await exportAsHTML(contentRef.current);
+        break;
+      case 'file-export-image':
+        await exportAsImage(contentRef.current);
+        break;
+      case 'file-export-pdf':
+        await exportAsPDF(contentRef.current);
+        break;
+    }
+  });
+}, [exportAsHTML, exportAsImage, exportAsPDF]);
+```
+
+#### 5. 调试检查清单
+
+如果点击菜单没有响应，按顺序检查：
+
+1. **Bun 端是否转发**：在 `index.ts` 的 switch 中打印日志确认进入 case
+2. **Web 端是否收到**：在 `App.tsx` 的 menuAction handler 中打印日志
+3. **依赖是否正确**：如果导出涉及第三方库，检查 `vite.config.ts` 的 `optimizeDeps.include`
+
+#### 完整数据流
+
+```
+用户点击菜单
+    ↓
+ApplicationMenu (原生菜单)
+    ↓
+ApplicationMenu.on('application-menu-clicked')  [src/bun/index.ts]
+    ↓
+fw?.win.webview.rpc.send.menuAction({ action })  [必须显式转发]
+    ↓
+electrobun.on('menuAction')  [src/mainview/App.tsx]
+    ↓
+执行业务逻辑
 ```
 
 ### Add a Milkdown Plugin

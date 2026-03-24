@@ -16,7 +16,10 @@
     "quickOpen": "빠른 열기...",
     "save": "저장",
     "saveAs": "다른 이름으로 저장...",
-    "history": "기록..."
+    "history": "기록...",
+    "export": "내보내기",
+    "exportImage": "이미지...",
+    "exportHTML": "HTML..."
   },
   "edit": {
     "title": "편집",

@@ -11,6 +11,9 @@ export default defineConfig({
       "@/shared": path.resolve(__dirname, "./src/shared"),
     },
   },
+  optimizeDeps: {
+    include: ['marked', 'html2canvas'],
+  },
   build: {
     outDir: "../../dist",
     emptyOutDir: true,

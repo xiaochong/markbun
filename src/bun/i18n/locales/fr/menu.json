@@ -16,7 +16,10 @@
     "quickOpen": "Ouverture rapide...",
     "save": "Enregistrer",
     "saveAs": "Enregistrer sous...",
-    "history": "Historique..."
+    "history": "Historique...",
+    "export": "Exporter",
+    "exportImage": "Image...",
+    "exportHTML": "HTML..."
   },
   "edit": {
     "title": "Édition",

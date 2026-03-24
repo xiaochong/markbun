@@ -51,5 +51,15 @@
     "timeMinutes": "{{m}}m ago",
     "timeHours": "{{h}}h ago",
     "timeDays": "{{d}}d ago"
+  },
+  "pandoc": {
+    "title": "Pandoc Not Installed",
+    "description": "Pandoc is required to export PDF. Please install it first. Visit pandoc.org for installation instructions.",
+    "download": "Download Pandoc"
+  },
+  "latex": {
+    "title": "LaTeX Not Installed",
+    "description": "A LaTeX distribution (MacTeX or BasicTeX) is required to export PDF. Please install it first. Visit tug.org/mactex for installation instructions.",
+    "download": "Download MacTeX"
   }
 }

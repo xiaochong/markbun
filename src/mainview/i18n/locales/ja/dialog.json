@@ -51,5 +51,15 @@
     "timeMinutes": "{{m}}分前",
     "timeHours": "{{h}}時間前",
     "timeDays": "{{d}}日前"
+  },
+  "pandoc": {
+    "title": "Pandoc がインストールされていません",
+    "description": "PDFエクスポートにはPandocが必要です。先にインストールしてください。インストール方法は pandoc.org をご覧ください。",
+    "download": "Pandoc をダウンロード"
+  },
+  "latex": {
+    "title": "LaTeX がインストールされていません",
+    "description": "PDFエクスポートにはLaTeXディストリビューション（MacTeXまたはBasicTeX）が必要です。先にインストールしてください。インストール方法は tug.org/mactex をご覧ください。",
+    "download": "MacTeX をダウンロード"
   }
 }

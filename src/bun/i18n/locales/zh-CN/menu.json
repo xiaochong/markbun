@@ -16,7 +16,10 @@
     "quickOpen": "快速打开...",
     "save": "保存",
     "saveAs": "另存为...",
-    "history": "历史记录..."
+    "history": "历史记录...",
+    "export": "导出",
+    "exportImage": "图片…",
+    "exportHTML": "HTML…"
   },
   "edit": {
     "title": "编辑",

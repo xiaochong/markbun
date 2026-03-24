@@ -15,6 +15,7 @@ export default {
 		copy: {
 			"dist/index.html": "views/mainview/index.html",
 			"dist/assets": "views/mainview/assets",
+			"src/mainview/images": "views/mainview/images",
 		},
 		// @ts-ignore
 		// Ignore Vite output in watch mode — HMR handles view rebuilds separately

@@ -20,6 +20,7 @@ import { useFileExplorer } from './hooks/useFileExplorer';
 import { useOutline } from './hooks/useOutline';
 import { useQuickOpen } from './hooks/useQuickOpen';
 import { useClipboard } from './hooks/useClipboard';
+import { useExport } from './hooks/useExport';
 import { electrobun } from './lib/electrobun';
 import i18n from './i18n';
 import {
@@ -382,6 +383,14 @@ function App() {
 
   // Clipboard operations with blob URL handling
   const clipboard = useClipboard(editorRef, currentFilePath, sourceMode);
+
+  // Ref to latest content so export handlers don't need content in their dep array
+  const contentRef = useRef(content);
+  contentRef.current = content;
+
+  // Export operations
+  const { exportAsHTML, exportAsImage } = useExport();
+
 
   // Handle editor content changes from Milkdown
   const handleEditorChange = useCallback((markdown: string) => {
@@ -1024,9 +1033,15 @@ function App() {
           editorRef.current?.focus();
           document.execCommand('selectAll');
           break;
+        case 'file-export-html':
+          await exportAsHTML(contentRef.current, path);
+          break;
+        case 'file-export-image':
+          await exportAsImage(contentRef.current, path);
+          break;
       }
     });
-  }, [clipboard]);
+  }, [clipboard, exportAsHTML, exportAsImage]);
 
   // Toolbar action handlers
   const handleBold = useCallback(() => editorRef.current?.toggleBold(), []);

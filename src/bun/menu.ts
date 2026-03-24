@@ -59,6 +59,14 @@ export function setupMenu(state: ViewMenuState = defaultState, tFn: (key: string
         { label: t('file.saveAs'), action: 'file-save-as', accelerator: 'CmdOrCtrl+Shift+S' },
         { type: 'separator' },
         { label: t('file.history'), action: 'file-history', accelerator: 'CmdOrCtrl+Alt+H' },
+        { type: 'separator' },
+        {
+          label: t('file.export'),
+          submenu: [
+            { label: t('file.exportImage'), action: 'file-export-image' },
+            { label: t('file.exportHTML'), action: 'file-export-html' },
+          ],
+        },
         ...(!isMac ? [
           { type: 'separator' },
           { label: t('app.quit'), role: 'quit', accelerator: 'Alt+F4' },

@@ -1,6 +1,4 @@
 import { useTranslation } from 'react-i18next';
-// @ts-ignore
-import logo from '../../../bun/assets/logo.svg';
 
 
 interface AboutDialogProps {
@@ -26,7 +24,7 @@ export function AboutDialog({ isOpen, onClose }: AboutDialogProps) {
         {/* App icon + name */}
         <div className="flex flex-col items-center px-8 pt-8 pb-6 gap-3">
           <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-3xl select-none">
-            <img src={logo} alt="Logo" />
+            <img src="views://mainview/images/logo.svg" alt="Logo" />
           </div>
           <div className="text-center">
             <h2 className="text-xl font-semibold tracking-tight">MarkBun</h2>

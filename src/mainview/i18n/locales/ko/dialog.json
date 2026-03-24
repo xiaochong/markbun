@@ -51,5 +51,15 @@
     "timeMinutes": "{{m}}분 전",
     "timeHours": "{{h}}시간 전",
     "timeDays": "{{d}}일 전"
+  },
+  "pandoc": {
+    "title": "Pandoc이 설치되지 않음",
+    "description": "PDF 내보내기에는 Pandoc이 필요합니다. 먼저 설치해 주세요. 설치 방법은 pandoc.org를 참조하세요.",
+    "download": "Pandoc 다운로드"
+  },
+  "latex": {
+    "title": "LaTeX이 설치되지 않음",
+    "description": "PDF 내보내기에는 LaTeX 배포판(MacTeX 또는 BasicTeX)이 필요합니다. 먼저 설치해 주세요. 설치 방법은 tug.org/mactex를 참조하세요.",
+    "download": "MacTeX 다운로드"
   }
 }

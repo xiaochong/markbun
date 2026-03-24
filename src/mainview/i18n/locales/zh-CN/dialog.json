@@ -51,5 +51,15 @@
     "timeMinutes": "{{m}} 分钟前",
     "timeHours": "{{h}} 小时前",
     "timeDays": "{{d}} 天前"
+  },
+  "pandoc": {
+    "title": "未安装 Pandoc",
+    "description": "导出 PDF 需要 Pandoc。请先安装。访问 pandoc.org 获取安装说明。",
+    "download": "下载 Pandoc"
+  },
+  "latex": {
+    "title": "未安装 LaTeX",
+    "description": "导出 PDF 需要 LaTeX 发行版（MacTeX 或 BasicTeX）。请先安装。访问 tug.org/mactex 获取安装说明。",
+    "download": "下载 MacTeX"
   }
 }

@@ -23,7 +23,7 @@ import {
   readVersionBackupContent,
   deleteVersionBackup,
 } from './services/backup';
-import { spawn } from 'child_process';
+import { spawn, exec } from 'child_process';
 
 const DEV_SERVER_PORT = 5173;
 const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`;
@@ -1329,6 +1329,56 @@ async function main() {
             return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
           }
         },
+
+        saveExportedFile: async ({ content, isBase64, defaultName, extension }: { content: string; isBase64: boolean; defaultName: string; extension: string }) => {
+          try {
+            // @ts-ignore
+            const chosenPaths = await Utils.openFileDialog({
+              startingFolder: state.filePath || join(homedir(), 'Desktop'),
+              allowedFileTypes: extension,
+              canChooseFiles: true,
+              canChooseDirectory: true,
+              allowsMultipleSelection: false,
+            });
+
+            if (!chosenPaths || chosenPaths.length === 0) {
+              return { success: false };
+            }
+
+            let filePath = chosenPaths[0];
+            try {
+              const s = await stat(filePath);
+              if (s.isDirectory()) {
+                filePath = join(filePath, `${defaultName}.${extension}`);
+              }
+            } catch {}
+
+            if (!filePath.toLowerCase().endsWith(`.${extension.toLowerCase()}`)) {
+              filePath = `${filePath}.${extension}`;
+            }
+
+            if (isBase64) {
+              await writeFile(filePath, Buffer.from(content, 'base64'));
+            } else {
+              await writeFile(filePath, content, 'utf-8');
+            }
+
+            return { success: true, path: filePath };
+          } catch (error) {
+            console.error('Failed to save exported file:', error);
+            return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+          }
+        },
+
+        openExternal: async ({ url }: { url: string }) => {
+          try {
+            await Utils.openExternal(url);
+            return { success: true };
+          } catch (error) {
+            console.error('Failed to open external URL:', error);
+            return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+          }
+        },
       },
       messages: {},
     },
@@ -1747,6 +1797,10 @@ async function main() {
       case 'para-insert-above':
       case 'para-insert-below':
       case 'para-horizontal-rule':
+      // Export menu actions
+      case 'file-export-html':
+      case 'file-export-image':
+      case 'file-export-pdf':
         // @ts-ignore
         fw?.win.webview.rpc.send.menuAction({ action });
         break;

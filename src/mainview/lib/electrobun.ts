@@ -2,10 +2,10 @@
 import { Electroview } from 'electrobun/view';
 import type { MarkBunRPC } from '../../shared/types';
 
-// Define RPC for the view side with increased timeout
+// Define RPC for the view side with standard timeout
 // @ts-ignore - Type complexity with RPCSchema
 const rpc = Electroview.defineRPC<MarkBunRPC>({
-  maxRequestTime: 30000, // 30 seconds timeout for file operations
+  maxRequestTime: 30000, // 30 seconds timeout
   handlers: {
     requests: {},
     messages: {
@@ -283,6 +283,15 @@ export const electrobun = {
 
   async openInFinder(params: { path: string }) {
     return await electroview.rpc.request.openInFinder(params) as { success: boolean; error?: string };
+  },
+
+  // Export
+  async saveExportedFile(params: { content: string; isBase64: boolean; defaultName: string; extension: string }) {
+    return await electroview.rpc.request.saveExportedFile(params) as { success: boolean; path?: string; error?: string };
+  },
+
+  async openExternal(url: string) {
+    return await electroview.rpc.request.openExternal({ url }) as { success: boolean; error?: string };
   },
 
   // Subscribe to messages from main process
