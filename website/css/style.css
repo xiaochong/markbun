@@ -34,7 +34,7 @@
   --text-gradient: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
 
   /* Grid pattern */
-  --grid-color: rgba(79, 70, 229, 0.05);
+  --grid-color: rgba(79, 70, 229, 0.12);
 }
 
 /* ---- Dark Theme ---- */
@@ -65,7 +65,7 @@
 
   --gradient-cta: linear-gradient(135deg, #6063ee 0%, #8455ef 100%);
   --text-gradient: linear-gradient(135deg, #a3a6ff 0%, #ac8aff 100%);
-  --grid-color: rgba(73, 72, 71, 0.1);
+  --grid-color: rgba(163, 166, 255, 0.18);
 }
 
 /* ==========================================

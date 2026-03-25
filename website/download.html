@@ -61,48 +61,80 @@
         }
     </style>
 </head>
-<body class="bg-surface text-on-surface font-sans selection:bg-primary/30">
+<body class="bg-surface text-on-surface font-sans antialiased selection:bg-primary/20">
     <!-- Navigation -->
-    <header class="sticky top-0 z-50 w-full bg-surface-variant/60 backdrop-blur-md shadow-2xl shadow-black/40">
-        <nav class="flex justify-between items-center h-16 px-6 lg:px-12 max-w-screen-2xl mx-auto">
-            <div class="text-xl font-bold text-white flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary">terminal</span>
+    <header class="sticky top-0 z-50 w-full bg-surface-variant/70 backdrop-blur-md border-b border-outline-variant/20 shadow-sm">
+        <nav class="flex items-center justify-between h-16 px-6 lg:px-12 max-w-screen-2xl mx-auto gap-4">
+            <!-- Logo -->
+            <a href="index.html" class="text-xl font-bold text-on-surface flex items-center gap-2 shrink-0">
+                <span class="material-symbols-outlined text-primary" style="font-variation-settings:'FILL' 1">edit_note</span>
                 MarkBun
+            </a>
+
+            <!-- Desktop nav links -->
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium">
+                <a href="features.html" class="text-on-surface-variant hover:text-on-surface transition-colors" data-i18n="nav_features">Features</a>
+                <a href="download.html" class="nav-link-active text-on-surface transition-colors" data-i18n="nav_download">Download</a>
+                <a href="about.html" class="text-on-surface-variant hover:text-on-surface transition-colors" data-i18n="nav_about">About</a>
+                <a href="https://github.com/nicholasgasior/markbun" target="_blank" class="text-on-surface-variant hover:text-on-surface transition-colors" data-i18n="nav_github">GitHub</a>
             </div>
-            <div class="hidden md:flex items-center gap-8 font-sans tracking-tight font-medium text-sm">
-                <a class="text-on-surface-variant hover:text-on-surface transition-colors" href="index.html" data-i18n="nav_features">Features</a>
-                <a class="nav-link-active" href="download.html" data-i18n="nav_download">Download</a>
-                <a class="text-on-surface-variant hover:text-on-surface transition-colors" href="about.html" data-i18n="nav_about">About</a>
-                <a class="text-on-surface-variant hover:text-on-surface transition-colors" href="https://github.com/nicholasgasior/markbun" target="_blank" data-i18n="nav_github">GitHub</a>
+
+            <!-- Right controls -->
+            <div class="flex items-center gap-2">
+                <!-- Lang toggle -->
+                <button id="lang-toggle" class="hidden md:inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold border border-outline-variant/40 text-on-surface-variant hover:text-on-surface hover:border-outline transition-colors">
+                    <span id="lang-btn">中文</span>
+                </button>
+                <!-- Theme toggle -->
+                <button id="theme-toggle" class="w-9 h-9 rounded-lg border border-outline-variant/40 flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:border-outline transition-colors" aria-label="Toggle theme">
+                    <span id="theme-btn-light" class="material-symbols-outlined text-[18px]">light_mode</span>
+                    <span id="theme-btn-dark" class="material-symbols-outlined text-[18px] hidden">dark_mode</span>
+                </button>
+                <!-- CTA -->
+                <a href="download.html" class="hidden md:inline-flex btn-gradient px-5 py-2 rounded-xl text-sm font-semibold text-white" data-i18n="nav_cta">Download Free</a>
+                <!-- Mobile menu -->
+                <button id="mobile-menu-btn" class="md:hidden w-9 h-9 rounded-lg border border-outline-variant/40 flex items-center justify-center text-on-surface-variant">
+                    <span class="material-symbols-outlined text-[20px]">menu</span>
+                </button>
             </div>
-            <button class="btn-gradient px-6 py-2 rounded-xl text-on-primary font-semibold text-sm scale-95 active:scale-90 transition-transform" data-i18n="nav_download_btn">
-                Download Free
-            </button>
         </nav>
+
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="hidden md:hidden border-t border-outline-variant/20 px-6 py-4 flex flex-col gap-4 bg-surface-container-low">
+            <a href="features.html" class="text-on-surface-variant text-sm font-medium" data-i18n="nav_features">Features</a>
+            <a href="download.html" class="nav-link-active text-on-surface text-sm font-medium" data-i18n="nav_download">Download</a>
+            <a href="about.html" class="text-on-surface-variant text-sm font-medium" data-i18n="nav_about">About</a>
+            <a href="https://github.com/nicholasgasior/markbun" target="_blank" class="text-on-surface-variant text-sm font-medium" data-i18n="nav_github">GitHub</a>
+            <div class="flex gap-3 pt-2">
+                <button id="lang-toggle-m" class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-outline-variant/40 text-on-surface-variant">中文</button>
+                <a href="download.html" class="btn-gradient px-5 py-2 rounded-xl text-sm font-semibold text-white" data-i18n="nav_cta">Download Free</a>
+            </div>
+        </div>
     </header>
 
     <main class="relative overflow-hidden">
         <!-- Hero Section -->
-        <section class="relative py-24 px-6 lg:px-12 max-w-screen-2xl mx-auto flex flex-col items-center text-center">
-            <!-- Background glows -->
-            <div class="absolute top-0 -z-10 w-full h-full opacity-20 overflow-hidden pointer-events-none">
-                <div class="absolute top-[-10%] left-[20%] w-[500px] h-[500px] bg-primary/30 blur-[120px] rounded-full"></div>
-                <div class="absolute bottom-[-10%] right-[20%] w-[500px] h-[500px] bg-secondary/20 blur-[120px] rounded-full"></div>
-            </div>
+        <section class="relative pt-24 pb-32 px-6 lg:px-12 max-w-screen-2xl mx-auto flex flex-col items-center text-center bg-grid-pattern">
+            <!-- Gradient overlay -->
+            <div class="absolute inset-0 bg-gradient-to-b from-surface via-surface/50 to-surface pointer-events-none"></div>
+            <!-- Ambient blobs -->
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-primary/10 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
 
-            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-tertiary/10 text-tertiary text-xs font-bold mb-8 uppercase tracking-widest border border-tertiary/20" data-i18n="dl_badge">
-                Current Stable Release
-            </div>
-            <h1 class="text-6xl md:text-8xl font-black text-on-surface tracking-tight mb-6" data-i18n="dl_title">
-                Download MarkBun
-            </h1>
-            <p class="text-xl md:text-2xl text-on-surface-variant max-w-2xl mb-4" data-i18n="dl_sub">
-                Free for everyone. Always.
-            </p>
-            <div class="flex items-center gap-3 bg-surface-container px-4 py-2 rounded-lg border border-outline-variant/15 text-on-surface-variant">
-                <span class="text-sm font-mono">v0.3.0</span>
-                <span class="w-1 h-1 rounded-full bg-outline-variant"></span>
-                <span class="text-sm" data-i18n="dl_latest_build">Latest Build</span>
+            <div class="relative z-10">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-tertiary/10 text-tertiary text-xs font-bold mb-8 uppercase tracking-widest border border-tertiary/20" data-i18n="dl_badge">
+                    Current Stable Release
+                </div>
+                <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight mb-6" data-i18n="dl_title">
+                    Download MarkBun
+                </h1>
+                <p class="text-xl md:text-2xl text-on-surface-variant max-w-2xl mb-4" data-i18n="dl_sub">
+                    Free for everyone. Always.
+                </p>
+                <div class="flex items-center gap-3 bg-surface-container-high px-4 py-2 rounded-lg border border-outline-variant/20 text-on-surface-variant">
+                    <span class="text-sm font-mono">v0.3.0</span>
+                    <span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+                    <span class="text-sm" data-i18n="dl_latest_build">Latest Build</span>
+                </div>
             </div>
         </section>
 
@@ -298,47 +330,50 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-surface w-full pt-20 pb-10 border-t border-outline-variant/15">
+    <footer class="bg-surface-container-low border-t border-outline-variant/20 pt-16 pb-10">
         <div class="max-w-screen-2xl mx-auto px-6 lg:px-12 grid grid-cols-1 md:grid-cols-4 gap-12">
-            <div class="col-span-1 md:col-span-1">
-                <div class="text-lg font-bold text-on-surface mb-6">MarkBun</div>
-                <p class="text-on-surface-variant text-sm leading-relaxed mb-6">
-                    The precision instrument for markdown writing. Carved from obsidian, built for the future.
-                </p>
-                <div class="flex gap-4">
-                    <span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer">public</span>
-                    <span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer">forum</span>
+            <div>
+                <div class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings:'FILL' 1">edit_note</span>
+                    MarkBun
+                </div>
+                <p class="text-on-surface-variant text-sm leading-relaxed mb-6" data-i18n="footer_tagline">The precision instrument for markdown writing. Built for the future.</p>
+                <div class="flex gap-3">
+                    <a href="#" class="w-9 h-9 rounded-lg border border-outline-variant/30 flex items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary/40 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">public</span>
+                    </a>
+                    <a href="#" class="w-9 h-9 rounded-lg border border-outline-variant/30 flex items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary/40 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">forum</span>
+                    </a>
                 </div>
             </div>
-            <div class="col-span-1">
-                <h4 class="text-on-surface font-bold text-sm mb-6 uppercase tracking-widest" data-i18n="footer_product">Product</h4>
-                <ul class="space-y-4 text-sm font-sans">
-                    <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="index.html" data-i18n="footer_features">Features</a></li>
-                    <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="download.html" data-i18n="footer_download">Download</a></li>
-                    <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#" data-i18n="footer_changelog">Changelog</a></li>
+            <div>
+                <h4 class="font-bold text-sm mb-5 uppercase tracking-widest" data-i18n="footer_product">Product</h4>
+                <ul class="space-y-3 text-sm text-on-surface-variant">
+                    <li><a href="features.html" class="hover:text-primary transition-colors" data-i18n="footer_features">Features</a></li>
+                    <li><a href="download.html" class="hover:text-primary transition-colors" data-i18n="footer_download">Download</a></li>
+                    <li><a href="#" class="hover:text-primary transition-colors" data-i18n="footer_changelog">Changelog</a></li>
                 </ul>
             </div>
-            <div class="col-span-1">
-                <h4 class="text-on-surface font-bold text-sm mb-6 uppercase tracking-widest" data-i18n="footer_resources">Resources</h4>
-                <ul class="space-y-4 text-sm font-sans">
-                    <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="about.html" data-i18n="footer_about">About</a></li>
-                    <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="https://github.com/nicholasgasior/markbun" target="_blank" data-i18n="footer_github">GitHub</a></li>
-                    <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#" data-i18n="footer_license">License</a></li>
+            <div>
+                <h4 class="font-bold text-sm mb-5 uppercase tracking-widest" data-i18n="footer_resources">Resources</h4>
+                <ul class="space-y-3 text-sm text-on-surface-variant">
+                    <li><a href="about.html" class="hover:text-primary transition-colors" data-i18n="footer_about">About</a></li>
+                    <li><a href="https://github.com/nicholasgasior/markbun" target="_blank" class="hover:text-primary transition-colors" data-i18n="footer_github">GitHub</a></li>
+                    <li><a href="#" class="hover:text-primary transition-colors" data-i18n="footer_license">License</a></li>
                 </ul>
             </div>
-            <div class="col-span-1">
-                <h4 class="text-on-surface font-bold text-sm mb-6 uppercase tracking-widest" data-i18n="footer_community">Community</h4>
-                <ul class="space-y-4 text-sm font-sans">
-                    <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="https://github.com/nicholasgasior/markbun/issues" target="_blank" data-i18n="footer_issues">GitHub Issues</a></li>
-                    <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#" data-i18n="footer_twitter">Twitter</a></li>
-                    <li><a class="text-on-surface-variant hover:text-primary transition-colors" href="#" data-i18n="footer_discussions">Discussions</a></li>
+            <div>
+                <h4 class="font-bold text-sm mb-5 uppercase tracking-widest" data-i18n="footer_community">Community</h4>
+                <ul class="space-y-3 text-sm text-on-surface-variant">
+                    <li><a href="https://github.com/nicholasgasior/markbun/issues" target="_blank" class="hover:text-primary transition-colors" data-i18n="footer_issues">GitHub Issues</a></li>
+                    <li><a href="#" class="hover:text-primary transition-colors" data-i18n="footer_twitter">Twitter</a></li>
+                    <li><a href="#" class="hover:text-primary transition-colors" data-i18n="footer_discussions">Discussions</a></li>
                 </ul>
             </div>
         </div>
-        <div class="max-w-screen-2xl mx-auto px-6 lg:px-12 mt-20 text-center">
-            <p class="text-on-surface-variant text-sm font-sans opacity-80">
-                Made with love using Bun + React. &copy; 2024 MarkBun. Open source under MIT License.
-            </p>
+        <div class="max-w-screen-2xl mx-auto px-6 lg:px-12 mt-12 pt-6 border-t border-outline-variant/15 text-center">
+            <p class="text-on-surface-variant text-xs opacity-70" data-i18n="footer_copy">Made with ♥ using Bun + React. © 2024 MarkBun. Open source under MIT License.</p>
         </div>
     </footer>
 
