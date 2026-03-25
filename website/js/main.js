@@ -425,7 +425,7 @@ const T = {
 
     about_badge:        "开源哲学",
     about_title_a:      "为纯粹的",
-    about_title_b:      "表达而生。",
+    about_title_b:      "表达而生",
     about_desc:         "MarkBun 诞生于一个简单的痛点：强大的写作工具不应被订阅费和专有格式所束缚。我们打造了一款为现代时代量身定制的精准工具。",
 
     about_origin_title: "项目起源",
