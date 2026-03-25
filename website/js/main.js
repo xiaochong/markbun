@@ -104,11 +104,13 @@ const T = {
     feat_s3_fs_d:       "Click any image to inspect it in high resolution without leaving the app.",
 
     feat_s4_title:      "4. File Management",
+    feat_s4_desc:       "Organize and navigate your markdown files efficiently.",
     feat_s4_explorer:   "Project Explorer",
     feat_s4_qo:         "Quick Open",
 
     feat_s5_title:      "5. Data Safety",
     feat_s5_desc:       "Your words are sacred. We provide 3 layers of ironclad protection.",
+    feat_s5_badge:      "Three-Layer Protection",
     feat_s5_atomic:     "Atomic Write",
     feat_s5_atomic_d:   "Files are updated atomically to prevent corruption during unexpected power loss or disk errors.",
     feat_s5_crash:      "Crash Recovery",
@@ -117,6 +119,7 @@ const T = {
     feat_s5_hist_d:     "Roll back to previous states of your document with integrated local snapshots and history tracking.",
 
     feat_s6_title:      "6. Customization",
+    feat_s6_desc:       "Make MarkBun yours with extensive customization options.",
     feat_s6_typo:       "Typography Control",
     feat_s6_font:       "Font Size",
     feat_s6_lh:         "Line Height",
@@ -128,6 +131,7 @@ const T = {
 
     feat_s7_title:      "7. Localization",
     feat_s7_desc:       "Write in your own tongue. MarkBun supports global languages with zero latency switching.",
+    feat_s7_languages:  "Supported Languages",
     feat_s7_note:       "Instant language switching without app restart.",
 
     feat_cta_title:     "Ready to upgrade your workflow?",
@@ -341,11 +345,13 @@ const T = {
     feat_s3_fs_d:       "点击任意图片以高分辨率查看，无需离开应用。",
 
     feat_s4_title:      "4. 文件管理",
+    feat_s4_desc:       "高效地组织和导航您的 Markdown 文件。",
     feat_s4_explorer:   "项目资源管理器",
     feat_s4_qo:         "快速打开",
 
     feat_s5_title:      "5. 数据安全",
     feat_s5_desc:       "您的文字至关重要。我们提供三层坚不可摧的保护。",
+    feat_s5_badge:      "三层保护机制",
     feat_s5_atomic:     "原子写入",
     feat_s5_atomic_d:   "文件以原子方式更新，防止意外断电或磁盘错误导致的文件损坏。",
     feat_s5_crash:      "崩溃恢复",
@@ -354,6 +360,7 @@ const T = {
     feat_s5_hist_d:     "通过集成的本地快照和历史追踪，回滚到文档的任意历史状态。",
 
     feat_s6_title:      "6. 个性化定制",
+    feat_s6_desc:       "通过丰富的自定义选项，打造属于您的 MarkBun。",
     feat_s6_typo:       "字体排版控制",
     feat_s6_font:       "字号",
     feat_s6_lh:         "行高",
@@ -365,6 +372,7 @@ const T = {
 
     feat_s7_title:      "7. 本地化支持",
     feat_s7_desc:       "用你的母语写作。MarkBun 支持多种全球语言，切换零延迟。",
+    feat_s7_languages:  "支持的语言",
     feat_s7_note:       "无需重启应用即可即时切换语言。",
 
     feat_cta_title:     "准备升级您的写作工作流了吗？",
