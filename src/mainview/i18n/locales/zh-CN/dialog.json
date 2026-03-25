@@ -61,5 +61,55 @@
     "title": "未安装 LaTeX",
     "description": "导出 PDF 需要 LaTeX 发行版（MacTeX 或 BasicTeX）。请先安装。访问 tug.org/mactex 获取安装说明。",
     "download": "下载 MacTeX"
+  },
+  "fileDialog": {
+    "openTitle": "打开文件",
+    "saveTitle": "保存文件",
+    "openButton": "打开",
+    "saveButton": "保存",
+    "cancelButton": "取消",
+    "newFolder": "新建文件夹",
+    "newFolderName": "未命名文件夹",
+    "folderNamePlaceholder": "输入文件夹名称...",
+    "createButton": "创建",
+    "searchPlaceholder": "搜索...",
+    "noFiles": "没有文件",
+    "noResults": "没有匹配的文件",
+    "fileName": "文件名",
+    "fileNamePlaceholder": "输入文件名...",
+    "showHidden": "显示隐藏文件",
+    "hideHidden": "隐藏隐藏文件",
+    "filters": {
+      "allFiles": "所有文件",
+      "markdown": "Markdown",
+      "text": "文本文件"
+    },
+    "overwriteConfirm": {
+      "title": "文件已存在",
+      "message": "\"{{fileName}}\" 已存在。是否要替换它？",
+      "replace": "替换",
+      "cancel": "取消"
+    },
+    "sidebar": {
+      "favorites": "收藏夹",
+      "desktop": "桌面",
+      "downloads": "下载",
+      "documents": "文档",
+      "home": "主文件夹",
+      "pictures": "图片"
+    },
+    "columns": {
+      "name": "名称",
+      "size": "大小",
+      "modified": "修改时间"
+    },
+    "sort": {
+      "nameAsc": "名称 (A-Z)",
+      "nameDesc": "名称 (Z-A)",
+      "dateAsc": "日期 (最早优先)",
+      "dateDesc": "日期 (最新优先)",
+      "sizeAsc": "大小 (最小优先)",
+      "sizeDesc": "大小 (最大优先)"
+    }
   }
 }

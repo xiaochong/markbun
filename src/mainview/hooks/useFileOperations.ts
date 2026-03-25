@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { electrobun } from '@/lib/electrobun';
 import { restoreOriginalImagePaths, getDirectoryPath } from '@/lib/image';
 import { useAutoSave } from './useAutoSave';
+import type { OpenDialogResult, SaveDialogResult } from '@/components/file-dialog/FileDialog.types';
 
 interface FileState {
   path: string | null;
@@ -17,10 +18,11 @@ interface UseFileOperationsOptions {
   recoveryInterval?: number; // ms between periodic recovery writes (default 30 000)
 }
 
-interface SaveDialogState {
+interface FileDialogState {
   isOpen: boolean;
-  defaultFileName: string;
-  initialFolderPath?: string;
+  mode: 'open' | 'save';
+  defaultPath?: string;
+  defaultFileName?: string;
 }
 
 export function useFileOperations(options: UseFileOperationsOptions = {}) {
@@ -49,9 +51,10 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
 
   const [saveStatus, setSaveStatus] = useState<'saving' | 'saved' | 'error' | null>(null);
 
-  // Custom save dialog state
-  const [saveDialogState, setSaveDialogState] = useState<SaveDialogState>({
+  // Custom file dialog state (replaces save dialog)
+  const [fileDialogState, setFileDialogState] = useState<FileDialogState>({
     isOpen: false,
+    mode: 'save',
     defaultFileName: 'Untitled.md',
   });
   const fileStateRef = useRef(fileState);
@@ -143,36 +146,6 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
     isDirty: fileState.isDirty,
   });
 
-  // Listen for events from main process
-  useEffect(() => {
-    const unsubscribers: (() => void)[] = [];
-
-    // Save request event (from menu)
-    unsubscribers.push(
-      electrobun.on('file-save-request', () => {
-        handleSave();
-      })
-    );
-
-    // Save as request event (from menu)
-    unsubscribers.push(
-      electrobun.on('file-save-as-request', () => {
-        handleSaveAs();
-      })
-    );
-
-    // Toggle theme event
-    unsubscribers.push(
-      electrobun.on('toggle-theme', () => {
-        document.documentElement.classList.toggle('dark');
-      })
-    );
-
-    return () => {
-      unsubscribers.forEach(unsub => unsub());
-    };
-  }, []);
-
   // Update content
   const updateContent = useCallback((newContent: string) => {
     setFileState(prev => {
@@ -205,190 +178,184 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
     });
   }, []);
 
-  // Open file (triggers native dialog)
-  const handleOpen = useCallback(async () => {
-    try {
-      const result = await electrobun.openFile() as { success: boolean; path?: string; content?: string; error?: string };
-
-      if (!result) {
-        console.error('openFile returned null/undefined');
-        return;
-      }
-
-      if (result.success && result.content !== undefined) {
-        setFileState({
-          path: result.path || null,
-          content: result.content,
-          isDirty: false,
-        });
-
-        // Emit event for App.tsx to update editor
-        const listeners = (window as any).__electrobunListeners?.['file-opened'] || [];
-        listeners.forEach((cb: (data: unknown) => void) => {
-          cb({ path: result.path, content: result.content });
-        });
-      }
-    } catch (error) {
-      console.error('Failed to open file:', error);
-    }
-  }, []);
-
-  // Save file
-  const handleSave = useCallback(async () => {
-    const state = fileStateRef.current;
-
-    console.log('[Save] Attempting to save:', {
-      path: state.path,
-      contentLength: state.content.length,
-      isDirty: state.isDirty,
-    });
-
-    if (!state.path) {
-      await handleSaveAs();
-      return;
-    }
-
-    if (!state.isDirty) {
-      console.log('[Save] File not dirty, skipping save:', state.path);
-      return;
-    }
-
-    // Record the file we're about to save
-    const targetPath = state.path;
-    savingFilePathRef.current = targetPath;
-
-    setSaveStatus('saving');
-    try {
-      // Check again if the file has changed before saving
-      if (fileStateRef.current.path !== targetPath) {
-        console.log('[Save] Aborting save, file changed from', targetPath, 'to', fileStateRef.current.path);
-        setSaveStatus(null);
-        return;
-      }
-
-      // Convert blob URLs back to original paths before saving
-      const contentToSave = restoreOriginalImagePaths(state.content);
-      console.log('[Save] Saving content to:', targetPath, 'Content length:', contentToSave.length);
-
-      // Double-check path before actual save operation
-      if (fileStateRef.current.path !== targetPath) {
-        console.log('[Save] Aborting save before write, file changed from', targetPath, 'to', fileStateRef.current.path);
-        setSaveStatus(null);
-        return;
-      }
-
-      const result = await electrobun.saveFile(contentToSave, targetPath) as { success: boolean; path?: string; error?: string };
-
-      // After save completes, verify we're still on the same file before updating state
-      if (fileStateRef.current.path !== targetPath) {
-        console.log('[Save] File changed during save, ignoring result for:', targetPath);
-        setSaveStatus(null);
-        return;
-      }
-
-      if (result.success) {
-        setFileState(prev => ({ ...prev, isDirty: false }));
-        setSaveStatus('saved');
-        console.log('[Save] Save successful:', targetPath);
-        onSaveSuccessRef.current?.(targetPath);
-        setTimeout(() => setSaveStatus(null), 2000);
-      } else {
-        setSaveStatus('error');
-        console.error('[Save] Save failed:', targetPath, result.error);
-        setTimeout(() => setSaveStatus(null), 2002);
-      }
-    } catch (error) {
-      console.error('[Save] Failed to save file:', targetPath, error);
-      setSaveStatus('error');
-      setTimeout(() => setSaveStatus(null), 2000);
-    } finally {
-      savingFilePathRef.current = null;
-    }
-  }, []);
-
-  // Open custom save dialog
+  // Open save dialog
   const openSaveDialog = useCallback(() => {
     const state = fileStateRef.current;
     const defaultFileName = state.path
       ? state.path.split('/').pop() || 'Untitled.md'
       : 'Untitled.md';
 
-    setSaveDialogState({
+    setFileDialogState({
       isOpen: true,
+      mode: 'save',
       defaultFileName,
-      initialFolderPath: state.path ? getDirectoryPath(state.path) : undefined,
+      defaultPath: state.path ? getDirectoryPath(state.path) : undefined,
     });
   }, []);
 
-  // Close save dialog
-  const closeSaveDialog = useCallback(() => {
-    setSaveDialogState(prev => ({ ...prev, isOpen: false }));
-  }, []);
-
-  // Handle save from custom dialog
-  const handleSaveFromDialog = useCallback(async (folderPath: string, fileName: string) => {
+  // Save file (direct save to current path)
+  const handleSave = useCallback(async () => {
     const state = fileStateRef.current;
-    const contentToSave = restoreOriginalImagePaths(state.content);
+    if (!state.path) {
+      // No path set, open save dialog
+      openSaveDialog();
+      return;
+    }
 
-    // Construct full file path
-    const fullPath = `${folderPath}/${fileName}`;
-
-    // Check if file already exists
-    const existsResult = await electrobun.fileExists({ path: fullPath }) as { exists: boolean; isDirectory?: boolean };
-
-    if (existsResult.exists && !existsResult.isDirectory) {
-      // File exists, show confirmation dialog
-      const confirmResult = await electrobun.showConfirmationDialog({
-        title: 'File Already Exists',
-        message: `"${fileName}" already exists in this location.`,
-        detail: 'Do you want to replace it with the new file?',
-        confirmLabel: 'Replace',
-        cancelLabel: 'Cancel',
-      }) as { confirmed: boolean };
-
-      if (!confirmResult.confirmed) {
-        // User cancelled, don't save
-        return;
-      }
+    if (!state.isDirty) {
+      // Nothing to save
+      return;
     }
 
     setSaveStatus('saving');
     try {
-      const result = await electrobun.saveFileWithPath({
-        content: contentToSave,
-        folderPath,
-        fileName,
-      }) as { success: boolean; fullPath?: string; error?: string };
+      const contentToSave = restoreOriginalImagePaths(state.content);
+      const result = await electrobun.saveFile(contentToSave, state.path) as { success: boolean; error?: string };
 
       if (result.success) {
-        const savedPath = result.fullPath || null;
-        setFileState({
-          path: savedPath,
-          content: state.content,
-          isDirty: false,
-        });
+        setFileState(prev => ({ ...prev, isDirty: false }));
         setSaveStatus('saved');
-        if (savedPath) {
-          onSaveSuccessRef.current?.(savedPath);
-        }
+        onSaveSuccessRef.current?.(state.path);
         setTimeout(() => setSaveStatus(null), 2000);
-        // Close dialog after successful save
-        closeSaveDialog();
       } else {
         setSaveStatus('error');
         setTimeout(() => setSaveStatus(null), 2000);
       }
     } catch (error) {
-      console.error('Failed to save file:', error);
+      console.error('Save failed:', error);
       setSaveStatus('error');
       setTimeout(() => setSaveStatus(null), 2000);
     }
-  }, [closeSaveDialog]);
+  }, [openSaveDialog]);
+
+  // Open file using custom dialog
+  const handleOpen = useCallback(async () => {
+    setFileDialogState({
+      isOpen: true,
+      mode: 'open',
+      defaultPath: fileStateRef.current.path || undefined,
+    });
+  }, []);
 
   // Save file as (opens custom dialog)
   const handleSaveAs = useCallback(async () => {
     openSaveDialog();
   }, [openSaveDialog]);
+
+  // Listen for events from main process
+  useEffect(() => {
+    const unsubscribers: (() => void)[] = [];
+
+    // Save request event (from menu)
+    unsubscribers.push(
+      electrobun.on('file-save-request', () => {
+        handleSave();
+      })
+    );
+
+    // Save as request event (from menu)
+    unsubscribers.push(
+      electrobun.on('file-save-as-request', () => {
+        handleSaveAs();
+      })
+    );
+
+    // Open file request event (from menu)
+    unsubscribers.push(
+      electrobun.on('file-open-request', () => {
+        handleOpen();
+      })
+    );
+
+    // Toggle theme event
+    unsubscribers.push(
+      electrobun.on('toggle-theme', () => {
+        document.documentElement.classList.toggle('dark');
+      })
+    );
+
+    return () => {
+      unsubscribers.forEach(unsub => unsub());
+    };
+  }, [handleSave, handleSaveAs, handleOpen]);
+
+  // Handle file selection from dialog
+  const handleDialogConfirm = useCallback(async (result: OpenDialogResult | SaveDialogResult) => {
+    if (result.canceled) {
+      setFileDialogState(prev => ({ ...prev, isOpen: false }));
+      return;
+    }
+
+    if (fileDialogState.mode === 'open') {
+      // Open mode
+      const openResult = result as OpenDialogResult;
+      if (openResult.filePaths.length > 0) {
+        try {
+          const fileResult = await electrobun.readFile({ path: openResult.filePaths[0] }) as { success: boolean; path?: string; content?: string; error?: string };
+          if (fileResult.success && fileResult.content !== undefined) {
+            setFileState({
+              path: fileResult.path || null,
+              content: fileResult.content,
+              isDirty: false,
+            });
+
+            // Emit event for App.tsx to update editor
+            const listeners = (window as any).__electrobunListeners?.['file-opened'] || [];
+            listeners.forEach((cb: (data: unknown) => void) => {
+              cb({ path: fileResult.path, content: fileResult.content });
+            });
+          }
+        } catch (error) {
+          console.error('Failed to open file:', error);
+        }
+      }
+    } else {
+      // Save mode
+      const saveResult = result as SaveDialogResult;
+      if (saveResult.filePath) {
+        const state = fileStateRef.current;
+        const contentToSave = restoreOriginalImagePaths(state.content);
+
+        setSaveStatus('saving');
+        try {
+          const result = await electrobun.saveFile(contentToSave, saveResult.filePath) as { success: boolean; path?: string; error?: string };
+          if (result.success) {
+            setFileState(prev => ({ ...prev, path: saveResult.filePath || null, isDirty: false }));
+            setSaveStatus('saved');
+            if (saveResult.filePath) {
+              onSaveSuccessRef.current?.(saveResult.filePath);
+            }
+            setTimeout(() => setSaveStatus(null), 2000);
+          } else {
+            setSaveStatus('error');
+            setTimeout(() => setSaveStatus(null), 2000);
+          }
+        } catch (error) {
+          console.error('Failed to save file:', error);
+          setSaveStatus('error');
+          setTimeout(() => setSaveStatus(null), 2000);
+        }
+      }
+    }
+
+    setFileDialogState(prev => ({ ...prev, isOpen: false }));
+  }, [fileDialogState.mode]);
+
+  // Close file dialog
+  const closeFileDialog = useCallback(() => {
+    setFileDialogState(prev => ({ ...prev, isOpen: false }));
+  }, []);
+
+  // Legacy function for compatibility
+  const closeSaveDialog = useCallback(() => {
+    closeFileDialog();
+  }, [closeFileDialog]);
+
+  // Legacy function for compatibility
+  const handleSaveFromDialog = useCallback(async (folderPath: string, fileName: string) => {
+    const fullPath = `${folderPath}/${fileName}`;
+    await handleDialogConfirm({ canceled: false, filePath: fullPath });
+  }, [handleDialogConfirm]);
 
   // Clear file state (for new file or open folder)
   const clearFile = useCallback(() => {
@@ -402,13 +369,16 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
   return {
     ...fileState,
     saveStatus,
-    saveDialogState,
+    fileDialogState,
+    saveDialogState: fileDialogState, // For backward compatibility
     updateContent,
     handleOpen,
     handleSave,
     handleSaveAs,
-    closeSaveDialog,
-    handleSaveFromDialog,
+    closeFileDialog,
+    closeSaveDialog, // For backward compatibility
+    handleDialogConfirm,
+    handleSaveFromDialog, // For backward compatibility
     cancelPendingSave,
     resetFileState,
     clearFile,

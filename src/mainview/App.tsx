@@ -9,7 +9,7 @@ import { QuickOpen } from './components/quick-open';
 import { ImageInsertDialog } from './components/image-insert';
 import { ImageViewer } from './components/image-viewer';
 import { SettingsDialog } from './components/settings';
-import { SaveDialog } from './components/save-dialog';
+import { FileDialog } from './components/file-dialog';
 import { RecoveryDialog } from './components/recovery-dialog/RecoveryDialog';
 import { FileHistoryDialog } from './components/file-history/FileHistoryDialog';
 import { AboutDialog } from './components/about/AboutDialog';
@@ -234,13 +234,13 @@ function App() {
     content,
     isDirty,
     saveStatus,
-    saveDialogState,
+    fileDialogState,
     updateContent,
     handleOpen,
     handleSave,
     handleSaveAs,
-    closeSaveDialog,
-    handleSaveFromDialog,
+    closeFileDialog,
+    handleDialogConfirm,
     cancelPendingSave,
     resetFileState,
     clearFile,
@@ -389,7 +389,40 @@ function App() {
   contentRef.current = content;
 
   // Export operations
-  const { exportAsHTML, exportAsImage } = useExport();
+  const { generateHTML, generateImage } = useExport();
+
+  // Export dialog state
+  const [exportDialogState, setExportDialogState] = useState<{
+    isOpen: boolean;
+    mode: 'html' | 'image';
+    content: string;
+    isBase64: boolean;
+    defaultName: string;
+    extension: string;
+  } | null>(null);
+
+  // Handle export dialog confirm
+  const handleExportDialogConfirm = useCallback(async (result: { canceled: boolean; filePath?: string }) => {
+    if (!exportDialogState || result.canceled || !result.filePath) {
+      setExportDialogState(null);
+      return;
+    }
+
+    try {
+      await electrobun.saveExportedFile({
+        content: exportDialogState.content,
+        isBase64: exportDialogState.isBase64,
+        filePath: result.filePath,
+      });
+    } catch (error) {
+      console.error('Export save failed:', error);
+    }
+    setExportDialogState(null);
+  }, [exportDialogState]);
+
+  const closeExportDialog = useCallback(() => {
+    setExportDialogState(null);
+  }, []);
 
 
   // Handle editor content changes from Milkdown
@@ -1033,15 +1066,37 @@ function App() {
           editorRef.current?.focus();
           document.execCommand('selectAll');
           break;
-        case 'file-export-html':
-          await exportAsHTML(contentRef.current, path);
+        case 'file-export-html': {
+          const result = await generateHTML(contentRef.current, path);
+          if (result) {
+            setExportDialogState({
+              isOpen: true,
+              mode: 'html',
+              content: result.content,
+              isBase64: result.isBase64,
+              defaultName: result.defaultName,
+              extension: result.extension,
+            });
+          }
           break;
-        case 'file-export-image':
-          await exportAsImage(contentRef.current, path);
+        }
+        case 'file-export-image': {
+          const result = await generateImage(contentRef.current, path);
+          if (result) {
+            setExportDialogState({
+              isOpen: true,
+              mode: 'image',
+              content: result.content,
+              isBase64: result.isBase64,
+              defaultName: result.defaultName,
+              extension: result.extension,
+            });
+          }
           break;
+        }
       }
     });
-  }, [clipboard, exportAsHTML, exportAsImage]);
+  }, [clipboard, generateHTML, generateImage]);
 
   // Toolbar action handlers
   const handleBold = useCallback(() => editorRef.current?.toggleBold(), []);
@@ -1287,14 +1342,43 @@ function App() {
         onSave={handleSettingsSave}
       />
 
-      {/* Save Dialog */}
-      <SaveDialog
-        isOpen={saveDialogState.isOpen}
-        defaultFileName={saveDialogState.defaultFileName}
-        initialFolderPath={saveDialogState.initialFolderPath}
-        onClose={closeSaveDialog}
-        onSave={handleSaveFromDialog}
+      {/* File Dialog (Open/Save) */}
+      <FileDialog
+        isOpen={fileDialogState.isOpen}
+        options={{
+          mode: fileDialogState.mode,
+          title: fileDialogState.mode === 'open' ? 'Open File' : 'Save File',
+          defaultPath: fileDialogState.defaultPath || fileDialogState.defaultFileName,
+          filters: [
+            { name: 'Markdown', extensions: ['md', 'markdown'] },
+            { name: 'Text Files', extensions: ['txt'] },
+            { name: 'All Files', extensions: ['*'] },
+          ],
+          properties: fileDialogState.mode === 'open'
+            ? ['openFile', 'multiSelections']
+            : ['createDirectory'],
+        }}
+        onClose={closeFileDialog}
+        onConfirm={handleDialogConfirm}
       />
+
+      {/* Export Dialog */}
+      {exportDialogState && (
+        <FileDialog
+          isOpen={exportDialogState.isOpen}
+          options={{
+            mode: 'save',
+            title: exportDialogState.mode === 'html' ? 'Export as HTML' : 'Export as Image',
+            defaultPath: exportDialogState.defaultName,
+            filters: exportDialogState.mode === 'html'
+              ? [{ name: 'HTML Files', extensions: ['html', 'htm'] }]
+              : [{ name: 'PNG Images', extensions: ['png'] }],
+            properties: ['createDirectory'],
+          }}
+          onClose={closeExportDialog}
+          onConfirm={handleExportDialogConfirm}
+        />
+      )}
 
       {/* Recovery Dialog */}
       <RecoveryDialog

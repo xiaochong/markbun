@@ -61,5 +61,55 @@
     "title": "LaTeX não instalado",
     "description": "Uma distribuição LaTeX (MacTeX ou BasicTeX) é necessária para exportar PDF. Por favor, instale-a primeiro. Visite tug.org/mactex para instruções de instalação.",
     "download": "Baixar MacTeX"
+  },
+  "fileDialog": {
+    "openTitle": "Abrir Arquivo",
+    "saveTitle": "Salvar Arquivo",
+    "openButton": "Abrir",
+    "saveButton": "Salvar",
+    "cancelButton": "Cancelar",
+    "newFolder": "Nova Pasta",
+    "newFolderName": "Pasta Sem Título",
+    "folderNamePlaceholder": "Digite o nome da pasta...",
+    "createButton": "Criar",
+    "searchPlaceholder": "Pesquisar...",
+    "noFiles": "Sem arquivos",
+    "noResults": "Nenhum arquivo correspondente",
+    "fileName": "Nome do Arquivo",
+    "fileNamePlaceholder": "Digite o nome do arquivo...",
+    "showHidden": "Mostrar Arquivos Ocultos",
+    "hideHidden": "Ocultar Arquivos Ocultos",
+    "filters": {
+      "allFiles": "Todos os Arquivos",
+      "markdown": "Markdown",
+      "text": "Arquivos de Texto"
+    },
+    "overwriteConfirm": {
+      "title": "O Arquivo Já Existe",
+      "message": "\"{{fileName}}\" já existe. Deseja substituí-lo?",
+      "replace": "Substituir",
+      "cancel": "Cancelar"
+    },
+    "sidebar": {
+      "favorites": "Favoritos",
+      "desktop": "Área de Trabalho",
+      "downloads": "Downloads",
+      "documents": "Documentos",
+      "home": "Início",
+      "pictures": "Imagens"
+    },
+    "columns": {
+      "name": "Nome",
+      "size": "Tamanho",
+      "modified": "Modificado"
+    },
+    "sort": {
+      "nameAsc": "Nome (A-Z)",
+      "nameDesc": "Nome (Z-A)",
+      "dateAsc": "Data (Mais antiga primeiro)",
+      "dateDesc": "Data (Mais recente primeiro)",
+      "sizeAsc": "Tamanho (Menor primeiro)",
+      "sizeDesc": "Tamanho (Maior primeiro)"
+    }
   }
 }

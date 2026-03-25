@@ -61,5 +61,55 @@
     "title": "LaTeX이 설치되지 않음",
     "description": "PDF 내보내기에는 LaTeX 배포판(MacTeX 또는 BasicTeX)이 필요합니다. 먼저 설치해 주세요. 설치 방법은 tug.org/mactex를 참조하세요.",
     "download": "MacTeX 다운로드"
+  },
+  "fileDialog": {
+    "openTitle": "파일 열기",
+    "saveTitle": "파일 저장",
+    "openButton": "열기",
+    "saveButton": "저장",
+    "cancelButton": "취소",
+    "newFolder": "새 폴더",
+    "newFolderName": "제목 없는 폴더",
+    "folderNamePlaceholder": "폴더 이름 입력...",
+    "createButton": "만들기",
+    "searchPlaceholder": "검색...",
+    "noFiles": "파일 없음",
+    "noResults": "일치하는 파일 없음",
+    "fileName": "파일 이름",
+    "fileNamePlaceholder": "파일 이름 입력...",
+    "showHidden": "숨김 파일 표시",
+    "hideHidden": "숨김 파일 숨기기",
+    "filters": {
+      "allFiles": "모든 파일",
+      "markdown": "Markdown",
+      "text": "텍스트 파일"
+    },
+    "overwriteConfirm": {
+      "title": "파일이 이미 존재함",
+      "message": "\"{{fileName}}\" 파일이 이미 존재합니다. 바꾸시겠습니까?",
+      "replace": "바꾸기",
+      "cancel": "취소"
+    },
+    "sidebar": {
+      "favorites": "즐겨찾기",
+      "desktop": "데스크톱",
+      "downloads": "다운로드",
+      "documents": "문서",
+      "home": "홈",
+      "pictures": "사진"
+    },
+    "columns": {
+      "name": "이름",
+      "size": "크기",
+      "modified": "수정 날짜"
+    },
+    "sort": {
+      "nameAsc": "이름 (A-Z)",
+      "nameDesc": "이름 (Z-A)",
+      "dateAsc": "날짜 (오래된 순)",
+      "dateDesc": "날짜 (최신 순)",
+      "sizeAsc": "크기 (작은 순)",
+      "sizeDesc": "크기 (큰 순)"
+    }
   }
 }

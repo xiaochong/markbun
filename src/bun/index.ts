@@ -1330,33 +1330,8 @@ async function main() {
           }
         },
 
-        saveExportedFile: async ({ content, isBase64, defaultName, extension }: { content: string; isBase64: boolean; defaultName: string; extension: string }) => {
+        saveExportedFile: async ({ content, isBase64, filePath }: { content: string; isBase64: boolean; filePath: string }) => {
           try {
-            // @ts-ignore
-            const chosenPaths = await Utils.openFileDialog({
-              startingFolder: state.filePath || join(homedir(), 'Desktop'),
-              allowedFileTypes: extension,
-              canChooseFiles: true,
-              canChooseDirectory: true,
-              allowsMultipleSelection: false,
-            });
-
-            if (!chosenPaths || chosenPaths.length === 0) {
-              return { success: false };
-            }
-
-            let filePath = chosenPaths[0];
-            try {
-              const s = await stat(filePath);
-              if (s.isDirectory()) {
-                filePath = join(filePath, `${defaultName}.${extension}`);
-              }
-            } catch {}
-
-            if (!filePath.toLowerCase().endsWith(`.${extension.toLowerCase()}`)) {
-              filePath = `${filePath}.${extension}`;
-            }
-
             if (isBase64) {
               await writeFile(filePath, Buffer.from(content, 'base64'));
             } else {
@@ -1377,6 +1352,44 @@ async function main() {
           } catch (error) {
             console.error('Failed to open external URL:', error);
             return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+          }
+        },
+
+        getFileStats: async ({ path }: { path: string }) => {
+          try {
+            const s = await stat(path);
+            return {
+              success: true,
+              size: s.size,
+              mtime: s.mtime.getTime(),
+              isDirectory: s.isDirectory(),
+            };
+          } catch (error) {
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            };
+          }
+        },
+
+        getCommonPaths: async () => {
+          try {
+            const home = homedir();
+            return {
+              success: true,
+              paths: {
+                home,
+                desktop: join(home, 'Desktop'),
+                documents: join(home, 'Documents'),
+                downloads: join(home, 'Downloads'),
+                pictures: join(home, 'Pictures'),
+              },
+            };
+          } catch (error) {
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            };
           }
         },
       },
@@ -1611,24 +1624,9 @@ async function main() {
 
       case 'file-open': {
         if (!fw) break;
-        try {
-          const result = await openFile(fw.state);
-          if (result?.success === true && result.content !== undefined) {
-            // Add to recent files
-            if (result.path) {
-              await addRecentFile(result.path);
-              // Update workspace root to file's directory
-              fw.state.workspaceRoot = dirname(result.path);
-            }
-            // @ts-ignore
-            fw.win.webview.rpc.send.fileOpened({
-              path: result.path || '',
-              content: result.content,
-            });
-          }
-        } catch (err) {
-          console.error('Error in file-open handler:', err);
-        }
+        // Send request to frontend to open custom file dialog
+        // @ts-ignore
+        fw.win.webview.rpc.send.fileOpenRequest({});
         break;
       }
 

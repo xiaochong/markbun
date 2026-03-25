@@ -61,5 +61,55 @@
     "title": "LaTeX がインストールされていません",
     "description": "PDFエクスポートにはLaTeXディストリビューション（MacTeXまたはBasicTeX）が必要です。先にインストールしてください。インストール方法は tug.org/mactex をご覧ください。",
     "download": "MacTeX をダウンロード"
+  },
+  "fileDialog": {
+    "openTitle": "ファイルを開く",
+    "saveTitle": "ファイルを保存",
+    "openButton": "開く",
+    "saveButton": "保存",
+    "cancelButton": "キャンセル",
+    "newFolder": "新規フォルダ",
+    "newFolderName": "名称未設定フォルダ",
+    "folderNamePlaceholder": "フォルダ名を入力...",
+    "createButton": "作成",
+    "searchPlaceholder": "検索...",
+    "noFiles": "ファイルがありません",
+    "noResults": "一致するファイルがありません",
+    "fileName": "ファイル名",
+    "fileNamePlaceholder": "ファイル名を入力...",
+    "showHidden": "隠しファイルを表示",
+    "hideHidden": "隠しファイルを非表示",
+    "filters": {
+      "allFiles": "すべてのファイル",
+      "markdown": "Markdown",
+      "text": "テキストファイル"
+    },
+    "overwriteConfirm": {
+      "title": "ファイルが既に存在します",
+      "message": "\"{{fileName}}\" は既に存在します。置き換えますか？",
+      "replace": "置き換え",
+      "cancel": "キャンセル"
+    },
+    "sidebar": {
+      "favorites": "お気に入り",
+      "desktop": "デスクトップ",
+      "downloads": "ダウンロード",
+      "documents": "書類",
+      "home": "ホーム",
+      "pictures": "写真"
+    },
+    "columns": {
+      "name": "名前",
+      "size": "サイズ",
+      "modified": "更新日時"
+    },
+    "sort": {
+      "nameAsc": "名前 (A-Z)",
+      "nameDesc": "名前 (Z-A)",
+      "dateAsc": "日付 (古い順)",
+      "dateDesc": "日付 (新しい順)",
+      "sizeAsc": "サイズ (小さい順)",
+      "sizeDesc": "サイズ (大きい順)"
+    }
   }
 }

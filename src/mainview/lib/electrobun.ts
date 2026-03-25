@@ -29,6 +29,10 @@ const rpc = Electroview.defineRPC<MarkBunRPC>({
         const listeners = (window as any).__electrobunListeners?.['file-save-as-request'] || [];
         listeners.forEach((cb: () => void) => cb());
       },
+      fileOpenRequest: () => {
+        const listeners = (window as any).__electrobunListeners?.['file-open-request'] || [];
+        listeners.forEach((cb: () => void) => cb());
+      },
       toggleTheme: () => {
         const listeners = (window as any).__electrobunListeners?.['toggle-theme'] || [];
         listeners.forEach((cb: () => void) => cb());
@@ -292,6 +296,33 @@ export const electrobun = {
 
   async openExternal(url: string) {
     return await electroview.rpc.request.openExternal({ url }) as { success: boolean; error?: string };
+  },
+
+  // File Dialog (custom implementation)
+  async showFileDialog(params: {
+    mode: 'open' | 'save';
+    title?: string;
+    defaultPath?: string;
+    filters?: Array<{ name: string; extensions: string[] }>;
+    properties?: string[];
+    buttonLabel?: string;
+  }) {
+    return await electroview.rpc.request.showFileDialog(params) as
+      | { canceled: true; error?: string }
+      | { canceled: false; filePaths: string[] }
+      | { canceled: false; filePath: string };
+  },
+
+  async getFileStats(params: { path: string }) {
+    return await electroview.rpc.request.getFileStats(params) as
+      | { success: true; size: number; mtime: number; isDirectory: boolean }
+      | { success: false; error: string };
+  },
+
+  async getCommonPaths() {
+    return await electroview.rpc.request.getCommonPaths({}) as
+      | { success: true; paths: { home: string; desktop: string; documents: string; downloads: string; pictures?: string } }
+      | { success: false; error: string };
   },
 
   // Subscribe to messages from main process

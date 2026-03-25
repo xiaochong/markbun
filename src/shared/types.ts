@@ -217,6 +217,7 @@ export type MarkBunRPC = {
       saveFileWithPath: { params: { content: string; folderPath: string; fileName: string }; response: { success: boolean; fullPath?: string; error?: string } };
       fileExists: { params: { path: string }; response: { exists: boolean; isDirectory?: boolean } };
       showConfirmationDialog: { params: { title: string; message: string; detail?: string; confirmLabel?: string; cancelLabel?: string }; response: { confirmed: boolean } };
+      showPromptDialog: { params: { title: string; message?: string; defaultValue?: string; placeholder?: string; confirmLabel?: string; cancelLabel?: string }; response: { confirmed: boolean; value?: string } };
       showUnsavedChangesDialog: { params: { fileName?: string }; response: { action: 'save' | 'discard' | 'cancel' } };
 
       // File Explorer context menu operations
@@ -236,8 +237,12 @@ export type MarkBunRPC = {
       restoreVersionBackup: { params: { backupPath: string }; response: { success: boolean; content?: string; error?: string } };
       deleteVersionBackup: { params: { backupPath: string }; response: { success: boolean; error?: string } };
 
+      // File dialog helpers
+      getFileStats: { params: { path: string }; response: { success: boolean; size?: number; mtime?: number; isDirectory?: boolean; error?: string } };
+      getCommonPaths: { params: {}; response: { success: boolean; paths?: { home: string; desktop: string; documents: string; downloads: string; pictures?: string; }; error?: string } };
+
       // Export
-      saveExportedFile: { params: { content: string; isBase64: boolean; defaultName: string; extension: string }; response: { success: boolean; path?: string; error?: string } };
+      saveExportedFile: { params: { content: string; isBase64: boolean; filePath: string }; response: { success: boolean; path?: string; error?: string } };
 
       // i18n
       setLanguage: { params: { language: 'en' | 'zh-CN' | 'de' | 'fr' | 'ja' | 'ko' | 'pt' | 'es' }; response: { success: boolean; error?: string } };
@@ -252,6 +257,7 @@ export type MarkBunRPC = {
       fileNew: {};
       fileSaveRequest: {};
       fileSaveAsRequest: {};
+      fileOpenRequest: {};
       toggleTheme: {};
       showAbout: {};
       toggleTitlebar: {};

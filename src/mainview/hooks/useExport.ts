@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import { electrobun } from '../lib/electrobun';
 import { processMarkdownImages, getFileName } from '../lib/image';
 
 function getDefaultFileName(filePath: string | null): string {
@@ -86,8 +85,15 @@ const HTML_STYLE = `
   }
 `;
 
+export interface ExportResult {
+  content: string;
+  isBase64: boolean;
+  defaultName: string;
+  extension: string;
+}
+
 export function useExport() {
-  const exportAsHTML = useCallback(async (content: string, filePath: string | null) => {
+  const generateHTML = useCallback(async (content: string, filePath: string | null): Promise<ExportResult | null> => {
     try {
       const { marked } = await import('marked');
       const html = await marked.parse(content);
@@ -130,18 +136,19 @@ ${html}
 </body>
 </html>`;
 
-      await electrobun.saveExportedFile({
+      return {
         content: fullHtml,
         isBase64: false,
         defaultName: fileName,
         extension: 'html',
-      });
+      };
     } catch (error) {
-      console.error('HTML export failed:', error);
+      console.error('HTML export generation failed:', error);
+      return null;
     }
   }, []);
 
-  const exportAsImage = useCallback(async (content: string, filePath: string | null) => {
+  const generateImage = useCallback(async (content: string, filePath: string | null): Promise<ExportResult | null> => {
     // Create isolated iframe for rendering - must be cleaned up in finally
     const iframe = document.createElement('iframe');
 
@@ -167,7 +174,7 @@ ${html}
 
       const iframeDoc = iframe.contentDocument;
       if (!iframeDoc) {
-        return;
+        return null;
       }
 
       // Add doctype to prevent quirks mode (required for KaTeX)
@@ -347,14 +354,15 @@ ${html}
       const base64 = canvas.toDataURL('image/png').split(',')[1];
       const fileName = getDefaultFileName(filePath);
 
-      await electrobun.saveExportedFile({
+      return {
         content: base64,
         isBase64: true,
         defaultName: fileName,
         extension: 'png',
-      });
+      };
     } catch (error) {
-      console.error('Image export failed:', error);
+      console.error('Image export generation failed:', error);
+      return null;
     } finally {
       // Always cleanup iframe
       if (iframe.parentNode) {
@@ -363,5 +371,5 @@ ${html}
     }
   }, []);
 
-  return { exportAsHTML, exportAsImage };
+  return { generateHTML, generateImage };
 }

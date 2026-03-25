@@ -61,5 +61,55 @@
     "title": "LaTeX nicht installiert",
     "description": "Eine LaTeX-Distribution (MacTeX oder BasicTeX) ist für den PDF-Export erforderlich. Bitte installieren Sie sie zuerst. Besuchen Sie tug.org/mactex für Installationsanweisungen.",
     "download": "MacTeX herunterladen"
+  },
+  "fileDialog": {
+    "openTitle": "Datei öffnen",
+    "saveTitle": "Datei speichern",
+    "openButton": "Öffnen",
+    "saveButton": "Speichern",
+    "cancelButton": "Abbrechen",
+    "newFolder": "Neuer Ordner",
+    "newFolderName": "Unbenannter Ordner",
+    "folderNamePlaceholder": "Ordnernamen eingeben...",
+    "createButton": "Erstellen",
+    "searchPlaceholder": "Suchen...",
+    "noFiles": "Keine Dateien",
+    "noResults": "Keine passenden Dateien",
+    "fileName": "Dateiname",
+    "fileNamePlaceholder": "Dateinamen eingeben...",
+    "showHidden": "Versteckte Dateien anzeigen",
+    "hideHidden": "Versteckte Dateien ausblenden",
+    "filters": {
+      "allFiles": "Alle Dateien",
+      "markdown": "Markdown",
+      "text": "Textdateien"
+    },
+    "overwriteConfirm": {
+      "title": "Datei existiert bereits",
+      "message": "\"{{fileName}}\" existiert bereits. Möchten Sie sie ersetzen?",
+      "replace": "Ersetzen",
+      "cancel": "Abbrechen"
+    },
+    "sidebar": {
+      "favorites": "Favoriten",
+      "desktop": "Desktop",
+      "downloads": "Downloads",
+      "documents": "Dokumente",
+      "home": "Home",
+      "pictures": "Bilder"
+    },
+    "columns": {
+      "name": "Name",
+      "size": "Größe",
+      "modified": "Geändert"
+    },
+    "sort": {
+      "nameAsc": "Name (A-Z)",
+      "nameDesc": "Name (Z-A)",
+      "dateAsc": "Datum (Älteste zuerst)",
+      "dateDesc": "Datum (Neueste zuerst)",
+      "sizeAsc": "Größe (Kleinste zuerst)",
+      "sizeDesc": "Größe (Größte zuerst)"
+    }
   }
 }

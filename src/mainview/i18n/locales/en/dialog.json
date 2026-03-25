@@ -61,5 +61,55 @@
     "title": "LaTeX Not Installed",
     "description": "A LaTeX distribution (MacTeX or BasicTeX) is required to export PDF. Please install it first. Visit tug.org/mactex for installation instructions.",
     "download": "Download MacTeX"
+  },
+  "fileDialog": {
+    "openTitle": "Open File",
+    "saveTitle": "Save File",
+    "openButton": "Open",
+    "saveButton": "Save",
+    "cancelButton": "Cancel",
+    "newFolder": "New Folder",
+    "newFolderName": "Untitled Folder",
+    "folderNamePlaceholder": "Enter folder name...",
+    "createButton": "Create",
+    "searchPlaceholder": "Search...",
+    "noFiles": "No files",
+    "noResults": "No matching files",
+    "fileName": "File Name",
+    "fileNamePlaceholder": "Enter file name...",
+    "showHidden": "Show Hidden Files",
+    "hideHidden": "Hide Hidden Files",
+    "filters": {
+      "allFiles": "All Files",
+      "markdown": "Markdown",
+      "text": "Text Files"
+    },
+    "overwriteConfirm": {
+      "title": "File Already Exists",
+      "message": "\"{{fileName}}\" already exists. Do you want to replace it?",
+      "replace": "Replace",
+      "cancel": "Cancel"
+    },
+    "sidebar": {
+      "favorites": "Favorites",
+      "desktop": "Desktop",
+      "downloads": "Downloads",
+      "documents": "Documents",
+      "home": "Home",
+      "pictures": "Pictures"
+    },
+    "columns": {
+      "name": "Name",
+      "size": "Size",
+      "modified": "Modified"
+    },
+    "sort": {
+      "nameAsc": "Name (A-Z)",
+      "nameDesc": "Name (Z-A)",
+      "dateAsc": "Date (Oldest first)",
+      "dateDesc": "Date (Newest first)",
+      "sizeAsc": "Size (Smallest first)",
+      "sizeDesc": "Size (Largest first)"
+    }
   }
 }
