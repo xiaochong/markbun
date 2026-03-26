@@ -35,7 +35,13 @@ MarkBun is an open-source, cross-platform markdown editor designed for seamless 
 > - ✅ File explorer sidebar (v0.2.0)
 > - ✅ Outline navigation (v0.2.0)
 > - ✅ Quick Open (Ctrl/Cmd+P)
-> - ⏳ Math equations (v0.3.0)
+> - ✅ Auto-save (v0.3.0)
+> - ✅ Settings UI (v0.3.0)
+> - ✅ Multi-monitor support (v0.3.0)
+> - ✅ Three-layer file protection (v0.4.0)
+> - ✅ Export to PNG/HTML/PDF (v0.4.0)
+> - ✅ Math equations (v0.4.0)
+> - ⏳ Editor Productivity (v0.5.0)
 >
 > See [ROADMAP.md](./ROADMAP.md) for detailed development phases.
 
@@ -62,6 +68,8 @@ When you need them, every UI element can be instantly toggled via the **View men
 - 💾 **Auto Save** - Hybrid throttle/debounce strategy
 - ⚙️ **Settings** - Persistent settings with UI
 - 🖥️ **Multi-Monitor** - Window position saved per display with smart fallback
+- 🛡️ **File Protection** - Atomic write, crash recovery, and version history
+- 📤 **Export** - Export to PNG, HTML, and PDF with Chinese font support
 - ⌨️ **Keyboard Shortcuts** - Vim mode support (planned)
 
 ## 🚀 Quick Start
@@ -408,11 +416,50 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 - [x] Theme management (light/dark/system)
 - [x] Multi-monitor support with display detection
 
+### v0.4.0 ✅ Completed
+- [x] Three-layer file protection (atomic write, crash recovery, version history)
+- [x] Export to PNG image
+- [x] Export to HTML
+- [x] Export to PDF (with Chinese font support)
+- [x] Math equations (LaTeX inline and block support)
+
+### v0.5.0 ⏳ Planned
+- [ ] Find & Replace
+- [ ] Command Palette (Ctrl/Cmd+Shift+P)
+- [ ] Tabbed Editing (multiple documents)
+
+### v0.6.0 ⏳ Planned
+- [ ] AI Writing Assistant (continue writing, generate content)
+- [ ] AI Editor (polish, summarize, translate)
+- [ ] AI Agent (auto-optimize structure, title suggestions)
+
+### v0.7.0 ⏳ Planned
+- [ ] Focus Mode (distraction-free writing)
+- [ ] Document Statistics (word count, writing speed)
+- [ ] Typewriter Mode (cursor centered)
+
+### v0.8.0 ⏳ Planned
+- [ ] Custom Themes
+- [ ] Advanced Keybindings
+- [ ] Accessibility Support
+
+### v0.9.0 ⏳ Planned
+- [ ] Performance Optimization (large files)
+- [ ] Cross-platform Distribution (macOS/Windows/Linux)
+- [ ] Workspace Management
+
+### v0.10.0 ⏳ Planned
+- [ ] Auto Updater
+- [ ] Cloud Sync (iCloud, Dropbox, OneDrive, Google Drive)
+- [ ] Final Polish
+
 ### v1.0.0
-- [ ] Vim mode
-- [ ] Plugin system
-- [ ] Custom themes
-- [ ] Cloud sync
+- Stable release
+
+### Post v1.0
+- [ ] Plugin System
+- [ ] Git Integration
+- [ ] Real-time Collaboration
 
 ## 📄 License
 

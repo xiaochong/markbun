@@ -10,7 +10,14 @@ This document outlines the development phases for MarkBun, from MVP to v1.0.
 | Phase 1 | v0.1.0 | MVP - Core Editor | ✅ Complete |
 | Phase 2 | v0.2.0 | File Management | ✅ Complete |
 | Phase 3 | v0.3.0 | Enhanced Editing | ✅ Complete |
-| Phase 4 | v1.0.0 | Production Ready | ⏳ Planned |
+| Phase 4 | v0.4.0 | File Protection & Export | ✅ Complete |
+| Phase 5 | v0.5.0 | Editor Productivity | ⏳ Planned |
+| Phase 6 | v0.6.0 | AI Support | ⏳ Planned |
+| Phase 7 | v0.7.0 | Writing Experience | ⏳ Planned |
+| Phase 8 | v0.8.0 | Themes & Accessibility | ⏳ Planned |
+| Phase 9 | v0.9.0 | Performance & Distribution | ⏳ Planned |
+| Phase 10 | v0.10.0 | Polish & Cloud Sync | ⏳ Planned |
+| Phase 11 | v1.0.0 | Production Ready | ⏳ Planned |
 
 ---
 
@@ -130,10 +137,10 @@ This document outlines the development phases for MarkBun, from MVP to v1.0.
 ### Tasks
 
 #### Advanced Markdown
-- [ ] Math support (LaTeX)
-  - [ ] Inline math: `$...$`
-  - [ ] Block math: `$$...$$`
-  - [ ] Live preview
+- [x] Math support (LaTeX)
+  - [x] Inline math: `$...$`
+  - [x] Block math: `$$...$$`
+  - [x] Live preview
 - [x] Table editing
   - [x] Insert table dialog
   - [x] Add/remove rows and columns
@@ -162,47 +169,224 @@ This document outlines the development phases for MarkBun, from MVP to v1.0.
 
 ---
 
-## ⏳ Phase 4: Production Ready (v1.0.0)
+## ✅ Phase 4: File Protection & Export (v0.4.0)
 
-**Status:** Planned  
-**Target:** Stable, feature-complete editor
+**Status:** Complete
+**Target:** Robust file protection and export capabilities
+
+### Goals
+- Three-layer file protection system
+- Export to multiple formats
+- Math equation support
+
+### Completed Tasks
+
+#### File Protection
+- [x] **Atomic Write** - Write to temp file then rename
+- [x] **Crash Recovery** - Recovery files on unexpected shutdown
+- [x] **Version History** - Automatic backup versions
+- [x] Recovery dialog on startup
+- [x] Settings tab for backup configuration
+
+#### Export
+- [x] Export to PNG image
+- [x] Export to HTML
+- [x] Export to PDF with Chinese font support (NotoSansSC)
+- [x] Export menu in File menu
+
+#### Math Support
+- [x] LaTeX inline math support
+- [x] LaTeX block math support
+- [x] Code block editing for LaTeX
+
+### Implementation Details
+- **Backup Service**: `src/bun/services/backup.ts` with 35+ unit tests
+- **Export Hook**: `src/mainview/hooks/useExport.ts`
+- **Recovery Dialog**: `src/mainview/components/recovery-dialog/RecoveryDialog.tsx`
+
+---
+
+## ⏳ Phase 5: Editor Productivity (v0.5.0)
+
+**Status:** Planned
+**Target:** Improve editing efficiency with advanced features
 
 ### Tasks
 
-#### Editor Enhancements
-- [ ] Vim mode
-- [ ] Command palette (Ctrl/Cmd + Shift + P)
-- [ ] Multiple cursors
-- [ ] Split view (edit + preview)
+#### Find & Replace
+- [ ] Find in document (Ctrl/Cmd + F)
+- [ ] Find and replace (Ctrl/Cmd + H)
+- [ ] Search highlighting
+- [ ] Regex support
+- [ ] Case sensitivity toggle
 
-#### Settings (Completed in v0.3.0)
-- [x] Settings UI dialog
-- [x] Font family and size
-- [x] Line height
-- [x] Word wrap toggle
-- [x] Show/hide line numbers
+#### Command Palette
+- [ ] Command palette dialog (Ctrl/Cmd + Shift + P)
+- [ ] Fuzzy search for all commands
+- [ ] Show keyboard shortcuts
+- [ ] Recent commands
 
-#### Polish
-- [ ] Custom themes support
-- [ ] Plugin system
-- [ ] Performance optimization for large files
-- [ ] Comprehensive error handling
+#### Tabbed Editing
+- [ ] Multiple document tabs
+- [ ] Tab switching
+- [ ] Unsaved changes indicator per tab
+- [ ] Drag to reorder tabs
+
+---
+
+## ⏳ Phase 6: AI Support (v0.6.0)
+
+**Status:** Planned
+**Target:** AI-assisted writing and optimization
+
+### Tasks
+
+#### AI Writing Assistant
+- [ ] AI continue writing from selection
+- [ ] Generate content from prompt
+- [ ] Multiple writing styles (formal, casual, technical, creative)
+
+#### AI Editor
+- [ ] Polish and rewrite (improve expression, fix grammar)
+- [ ] Text summarization
+- [ ] Translation (Chinese/English)
+
+#### AI Agent
+- [ ] Auto-optimize document structure
+- [ ] Smart title suggestions
+- [ ] Image/chart suggestions
+- [ ] Document consistency check (terminology, formatting)
+
+---
+
+## ⏳ Phase 7: Writing Experience (v0.7.0)
+
+**Status:** Planned
+**Target:** Immersive writing environment
+
+### Tasks
+
+#### Focus Mode
+- [ ] Highlight current paragraph, dim others
+- [ ] Optional typewriter mode (cursor centered)
+- [ ] Full-screen distraction-free writing
+- [ ] Optional background white noise
+
+#### Document Statistics
+- [ ] Word count, character count, line count
+- [ ] Reading time estimation
+- [ ] Writing speed tracking (words/hour)
+- [ ] Daily writing goal setting
+
+#### Typewriter Mode
+- [ ] Current line fixed at screen center
+- [ ] Smooth scroll animation
+- [ ] Reduced visual fatigue
+
+---
+
+## ⏳ Phase 8: Themes & Accessibility (v0.8.0)
+
+**Status:** Planned
+**Target:** Personalization and accessibility
+
+### Tasks
+
+#### Custom Themes
+- [ ] Theme configuration files (~/.markbun/themes/)
+- [ ] Theme marketplace/preset themes
+- [ ] Editor colors, fonts, line height customization
+- [ ] Syntax highlighting themes
+
+#### Advanced Keybindings
+- [ ] Keybindings configuration UI
+- [ ] Support modifying all shortcuts
+- [ ] VS Code / Sublime presets
+- [ ] Keybinding conflict detection
+
+#### Accessibility
+- [ ] Screen reader support
+- [ ] Keyboard navigation optimization
+- [ ] High contrast mode
+- [ ] Quick font size adjustment
+
+---
+
+## ⏳ Phase 9: Performance & Distribution (v0.9.0)
+
+**Status:** Planned
+**Target:** Large file support and cross-platform distribution
+
+### Tasks
+
+#### Performance Optimization
+- [ ] Smooth editing for large files (>10MB)
+- [ ] Virtual scroll optimization
+- [ ] Lazy image loading
+- [ ] Memory usage optimization
+- [ ] Startup speed optimization
 
 #### Distribution
-- [ ] macOS app bundle
-- [ ] Windows installer
-- [ ] Linux AppImage
-- [ ] Auto-updater
+- [ ] macOS DMG installer
+- [ ] Windows MSI/EXE installer
+- [ ] Linux AppImage/Snap/Flatpak
+- [ ] Code signing
+
+#### Workspace Management
+- [ ] Multi-folder workspaces
+- [ ] Workspace switching
+- [ ] Workspace-specific settings
+
+---
+
+## ⏳ Phase 10: Polish & Cloud Sync (v0.10.0)
+
+**Status:** Planned
+**Target:** Final polish and cloud service integration
+
+### Tasks
+
+#### Auto Updater
+- [ ] Auto-detect new versions
+- [ ] Background download
+- [ ] One-click update install
+- [ ] Changelog display
+
+#### Cloud Sync (Basic)
+- [ ] Config export/import
+- [ ] Third-party cloud integration (iCloud Drive, Dropbox, OneDrive, Google Drive)
+- [ ] Recent documents cross-device sync
+- [ ] Cloud backup recovery
+
+#### Polish & Bugfix
+- [ ] Comprehensive error handling
+- [ ] Edge case fixes
+- [ ] Accessibility improvements
+- [ ] Internationalization completion
+- [ ] Final performance optimization
+
+---
+
+## ⏳ Phase 11: Production Ready (v1.0.0)
+
+**Status:** Planned
+**Target:** Stable, feature-complete editor release
+
+### v1.0.0 Goals
+- Stable core functionality
+- Comprehensive documentation
+- Full platform distribution
+- User community building
 
 ---
 
 ## 🎯 Long-term Ideas (Post v1.0)
 
-- Cloud sync (iCloud, Dropbox)
-- Git integration
-- Real-time collaboration
-- Mobile companion app
-- Plugin marketplace
+- **Plugin System** - Extensible plugin architecture
+- **Git Integration** - Version control integration
+- **Real-time Collaboration** - Multi-user editing
+- **Mobile Companion** - Mobile companion app
+- **Plugin Marketplace** - Plugin discovery and distribution
 
 ---
 
@@ -220,4 +404,4 @@ Users retain full control: every UI element can be toggled on demand via the Vie
 
 ---
 
-*Last updated: 2026-03-15*
+*Last updated: 2026-03-26*
