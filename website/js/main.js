@@ -183,8 +183,8 @@ const T = {
     dl_faq1_a:          "Yes. MarkBun is an open-source project and will always be free to download and use. No subscriptions, no hidden fees.",
     dl_faq2_q:          "Is it safe to download?",
     dl_faq2_a:          "Absolutely. All binaries are built directly from the public GitHub repository. We use automated CI/CD pipelines to ensure integrity and security.",
-    dl_faq3_q:          "How often are updates released?",
-    dl_faq3_a:          "We typically release stable updates every 2-4 weeks, with frequent alpha/beta builds available on our GitHub Issues page for testers.",
+    dl_faq3_q:          "Current Version Status?",
+    dl_faq3_a:          "Preview release. MacOS is fully supported. Windows builds are experimental and may have issues. Linux builds are not yet tested.",
 
     dl_community_title: "Stay in the loop",
     dl_community_desc:  "Join our developer community to get notified about new features, security patches, and performance boosts.",
@@ -423,8 +423,8 @@ const T = {
     dl_faq1_a:          "是的。MarkBun 是一个开源项目，将永远免费提供下载和使用。无订阅费，无隐藏收费。",
     dl_faq2_q:          "下载安全吗？",
     dl_faq2_a:          "完全安全。所有二进制文件直接从公开的 GitHub 仓库构建，使用自动化 CI/CD 流程确保完整性和安全性。",
-    dl_faq3_q:          "更新频率如何？",
-    dl_faq3_a:          "我们通常每 2-4 周发布一次稳定更新，GitHub Issues 页面还有频繁的 alpha/beta 构建供测试者使用。",
+    dl_faq3_q:          "当前版本状态？",
+    dl_faq3_a:          "预览版。MacOS 完全可用，Windows 版本可能存在问题，Linux 版本尚未测试。",
 
     dl_community_title: "关注最新动态",
     dl_community_desc:  "加入我们的开发者社区，获取新功能、安全补丁和性能提升的通知。",
