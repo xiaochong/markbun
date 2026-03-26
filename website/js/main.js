@@ -65,8 +65,8 @@ const T = {
 
     // ---- Home — Download CTA ----
     home_cta_title:     "Ready to write without limits?",
-    home_cta_desc:      "Join thousands of writers using MarkBun today. v0.3.0 stable release.",
-    home_cta_version:   "Version v0.3.0 • Open Source MIT",
+    home_cta_desc:      "Join thousands of writers using MarkBun today. v0.4.0 preview release.",
+    home_cta_version:   "Version v0.4.0 • Open Source MIT",
 
     // ---- Features Page ----
     feat_hero_badge:    "Professional Markdown Editor",
@@ -252,7 +252,7 @@ const T = {
     footer_issues:      "GitHub Issues",
     footer_twitter:     "Twitter",
     footer_discussions: "Discussions",
-    footer_copy:        "Made with ♥ using Bun + React. © 2024 MarkBun. Open source under MIT License.",
+    footer_copy:        "Made with ♥ using Bun + React. © 2026 MarkBun. Open source under MIT License.",
   },
 
   // ==========================================
@@ -490,7 +490,7 @@ const T = {
     footer_issues:      "GitHub Issues",
     footer_twitter:     "Twitter",
     footer_discussions: "讨论",
-    footer_copy:        "用 ♥ 以 Bun + React 构建。© 2024 MarkBun。MIT 开源协议。",
+    footer_copy:        "用 ♥ 以 Bun + React 构建。© 2026 MarkBun。MIT 开源协议。",
   }
 };
 
