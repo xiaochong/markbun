@@ -155,52 +155,173 @@
 
   <!-- Editor mockup -->
   <div class="max-w-5xl mx-auto mt-20 px-6">
-    <div class="relative rounded-xl overflow-hidden bg-surface-container shadow-2xl border border-outline-variant/20">
+    <div class="relative rounded-xl overflow-hidden bg-white dark:bg-surface-container shadow-2xl border border-outline-variant/20">
       <!-- Title bar -->
-      <div class="h-9 bg-surface-container-high flex items-center px-4 gap-1.5 border-b border-outline-variant/15">
+      <div class="h-9 bg-gray-100 dark:bg-surface-container-high flex items-center px-4 gap-2 border-b border-gray-200 dark:border-outline-variant/15">
         <div class="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
         <div class="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
         <div class="w-3 h-3 rounded-full bg-[#27c93f]"></div>
-        <div class="ml-4 text-[10px] text-on-surface-variant uppercase tracking-widest font-mono" data-i18n="home_mockup_label">Untitled.md — MarkBun</div>
+        <div class="flex-1 text-center text-[11px] text-gray-500 dark:text-on-surface-variant font-medium tracking-wide" style="margin-left: -44px;">MarkBun</div>
       </div>
-      <div class="flex h-[460px]">
-        <!-- Sidebar -->
-        <div class="w-14 bg-surface-container-low border-r border-outline-variant/15 flex flex-col items-center py-5 gap-5">
-          <span class="material-symbols-outlined text-primary text-[22px]" style="font-variation-settings:'FILL' 1">folder</span>
-          <span class="material-symbols-outlined text-on-surface-variant text-[22px]">search</span>
-          <span class="material-symbols-outlined text-on-surface-variant text-[22px]">extension</span>
-          <div class="mt-auto">
-            <span class="material-symbols-outlined text-on-surface-variant text-[22px]">settings</span>
+      <div class="flex h-[520px]">
+        <!-- File tree panel -->
+        <div class="w-60 bg-gray-50/50 dark:bg-surface-container-low/50 border-r border-gray-200 dark:border-outline-variant/15 flex flex-col">
+          <!-- Tabs -->
+          <div class="flex border-b border-gray-200 dark:border-outline-variant/15 bg-gray-100/50 dark:bg-surface-container-high/50">
+            <button class="flex-1 py-2.5 text-xs font-medium text-gray-700 dark:text-on-surface border-b-2 border-gray-800 dark:border-primary flex items-center justify-center gap-1.5">
+              <span class="material-symbols-outlined text-[14px]">folder_open</span>
+              Files
+            </button>
+            <button class="flex-1 py-2.5 text-xs font-medium text-gray-400 dark:text-on-surface-variant flex items-center justify-center gap-1.5">
+              <span class="material-symbols-outlined text-[14px]">list</span>
+              Outline
+            </button>
+          </div>
+          <!-- File Tree -->
+          <div class="flex-1 overflow-y-auto py-2">
+            <div class="px-3">
+              <!-- markbun folder -->
+              <div class="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200/50 dark:hover:bg-surface-container-high/50 cursor-pointer">
+                <span class="material-symbols-outlined text-[14px] text-gray-400">expand_more</span>
+                <span class="material-symbols-outlined text-[16px] text-blue-400">folder</span>
+                <span class="text-xs text-gray-700 dark:text-on-surface">markbun</span>
+              </div>
+              <!-- Subfolders -->
+              <div class="ml-4">
+                <div class="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200/50 dark:hover:bg-surface-container-high/50 cursor-pointer">
+                  <span class="material-symbols-outlined text-[14px] text-gray-400">chevron_right</span>
+                  <span class="material-symbols-outlined text-[16px] text-blue-300">folder</span>
+                  <span class="text-xs text-gray-500 dark:text-on-surface-variant">artifacts</span>
+                </div>
+                <div class="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200/50 dark:hover:bg-surface-container-high/50 cursor-pointer">
+                  <span class="material-symbols-outlined text-[14px] text-gray-400">chevron_right</span>
+                  <span class="material-symbols-outlined text-[16px] text-blue-300">folder</span>
+                  <span class="text-xs text-gray-500 dark:text-on-surface-variant">build</span>
+                </div>
+                <div class="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200/50 dark:hover:bg-surface-container-high/50 cursor-pointer">
+                  <span class="material-symbols-outlined text-[14px] text-gray-400">chevron_right</span>
+                  <span class="material-symbols-outlined text-[16px] text-blue-300">folder</span>
+                  <span class="text-xs text-gray-500 dark:text-on-surface-variant">dist</span>
+                </div>
+                <div class="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200/50 dark:hover:bg-surface-container-high/50 cursor-pointer">
+                  <span class="material-symbols-outlined text-[14px] text-gray-400">chevron_right</span>
+                  <span class="material-symbols-outlined text-[16px] text-blue-300">folder</span>
+                  <span class="text-xs text-gray-500 dark:text-on-surface-variant">docs</span>
+                </div>
+                <div class="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200/50 dark:hover:bg-surface-container-high/50 cursor-pointer">
+                  <span class="material-symbols-outlined text-[14px] text-gray-400">chevron_right</span>
+                  <span class="material-symbols-outlined text-[16px] text-blue-300">folder</span>
+                  <span class="text-xs text-gray-500 dark:text-on-surface-variant">icon.iconset</span>
+                </div>
+                <div class="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200/50 dark:hover:bg-surface-container-high/50 cursor-pointer">
+                  <span class="material-symbols-outlined text-[14px] text-gray-400">chevron_right</span>
+                  <span class="material-symbols-outlined text-[16px] text-blue-300">folder</span>
+                  <span class="text-xs text-gray-500 dark:text-on-surface-variant">node_modules</span>
+                </div>
+                <div class="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200/50 dark:hover:bg-surface-container-high/50 cursor-pointer">
+                  <span class="material-symbols-outlined text-[14px] text-gray-400">chevron_right</span>
+                  <span class="material-symbols-outlined text-[16px] text-blue-300">folder</span>
+                  <span class="text-xs text-gray-500 dark:text-on-surface-variant">scripts</span>
+                </div>
+                <div class="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200/50 dark:hover:bg-surface-container-high/50 cursor-pointer">
+                  <span class="material-symbols-outlined text-[14px] text-gray-400">chevron_right</span>
+                  <span class="material-symbols-outlined text-[16px] text-blue-300">folder</span>
+                  <span class="text-xs text-gray-500 dark:text-on-surface-variant">src</span>
+                </div>
+                <div class="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200/50 dark:hover:bg-surface-container-high/50 cursor-pointer">
+                  <span class="material-symbols-outlined text-[14px] text-gray-400">chevron_right</span>
+                  <span class="material-symbols-outlined text-[16px] text-blue-300">folder</span>
+                  <span class="text-xs text-gray-500 dark:text-on-surface-variant">tests</span>
+                </div>
+                <div class="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200/50 dark:hover:bg-surface-container-high/50 cursor-pointer">
+                  <span class="material-symbols-outlined text-[14px] text-gray-400">chevron_right</span>
+                  <span class="material-symbols-outlined text-[16px] text-blue-300">folder</span>
+                  <span class="text-xs text-gray-500 dark:text-on-surface-variant">website</span>
+                </div>
+                <!-- MD Files -->
+                <div class="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200/50 dark:hover:bg-surface-container-high/50 cursor-pointer">
+                  <span class="w-[14px]"></span>
+                  <span class="material-symbols-outlined text-[18px] text-blue-400">markdown</span>
+                  <span class="text-xs text-gray-500 dark:text-on-surface-variant">AGENTS.md</span>
+                </div>
+                <div class="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200/50 dark:hover:bg-surface-container-high/50 cursor-pointer">
+                  <span class="w-[14px]"></span>
+                  <span class="material-symbols-outlined text-[18px] text-blue-400">markdown</span>
+                  <span class="text-xs text-gray-500 dark:text-on-surface-variant">CHANGELOG.md</span>
+                </div>
+                <div class="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200/50 dark:hover:bg-surface-container-high/50 cursor-pointer">
+                  <span class="w-[14px]"></span>
+                  <span class="material-symbols-outlined text-[18px] text-blue-400">markdown</span>
+                  <span class="text-xs text-gray-500 dark:text-on-surface-variant">CONTRIBUTING.md</span>
+                </div>
+                <div class="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200/50 dark:hover:bg-surface-container-high/50 cursor-pointer">
+                  <span class="w-[14px]"></span>
+                  <span class="material-symbols-outlined text-[18px] text-blue-400">markdown</span>
+                  <span class="text-xs text-gray-500 dark:text-on-surface-variant">README.md</span>
+                </div>
+                <div class="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200/50 dark:hover:bg-surface-container-high/50 cursor-pointer">
+                  <span class="w-[14px]"></span>
+                  <span class="material-symbols-outlined text-[18px] text-blue-400">markdown</span>
+                  <span class="text-xs text-gray-500 dark:text-on-surface-variant">ROADMAP.md</span>
+                </div>
+                <!-- Selected file -->
+                <div class="flex items-center gap-1 px-2 py-1 rounded bg-indigo-50 dark:bg-primary/10 cursor-pointer">
+                  <span class="w-[14px]"></span>
+                  <span class="material-symbols-outlined text-[18px] text-blue-400">markdown</span>
+                  <span class="text-xs text-indigo-600 dark:text-primary font-medium">demo.md</span>
+                </div>
+                <div class="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200/50 dark:hover:bg-surface-container-high/50 cursor-pointer">
+                  <span class="w-[14px]"></span>
+                  <span class="material-symbols-outlined text-[16px] text-gray-400">description</span>
+                  <span class="text-xs text-gray-500 dark:text-on-surface-variant">llms.txt</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <!-- Editor content -->
-        <div class="flex-1 p-10 overflow-hidden">
-          <div class="max-w-xl">
-            <div class="text-2xl font-bold mb-4 text-on-surface font-mono"># Getting Started with MarkBun</div>
-            <p class="text-on-surface-variant mb-4 font-mono text-sm leading-relaxed">
-              MarkBun is a <strong class="text-on-surface">**WYSIWYG**</strong> editor that doesn't hide the power of Markdown.<br/>
-              Just type and see the results instantly.
+        <div class="flex-1 bg-white dark:bg-surface overflow-y-auto">
+          <div class="p-10 max-w-2xl">
+            <!-- Document title -->
+            <h1 class="text-3xl font-bold mb-5 text-gray-900 dark:text-on-surface">Getting Started with MarkBun</h1>
+            <!-- Paragraph -->
+            <p class="text-gray-600 dark:text-on-surface-variant mb-6 leading-relaxed">
+              MarkBun is a <strong class="text-gray-900 dark:text-on-surface font-bold">WYSIWYG</strong> editor that doesn't hide the power of Markdown. Just type and see the results instantly.
             </p>
-            <div class="p-4 rounded-lg bg-surface-container-lowest border border-outline-variant/20 font-mono text-sm text-primary mb-5">
-              const hello = "MarkBun World";<br/>
-              console.log(hello);
+
+            <!-- H2: Code Example -->
+            <h2 class="text-2xl font-bold mt-8 mb-4 text-gray-900 dark:text-on-surface">Code Example</h2>
+            <div class="w-full h-px bg-gray-200 dark:bg-outline-variant/30 mb-4"></div>
+
+            <!-- Code block - no header, rounded gray background -->
+            <div class="my-4 rounded-xl bg-gray-100 dark:bg-surface-container-lowest overflow-hidden">
+              <div class="p-4 font-mono text-sm leading-relaxed">
+                <div><span class="text-purple-600">const</span> <span class="text-gray-700 dark:text-on-surface">hello</span> <span class="text-gray-500">=</span> <span class="text-green-600">"MarkBun World"</span><span class="text-gray-500">;</span></div>
+                <div><span class="text-red-500">console</span><span class="text-gray-500">.</span><span class="text-amber-500">log</span><span class="text-gray-500">(</span><span class="text-gray-700 dark:text-on-surface">hello</span><span class="text-gray-500">);</span></div>
+              </div>
             </div>
-            <p class="text-on-surface-variant leading-relaxed text-sm">
-              Supports Tables, KaTeX formula <em>E=mc²</em>, and Mermaid diagrams.<br/>
-              All powered by Bun and Milkdown.
+
+            <!-- H2: Rich Features -->
+            <h2 class="text-2xl font-bold mt-8 mb-4 text-gray-900 dark:text-on-surface">Rich Features</h2>
+            <div class="w-full h-px bg-gray-200 dark:bg-outline-variant/30 mb-4"></div>
+
+            <!-- Paragraph with formula -->
+            <p class="text-gray-600 dark:text-on-surface-variant mb-4 leading-relaxed">
+              Supports <strong class="text-gray-900 dark:text-on-surface font-bold">Tables</strong>, KaTeX formula <span class="italic">E = mc²</span>, and Mermaid diagrams. All powered by Bun and Milkdown.
             </p>
-            <!-- Task list preview -->
-            <div class="mt-5 space-y-2">
-              <div class="flex items-center gap-2 text-sm text-on-surface-variant">
-                <div class="w-4 h-4 rounded border border-primary/40 bg-primary/10 flex items-center justify-center">
-                  <span class="material-symbols-outlined text-primary text-[12px]" style="font-variation-settings:'FILL' 1">check</span>
-                </div>
-                <span class="line-through opacity-60">Write the introduction</span>
-              </div>
-              <div class="flex items-center gap-2 text-sm text-on-surface-variant">
-                <div class="w-4 h-4 rounded border border-outline-variant/40"></div>
-                <span>Add code examples</span>
-              </div>
+
+            <!-- H2: Formula Example -->
+            <h2 class="text-2xl font-bold mt-8 mb-4 text-gray-900 dark:text-on-surface">Formula Example</h2>
+            <div class="w-full h-px bg-gray-200 dark:bg-outline-variant/30 mb-4"></div>
+
+            <!-- Paragraph -->
+            <p class="text-gray-600 dark:text-on-surface-variant mb-4 leading-relaxed">
+              The famous mass-energy equivalence:
+            </p>
+
+            <!-- Block formula - centered -->
+            <div class="my-6 p-6 rounded-xl bg-gray-100 dark:bg-surface-container-lowest flex items-center justify-center">
+              <div class="text-xl text-gray-800 dark:text-on-surface" style="font-family: 'KaTeX_Math', serif; font-style: italic;">E = mc²</div>
             </div>
           </div>
         </div>
