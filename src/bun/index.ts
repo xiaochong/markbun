@@ -4,7 +4,7 @@ import { initI18n, changeLanguage, t } from './i18n';
 import { resolveLanguage } from '../shared/i18n/config';
 import type { MarkBunRPC } from '../shared/types';
 import { readFile, writeFile, stat, mkdir, readdir, open, unlink, rename, rmdir, rm, access, mkdtemp } from 'fs/promises';
-import { existsSync } from 'fs';
+import {existsSync, mkdirSync} from 'fs';
 import { join, dirname, relative } from 'path';
 import { homedir, tmpdir } from 'os';
 import { HELP_CONTENT } from './assets/helpContent';
@@ -36,6 +36,10 @@ interface WindowState {
 
 // Track the focused window (for routing menu actions)
 let focusedWindow: { win: BrowserWindow; state: WindowState } | null = null;
+
+// Pending file IPC (written by AppleScript wrapper when user opens .md file)
+const PENDING_DIR = '/tmp/markbun';
+const PENDING_FILE_PATH = `${PENDING_DIR}/pending.txt`;
 
 // File path pending open (from CLI argv or open-url event)
 let pendingOpenFilePath: string | null = null;
@@ -322,24 +326,42 @@ async function getMainViewUrl(): Promise<string> {
   return 'views://mainview/index.html';
 }
 
+// Open a file in the focused window (shared by open-url handler and pending file polling)
+async function openFileInFocusedWindow(filePath: string) {
+  const fw = focusedWindow;
+  if (!fw) return;
+  try {
+    const result = await openFileByPath(filePath, fw.state);
+    if (result.success && result.path && result.content !== undefined) {
+      await addRecentFile(result.path);
+      fw.state.workspaceRoot = dirname(result.path);
+      // @ts-ignore
+      fw.win.webview.rpc.send.fileOpened({ path: result.path, content: result.content });
+    }
+  } catch (err) {
+    console.error('[open-file] Failed to open:', filePath, err);
+  }
+}
+
+// Consume the pending file IPC, returns the file path or null
+async function consumePendingFile(): Promise<string | null> {
+  try {
+    const content = (await readFile(PENDING_FILE_PATH, 'utf-8')).trim();
+    await unlink(PENDING_FILE_PATH);
+    return content || null;
+  } catch {
+    return null;
+  }
+}
+
 // Create the main application window
 async function main() {
-  // FIRST: Check for pending file from MarkBun Opener (macOS only)
-  // This file is written by the AppleScript opener before launching the app
+  // FIRST: Check for pending file from MarkBun wrapper (macOS only)
   if (process.platform === 'darwin') {
-    const pendingFilePath = join(homedir(), 'Library', 'Application Support', 'dev.markbun.app', 'pending-open.txt');
-    try {
-      if (existsSync(pendingFilePath)) {
-        const filePath = (await readFile(pendingFilePath, 'utf-8')).trim();
-        // Delete the file immediately to prevent re-processing
-        await unlink(pendingFilePath);
-        if (filePath && existsSync(filePath)) {
-          console.log('[main] Found pending file from opener:', filePath);
-          pendingOpenFilePath = filePath;
-        }
-      }
-    } catch (err) {
-      console.error('[main] Failed to check pending file:', err);
+    const filePath = await consumePendingFile();
+    if (filePath) {
+      console.log('[main] Found pending file from wrapper:', filePath);
+      pendingOpenFilePath = filePath;
     }
   }
 
@@ -1806,29 +1828,34 @@ async function main() {
   });
 
   // Handle open-url events (triggered by markbun:// URL scheme)
-  // When app is already running, handle URL directly
   Electrobun.events.on('open-url', async (event: { data: { url: string } }) => {
-    console.log('[open-url] App running, processing URL:', event.data.url);
     try {
       const url = new URL(event.data.url);
       if (url.hostname === 'open') {
         const filePath = decodeURIComponent(url.searchParams.get('path') ?? '');
         if (filePath) {
-          const fw = focusedWindow;
-          if (!fw) return;
-          const result = await openFileByPath(filePath, fw.state);
-          if (result.success && result.path && result.content !== undefined) {
-            await addRecentFile(result.path);
-            fw.state.workspaceRoot = dirname(result.path);
-            // @ts-ignore
-            fw.win.webview.rpc.send.fileOpened({ path: result.path, content: result.content });
-          }
+          await openFileInFocusedWindow(filePath);
         }
       }
     } catch (err) {
       console.error('[open-url] Failed to handle URL:', err);
     }
   });
+
+  // Watch for pending file from wrapper (handles "app already running" case)
+  if (process.platform === 'darwin') {
+    const { watch } = await import('fs');
+    mkdirSync(PENDING_DIR, { recursive: true });
+    watch(PENDING_DIR, (eventType, filename) => {
+      if (filename !== 'pending.txt') return;
+      consumePendingFile().then(filePath => {
+        if (filePath) {
+          console.log('[pending-file] Opening file from wrapper:', filePath);
+          openFileInFocusedWindow(filePath);
+        }
+      });
+    });
+  }
 
 }
 

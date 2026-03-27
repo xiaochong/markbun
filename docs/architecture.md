@@ -34,16 +34,16 @@ MarkBun is a Typora-like markdown desktop editor built with a modern, performant
 
 ## Technology Stack
 
-| Layer | Technology | Purpose |
-|-------|------------|---------|
-| Runtime | Bun | JavaScript runtime, bundler, package manager |
-| Desktop Framework | Electrobun | Cross-platform native desktop apps |
-| Editor Core | Milkdown | WYSIWYG markdown editor framework |
-| UI Framework | React | Component-based UI |
-| UI Components | shadcn/ui | Accessible, customizable components |
-| Styling | Tailwind CSS | Utility-first CSS |
-| Document Model | ProseMirror | Rich-text editing foundation |
-| Markdown Parser | Remark | Markdown AST processing |
+| Layer             | Technology   | Purpose                                      |
+| ----------------- | ------------ | -------------------------------------------- |
+| Runtime           | Bun          | JavaScript runtime, bundler, package manager |
+| Desktop Framework | Electrobun   | Cross-platform native desktop apps           |
+| Editor Core       | Milkdown     | WYSIWYG markdown editor framework            |
+| UI Framework      | React        | Component-based UI                           |
+| UI Components     | shadcn/ui    | Accessible, customizable components          |
+| Styling           | Tailwind CSS | Utility-first CSS                            |
+| Document Model    | ProseMirror  | Rich-text editing foundation                 |
+| Markdown Parser   | Remark       | Markdown AST processing                      |
 
 ## Process Architecture
 
@@ -52,13 +52,19 @@ MarkBun is a Typora-like markdown desktop editor built with a modern, performant
 The main process runs in the Bun runtime and has full access to system APIs.
 
 **Responsibilities:**
-- Window management (create, resize, close)
-- Native menus (application menu, context menu)
-- File system operations (read, write, watch)
-- System integration (tray, notifications)
-- Auto-updater
+
+* Window management (create, resize, close)
+
+* Native menus (application menu, context menu)
+
+* File system operations (read, write, watch)
+
+* System integration (tray, notifications)
+
+* Auto-updater
 
 **Key APIs:**
+
 ```typescript
 import { 
   BrowserWindow, 
@@ -73,12 +79,17 @@ import {
 The renderer runs in a native WebView and renders the UI using React.
 
 **Responsibilities:**
-- Render the editor UI
-- Handle user input
-- Display markdown content
-- Manage local UI state
+
+* Render the editor UI
+
+* Handle user input
+
+* Display markdown content
+
+* Manage local UI state
 
 **Key APIs:**
+
 ```typescript
 import { Electroview } from "electrobun/view";
 ```
@@ -93,12 +104,20 @@ Main ──────► webview.send("event", data) ──────► Ren
 ```
 
 **IPC Channels:**
-- `file:open` - Open file dialog
-- `file:read` - Read file contents
-- `file:save` - Save file contents
-- `file:watch` - Watch file for changes
-- `menu:action` - Menu item clicked
-- `window:state` - Window state changes
+
+* `file:open` - Open file dialog
+
+* `file:read` - Read file contents
+
+* `file:save` - Save file contents
+
+* `file:watch` - Watch file for changes
+
+* `menu:action` - Menu item clicked
+
+<br />
+
+* `window:state` - Window state changes
 
 ## Component Architecture
 
@@ -211,6 +230,8 @@ MilkdownEditor (React Component)
 7. Renderer: Update "saved" indicator in status bar
 ```
 
+<br />
+
 ### Theme Switching Flow
 
 ```
@@ -232,20 +253,29 @@ MilkdownEditor (React Component)
 ### Local Component State (React useState)
 
 Used for UI-specific state that doesn't need to persist:
-- Sidebar open/closed
-- Active panel in sidebar
-- Toolbar button hover states
-- Dialog visibility
+
+* Sidebar open/closed
+
+* Active panel in sidebar
+
+* Toolbar button hover states
+
+* Dialog visibility
 
 ### Editor State (ProseMirror)
 
 Managed internally by Milkdown/ProseMirror:
-- Document content (JSON tree)
-- Selection state
-- Undo/redo history
-- Plugin states
+
+* Document content (JSON tree)
+
+* Selection state
+
+* Undo/redo history
+
+* Plugin states
 
 Accessed via:
+
 ```typescript
 editor.action(ctx => {
   const view = ctx.get(editorViewCtx);
@@ -257,6 +287,7 @@ editor.action(ctx => {
 ### Global Settings
 
 Persisted to disk and loaded on startup:
+
 ```typescript
 interface Settings {
   theme: "light" | "dark" | "system";
@@ -272,9 +303,12 @@ interface Settings {
 ```
 
 Stored in:
-- macOS: `~/Library/Application Support/MarkBun/settings.json`
-- Windows: `%APPDATA%/MarkBun/settings.json`
-- Linux: `~/.config/MarkBun/settings.json`
+
+* macOS: `~/Library/Application Support/MarkBun/settings.json`
+
+* Windows: `%APPDATA%/MarkBun/settings.json`
+
+* Linux: `~/.config/MarkBun/settings.json`
 
 ## Styling Architecture
 
@@ -324,6 +358,8 @@ Stored in:
   /* ... dark mode values ... */
 }
 ```
+
+<br />
 
 ### Milkdown Editor Styling
 
@@ -437,170 +473,4 @@ export default {
 } satisfies ElectrobunConfig;
 ```
 
-### Build Process
-
-```bash
-# Development
-bun dev
-# 1. Start Electrobun dev server
-# 2. Watch for file changes
-# 3. Hot reload renderer
-# 4. Restart main on changes
-
-# Production build
-bun run build
-# 1. Type check with tsc
-# 2. Bundle main process with Bun
-# 3. Bundle renderer with Bun
-# 4. Copy resources
-# 5. Package for target platform
-
-# Cross-platform builds
-bun run build:macos
-bun run build:windows
-bun run build:linux
-```
-
-## Performance Considerations
-
-### Editor Performance
-
-- **Virtual Scrolling**: For very large documents, render only visible content
-- **Debounced Saves**: Auto-save triggers 1 second after typing stops
-- **Lazy Plugins**: Load heavy plugins (math, diagrams) on demand
-- **Image Optimization**: Resize large images before rendering
-
-### Memory Management
-
-- Dispose Milkdown editor on component unmount
-- Clear file watchers when closing folders
-- Limit undo history to 100 steps
-- Use WeakMap for plugin state where appropriate
-
-### Bundle Size
-
-- Tree-shake unused Milkdown plugins
-- Lazy load dialog components
-- Use dynamic imports for heavy features
-- Minimize CSS with PurgeCSS
-
-## Security
-
-### IPC Security
-
-- Validate all IPC message payloads
-- Whitelist allowed file operations
-- Sanitize file paths (prevent directory traversal)
-- Use native file dialogs (don't trust renderer paths)
-
-### Content Security
-
-- Sanitize pasted HTML content
-- Validate image URLs before loading
-- Use `sandbox` attribute on webviews
-- Disable `nodeIntegration` in renderer
-
-## Extension Points
-
-### Custom Milkdown Plugins
-
-Create plugins in `src/renderer/components/editor/plugins/`:
-
-```typescript
-// my-plugin.ts
-import { $prose } from "@milkdown/utils";
-import { Plugin } from "prosemirror-state";
-
-export const myPlugin = $prose(() => {
-  return new Plugin({
-    state: { /* ... */ },
-    props: { /* ... */ },
-  });
-});
-```
-
-### Custom shadcn Themes
-
-Add theme files to `resources/themes/`:
-
-```css
-/* resources/themes/my-theme.css */
-:root {
-  --font-serif: "Merriweather", serif;
-  --color-primary: #e74c3c;
-  /* ... */
-}
-```
-
-### Main Process Extensions
-
-Add IPC handlers in `src/main/ipc/`:
-
-```typescript
-// custom-handlers.ts
-export function registerCustomHandlers(electrobun) {
-  electrobun.handle("custom:action", async (data) => {
-    // Implementation
-    return result;
-  });
-}
-```
-
-## Testing Strategy
-
-### Unit Tests
-
-```typescript
-// src/renderer/components/editor/MilkdownEditor.test.tsx
-import { render, screen } from "@testing-library/react";
-import { MilkdownEditor } from "./MilkdownEditor";
-
-test("renders editor with content", () => {
-  render(<MilkdownEditor initialValue="# Hello" />);
-  expect(screen.getByRole("textbox")).toBeInTheDocument();
-});
-```
-
-### Integration Tests
-
-Test IPC communication:
-```typescript
-// tests/ipc.test.ts
-test("file:open returns file content", async () => {
-  const result = await ipc.invoke("file:open", "/test.md");
-  expect(result.content).toBe("# Test");
-});
-```
-
-### E2E Tests
-
-Use Playwright for end-to-end testing:
-```typescript
-test("user can type and save", async ({ page }) => {
-  await page.goto("app://index.html");
-  await page.type("[contenteditable]", "# Hello World");
-  await page.keyboard.press("Control+s");
-  // Assert file saved
-});
-```
-
-## Future Considerations
-
-### Planned Features
-
-- **Plugin System**: Allow third-party plugins
-- **Cloud Sync**: iCloud, Dropbox, Git integration
-- **Collaboration**: Real-time collaborative editing via Y.js
-- **Vim Mode**: Modal editing support
-- **Command Palette**: VS Code-style command palette
-
-### Scalability
-
-- Split large documents into sections
-- Lazy load folder contents in sidebar
-- Database for file indexing (if needed)
-- Worker threads for heavy operations
-
----
-
-*Last updated: 2026-03-08*
+<br />
