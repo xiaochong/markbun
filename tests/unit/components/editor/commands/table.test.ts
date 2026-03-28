@@ -59,7 +59,10 @@ function createTableMock(options: {
   for (let r = 0; r < rowCount; r++) {
     const capturedR = r;
     rowNodes.push({
-      type: { name: 'table_row' },
+      type: {
+        name: 'table_row',
+        create: (attrs: any, children: any) => ({ type: 'table_row', attrs, children }),
+      },
       childCount: colCount,
       nodeSize: ROW_SIZE,
       attrs: {},
