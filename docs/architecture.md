@@ -17,8 +17,8 @@ MarkBun is a Typora-like markdown desktop editor built with a modern, performant
 │   │                 │                                │                 │   │
 │   │  • Bun Runtime  │                                │  • React        │   │
 │   │  • File I/O     │                                │  • Milkdown     │   │
-│   │  • OS APIs      │                                │  • shadcn/ui    │   │
-│   │  • Menus        │                                │                 │   │
+│   │  • OS APIs      │                                │  • CodeMirror   │   │
+│   │  • Menus        │                                │  • shadcn/ui    │   │
 │   └─────────────────┘                                └─────────────────┘   │
 │            │                                                  │              │
 │            ▼                                                  ▼              │
@@ -27,23 +27,26 @@ MarkBun is a Typora-like markdown desktop editor built with a modern, performant
 │   │  • Read files   │                                │  • Editor       │   │
 │   │  • Write files  │                                │  • Sidebar      │   │
 │   │  • Watch dirs   │                                │  • Toolbar      │   │
-│   └─────────────────┘                                │  • StatusBar    │   │
-│                                                      └─────────────────┘   │
+│   │  • Backup       │                                │  • StatusBar    │   │
+│   └─────────────────┘                                └─────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Technology Stack
 
-| Layer             | Technology   | Purpose                                      |
-| ----------------- | ------------ | -------------------------------------------- |
-| Runtime           | Bun          | JavaScript runtime, bundler, package manager |
-| Desktop Framework | Electrobun   | Cross-platform native desktop apps           |
-| Editor Core       | Milkdown     | WYSIWYG markdown editor framework            |
-| UI Framework      | React        | Component-based UI                           |
-| UI Components     | shadcn/ui    | Accessible, customizable components          |
-| Styling           | Tailwind CSS | Utility-first CSS                            |
-| Document Model    | ProseMirror  | Rich-text editing foundation                 |
-| Markdown Parser   | Remark       | Markdown AST processing                      |
+| Layer             | Technology      | Purpose                                      |
+| ----------------- | --------------- | -------------------------------------------- |
+| Runtime           | Bun             | JavaScript runtime, bundler, package manager |
+| Desktop Framework | Electrobun      | Cross-platform native desktop apps           |
+| Editor Core       | Milkdown (Crepe)| WYSIWYG markdown editor framework            |
+| Source Editor      | CodeMirror 6   | Source mode markdown editing                 |
+| UI Framework      | React           | Component-based UI                           |
+| UI Components     | shadcn/ui       | Accessible, customizable components          |
+| Styling           | Tailwind CSS    | Utility-first CSS                            |
+| Document Model    | ProseMirror     | Rich-text editing foundation                 |
+| Markdown Parser   | Remark          | Markdown AST processing                      |
+| Internationalization | i18next      | Multi-language support (8 languages)         |
+| Validation        | Zod             | Settings schema validation                   |
 
 ## Process Architecture
 
@@ -54,23 +57,23 @@ The main process runs in the Bun runtime and has full access to system APIs.
 **Responsibilities:**
 
 * Window management (create, resize, close)
-
 * Native menus (application menu, context menu)
-
 * File system operations (read, write, watch)
-
-* System integration (tray, notifications)
-
+* Three-layer backup and recovery system
 * Auto-updater
+* Internationalization (menu translations)
 
 **Key APIs:**
 
 ```typescript
-import { 
-  BrowserWindow, 
+import Electrobun, {
+  BrowserWindow,
+  BrowserView,
+  Updater,
+  Utils,
   ApplicationMenu,
-  Tray,
-  Updater 
+  ContextMenu,
+  Screen
 } from "electrobun/bun";
 ```
 
@@ -81,11 +84,8 @@ The renderer runs in a native WebView and renders the UI using React.
 **Responsibilities:**
 
 * Render the editor UI
-
 * Handle user input
-
 * Display markdown content
-
 * Manage local UI state
 
 **Key APIs:**
@@ -99,25 +99,26 @@ import { Electroview } from "electrobun/view";
 Main and renderer communicate via JSON-RPC through Electrobun's IPC system.
 
 ```
-Renderer ──► Electroview.rpc("action", data) ──► Main
-Main ──────► webview.send("event", data) ──────► Renderer
+Renderer ──► BrowserView.defineRPC (typed request handlers) ──► Main
+Main ──────► webview.rpc.send.messageName(params) ────────────► Renderer
 ```
 
-**IPC Channels:**
+**Request RPCs (Renderer → Main):**
 
-* `file:open` - Open file dialog
+* **File operations**: `openFile`, `openFolder`, `saveFile`, `saveFileAs`, `readFile`, `readFolder`, `getCurrentFile`, `getPendingFile`
+* **File management**: `createFile`, `createFolder`, `deleteFile`, `moveFile`, `renameFile`, `openInFinder`, `fileExists`, `getFileStats`
+* **Recent files**: `getRecentFiles`, `addRecentFile`, `removeRecentFile`, `clearRecentFiles`, `quickOpen`
+* **Settings & UI state**: `getSettings`, `saveSettings`, `getUIState`, `saveUIState`, `updateWindowBounds`
+* **Backup & recovery**: `checkRecovery`, `clearRecovery`, `recoverFile`, `writeRecovery`, `getVersionBackups`, `restoreVersionBackup`, `deleteVersionBackup`
+* **Image handling**: `readImageAsBase64`, `selectImageFile`, `saveDroppedImage`
+* **Export**: `saveExportedFile`
+* **Clipboard**: `writeToClipboard`, `readFromClipboard`
+* **i18n**: `setLanguage`, `getSystemLanguage`
+* **Dialogs**: `showConfirmationDialog`, `showUnsavedChangesDialog`, `showPromptDialog`, `listFolder`, `getParentFolder`, `saveFileWithPath`
 
-* `file:read` - Read file contents
+**Messages (Main → Renderer):**
 
-* `file:save` - Save file contents
-
-* `file:watch` - Watch file for changes
-
-* `menu:action` - Menu item clicked
-
-<br />
-
-* `window:state` - Window state changes
+`fileOpened`, `folderOpened`, `fileNew`, `fileSaveRequest`, `fileSaveAsRequest`, `fileOpenRequest`, `toggleTheme`, `showAbout`, `toggleTitlebar`, `toggleToolbar`, `toggleStatusbar`, `toggleSidebar`, `openQuickOpen`, `openSettings`, `toggleSourceMode`, `openFileHistory`, `menuAction`, `languageChanged`
 
 ## Component Architecture
 
@@ -125,69 +126,83 @@ Main ──────► webview.send("event", data) ──────► Ren
 
 ```
 App
-├── RootLayout
-│   ├── TitleBar
-│   │   └── [Window controls, document title]
+├── TitleBar (conditionally rendered)
+├── Main Content Area (flex row)
+│   ├── Sidebar (conditionally rendered, tabbed)
+│   │   ├── FileExplorer (files tab)
+│   │   └── Outline (outline tab)
 │   │
-│   ├── MainContainer (flex row)
-│   │   ├── Sidebar (collapsible)
-│   │   │   ├── FileExplorer
-│   │   │   └── OutlineView
-│   │   │
-│   │   └── EditorArea (flex col, flex-1)
-│   │       ├── Toolbar
-│   │       │   ├── FormatButtons
-│   │       │   ├── InsertMenu
-│   │       │   └── ModeToggle
-│   │       │
-│   │       ├── MilkdownEditor
-│   │       │   ├── ProseMirror View
-│   │       │   ├── SlashCommand
-│   │       │   └── Tooltip
-│   │       │
-│   │       └── StatusBar
-│   │           ├── WordCount
-│   │           ├── SyncStatus
-│   │           └── FileInfo
-│   │
-│   └── CommandPalette (overlay)
+│   └── Editor Area (flex col, flex-1)
+│       ├── Toolbar (conditionally rendered)
+│       ├── Editor (one of three modes):
+│       │   ├── MilkdownEditor (WYSIWYG mode)
+│       │   ├── SourceEditor (source mode, CodeMirror 6)
+│       │   └── ImageViewer (image preview)
+│       └── StatusBar (conditionally rendered)
 │
-└── Dialogs
+└── Dialogs (all conditionally rendered)
+    ├── QuickOpen (Cmd+P file finder)
+    ├── ImageInsertDialog
     ├── SettingsDialog
-    ├── ImageUploadDialog
-    └── LinkEditDialog
+    ├── FileDialog (open/save)
+    ├── RecoveryDialog
+    ├── FileHistoryDialog
+    ├── SaveDialog
+    └── AboutDialog
 ```
+
+Note: TitleBar, Toolbar, StatusBar, and Sidebar visibility is toggled via the View menu and persisted in UI state.
 
 ### Milkdown Integration
 
-Milkdown is integrated as a React component wrapping the ProseMirror editor.
+Milkdown is integrated via **Crepe** (a high-level Milkdown wrapper) as a React component wrapping the ProseMirror editor.
 
 ```
-MilkdownEditor (React Component)
-├── useMilkdown (custom hook)
-│   ├── Editor.make()
-│   │   ├── Config (ctx)
-│   │   ├── Schema (nodes, marks)
-│   │   ├── Parser (markdown → ProseMirror)
-│   │   ├── Serializer (ProseMirror → markdown)
-│   │   ├── Commands
-│   │   ├── Keymap
-│   │   └── EditorView (DOM)
+MilkdownEditor (React Component, forwardRef + memo)
+├── useCrepeEditor (custom hook)
+│   ├── Crepe (from @milkdown/crepe)
+│   │   ├── Feature config:
+│   │   │   ├── BlockEdit: disabled
+│   │   │   ├── LinkTooltip: enabled
+│   │   │   ├── Toolbar: disabled (custom Toolbar used)
+│   │   │   ├── ImageBlock: enabled (with custom onUpload, proxyDomURL)
+│   │   │   └── CodeMirror: enabled (with Mermaid diagram rendering)
+│   │   │
+│   │   └── Plugins:
+│   │       ├── clipboard (@milkdown/plugin-clipboard)
+│   │       ├── history (@milkdown/plugin-history)
+│   │       ├── gfm (@milkdown/preset-gfm)
+│   │       ├── clipboardBlobConverter (custom — blob URL handling)
+│   │       ├── inlineMarksPlugin (custom — highlight, superscript, subscript)
+│   │       ├── breaksPlugin (custom — soft line breaks)
+│   │       └── inlineMarksParsersPlugin (custom — remarkHighlight, remarkSuperSub)
 │   │
-│   └── Plugins
-│       ├── commonmark (basic syntax)
-│       ├── gfm (GitHub flavored)
-│       ├── history (undo/redo)
-│       ├── clipboard (copy/paste)
-│       ├── math (LaTeX)
-│       ├── table (GFM tables)
-│       ├── slash (command palette)
-│       └── emoji (emoji picker)
+│   └── Content loading:
+│       ├── Direct parse (< 500 lines)
+│       └── Chunked loading (>= 500 lines, code-block-aware splitting)
 │
-└── Theme Styles
-    ├── prose-mirror.css (base)
-    ├── milkdown.css (custom)
-    └── shadcn-theme.css (colors)
+├── useThemeLoader (custom hook)
+│   ├── @milkdown/crepe/theme/frame.css (light mode)
+│   └── @milkdown/crepe/theme/frame-dark.css (dark mode)
+│
+├── useContextMenu (custom hook)
+│
+└── Style imports:
+    ├── @milkdown/crepe/theme/common/style.css
+    └── @milkdown/crepe/theme/common/link-tooltip.css
+```
+
+### Source Editor (CodeMirror 6)
+
+Used in source mode as an alternative to the WYSIWYG editor:
+
+```
+SourceEditor (React Component)
+├── EditorView + EditorState
+├── @codemirror/lang-markdown
+├── @codemirror/theme-one-dark (dark mode)
+├── Extensions: lineNumbers, history, search, bracketMatching
+└── Custom syntax highlighting for light/dark themes
 ```
 
 ## Data Flow
@@ -203,7 +218,7 @@ MilkdownEditor (React Component)
    ↓
 4. User selects file
    ↓
-5. Main: Read file content
+5. Main: Read file content via readFile RPC
    ↓
 6. Main: Send to renderer via IPC
    ↓
@@ -217,20 +232,22 @@ MilkdownEditor (React Component)
 ```
 1. Editor content changes (ProseMirror transaction)
    ↓
-2. Renderer: Debounce 1 second
+2. Renderer: Debounce (configurable interval, default 2000ms)
    ↓
 3. Renderer: Serialize to markdown
    ↓
-4. Renderer: Call IPC "file:save"
+4. Renderer: Call saveFile RPC
    ↓
-5. Main: Write to file system
+5. Main: Write recovery file (crash protection)
    ↓
-6. Main: Confirm save success
+6. Main: Create version backup (if enabled)
    ↓
-7. Renderer: Update "saved" indicator in status bar
+7. Main: Atomic write via .tmp + rename
+   ↓
+8. Main: Clear recovery file
+   ↓
+9. Renderer: Update save status indicator
 ```
-
-<br />
 
 ### Theme Switching Flow
 
@@ -241,11 +258,11 @@ MilkdownEditor (React Component)
    ↓
 3. Renderer: Apply CSS class to root
    ↓
-4. Renderer: Notify main via IPC
+4. Renderer: Load Crepe theme CSS dynamically
    ↓
-5. Main: Persist preference to settings file
+5. Renderer: Notify main via IPC
    ↓
-6. Main: Update native window chrome (macOS)
+6. Main: Persist preference to settings file
 ```
 
 ## State Management
@@ -255,11 +272,8 @@ MilkdownEditor (React Component)
 Used for UI-specific state that doesn't need to persist:
 
 * Sidebar open/closed
-
 * Active panel in sidebar
-
 * Toolbar button hover states
-
 * Dialog visibility
 
 ### Editor State (ProseMirror)
@@ -267,11 +281,8 @@ Used for UI-specific state that doesn't need to persist:
 Managed internally by Milkdown/ProseMirror:
 
 * Document content (JSON tree)
-
 * Selection state
-
 * Undo/redo history
-
 * Plugin states
 
 Accessed via:
@@ -286,47 +297,107 @@ editor.action(ctx => {
 
 ### Global Settings
 
-Persisted to disk and loaded on startup:
+Persisted to disk using a Zod-validated nested schema. Loaded on startup.
 
 ```typescript
 interface Settings {
-  theme: "light" | "dark" | "system";
-  fontSize: number;
-  lineHeight: number;
-  autoSave: boolean;
-  autoSaveInterval: number;
-  showLineNumbers: boolean;
-  wordWrap: boolean;
-  recentFiles: string[];
-  lastOpenFolder: string;
+  __version: 1;
+  general: {
+    autoSave: boolean;         // default: true
+    autoSaveInterval: number;  // 500-30000ms, default: 2000
+    language: 'en' | 'zh-CN' | 'de' | 'fr' | 'ja' | 'ko' | 'pt' | 'es';
+  };
+  editor: {
+    fontSize: number;   // 10-32, default: 15
+    lineHeight: number; // 1-3, default: 1.65
+  };
+  appearance: {
+    theme: 'light' | 'dark' | 'system';  // default: 'system'
+    sidebarWidth: number;                  // 150-500, default: 280
+  };
+  backup: {
+    enabled: boolean;           // default: true
+    maxVersions: number;        // 5-100, default: 20
+    retentionDays: number;      // 1-365, default: 30
+    recoveryInterval: number;   // 5000-120000ms, default: 30000
+  };
 }
 ```
 
-Stored in:
+### UI State
 
-* macOS: `~/Library/Application Support/MarkBun/settings.json`
+Separate from settings — stores ephemeral window/layout state:
 
-* Windows: `%APPDATA%/MarkBun/settings.json`
+```typescript
+interface UIState {
+  showTitleBar: boolean;
+  showToolBar: boolean;
+  showStatusBar: boolean;
+  showSidebar: boolean;
+  sourceMode: boolean;
+  sidebarWidth: number;
+  sidebarActiveTab: 'files' | 'outline' | 'search';
+  windowX: number;
+  windowY: number;
+  windowWidth: number;
+  windowHeight: number;
+  displayId?: number;
+}
+```
 
-* Linux: `~/.config/MarkBun/settings.json`
+### Storage Locations
+
+All platforms use a unified path:
+
+* Settings: `~/.config/markbun/settings.json`
+* UI state: `~/.config/markbun/ui-state.json`
+* Recovery files: `~/.config/markbun/recovery/`
+* Version backups: `~/.config/markbun/backups/`
+
+## Backup & Recovery System
+
+Three-layer file protection system in `src/bun/services/backup.ts`:
+
+1. **Atomic Write** — Write to `.tmp` then rename, prevents corruption from interrupted writes
+2. **Crash Recovery** — Write recovery file before save, clear after success. Stored as JSON with `{originalPath, timestamp, content}`
+3. **Version History** — Snapshot before each save, auto-pruned by `retentionDays` and `maxVersions`
+
+## Internationalization
+
+Multi-language support using i18next:
+
+* **Main process**: `src/bun/i18n/` — menu translations in 8 locales (en, zh-CN, de, es, fr, ja, ko, pt)
+* **Renderer process**: `src/mainview/i18n/` — UI translations
+* **Shared**: `src/shared/i18n/config.ts` — language resolution logic
+* Language preference saved in settings; menu rebuilt on change
+
+## Image Handling
+
+Pipeline for displaying and saving images in the editor:
+
+* **Local image path resolution** via `workspaceManager`
+* **Blob URL conversion** for display in WebView (security requirement)
+* **Original path restoration** on save via `restoreOriginalImagePaths`
+* **Image cache** (`imageCache.ts`) for blob URL reuse
+* **Drag-and-drop** saves images to workspace `assets/` directory
 
 ## Styling Architecture
 
 ### Layering System
 
 ```
-1. Tailwind CSS (base utilities)
+1. Tailwind CSS (base utilities via @tailwind directives)
    ↓
-2. shadcn/ui Theme (CSS variables)
+2. CSS Variables for theming (shadcn-compatible variables in :root/.dark)
    ↓
-3. ProseMirror Base Styles
+3. Crepe theme styles (@milkdown/crepe/theme/common/style.css, frame.css/frame-dark.css)
    ↓
-4. Milkdown Styles
+4. Crepe link tooltip styles (@milkdown/crepe/theme/common/link-tooltip.css)
    ↓
-5. MarkBun Custom Styles
+5. MarkBun custom styles (all in src/mainview/index.css)
 ```
 
-### CSS Variables (shadcn/ui Theme)
+### CSS Variables
 
 ```css
 :root {
@@ -353,87 +424,141 @@ Stored in:
 }
 
 .dark {
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
-  /* ... dark mode values ... */
+  --background: 220 13% 24%;
+  --foreground: 210 20% 96%;
+  --card: 220 13% 24%;
+  --card-foreground: 210 20% 96%;
+  --popover: 220 13% 24%;
+  --popover-foreground: 210 20% 96%;
+  --primary: 210 20% 96%;
+  --primary-foreground: 220 13% 24%;
+  --secondary: 220 10% 32%;
+  --secondary-foreground: 210 20% 96%;
+  --muted: 220 10% 32%;
+  --muted-foreground: 220 8% 65%;
+  --accent: 220 10% 32%;
+  --accent-foreground: 210 20% 96%;
+  --destructive: 0 62.8% 40%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 220 10% 32%;
+  --input: 220 10% 32%;
+  --ring: 210 20% 80%;
 }
 ```
 
-<br />
+### Style Source
 
-### Milkdown Editor Styling
+All custom styles are in a single file `src/mainview/index.css` (~1300 lines), covering: editor chrome, code blocks, drag-and-drop overlay, scrollbar auto-hide, image blocks, dialogs, sidebar, toolbar, status bar, outline, quick-open, file dialog, settings, and recovery dialog.
 
-Custom styles for the seamless editing experience:
-
-```css
-/* Hide markdown syntax when not focused */
-.milkdown .paragraph {
-  position: relative;
-}
-
-.milkdown .paragraph::before {
-  content: "";
-  position: absolute;
-  /* ... */
-}
-
-/* Live preview for links */
-.milkdown .link {
-  color: var(--primary);
-  text-decoration: none;
-}
-
-.milkdown .link:hover {
-  text-decoration: underline;
-}
-
-/* Code blocks */
-.milkdown pre {
-  background: var(--muted);
-  border-radius: var(--radius);
-  padding: 1rem;
-}
-```
+Crepe theme styles are loaded dynamically via `useThemeLoader` hook from npm packages.
 
 ## File Organization
 
 ```
 markbun/
 ├── src/
-│   ├── bun/                  
-│   │   ├── index.ts          # Main process (Electrobun/Bun)
-│   │   ├── menu.ts           # Application menus
-│   │   ├── window.ts         # Window management
-│   │   └── ipc/              # IPC handlers
+│   ├── bun/                         # Main process (Electrobun/Bun)
+│   │   ├── index.ts                 # Main entry, window mgmt, RPC handlers
+│   │   ├── menu.ts                  # Application menus
+│   │   ├── assets/
+│   │   │   └── helpContent.ts       # Help document content
+│   │   ├── i18n/
+│   │   │   ├── index.ts             # i18next setup
+│   │   │   └── locales/             # Menu translations (8 languages)
+│   │   │       ├── en/menu.json
+│   │   │       ├── zh-CN/menu.json
+│   │   │       └── ... (de, es, fr, ja, ko, pt)
+│   │   ├── ipc/
+│   │   │   ├── files.ts             # File I/O operations
+│   │   │   ├── folders.ts           # Folder tree reading
+│   │   │   └── recentFiles.ts       # Recent files management
+│   │   ├── lib/                     # Main process utilities
+│   │   └── services/
+│   │       ├── settings.ts          # Settings load/save/migrate
+│   │       ├── backup.ts            # Three-layer backup service
+│   │       └── uiState.ts           # UI state persistence
 │   │
-│   ├── mainview/             # Renderer process (WebView)
-│   │   ├── components/       # React components
-│   │   │   ├── editor/       # Milkdown editor wrapper
-│   │   │   ├── sidebar/      # File explorer
-│   │   │   ├── toolbar/      # Editor toolbar
-│   │   │   └── statusbar/    # Status bar
-│   │   │
-│   │   ├── hooks/            # Custom React hooks
-│   │   ├── lib/              # Utilities
-│   │   ├── styles/           # Global styles
-│   │   ├── main.tsx        # React entry point
-│   │   ├── App.tsx           # Main App component
-│   │   └── index.html        # HTML entry
+│   ├── mainview/                    # Renderer process (WebView)
+│   │   ├── main.tsx                 # React entry point
+│   │   ├── App.tsx                  # Main application component
+│   │   ├── index.html               # HTML entry
+│   │   ├── index.css                # All styles (~1300 lines)
+│   │   ├── components/
+│   │   │   ├── editor/              # Editor components
+│   │   │   │   ├── MilkdownEditor.tsx
+│   │   │   │   ├── SourceEditor.tsx  # CodeMirror 6 source mode
+│   │   │   │   ├── commands/        # Editor command functions
+│   │   │   │   ├── hooks/           # useCrepeEditor, useContextMenu, useThemeLoader
+│   │   │   │   ├── plugins/         # clipboardBlobConverter, inlineMarksPlugin, etc.
+│   │   │   │   └── utils/           # editorActions, tableHelpers
+│   │   │   ├── file-explorer/       # File tree browser
+│   │   │   │   ├── FileExplorer.tsx
+│   │   │   │   ├── FileTree.tsx
+│   │   │   │   ├── ContextMenu.tsx
+│   │   │   │   └── MoveDialog.tsx
+│   │   │   ├── file-dialog/         # Custom open/save dialog
+│   │   │   ├── file-history/        # Version history dialog
+│   │   │   ├── image-insert/        # Image insert dialog
+│   │   │   ├── image-viewer/        # Image preview
+│   │   │   ├── layout/              # TitleBar, Toolbar, Sidebar, StatusBar
+│   │   │   ├── outline/             # Document outline view
+│   │   │   ├── quick-open/          # Quick file opener (Cmd+P)
+│   │   │   ├── recovery-dialog/     # Crash recovery dialog
+│   │   │   ├── save-dialog/         # Unsaved changes dialog
+│   │   │   ├── settings/            # Settings dialog
+│   │   │   ├── about/               # About dialog
+│   │   │   └── ui/                  # shadcn/ui components
+│   │   ├── hooks/                   # App-level custom hooks
+│   │   │   ├── useAutoSave.ts
+│   │   │   ├── useClipboard.ts
+│   │   │   ├── useExport.ts
+│   │   │   ├── useFileExplorer.ts
+│   │   │   ├── useFileOperations.ts
+│   │   │   ├── useOutline.ts
+│   │   │   ├── useQuickOpen.ts
+│   │   │   ├── useSidebar.ts
+│   │   │   └── useTheme.ts
+│   │   ├── lib/                     # Renderer utilities
+│   │   │   ├── electrobun.ts        # IPC wrapper
+│   │   │   ├── image.ts             # Image processing (workspace, blob URLs)
+│   │   │   ├── imageCache.ts        # Image blob URL cache
+│   │   │   ├── imageProcessor.ts
+│   │   │   └── utils.ts
+│   │   ├── i18n/                    # Renderer-side translations
+│   │   │   ├── index.ts
+│   │   │   └── locales/             # UI translations (8 languages)
+│   │   └── images/
+│   │       └── logo.svg
 │   │
-│   └── shared/               # Shared types and utilities
+│   └── shared/                      # Shared between processes
+│       ├── types.ts                 # RPC schema, shared interfaces
+│       ├── settings/
+│       │   └── schema.ts            # Zod settings schema + defaults
+│       └── i18n/
+│           ├── config.ts            # Language resolution logic
+│           └── types.ts             # i18n type definitions
 │
-├── doc/                      # Documentation
-│   ├── architecture.md       # Architecture overview
-│   └── assets/               # Documentation assets
+├── docs/                            # Documentation
+│   ├── architecture.md
+│   ├── architecture-cn.md
+│   ├── file-association.md
+│   └── file-association-cn.md
 │
-├── resources/                # Static resources
-│   ├── icons/                # App icons
-│   └── themes/               # Editor themes
+├── scripts/                         # Build scripts
+│   ├── create-dmg.sh
+│   ├── create-wrapper.sh
+│   ├── patch-plist.sh
+│   ├── post-build.ts
+│   └── typecheck.sh
 │
-├── electrobun.config.ts      # Electrobun configuration
-├── components.json           # shadcn/ui configuration
-├── vite.config.ts          # Vite configuration
-├── tailwind.config.js      # Tailwind configuration
+├── tests/                           # Tests
+│   └── unit/
+│
+├── electrobun.config.ts             # Electrobun configuration
+├── vite.config.ts                   # Vite configuration
+├── tailwind.config.js               # Tailwind configuration
+├── postcss.config.js                # PostCSS configuration
+├── tsconfig.json
 ├── package.json
 └── README.md
 ```
@@ -446,31 +571,34 @@ markbun/
 // electrobun.config.ts
 import type { ElectrobunConfig } from "electrobun";
 
+// CEF is only needed in dev mode for debugging
+const isBuild = process.argv.some(arg => arg === "build");
+
 export default {
   app: {
-    name: "react-tailwind-vite",
-    identifier: "reacttailwindvite.electrobun.dev",
-    version: "0.0.1",
+    name: "MarkBun",
+    identifier: "dev.markbun.app",
+    version: "0.1.0",
+    urlSchemes: ["markbun"],
   },
   build: {
-    // Vite builds to dist/, we copy from there
     copy: {
       "dist/index.html": "views/mainview/index.html",
       "dist/assets": "views/mainview/assets",
+      "src/mainview/images": "views/mainview/images",
     },
-    // Ignore Vite output in watch mode — HMR handles view rebuilds separately
     watchIgnore: ["dist/**"],
     mac: {
-      bundleCEF: false,
+      bundleCEF: !isBuild,
     },
     linux: {
-      bundleCEF: false,
+      bundleCEF: true,
+      icon: "icon.iconset/icon_256x256.png",
     },
     win: {
       bundleCEF: false,
+      icon: "icon.iconset/icon_256x256.png",
     },
   },
 } satisfies ElectrobunConfig;
 ```
-
-<br />

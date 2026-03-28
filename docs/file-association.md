@@ -1,42 +1,42 @@
-# macOS 文件关联实现原理
+# macOS File Association Implementation
 
-## 功能概述
+## Overview
 
-用户可以在 macOS Finder 中双击 `.md`、`.markdown`、`.mdx` 文件，自动用 MarkBun 打开并加载文件内容。
+Users can double-click `.md`, `.markdown`, and `.mdx` files in macOS Finder to automatically open them in MarkBun and load the file content.
 
-## 架构设计
+## Architecture
 
-由于 Electrobun 框架**不支持** `application:openFile:` Apple Events，我们采用 **Wrapper App + 文件 IPC** 的方案：
+Since the Electrobun framework **does not support** `application:openFile:` Apple Events, we use a **Wrapper App + File IPC** approach:
 
 ```
 ┌─────────────────────────────────┐
 │         MarkBun.app (Wrapper)    │
 │  ┌───────────────────────────┐  │
-│  │  AppleScript droplet      │  │  收到 macOS 文件打开事件
-│  │  CFBundleDocumentTypes    │  │  → 写 /tmp/markbun/pending.txt
-│  └───────────────────────────┘  │  → 启动内部主应用
+│  │  AppleScript droplet      │  │  Receives macOS file-open events
+│  │  CFBundleDocumentTypes    │  │  → writes /tmp/markbun/pending.txt
+│  └───────────────────────────┘  │  → launches inner main app
 │  ┌───────────────────────────┐  │
 │  │  Contents/MacOS/          │  │
-│  │    MarkBun-canary.app/    │  │  Electrobun 主应用
-│  │      → 检查 pending 文件  │  │  → 渲染进程打开文件
+│  │    MarkBun-canary.app/    │  │  Electrobun main app
+│  │      → checks pending file│  │  → renderer opens file
 │  └───────────────────────────┘  │
 └─────────────────────────────────┘
 ```
 
-## 组件说明
+## Components
 
-### 1. MarkBun Wrapper（AppleScript Droplet）
+### 1. MarkBun Wrapper (AppleScript Droplet)
 
-**位置**：`build/MarkBun.app`
+**Location**: `build/MarkBun.app`
 
-**作用**：
+**Responsibilities**:
 
-- 注册为 `.md`/`.markdown`/`.mdx` 文件的处理器（通过 `CFBundleDocumentTypes`）
-- 接收 macOS 的文件打开事件
-- 将文件路径写入 `/tmp/markbun/pending.txt`
-- 启动或激活内部的 Electrobun 主应用
+- Registers as the handler for `.md`/`.markdown`/`.mdx` files (via `CFBundleDocumentTypes`)
+- Receives macOS file-open events
+- Writes the file path to `/tmp/markbun/pending.txt`
+- Launches or activates the inner Electrobun main app
 
-**源码**：`scripts/create-wrapper.sh`
+**Source**: `scripts/create-wrapper.sh`
 
 ```applescript
 on open theFiles
@@ -47,27 +47,27 @@ on open theFiles
 end open
 ```
 
-### 2. IPC 文件
+### 2. IPC File
 
-**路径**：`/tmp/markbun/pending.txt`
+**Path**: `/tmp/markbun/pending.txt`
 
-**作用**：
+**Responsibilities**:
 
-- Wrapper 写入待打开的文件路径
-- 主应用读取后立即删除（防止重复打开）
-- 系统重启自动清除，不会有残留
+- The Wrapper writes the file path to be opened
+- The main app reads and immediately deletes it (to prevent re-opening)
+- Automatically cleaned up on system restart
 
-### 3. 主应用处理逻辑
+### 3. Main App Processing Logic
 
-**文件**：`src/bun/index.ts`
+**File**: `src/bun/index.ts`
 
-**启动时消费**（应用未运行时）：
+**Startup consumption** (when the app is not running):
 ```typescript
 const filePath = await consumePendingFile();
 if (filePath) pendingOpenFilePath = filePath;
 ```
 
-**运行时监听**（应用已运行时，使用 `fs.watch` 事件驱动）：
+**Runtime listener** (when the app is already running, using `fs.watch` event-driven):
 ```typescript
 watch('/tmp/markbun', (eventType, filename) => {
   if (filename !== 'pending.txt') return;
@@ -76,7 +76,7 @@ watch('/tmp/markbun', (eventType, filename) => {
 });
 ```
 
-**渲染进程获取**：
+**Renderer retrieval**:
 ```typescript
 // RPC: getPendingFile
 getPendingFile: async () => {
@@ -87,13 +87,13 @@ getPendingFile: async () => {
 }
 ```
 
-### 4. URL Scheme（辅助方案）
+### 4. URL Scheme (Auxiliary Approach)
 
-**用途**：当主应用**已运行**时，可通过 URL scheme 直接打开文件
+**Purpose**: When the main app **is already running**, files can be opened directly via URL scheme
 
-**格式**：`markbun://open?path=/path/to/file.md`
+**Format**: `markbun://open?path=/path/to/file.md`
 
-**监听**：
+**Listener**:
 ```typescript
 Electrobun.events.on('open-url', (event) => {
   const url = new URL(event.data.url);
@@ -104,34 +104,34 @@ Electrobun.events.on('open-url', (event) => {
 });
 ```
 
-## 为什么不用 Apple Events？
+## Why Not Apple Events?
 
-Electrobun 框架的 launcher 是预编译的 Zig 二进制，没有实现 `application:openFile:` 委托。macOS 双击文件时发送的 Apple Events 无法被应用接收。
+The Electrobun framework's launcher is a pre-compiled Zig binary that does not implement the `application:openFile:` delegate. Apple Events sent by macOS when double-clicking a file cannot be received by the app.
 
-## 为什么需要 Wrapper？
+## Why a Wrapper?
 
-Electrobun 的启动链路是 `Zig 二进制 → Bun main.js → Worker(应用代码)`，命令行参数不会传递到 Worker 层，因此无法直接处理 Finder 传来的文件路径。
+Electrobun's startup chain is `Zig binary → Bun main.js → Worker (app code)`. Command-line arguments are not passed through to the Worker layer, so file paths from Finder cannot be processed directly.
 
-## 构建流程
+## Build Process
 
-`scripts/post-build.ts` 在 macOS 构建后自动执行：
+`scripts/post-build.ts` runs automatically after a macOS build:
 
-1. `create-wrapper.sh` - 创建 Wrapper App（内嵌主应用 + 文件关联声明）
-2. `create-dmg.sh` - 打包 DMG
+1. `create-wrapper.sh` - Creates the Wrapper App (embedding the main app + file association declarations)
+2. `create-dmg.sh` - Packages the DMG
 
-## 安装使用
+## Installation
 
-1. 将 `MarkBun.app` 从 DMG 拖到 `/Applications/`
-2. 右键任意 `.md` 文件 → "打开方式" → "MarkBun"
-3. 勾选 "始终使用此应用打开"
+1. Drag `MarkBun.app` from the DMG to `/Applications/`
+2. Right-click any `.md` file → "Open With" → "MarkBun"
+3. Check "Always Open With"
 
-## 相关文件
+## Related Files
 
-| 文件 | 作用 |
-|------|------|
-| `electrobun.config.ts` | 配置 `urlSchemes: ["markbun"]` |
-| `src/bun/index.ts` | 主进程文件，处理 IPC 和 URL scheme |
-| `src/mainview/App.tsx` | 渲染进程，启动时调用 `getPendingFile` |
-| `src/mainview/lib/electrobun.ts` | RPC 接口定义 |
-| `scripts/create-wrapper.sh` | 创建 Wrapper App |
-| `scripts/create-dmg.sh` | 打包 DMG |
+| File | Purpose |
+|------|---------|
+| `electrobun.config.ts` | Configures `urlSchemes: ["markbun"]` |
+| `src/bun/index.ts` | Main process file, handles IPC and URL scheme |
+| `src/mainview/App.tsx` | Renderer process, calls `getPendingFile` on startup |
+| `src/mainview/lib/electrobun.ts` | RPC interface definitions |
+| `scripts/create-wrapper.sh` | Creates the Wrapper App |
+| `scripts/create-dmg.sh` | Packages the DMG |
