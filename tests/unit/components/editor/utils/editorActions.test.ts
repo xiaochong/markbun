@@ -249,7 +249,7 @@ describe('insertParsedMarkdown', () => {
 
     const result = insertParsedMarkdown(ref as any, '# Big content', false);
     expect(result).toBe(true);
-    // The cursorPos should have been clamped via Math.min
-    expect(mockTextSelectionCreate).toHaveBeenCalled();
+    // setSelection should have been called (cursorPos clamped via Math.min)
+    expect(trChain.setSelection).toHaveBeenCalled();
   });
 });
