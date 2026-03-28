@@ -1,5 +1,7 @@
 # MarkBun
 
+**[中文](README-cn.md)** | English
+
 > 📝 A fast, beautiful, Typora-like markdown desktop editor
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -10,19 +12,17 @@ MarkBun is an open-source, cross-platform markdown editor designed for seamless 
 
 **Mark** (from Markdown) + **Bun** (from Electrobun) = MarkBun
 
-> 🍞 **Why "Mark"?**
+> 🍞 **Why "MarkBun"?**
 >
 > In the Age of AI, Markdown is the *lingua franca* — the universal currency of digital communication.
 > Learn Markdown, earn your bread. It's that simple.
 > (Plus, "Markbun" sounds way tastier than "Plaintextbun")
 
-<!-- ![MarkBun Preview](docs/assets/preview.png) -->
-
 ## 🚧 Development Status
 
 > **⚠️ Early Development Stage**
 >
-> MarkBun is currently in active development. The v0.1.0 MVP has been completed with core editing capabilities.
+> MarkBun is currently in active development. 
 >
 > **Current Status:**
 > - ✅ Electrobun desktop framework configured
@@ -73,6 +73,10 @@ When you need them, every UI element can be instantly toggled via the **View men
 - ⌨️ **Keyboard Shortcuts** - Comprehensive shortcuts for formatting and navigation
 - 🔤 **Source Mode** - Toggle between WYSIWYG and source code editing (`Cmd/Ctrl + /`)
 - 🌐 **i18n** - Multi-language support (English, Chinese, Japanese, Korean, etc.)
+
+![MarkBun Preview](docs/assets/preview1.png)
+
+![MarkBun Preview](docs/assets/preview2.png)
 
 ## 🚀 Quick Start
 
