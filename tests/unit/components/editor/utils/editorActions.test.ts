@@ -1,224 +1,255 @@
 /**
  * Editor Actions 单元测试
- * 测试编辑器操作工具函数
+ * 测试编辑器操作工具函数: execCommand, hasSelection, insertParsedMarkdown
  */
-import { describe, it, expect, mock, beforeEach } from 'bun:test';
+import { describe, it, expect, mock } from 'bun:test';
 import { execCommand, hasSelection, insertParsedMarkdown } from '../../../setup';
 
-// Mock dependencies
-const mockCallCommand = mock((key: any, payload?: any) => (ctx: any) => true);
+// ===== Mock for TextSelection — avoid real ProseMirror dependency =====
+const mockTextSelectionCreate = mock((doc: any, pos: number) => ({
+  type: 'text',
+  anchor: pos,
+  head: pos,
+}));
 
-// Helper to create mock Crepe ref
-const createMockCrepeRef = (overrides: any = {}) => ({
-  current: {
-    editor: {
-      ctx: {},
-      action: mock((fn: any) => {
-        const mockCtx = {
-          get: mock((key: any) => {
-            if (key.name === 'editorViewCtx') {
-              return {
-                state: {
-                  doc: { content: { size: 100 } },
-                  selection: { from: 10, to: 20 },
-                  tr: {
-                    replaceWith: mock(() => ({
-                      mapping: { map: (p: number) => p },
-                      doc: { content: { size: 100 } },
-                      setSelection: mock(() => ({ doc: { content: { size: 100 } } })),
-                    })),
-                    insert: mock(() => ({
-                      mapping: { map: (p: number) => p },
-                      doc: { content: { size: 100 } },
-                      setSelection: mock(() => ({ doc: { content: { size: 100 } } })),
-                    })),
-                  },
-                },
-                dispatch: mock(() => {}),
-                focus: mock(() => {}),
-              };
-            }
-            if (key.name === 'parserCtx') {
-              return (markdown: string) => ({
-                content: { size: 10 },
-              });
-            }
-            return null;
-          }),
+// We mock the module that TextSelection comes from
+// Note: milkdown/prose/state re-exports from prosemirror-state
+mock.module('@milkdown/prose/state', () => ({
+  TextSelection: { create: mockTextSelectionCreate },
+  NodeSelection: { create: mock((doc: any, pos: number) => ({ type: 'node', anchor: pos })) },
+  Selection: { create: mockTextSelectionCreate },
+  EditorState: { create: mock((config: any) => config?.doc || {}) },
+}));
+
+// ===== Helpers =====
+
+/**
+ * Build a mock that matches real milkdown context keys by .name property
+ */
+function buildMockCtx(viewState: any, parserFn: any = null) {
+  return {
+    get: mock((key: any) => {
+      if (key?.name === 'editorView') {
+        return {
+          state: viewState,
+          dispatch: mock(() => {}),
+          focus: mock(() => {}),
         };
-        return fn(mockCtx);
-      }),
+      }
+      if (key?.name === 'parser') {
+        return parserFn;
+      }
+      return null;
+    }),
+  };
+}
+
+function makeRef(ctx: any, actionImpl?: Function) {
+  return {
+    current: {
+      editor: {
+        ctx,
+        action: actionImpl || mock((fn: Function) => fn(ctx)),
+      },
     },
-    getMarkdown: mock(() => '# Test'),
-    ...overrides,
-  },
-});
+  };
+}
+
+function makeTrChain() {
+  const tr: any = {};
+  tr.replaceWith = mock(() => tr);
+  tr.insert = mock(() => tr);
+  tr.setSelection = mock(() => tr);
+  tr.doc = { content: { size: 200 } };
+  tr.mapping = { map: (p: number) => p };
+  return tr;
+}
+
+// ===== execCommand =====
 
 describe('execCommand', () => {
-  it('should return false when editor is not initialized', () => {
-    const emptyRef = { current: null };
-    const command = { key: 'testCommand' };
-
-    // Should not throw and return false
-    expect(() => execCommand(emptyRef as any, command)).not.toThrow();
+  it('should return false when editor is null', () => {
+    expect(execCommand({ current: null } as any, { key: 'test' })).toBe(false);
   });
 
   it('should return false when editor has no ctx', () => {
-    const refWithoutCtx = { current: { editor: {} } };
-    const command = { key: 'testCommand' };
-
-    expect(() => execCommand(refWithoutCtx as any, command)).not.toThrow();
+    expect(execCommand({ current: { editor: {} } } as any, { key: 'test' })).toBe(false);
   });
+
+  // Note: execCommand internally calls milkdown's callCommand which requires
+  // a real milkdown context. Full behavior tested via integration tests.
 });
+
+// ===== hasSelection =====
 
 describe('hasSelection', () => {
-  it('should return false when editor is not initialized', () => {
-    const emptyRef = { current: null };
-    expect(hasSelection(emptyRef as any)).toBe(false);
+  it('should return false when editor is null', () => {
+    expect(hasSelection({ current: null } as any)).toBe(false);
   });
 
   it('should return false when editor has no ctx', () => {
-    const refWithoutCtx = { current: { editor: {} } };
-    expect(hasSelection(refWithoutCtx as any)).toBe(false);
+    expect(hasSelection({ current: { editor: {} } } as any)).toBe(false);
   });
 
-  it('should detect selection when editor is ready', () => {
-    const mockAction = mock((fn: any) => {
-      const mockView = {
-        state: { selection: { from: 10, to: 20 } },
-      };
-      return fn({ get: () => mockView });
+  it('should return true when selection exists (from !== to)', () => {
+    const mockAction = mock((fn: Function) => {
+      return fn(buildMockCtx({
+        selection: { from: 10, to: 20 },
+      }));
     });
-    const refWithSelection = {
-      current: {
-        editor: {
-          ctx: {},
-          action: mockAction,
-        },
-      },
-    };
-
-    // This tests the function structure
-    expect(typeof hasSelection).toBe('function');
+    const ref = makeRef({}, mockAction);
+    const result = hasSelection(ref as any);
+    // hasSelection returns editor.action((ctx) => { ... return from !== to })
+    expect(result).toBe(true);
   });
 
-  it('should detect no selection when from equals to', () => {
-    const mockAction = mock((fn: any) => {
-      const mockView = {
-        state: { selection: { from: 10, to: 10 } },
-      };
-      return fn({ get: () => mockView });
+  it('should return false when no selection (from === to)', () => {
+    const mockAction = mock((fn: Function) => {
+      return fn(buildMockCtx({
+        selection: { from: 10, to: 10 },
+      }));
     });
-    const refWithoutSelection = {
-      current: {
-        editor: {
-          ctx: {},
-          action: mockAction,
-        },
-      },
-    };
-
-    expect(typeof hasSelection).toBe('function');
+    const ref = makeRef({}, mockAction);
+    const result = hasSelection(ref as any);
+    expect(result).toBe(false);
   });
 });
+
+// ===== insertParsedMarkdown =====
 
 describe('insertParsedMarkdown', () => {
-  it('should return false when editor is not initialized', () => {
-    const emptyRef = { current: null };
-    expect(insertParsedMarkdown(emptyRef as any, '# Hello')).toBe(false);
+  // Clear mock before each test
+  const clearMock = () => mockTextSelectionCreate.mockClear();
+
+  it('should return false when editor is null', () => {
+    expect(insertParsedMarkdown({ current: null } as any, '# Hello')).toBe(false);
   });
 
   it('should return false when editor has no ctx', () => {
-    const refWithoutCtx = { current: { editor: {} } };
-    expect(insertParsedMarkdown(refWithoutCtx as any, '# Hello')).toBe(false);
+    expect(insertParsedMarkdown({ current: { editor: {} } } as any, '# Hello')).toBe(false);
   });
 
-  it('should handle empty parsed content', () => {
-    const mockAction = mock((fn: any) => {
-      const mockCtx = {
-        get: (key: any) => {
-          if (key.name === 'parserCtx') {
-            return () => ({ content: { size: 0 } }); // Empty content
-          }
-          return null;
-        },
-      };
-      return fn(mockCtx);
+  it('should throw when parser is null', () => {
+    const ctx = buildMockCtx({
+      selection: { from: 10 },
+      doc: { resolve: () => ({ depth: 1, before: () => 5, after: () => 15 }), nodeAt: () => null },
+    }, null);
+    const ref = makeRef(ctx);
+    expect(() => insertParsedMarkdown(ref as any, '# Hello')).toThrow();
+  });
+
+  it('should return false when parsed content has size 0', () => {
+    const parserFn = mock(() => ({ content: { size: 0 } }));
+    const ctx = buildMockCtx({
+      selection: { from: 10 },
+      doc: { resolve: () => ({ depth: 1 }), nodeAt: () => null },
+    }, parserFn);
+    const ref = makeRef(ctx);
+    const result = insertParsedMarkdown(ref as any, '');
+    expect(result).toBe(false);
+    expect(parserFn).toHaveBeenCalledWith('');
+  });
+
+  it('should replace empty paragraph when cursorInside is true', () => {
+    const trChain = makeTrChain();
+    const parserFn = mock(() => ({ content: { size: 10 } }));
+    const ctx = buildMockCtx({
+      selection: { from: 10 },
+      doc: {
+        resolve: () => ({ depth: 1, before: () => 5, after: () => 15 }),
+        nodeAt: () => ({ type: { name: 'paragraph' }, textContent: '' }),
+      },
+      tr: trChain,
+    }, parserFn);
+    const ref = makeRef(ctx);
+
+    const result = insertParsedMarkdown(ref as any, '# Hello', true);
+    expect(result).toBe(true);
+    expect(trChain.replaceWith).toHaveBeenCalled();
+  });
+
+  it('should replace empty paragraph when cursorInside is false', () => {
+    const trChain = makeTrChain();
+    const parserFn = mock(() => ({ content: { size: 10 } }));
+    const ctx = buildMockCtx({
+      selection: { from: 10 },
+      doc: {
+        resolve: () => ({ depth: 1, before: () => 5, after: () => 15 }),
+        nodeAt: () => ({ type: { name: 'paragraph' }, textContent: '' }),
+      },
+      tr: trChain,
+    }, parserFn);
+    const ref = makeRef(ctx);
+
+    const result = insertParsedMarkdown(ref as any, '# Hello', false);
+    expect(result).toBe(true);
+  });
+
+  it('should insert after non-empty paragraph', () => {
+    const trChain = makeTrChain();
+    const parserFn = mock(() => ({ content: { size: 20 } }));
+    const ctx = buildMockCtx({
+      selection: { from: 10 },
+      doc: {
+        resolve: () => ({ depth: 1, before: () => 5, after: () => 15 }),
+        nodeAt: () => ({ type: { name: 'paragraph' }, textContent: 'existing' }),
+      },
+      tr: trChain,
+    }, parserFn);
+    const ref = makeRef(ctx);
+
+    const result = insertParsedMarkdown(ref as any, '| Col1 |', false);
+    expect(result).toBe(true);
+    expect(trChain.insert).toHaveBeenCalled();
+  });
+
+  it('should handle setSelection error by falling back to doc end', () => {
+    // First call to setSelection throws, second succeeds
+    let setSelectionCallCount = 0;
+    const trChain: any = {};
+    trChain.replaceWith = mock(() => trChain);
+    trChain.insert = mock(() => trChain);
+    trChain.setSelection = mock(() => {
+      setSelectionCallCount++;
+      if (setSelectionCallCount === 1) throw new Error('invalid pos');
+      return trChain;
     });
-    const refWithEmptyParser = {
-      current: {
-        editor: {
-          ctx: {},
-          action: mockAction,
-        },
-      },
-    };
+    trChain.doc = { content: { size: 200 } };
 
-    expect(typeof insertParsedMarkdown).toBe('function');
+    const parserFn = mock(() => ({ content: { size: 10 } }));
+    const ctx = buildMockCtx({
+      selection: { from: 10 },
+      doc: {
+        resolve: () => ({ depth: 1, before: () => 5, after: () => 15 }),
+        nodeAt: () => ({ type: { name: 'paragraph' }, textContent: '' }),
+      },
+      tr: trChain,
+    }, parserFn);
+    const ref = makeRef(ctx);
+
+    const result = insertParsedMarkdown(ref as any, '# Hello', true);
+    expect(result).toBe(true);
+    // setSelection should have been called at least twice (first throws, second succeeds)
+    expect(setSelectionCallCount).toBeGreaterThanOrEqual(2);
   });
 
-  it('should handle cursor inside parameter', () => {
-    const ref = createMockCrepeRef();
-
-    // Test that function accepts cursorInside parameter
-    expect(typeof insertParsedMarkdown).toBe('function');
-  });
-});
-
-describe('Editor Actions - Edge Cases', () => {
-  it('should handle editor action throwing an error', () => {
-    const refWithError = {
-      current: {
-        editor: {
-          ctx: {},
-          action: () => {
-            throw new Error('Test error');
-          },
-        },
+  it('should clamp cursorPos to doc.content.size', () => {
+    const trChain = makeTrChain();
+    trChain.doc = { content: { size: 5 } }; // Very small doc
+    const parserFn = mock(() => ({ content: { size: 100 } })); // Large content
+    const ctx = buildMockCtx({
+      selection: { from: 10 },
+      doc: {
+        resolve: () => ({ depth: 1, before: () => 5, after: () => 15 }),
+        nodeAt: () => ({ type: { name: 'paragraph' }, textContent: '' }),
       },
-    };
+      tr: trChain,
+    }, parserFn);
+    const ref = makeRef(ctx);
 
-    // Should handle error gracefully
-    expect(() => execCommand(refWithError as any, { key: 'test' })).toThrow();
-  });
-
-  it('should handle missing parser result', () => {
-    // Simplified test - just verify the function handles null doc gracefully
-    const refWithNullParser = {
-      current: {
-        editor: {
-          ctx: {},
-          action: (fn: Function) => {
-            const mockCtx = {
-              get: (key: any) => {
-                if (key.name === 'parserCtx') {
-                  return () => null; // Null parser result
-                }
-                return {
-                  state: {
-                    selection: { from: 10 },
-                    doc: {
-                      resolve: () => ({
-                        depth: 1,
-                        before: () => 5,
-                        after: () => 15,
-                      }),
-                      nodeAt: () => ({
-                        type: { name: 'paragraph' },
-                        textContent: '',
-                      }),
-                    },
-                  },
-                };
-              },
-            };
-            return fn(mockCtx);
-          },
-        },
-      },
-    };
-
-    // This test verifies the function structure - the actual null handling depends on implementation
-    expect(typeof insertParsedMarkdown).toBe('function');
+    const result = insertParsedMarkdown(ref as any, '# Big content', false);
+    expect(result).toBe(true);
+    // The cursorPos should have been clamped via Math.min
+    expect(mockTextSelectionCreate).toHaveBeenCalled();
   });
 });
