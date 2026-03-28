@@ -16,7 +16,7 @@ MarkBun is an open-source, cross-platform markdown editor designed for seamless 
 > Learn Markdown, earn your bread. It's that simple.
 > (Plus, "Markbun" sounds way tastier than "Plaintextbun")
 
-![MarkBun Preview](doc/assets/preview.png)
+<!-- ![MarkBun Preview](docs/assets/preview.png) -->
 
 ## 🚧 Development Status
 
@@ -39,7 +39,7 @@ MarkBun is an open-source, cross-platform markdown editor designed for seamless 
 > - ✅ Settings UI (v0.3.0)
 > - ✅ Multi-monitor support (v0.3.0)
 > - ✅ Three-layer file protection (v0.4.0)
-> - ✅ Export to PNG/HTML/PDF (v0.4.0)
+> - ✅ Export to PNG/HTML (v0.4.0)
 > - ✅ Math equations (v0.4.0)
 > - ⏳ Editor Productivity (v0.5.0)
 >
@@ -69,8 +69,10 @@ When you need them, every UI element can be instantly toggled via the **View men
 - ⚙️ **Settings** - Persistent settings with UI
 - 🖥️ **Multi-Monitor** - Window position saved per display with smart fallback
 - 🛡️ **File Protection** - Atomic write, crash recovery, and version history
-- 📤 **Export** - Export to PNG, HTML, and PDF with Chinese font support
-- ⌨️ **Keyboard Shortcuts** - Vim mode support (planned)
+- 📤 **Export** - Export to PNG and HTML
+- ⌨️ **Keyboard Shortcuts** - Comprehensive shortcuts for formatting and navigation
+- 🔤 **Source Mode** - Toggle between WYSIWYG and source code editing (`Cmd/Ctrl + /`)
+- 🌐 **i18n** - Multi-language support (English, Chinese, Japanese, Korean, etc.)
 
 ## 🚀 Quick Start
 
@@ -95,10 +97,10 @@ bun run dev:hmr
 ### Build
 
 ```bash
-# Build for production
-bun run build
+# Build for canary release
+bun run build:canary
 
-# Build for production release
+# Build for stable release
 bun run build:stable
 ```
 
@@ -113,8 +115,8 @@ When you run `bun run dev:hmr`:
 
 When you run `bun run dev` (without HMR):
 
-1. Electrobun starts and loads from `views://mainview/index.html`
-2. You need to rebuild (`bun run build`) to see changes
+1. Electrobun starts with file watch and loads from `views://mainview/index.html`
+2. You need to rebuild (`bun run build:canary`) to see changes
 
 ## 🏗️ Tech Stack
 
@@ -122,50 +124,50 @@ When you run `bun run dev` (without HMR):
 |------------|---------|
 | [Milkdown](https://milkdown.dev) | WYSIWYG Markdown editor core |
 | [Electrobun](https://electrobun.dev) | Cross-platform desktop framework |
-| [shadcn/ui](https://ui.shadcn.com) | UI component library |
+| [CodeMirror](https://codemirror.net) | Source mode editor |
 | [Bun](https://bun.sh) | JavaScript runtime and bundler |
 | [TypeScript](https://typescriptlang.org) | Type-safe development |
 | [Tailwind CSS](https://tailwindcss.com) | Utility-first styling |
+| [Zod](https://zod.dev) | Settings schema validation |
+| [i18next](https://www.i18next.com) | Internationalization |
 
 ## 📁 Project Structure
 
 ```
 markbun/
 ├── src/
-│   ├── bun/                  
-│   │   ├── index.ts          # Main process (Electrobun/Bun)
+│   ├── bun/                  # Main process (Electrobun/Bun)
+│   │   ├── index.ts          # Main entry point and RPC handlers
 │   │   ├── menu.ts           # Application menus
-│   │   ├── window.ts         # Window management
+│   │   ├── services/         # Backend services (settings, backup, uiState)
 │   │   └── ipc/              # IPC handlers
 │   │
 │   ├── mainview/             # Renderer process (WebView)
 │   │   ├── components/       # React components
-│   │   │   ├── editor/       # Milkdown editor wrapper
-│   │   │   ├── sidebar/      # File explorer
-│   │   │   ├── toolbar/      # Editor toolbar
-│   │   │   └── statusbar/    # Status bar
+│   │   │   ├── editor/       # Milkdown/Crepe editor wrapper
+│   │   │   ├── file-explorer/# File explorer sidebar
+│   │   │   ├── layout/       # Toolbar, StatusBar, TitleBar, Sidebar
+│   │   │   ├── outline/      # Outline navigation
+│   │   │   ├── quick-open/   # Quick Open dialog
+│   │   │   ├── settings/     # Settings dialog
+│   │   │   └── recovery-dialog/ # Crash recovery dialog
 │   │   │
 │   │   ├── hooks/            # Custom React hooks
-│   │   ├── lib/              # Utilities
+│   │   ├── lib/              # Utilities and helpers
+│   │   ├── i18n/             # Internationalization (8 locales)
 │   │   ├── styles/           # Global styles
-│   │   ├── main.tsx        # React entry point
+│   │   ├── main.tsx          # React entry point
 │   │   ├── App.tsx           # Main App component
 │   │   └── index.html        # HTML entry
 │   │
-│   └── shared/               # Shared types and utilities
+│   └── shared/               # Shared types, settings schema, and utilities
 │
-├── doc/                      # Documentation
-│   ├── architecture.md       # Architecture overview
-│   └── assets/               # Documentation assets
-│
-├── resources/                # Static resources
-│   ├── icons/                # App icons
-│   └── themes/               # Editor themes
+├── docs/                     # Documentation
+│   └── architecture.md       # Architecture overview
 │
 ├── electrobun.config.ts      # Electrobun configuration
-├── components.json           # shadcn/ui configuration
-├── vite.config.ts          # Vite configuration
-├── tailwind.config.js      # Tailwind configuration
+├── vite.config.ts            # Vite configuration
+├── tailwind.config.js        # Tailwind configuration
 ├── package.json
 └── README.md
 ```
@@ -190,50 +192,40 @@ MarkBun uses a **chromeless interface** — all toolbars and UI elements are hid
 | Status Bar | `View → Show Status Bar` | Hidden |
 | Sidebar | `View → Show Sidebar` | Hidden (`Cmd/Ctrl + B`) |
 | Dark Mode | `View → Toggle Dark Mode` | `Cmd/Ctrl + Shift + T` |
+| Source Mode | `View → Toggle Source Mode` | `Cmd/Ctrl + /` |
 | Settings | `MarkBun → Preferences` | `Cmd/Ctrl + ,` |
 
-### Markdown Shortcuts
+### Formatting Shortcuts
 
 | Action | Shortcut |
 |--------|----------|
 | Bold | `Cmd/Ctrl + B` |
 | Italic | `Cmd/Ctrl + I` |
-| Code | `` Cmd/Ctrl + ` `` |
-| Heading 1 | `Cmd/Ctrl + 1` |
-| Heading 2 | `Cmd/Ctrl + 2` |
-| Heading 3 | `Cmd/Ctrl + 3` |
-| Bullet List | `Cmd/Ctrl + Shift + 8` |
-| Numbered List | `Cmd/Ctrl + Shift + 7` |
-| Quote | `Cmd/Ctrl + Shift + .` |
+| Inline Code | `Cmd/Ctrl + Shift + C` |
+| Strikethrough | `Cmd/Ctrl + Shift + ~` |
+| Highlight | `Cmd/Ctrl + Shift + H` |
+| Inline Math | `Ctrl + M` |
 | Link | `Cmd/Ctrl + K` |
+| Image | `Cmd/Ctrl + Shift + I` |
 
-### Slash Commands
+### Paragraph Shortcuts
 
-Type `/` anywhere to open the command palette:
-- `/h1` - Insert heading 1
-- `/table` - Insert table
-- `/code` - Insert code block
-- `/math` - Insert math block
-- `/image` - Insert image
+| Action | Shortcut |
+|--------|----------|
+| Heading 1-6 | `Cmd/Ctrl + 1/2/3/4/5/6` |
+| Paragraph | `Cmd/Ctrl + 0` |
+| Increase Heading Level | `Cmd/Ctrl + =` |
+| Decrease Heading Level | `Cmd/Ctrl + -` |
+| Bullet List | `Alt + Cmd/Ctrl + U` |
+| Ordered List | `Alt + Cmd/Ctrl + O` |
+| Task List | `Alt + Cmd/Ctrl + X` |
+| Quote | `Alt + Cmd/Ctrl + Q` |
+| Code Block | `Alt + Cmd/Ctrl + C` |
+| Math Block | `Alt + Cmd/Ctrl + B` |
+| Horizontal Rule | `Alt + Cmd/Ctrl + -` |
+| Table | `Alt + Cmd/Ctrl + T` |
 
 ## 🎨 Customization
-
-### Themes
-
-MarkBun supports custom themes. Place your theme files in `~/.markbun/themes/`:
-
-```css
-/* ~/.markbun/themes/my-theme.css */
-:root {
-  --font-serif: "Georgia", serif;
-  --font-sans: "Inter", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
-  
-  --color-primary: #0066cc;
-  --color-background: #ffffff;
-  --color-text: #1a1a1a;
-}
-```
 
 ### Settings
 
@@ -244,7 +236,8 @@ Settings are stored in `~/.config/markbun/settings.json`:
   "__version": 1,
   "general": {
     "autoSave": true,
-    "autoSaveInterval": 2000
+    "autoSaveInterval": 2000,
+    "language": "en"
   },
   "editor": {
     "fontSize": 15,
@@ -253,6 +246,12 @@ Settings are stored in `~/.config/markbun/settings.json`:
   "appearance": {
     "theme": "system",
     "sidebarWidth": 280
+  },
+  "backup": {
+    "enabled": true,
+    "maxVersions": 20,
+    "retentionDays": 30,
+    "recoveryInterval": 30000
   }
 }
 ```
@@ -289,20 +288,14 @@ MarkBun fully supports multi-monitor setups:
 ### Scripts
 
 ```bash
-bun dev          # Start development server
-bun build        # Build for production
-bun build:all    # Build for all platforms
-bun test         # Run tests once
-bun run test:watch    # Run tests in watch mode
-bun run test:coverage # Run tests with coverage
-bun lint         # Run ESLint
-bun format       # Format code with Prettier
-```
-
-### Adding shadcn Components
-
-```bash
-npx shadcn@latest add button tooltip dialog
+bun run dev            # Start development with file watch
+bun run dev:hmr        # Start development with HMR (recommended)
+bun run build:canary   # Build canary release
+bun run build:stable   # Build stable release
+bun run test           # Run tests once
+bun run test:watch     # Run tests in watch mode
+bun run test:coverage  # Run tests with coverage
+bun run lint           # Run typecheck and tests
 ```
 
 ### Adding Milkdown Plugins
@@ -420,7 +413,6 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 - [x] Three-layer file protection (atomic write, crash recovery, version history)
 - [x] Export to PNG image
 - [x] Export to HTML
-- [x] Export to PDF (with Chinese font support)
 - [x] Math equations (LaTeX inline and block support)
 
 ### v0.5.0 ⏳ Planned
@@ -469,7 +461,7 @@ MarkBun is licensed under the [MIT License](LICENSE).
 
 - [Milkdown](https://milkdown.dev) - The amazing WYSIWYG markdown framework
 - [Electrobun](https://electrobun.dev) - Ultra-fast desktop framework
-- [shadcn/ui](https://ui.shadcn.com) - Beautiful React components
+- [CodeMirror](https://codemirror.net) - Source mode editor
 - [ProseMirror](https://prosemirror.net) - The foundation of Milkdown
 - [Typora](https://typora.io) - Inspiration for the editing experience
 
