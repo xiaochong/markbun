@@ -2,7 +2,7 @@
  * Table Commands 单元测试
  * 测试表格操作相关命令
  */
-import { describe, it, expect, mock } from 'bun:test';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import {
   insertTableRowAbove,
   insertTableRowBelow,
@@ -17,67 +17,183 @@ import {
   deleteTable,
 } from '../../../setup';
 
-// Helper to create a mock ProseMirror state
-const createMockTableState = (overrides: any = {}) => {
-  const defaultTableNode = {
-    type: { name: 'table' },
-    childCount: 3,
-    nodeSize: 100,
-    attrs: {},
-    child: (i: number) => ({
+// ===== Helpers for comprehensive table state mocking =====
+
+const TABLE_POS = 20;
+const ROW_SIZE = 30;
+const CELL_SIZE = 8;
+
+/**
+ * Creates a mock state that works with the real findCurrentCell/findTableNode
+ * Position layout:
+ *   Table starts at TABLE_POS (20)
+ *   Row i starts at: TABLE_POS + 1 + i * ROW_SIZE
+ *   Cell (r,c) starts at: rowStart[r] + 1 + c * CELL_SIZE
+ */
+function createTableMock(options: {
+  rowCount?: number;
+  colCount?: number;
+  currentRow?: number;
+  currentCol?: number;
+} = {}) {
+  const rowCount = options.rowCount ?? 3;
+  const colCount = options.colCount ?? 3;
+  const currentRow = options.currentRow ?? 1;
+  const currentCol = options.currentCol ?? 1;
+
+  // Build cell nodes
+  const cellNodes: any[][] = [];
+  for (let r = 0; r < rowCount; r++) {
+    const row: any[] = [];
+    for (let c = 0; c < colCount; c++) {
+      row.push({
+        type: { name: r === 0 ? 'table_header' : 'table_cell' },
+        nodeSize: CELL_SIZE,
+      });
+    }
+    cellNodes.push(row);
+  }
+
+  // Build row nodes
+  const rowNodes: any[] = [];
+  for (let r = 0; r < rowCount; r++) {
+    const capturedR = r;
+    rowNodes.push({
       type: { name: 'table_row' },
-      childCount: 3,
-      nodeSize: 30,
-      child: (j: number) => ({
-        type: { name: j === 0 ? 'table_header' : 'table_cell' },
-        nodeSize: 8,
-      }),
-    }),
+      childCount: colCount,
+      nodeSize: ROW_SIZE,
+      attrs: {},
+      child: (c: number) => cellNodes[capturedR][c],
+    });
+  }
+
+  // Build table node
+  const tableNode = {
+    type: {
+      name: 'table',
+      create: (attrs: any, children: any) => ({ type: 'table', attrs, children }),
+    },
+    childCount: rowCount,
+    nodeSize: rowCount * ROW_SIZE + 2,
+    attrs: {},
+    child: (i: number) => rowNodes[i],
   };
 
-  return {
+  // Calculate row start positions
+  const rowStartPositions: number[] = [];
+  let pos = TABLE_POS + 1;
+  for (let r = 0; r < rowCount; r++) {
+    rowStartPositions.push(pos);
+    pos += ROW_SIZE;
+  }
+
+  // Calculate cell start positions
+  const cellStartPositions: number[][] = [];
+  for (let r = 0; r < rowCount; r++) {
+    const rowCells: number[] = [];
+    let cpos = rowStartPositions[r] + 1;
+    for (let c = 0; c < colCount; c++) {
+      rowCells.push(cpos);
+      cpos += CELL_SIZE;
+    }
+    cellStartPositions.push(rowCells);
+  }
+
+  const rowStart = rowStartPositions[currentRow];
+  const cellStart = cellStartPositions[currentRow][currentCol];
+
+  // $pos mock — depth 4: doc(0) → table(1) → row(2) → cell(3)
+  const $pos = {
+    depth: 4,
+    before: (d: number) => {
+      if (d === 1) return TABLE_POS;
+      if (d === 2) return rowStart;
+      if (d === 3) return cellStart;
+      return 0;
+    },
+    start: (d: number) => {
+      if (d === 3) return cellStart + 1;
+      if (d === 2) return rowStart + 1;
+      if (d === 1) return TABLE_POS + 1;
+      return 0;
+    },
+    node: (d: number) => {
+      if (d === 1) return tableNode;
+      if (d === 2) return rowNodes[currentRow];
+      if (d === 3) return cellNodes[currentRow][currentCol];
+      return { type: { name: 'doc' } };
+    },
+    after: (d: number) => {
+      if (d === 1) return TABLE_POS + tableNode.nodeSize;
+      if (d === 2) return rowStart + ROW_SIZE;
+      if (d === 3) return cellStart + CELL_SIZE;
+      return 0;
+    },
+  };
+
+  // Transaction chain mock
+  const trChain: any = {};
+  trChain.insert = mock(() => trChain);
+  trChain.replaceWith = mock(() => trChain);
+  trChain.delete = mock(() => trChain);
+  trChain.setSelection = mock(() => trChain);
+  trChain.doc = { content: { size: 200 } };
+  trChain.mapping = { map: (p: number) => p };
+
+  const mockDispatch = mock(() => {});
+  const mockFocus = mock(() => {});
+
+  const state = {
     selection: {
-      from: 50,
-      $from: {
-        depth: 3,
-        before: (d: number) => ({ 0: 45, 1: 42, 2: 40, 3: 20 }[d] || 0),
-        start: (d: number) => ({ 0: 46, 1: 43, 2: 41, 3: 21 }[d] || 0),
-        node: (d: number) => {
-          const nodes = [
-            { type: { name: 'table_cell' } },
-            { type: { name: 'table_row' } },
-            defaultTableNode,
-            { type: { name: 'doc' } },
-          ];
-          return nodes[d] || null;
-        },
-      },
+      from: cellStart + 2,
+      to: cellStart + 2,
+      $from: $pos,
+      $to: $pos,
     },
     doc: {
-      resolve: () => ({
-        depth: 3,
-        before: () => 40,
-        start: () => 41,
-        node: () => defaultTableNode,
-      }),
+      resolve: () => $pos,
       nodeAt: () => null,
     },
     schema: {
       nodes: {
-        table_row: { create: (attrs: any, children: any) => ({ type: 'table_row', children }) },
-        table_cell: { create: (attrs: any, content: any) => ({ type: 'table_cell', content }) },
-        table_header: { create: (attrs: any, content: any) => ({ type: 'table_header', content }) },
-        paragraph: { create: () => ({ type: 'paragraph' }) },
+        table_row: {
+          type: { name: 'table_row' },
+          create: (attrs: any, children: any) => ({ type: 'table_row', attrs, children }),
+        },
+        table_cell: {
+          type: { name: 'table_cell' },
+          create: (attrs: any, content: any) => ({ type: 'table_cell', attrs, content }),
+        },
+        table_header: {
+          type: { name: 'table_header' },
+          create: (attrs: any, content: any) => ({ type: 'table_header', attrs, content }),
+        },
+        paragraph: {
+          type: { name: 'paragraph' },
+          create: () => ({ type: 'paragraph' }),
+        },
       },
     },
-    tr: {
-      insert: () => ({ doc: {} }),
-      replaceWith: () => ({ doc: {} }),
-      delete: () => ({ doc: {} }),
-    },
-    ...overrides,
+    tr: trChain,
   };
-};
+
+  const view = { state, dispatch: mockDispatch, focus: mockFocus };
+
+  const createRef = () => ({
+    current: {
+      editor: {
+        ctx: {},
+        action: mock((fn: Function) => fn({ get: () => view })),
+      },
+    },
+  });
+
+  return {
+    state, tableNode, rowNodes, cellNodes, $pos, trChain,
+    mockDispatch, mockFocus, view, createRef,
+    rowStartPositions, cellStartPositions,
+  };
+}
 
 const createMockCrepeRef = (actionResult: any = true) => ({
   current: {
@@ -88,220 +204,296 @@ const createMockCrepeRef = (actionResult: any = true) => ({
   },
 });
 
+// ===== Null/undefined guard tests =====
+
 describe('insertTableRowAbove', () => {
   it('should return false when editor is not initialized', () => {
-    const emptyRef = { current: null };
-    expect(insertTableRowAbove(emptyRef as any)).toBe(false);
+    expect(insertTableRowAbove({ current: null } as any)).toBe(false);
   });
 
   it('should return false when editor has no ctx', () => {
-    const ref = { current: { editor: {} } };
-    expect(insertTableRowAbove(ref as any)).toBe(false);
+    expect(insertTableRowAbove({ current: { editor: {} } } as any)).toBe(false);
   });
 
-  it('should insert row above current row', () => {
-    const mockDispatch = mock(() => {});
-    const mockFocus = mock(() => {});
-    const mockInsert = mock(() => ({ doc: {} }));
-
-    const mockAction = mock((fn: Function) => {
-      const mockState = {
-        ...createMockTableState(),
-        tr: {
-          insert: mockInsert,
-        },
-      };
-      const mockCtx = {
-        get: () => ({
-          state: mockState,
-          dispatch: mockDispatch,
-          focus: mockFocus,
-        }),
-      };
-      return fn(mockCtx);
-    });
-
+  it('should return false when findCurrentCell returns null (not in table)', () => {
     const ref = {
       current: {
         editor: {
           ctx: {},
-          action: mockAction,
+          action: mock((fn: Function) => {
+            // Return state with no table structure → findCurrentCell returns null
+            const state = {
+              selection: { from: 5, to: 5, $from: { depth: 0, node: () => ({ type: { name: 'doc' } }) } },
+              doc: { resolve: () => ({ depth: 0, node: () => ({ type: { name: 'doc' } }) }) },
+              schema: { nodes: {} },
+              tr: { insert: mock(() => ({})) },
+            };
+            return fn({ get: () => ({ state, dispatch: mock(() => {}), focus: mock(() => {}) }) });
+          }),
         },
       },
     };
+    expect(insertTableRowAbove(ref as any)).toBe(false);
+  });
 
+  it('should insert row above row 1 with table_cell type', () => {
+    const m = createTableMock({ currentRow: 1, currentCol: 1 });
+    const ref = m.createRef();
     const result = insertTableRowAbove(ref as any);
-    expect(typeof result).toBe('boolean');
+    expect(result).toBe(true);
+    expect(m.mockDispatch).toHaveBeenCalled();
+    expect(m.mockFocus).toHaveBeenCalled();
+  });
+
+  it('should insert row above row 0 with table_header type', () => {
+    const m = createTableMock({ currentRow: 0, currentCol: 0 });
+    const ref = m.createRef();
+    const result = insertTableRowAbove(ref as any);
+    expect(result).toBe(true);
+    expect(m.trChain.insert).toHaveBeenCalled();
   });
 });
 
 describe('insertTableRowBelow', () => {
   it('should return false when editor is not initialized', () => {
-    const emptyRef = { current: null };
-    expect(insertTableRowBelow(emptyRef as any)).toBe(false);
+    expect(insertTableRowBelow({ current: null } as any)).toBe(false);
   });
 
   it('should return false when editor has no ctx', () => {
-    const ref = { current: { editor: {} } };
-    expect(insertTableRowBelow(ref as any)).toBe(false);
+    expect(insertTableRowBelow({ current: { editor: {} } } as any)).toBe(false);
   });
 
   it('should insert row below current row', () => {
-    expect(typeof insertTableRowBelow).toBe('function');
+    const m = createTableMock({ currentRow: 1, currentCol: 1 });
+    const ref = m.createRef();
+    const result = insertTableRowBelow(ref as any);
+    expect(result).toBe(true);
+    expect(m.mockDispatch).toHaveBeenCalled();
+    expect(m.trChain.insert).toHaveBeenCalled();
+  });
+
+  it('should insert row below last row', () => {
+    const m = createTableMock({ rowCount: 3, currentRow: 2, currentCol: 0 });
+    const ref = m.createRef();
+    expect(insertTableRowBelow(ref as any)).toBe(true);
   });
 });
 
 describe('insertTableColumnLeft', () => {
   it('should return false when editor is not initialized', () => {
-    const emptyRef = { current: null };
-    expect(insertTableColumnLeft(emptyRef as any)).toBe(false);
+    expect(insertTableColumnLeft({ current: null } as any)).toBe(false);
   });
 
-  it('should insert column to the left', () => {
-    expect(typeof insertTableColumnLeft).toBe('function');
+  it('should insert column to the left of current cell', () => {
+    const m = createTableMock({ currentRow: 1, currentCol: 1 });
+    const ref = m.createRef();
+    expect(insertTableColumnLeft(ref as any)).toBe(true);
+    expect(m.mockDispatch).toHaveBeenCalled();
+    expect(m.trChain.replaceWith).toHaveBeenCalled();
+  });
+
+  it('should insert header column when in row 0', () => {
+    const m = createTableMock({ currentRow: 0, currentCol: 1 });
+    const ref = m.createRef();
+    expect(insertTableColumnLeft(ref as any)).toBe(true);
   });
 });
 
 describe('insertTableColumnRight', () => {
   it('should return false when editor is not initialized', () => {
-    const emptyRef = { current: null };
-    expect(insertTableColumnRight(emptyRef as any)).toBe(false);
+    expect(insertTableColumnRight({ current: null } as any)).toBe(false);
   });
 
-  it('should insert column to the right', () => {
-    expect(typeof insertTableColumnRight).toBe('function');
+  it('should insert column to the right of current cell', () => {
+    const m = createTableMock({ currentRow: 1, currentCol: 1 });
+    const ref = m.createRef();
+    expect(insertTableColumnRight(ref as any)).toBe(true);
+    expect(m.mockDispatch).toHaveBeenCalled();
+    expect(m.trChain.replaceWith).toHaveBeenCalled();
+  });
+
+  it('should insert column right of last column', () => {
+    const m = createTableMock({ colCount: 3, currentCol: 2 });
+    const ref = m.createRef();
+    expect(insertTableColumnRight(ref as any)).toBe(true);
   });
 });
 
 describe('moveTableRowUp', () => {
   it('should return false when editor is not initialized', () => {
-    const emptyRef = { current: null };
-    expect(moveTableRowUp(emptyRef as any)).toBe(false);
+    expect(moveTableRowUp({ current: null } as any)).toBe(false);
   });
 
-  it('should return false when at first row', () => {
-    // Row index 0 should return false
-    expect(typeof moveTableRowUp).toBe('function');
+  it('should return false when at first row (row 0)', () => {
+    const m = createTableMock({ currentRow: 0, currentCol: 0 });
+    const ref = m.createRef();
+    expect(moveTableRowUp(ref as any)).toBe(false);
   });
 
   it('should swap row with previous row', () => {
-    expect(typeof moveTableRowUp).toBe('function');
+    const m = createTableMock({ currentRow: 1, currentCol: 1 });
+    const ref = m.createRef();
+    expect(moveTableRowUp(ref as any)).toBe(true);
+    expect(m.mockDispatch).toHaveBeenCalled();
+    expect(m.trChain.replaceWith).toHaveBeenCalled();
   });
 });
 
 describe('moveTableRowDown', () => {
   it('should return false when editor is not initialized', () => {
-    const emptyRef = { current: null };
-    expect(moveTableRowDown(emptyRef as any)).toBe(false);
+    expect(moveTableRowDown({ current: null } as any)).toBe(false);
   });
 
   it('should return false when at last row', () => {
-    expect(typeof moveTableRowDown).toBe('function');
+    const m = createTableMock({ rowCount: 3, currentRow: 2, currentCol: 0 });
+    const ref = m.createRef();
+    expect(moveTableRowDown(ref as any)).toBe(false);
   });
 
   it('should swap row with next row', () => {
-    expect(typeof moveTableRowDown).toBe('function');
+    const m = createTableMock({ currentRow: 0, currentCol: 0 });
+    const ref = m.createRef();
+    expect(moveTableRowDown(ref as any)).toBe(true);
+    expect(m.mockDispatch).toHaveBeenCalled();
   });
 });
 
 describe('moveTableColumnLeft', () => {
   it('should return false when editor is not initialized', () => {
-    const emptyRef = { current: null };
-    expect(moveTableColumnLeft(emptyRef as any)).toBe(false);
+    expect(moveTableColumnLeft({ current: null } as any)).toBe(false);
   });
 
-  it('should return false when at first column', () => {
-    expect(typeof moveTableColumnLeft).toBe('function');
+  it('should return false when at first column (col 0)', () => {
+    const m = createTableMock({ currentRow: 1, currentCol: 0 });
+    const ref = m.createRef();
+    expect(moveTableColumnLeft(ref as any)).toBe(false);
+  });
+
+  it('should swap column with left neighbor', () => {
+    const m = createTableMock({ currentRow: 1, currentCol: 1 });
+    const ref = m.createRef();
+    expect(moveTableColumnLeft(ref as any)).toBe(true);
+    expect(m.trChain.replaceWith).toHaveBeenCalled();
   });
 });
 
 describe('moveTableColumnRight', () => {
   it('should return false when editor is not initialized', () => {
-    const emptyRef = { current: null };
-    expect(moveTableColumnRight(emptyRef as any)).toBe(false);
+    expect(moveTableColumnRight({ current: null } as any)).toBe(false);
   });
 
   it('should return false when at last column', () => {
-    expect(typeof moveTableColumnRight).toBe('function');
+    const m = createTableMock({ colCount: 3, currentRow: 1, currentCol: 2 });
+    const ref = m.createRef();
+    expect(moveTableColumnRight(ref as any)).toBe(false);
+  });
+
+  it('should swap column with right neighbor', () => {
+    const m = createTableMock({ currentRow: 1, currentCol: 0 });
+    const ref = m.createRef();
+    expect(moveTableColumnRight(ref as any)).toBe(true);
+    expect(m.trChain.replaceWith).toHaveBeenCalled();
   });
 });
 
 describe('deleteTableRow', () => {
   it('should return false when editor is not initialized', () => {
-    const emptyRef = { current: null };
-    expect(deleteTableRow(emptyRef as any)).toBe(false);
+    expect(deleteTableRow({ current: null } as any)).toBe(false);
   });
 
-  it('should return false when not in a table cell', () => {
-    const mockAction = mock((fn: Function) => {
-      const mockCtx = {
-        get: () => ({
-          state: {
-            selection: {
-              from: 10,
-              $from: {
-                depth: 1,
-                node: () => ({ type: { name: 'paragraph' } }),
-              },
-            },
-            doc: {
-              resolve: () => mockCtx.get().state.selection.$from,
-            },
-          },
-        }),
-      };
-      return fn(mockCtx);
-    });
-
+  it('should return false when not in a table', () => {
     const ref = {
       current: {
         editor: {
           ctx: {},
-          action: mockAction,
+          action: mock((fn: Function) => {
+            const state = {
+              selection: {
+                from: 10, to: 10,
+                $from: { depth: 1, node: () => ({ type: { name: 'paragraph' } }) },
+              },
+              doc: { resolve: () => ({ depth: 1, node: () => ({ type: { name: 'paragraph' } }) }) },
+              schema: { nodes: {} },
+              tr: { delete: mock(() => ({})) },
+            };
+            return fn({ get: () => ({ state, dispatch: mock(() => {}), focus: mock(() => {}) }) });
+          }),
         },
       },
     };
-
-    const result = deleteTableRow(ref as any);
-    expect(typeof result).toBe('boolean');
+    expect(deleteTableRow(ref as any)).toBe(false);
   });
 
   it('should delete entire table when only one row remains', () => {
-    expect(typeof deleteTableRow).toBe('function');
+    const m = createTableMock({ rowCount: 1, colCount: 2, currentRow: 0, currentCol: 0 });
+    const ref = m.createRef();
+    expect(deleteTableRow(ref as any)).toBe(true);
+    expect(m.trChain.delete).toHaveBeenCalled();
   });
 
-  it('should delete current row', () => {
-    expect(typeof deleteTableRow).toBe('function');
+  it('should delete current row when multiple rows exist', () => {
+    const m = createTableMock({ rowCount: 3, currentRow: 1, currentCol: 1 });
+    const ref = m.createRef();
+    expect(deleteTableRow(ref as any)).toBe(true);
+    expect(m.mockDispatch).toHaveBeenCalled();
   });
 });
 
 describe('deleteTableColumn', () => {
   it('should return false when editor is not initialized', () => {
-    const emptyRef = { current: null };
-    expect(deleteTableColumn(emptyRef as any)).toBe(false);
+    expect(deleteTableColumn({ current: null } as any)).toBe(false);
   });
 
   it('should delete entire table when only one column remains', () => {
-    expect(typeof deleteTableColumn).toBe('function');
+    const m = createTableMock({ rowCount: 2, colCount: 1, currentRow: 1, currentCol: 0 });
+    const ref = m.createRef();
+    expect(deleteTableColumn(ref as any)).toBe(true);
+    expect(m.trChain.delete).toHaveBeenCalled();
   });
 
-  it('should delete current column', () => {
-    expect(typeof deleteTableColumn).toBe('function');
+  it('should delete current column when multiple columns exist', () => {
+    const m = createTableMock({ rowCount: 3, colCount: 3, currentRow: 1, currentCol: 1 });
+    const ref = m.createRef();
+    expect(deleteTableColumn(ref as any)).toBe(true);
+    expect(m.trChain.replaceWith).toHaveBeenCalled();
+    expect(m.mockDispatch).toHaveBeenCalled();
   });
 });
 
 describe('deleteTable', () => {
   it('should return false when editor is not initialized', () => {
-    const emptyRef = { current: null };
-    expect(deleteTable(emptyRef as any)).toBe(false);
+    expect(deleteTable({ current: null } as any)).toBe(false);
   });
 
   it('should return false when editor has no ctx', () => {
-    const ref = { current: { editor: {} } };
+    expect(deleteTable({ current: { editor: {} } } as any)).toBe(false);
+  });
+
+  it('should return false when not in a table', () => {
+    const ref = {
+      current: {
+        editor: {
+          ctx: {},
+          action: mock((fn: Function) => {
+            const state = {
+              selection: { from: 5, to: 5, $from: { depth: 0, node: () => ({ type: { name: 'doc' } }) } },
+              doc: { resolve: () => ({ depth: 0, node: () => ({ type: { name: 'doc' } }) }) },
+              schema: { nodes: {} },
+              tr: { delete: mock(() => ({})) },
+            };
+            return fn({ get: () => ({ state, dispatch: mock(() => {}), focus: mock(() => {}) }) });
+          }),
+        },
+      },
+    };
     expect(deleteTable(ref as any)).toBe(false);
   });
 
-  it('should delete entire table', () => {
-    expect(typeof deleteTable).toBe('function');
+  it('should delete entire table when cursor is in table', () => {
+    const m = createTableMock({ currentRow: 1, currentCol: 1 });
+    const ref = m.createRef();
+    expect(deleteTable(ref as any)).toBe(true);
+    expect(m.trChain.delete).toHaveBeenCalled();
+    expect(m.mockFocus).toHaveBeenCalled();
   });
 });
