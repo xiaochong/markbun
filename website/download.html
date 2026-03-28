@@ -251,7 +251,10 @@
                             <div class="flex-shrink-0 w-10 h-10 rounded-full bg-surface-container flex items-center justify-center border border-outline-variant/15 font-bold text-primary">3</div>
                             <div>
                                 <h4 class="text-on-surface font-semibold mb-2" data-i18n="dl_step3_title">Security Permissions</h4>
-                                <p class="text-on-surface-variant text-sm leading-relaxed" data-i18n="dl_step3_desc">If prompted, allow the application to run. MarkBun is code-signed for Windows and macOS.</p>
+                                <p class="text-on-surface-variant text-sm leading-relaxed" data-i18n="dl_step3_desc">On macOS, if you see a "damaged" warning, run the command below in Terminal. On Windows, click "More info" → "Run anyway".</p>
+                                <div class="mt-3 bg-surface-container-lowest rounded-lg p-3 border border-outline-variant/10 font-mono text-sm">
+                                    <span class="text-primary">$</span> <span class="text-on-surface">xattr -cr /Applications/MarkBun.app</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -312,6 +315,11 @@
                 <div class="bg-surface-container rounded-xl p-6 border border-outline-variant/15">
                     <h4 class="text-on-surface font-bold mb-2" data-i18n="dl_faq3_q">Current Version Status</h4>
                     <p class="text-on-surface-variant text-sm" data-i18n="dl_faq3_a">Preview release. macOS is fully supported. Windows builds are experimental and may have issues. Linux builds are not yet tested.</p>
+                </div>
+                <!-- FAQ 4 -->
+                <div class="bg-surface-container rounded-xl p-6 border border-outline-variant/15">
+                    <h4 class="text-on-surface font-bold mb-2" data-i18n="dl_faq4_q">macOS says "MarkBun is damaged"</h4>
+                    <p class="text-on-surface-variant text-sm" data-i18n="dl_faq4_a">MarkBun is not yet code-signed, so macOS Gatekeeper blocks it. Open Terminal and run: xattr -cr /Applications/MarkBun.app — then launch the app again.</p>
                 </div>
             </div>
         </section>

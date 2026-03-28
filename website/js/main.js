@@ -170,7 +170,7 @@ const T = {
     dl_step2_title:     "Run the Installer",
     dl_step2_desc:      "On macOS, drag MarkBun to your Applications folder. On Windows, double-click the .exe file.",
     dl_step3_title:     "Security Permissions",
-    dl_step3_desc:      "If prompted, allow the application to run. MarkBun is code-signed for Windows and macOS.",
+    dl_step3_desc:      "On macOS, if you see a \"damaged\" warning, run the command below in Terminal. On Windows, click \"More info\" → \"Run anyway\".",
 
     dl_src_title:       "Build from Source",
     dl_src_desc:        "Want to customize MarkBun? Build it directly using Bun runtime.",
@@ -185,6 +185,8 @@ const T = {
     dl_faq2_a:          "Absolutely. All binaries are built directly from the public GitHub repository. We use automated CI/CD pipelines to ensure integrity and security.",
     dl_faq3_q:          "Current Version Status?",
     dl_faq3_a:          "Preview release. MacOS is fully supported. Windows builds are experimental and may have issues. Linux builds are not yet tested.",
+    dl_faq4_q:          "macOS says \"MarkBun is damaged\"",
+    dl_faq4_a:          "MarkBun is not yet code-signed, so macOS Gatekeeper blocks it. Open Terminal and run: xattr -cr /Applications/MarkBun.app — then launch the app again.",
 
     dl_community_title: "Stay in the loop",
     dl_community_desc:  "Join our developer community to get notified about new features, security patches, and performance boosts.",
@@ -410,7 +412,7 @@ const T = {
     dl_step2_title:     "运行安装程序",
     dl_step2_desc:      "在 macOS 上，将 MarkBun 拖入「应用程序」文件夹；在 Windows 上，双击 .exe 文件。",
     dl_step3_title:     "安全权限",
-    dl_step3_desc:      "如有提示，请允许应用程序运行。MarkBun 已为 Windows 和 macOS 进行代码签名。",
+    dl_step3_desc:      "在 macOS 上，如果提示「已损坏」，请在终端执行下方命令。在 Windows 上，点击「更多信息」→「仍要运行」。",
 
     dl_src_title:       "从源码构建",
     dl_src_desc:        "想要自定义 MarkBun？使用 Bun 运行时直接构建。",
@@ -425,6 +427,8 @@ const T = {
     dl_faq2_a:          "完全安全。所有二进制文件直接从公开的 GitHub 仓库构建，使用自动化 CI/CD 流程确保完整性和安全性。",
     dl_faq3_q:          "当前版本状态？",
     dl_faq3_a:          "预览版。MacOS 完全可用，Windows 版本可能存在问题，Linux 版本尚未测试。",
+    dl_faq4_q:          "macOS 提示「MarkBun 已损坏」",
+    dl_faq4_a:          "MarkBun 尚未进行代码签名，macOS Gatekeeper 会阻止运行。打开终端执行：xattr -cr /Applications/MarkBun.app，然后重新启动应用即可。",
 
     dl_community_title: "关注最新动态",
     dl_community_desc:  "加入我们的开发者社区，获取新功能、安全补丁和性能提升的通知。",

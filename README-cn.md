@@ -10,6 +10,10 @@
 
 MarkBun 是一款开源、跨平台的 Markdown 编辑器，专为流畅写作而设计。与 Typora 类似，它提供无干扰的所见即所得编辑体验——Markdown 语法在输入后自动隐藏，呈现精美的格式化内容。
 
+<div align="center">
+  <img src="docs/assets/logo.svg" alt="MarkBun Logo" width="200">
+</div>
+
 **Mark**（来自 Markdown）+ **Bun**（来自 Electrobun）= MarkBun
 
 > 🍞 **MarkBun 这个名字怎么来的？**
@@ -99,6 +103,14 @@ bun run dev
 
 # 开发模式（带 HMR，推荐）
 bun run dev:hmr
+```
+
+### macOS 注意事项
+
+MarkBun 尚未进行代码签名，macOS Gatekeeper 可能会提示"已损坏，无法打开"。安装后请在终端执行：
+
+```bash
+xattr -cr /Applications/MarkBun.app
 ```
 
 ### 构建
