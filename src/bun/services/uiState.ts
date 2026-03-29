@@ -60,10 +60,33 @@ export async function loadUIState(): Promise<UIState> {
     const data = await readFile(UI_STATE_PATH, 'utf-8');
     const parsed = JSON.parse(data) as Partial<UIState>;
 
+    // Validate and sanitize window dimensions
+    const MIN_WIDTH = 800;
+    const MIN_HEIGHT = 600;
+    const MAX_DIMENSION = 10000;
+
+    const sanitized: Partial<UIState> = {
+      ...parsed,
+    };
+
+    // Sanitize window dimensions
+    if (parsed.windowWidth !== undefined && (parsed.windowWidth < MIN_WIDTH || parsed.windowWidth > MAX_DIMENSION)) {
+      sanitized.windowWidth = defaultUIState.windowWidth;
+    }
+    if (parsed.windowHeight !== undefined && (parsed.windowHeight < MIN_HEIGHT || parsed.windowHeight > MAX_DIMENSION)) {
+      sanitized.windowHeight = defaultUIState.windowHeight;
+    }
+    if (parsed.windowX !== undefined && (parsed.windowX < -MAX_DIMENSION || parsed.windowX > MAX_DIMENSION)) {
+      sanitized.windowX = defaultUIState.windowX;
+    }
+    if (parsed.windowY !== undefined && (parsed.windowY < -MAX_DIMENSION || parsed.windowY > MAX_DIMENSION)) {
+      sanitized.windowY = defaultUIState.windowY;
+    }
+
     // Merge with defaults to ensure all fields exist
     return {
       ...defaultUIState,
-      ...parsed,
+      ...sanitized,
     };
   } catch (error) {
     // File doesn't exist or is invalid, return defaults

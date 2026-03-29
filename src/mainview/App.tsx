@@ -39,7 +39,7 @@ import {
   restoreOriginalImagePaths,
   getDirectoryPath,
 } from './lib/image';
-import type { FileNode, AppSettings, UIState, RecoveryInfo, MenuConfig } from '@/shared/types';
+import type { FileNode, AppSettings, UIState, RecoveryInfo, MenuConfig, MenuItemConfig } from '@/shared/types';
 import { AppMenuBar } from './components/menu';
 import type { AppMenuState } from './components/menu';
 
@@ -105,21 +105,25 @@ function App() {
     if (!isWindows) return;
 
     const loadMenuConfig = async () => {
-      const result = await electrobun.getMenuConfig() as { success: boolean; config?: MenuConfig[] };
+      // Backend uses ApplicationMenuItemConfig which stores children in `submenu`
+      const result = await electrobun.getMenuConfig() as { success: boolean; config?: Array<Record<string, unknown>> };
       if (result.success && result.config) {
-        // Transform MenuItemConfig to MenuConfig format
-        const transformed = result.config.map(menu => ({
-          label: menu.label,
-          items: menu.items?.map(item => ({
-            label: item.label,
-            action: item.action,
-            accelerator: item.accelerator,
-            checked: item.checked,
+        const transformItems = (items: Array<Record<string, unknown>> | undefined): MenuItemConfig[] => {
+          if (!items) return [];
+          return items.map(item => ({
+            label: item.label as string | undefined,
+            action: item.action as string | undefined,
+            accelerator: item.accelerator as string | undefined,
+            checked: item.checked as boolean | undefined,
             type: item.type === 'separator' ? 'separator' as const : undefined,
-            submenu: item.submenu,
-          })) || [],
+            submenu: transformItems(item.submenu as Array<Record<string, unknown>> | undefined),
+          }));
+        };
+        const transformed = result.config.map(menu => ({
+          label: menu.label as string,
+          items: transformItems(menu.submenu as Array<Record<string, unknown>> | undefined),
         }));
-        setMenuConfig(transformed);
+        setMenuConfig(transformed as MenuConfig[]);
       }
     };
     void loadMenuConfig();
