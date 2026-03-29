@@ -39,7 +39,7 @@ import {
   restoreOriginalImagePaths,
   getDirectoryPath,
 } from './lib/image';
-import type { FileNode, AppSettings, UIState, RecoveryInfo, MenuConfig } from '@/shared/types';
+import type { FileNode, AppSettings, UIState, RecoveryInfo, MenuConfig, MenuItemConfig } from '@/shared/types';
 import { AppMenuBar } from './components/menu';
 import type { AppMenuState } from './components/menu';
 
@@ -100,30 +100,34 @@ function App() {
     sourceMode,
   }), [sidebar.isOpen, showTitleBar, showToolbar, showStatusBar, sourceMode]);
 
-  // Load menu config on mount (Windows only)
-  useEffect(() => {
+  // Load menu config from backend (Windows only)
+  const loadMenuConfig = useCallback(async () => {
     if (!isWindows) return;
-
-    const loadMenuConfig = async () => {
-      const result = await electrobun.getMenuConfig() as { success: boolean; config?: MenuConfig[] };
-      if (result.success && result.config) {
-        // Transform MenuItemConfig to MenuConfig format
-        const transformed = result.config.map(menu => ({
-          label: menu.label,
-          items: menu.items?.map(item => ({
-            label: item.label,
-            action: item.action,
-            accelerator: item.accelerator,
-            checked: item.checked,
-            type: item.type === 'separator' ? 'separator' as const : undefined,
-            submenu: item.submenu,
-          })) || [],
+    const result = await electrobun.getMenuConfig() as { success: boolean; config?: Array<Record<string, unknown>> };
+    if (result.success && result.config) {
+      const transformItems = (items: Array<Record<string, unknown>> | undefined): MenuItemConfig[] => {
+        if (!items) return [];
+        return items.map(item => ({
+          label: item.label as string | undefined,
+          action: item.action as string | undefined,
+          accelerator: item.accelerator as string | undefined,
+          checked: item.checked as boolean | undefined,
+          type: item.type === 'separator' ? 'separator' as const : undefined,
+          submenu: transformItems(item.submenu as Array<Record<string, unknown>> | undefined),
         }));
-        setMenuConfig(transformed);
-      }
-    };
-    void loadMenuConfig();
+      };
+      const transformed = result.config.map(menu => ({
+        label: menu.label as string,
+        items: transformItems(menu.submenu as Array<Record<string, unknown>> | undefined),
+      }));
+      setMenuConfig(transformed as MenuConfig[]);
+    }
   }, [isWindows]);
+
+  // Load menu config on mount
+  useEffect(() => {
+    void loadMenuConfig();
+  }, [loadMenuConfig]);
 
   // Handle menu action from Windows frontend menu
   const handleMenuAction = useCallback((action: string) => {
@@ -941,14 +945,17 @@ function App() {
     setSettings(newSettings);
     // Notify main process about language change (for menu rebuild)
     if (newSettings.language !== settings?.language) {
-      void electrobun.setLanguage(newSettings.language);
+      const result = await electrobun.setLanguage(newSettings.language);
+      if ((result as { success?: boolean })?.success) {
+        void loadMenuConfig();
+      }
     }
     // The RPC expects { settings: params }, but our lib wraps it
     const result = await electrobun.saveSettings(newSettings) as { success: boolean; error?: string };
     if (!result.success) {
       console.error('Failed to save settings:', result.error);
     }
-  }, [settings?.language]);
+  }, [settings?.language, loadMenuConfig]);
 
   // Listen for visibility toggle events
   useEffect(() => {

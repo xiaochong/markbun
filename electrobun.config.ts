@@ -28,7 +28,7 @@ export default {
 			icon: "icon.iconset/icon_256x256.png",
 		},
 		win: {
-			bundleCEF: !isBuild,
+			bundleCEF: false,
 			icon: "icon.iconset/icon_256x256.png",
 		},
 	},

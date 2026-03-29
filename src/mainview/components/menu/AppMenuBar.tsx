@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 import type { MenuItemConfig, MenuConfig, AppMenuState } from './types';
 
@@ -11,13 +12,18 @@ interface AppMenuBarProps {
 export function AppMenuBar({ menuConfig, menuState, onAction }: AppMenuBarProps) {
   const [activeMenuIndex, setActiveMenuIndex] = useState<number | null>(null);
   const menuBarRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null);
 
-  // Close menu when clicking outside
+  // Close menu when clicking outside (check both menu bar and dropdown portal)
   useEffect(() => {
     if (activeMenuIndex === null) return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuBarRef.current && !menuBarRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const isInMenuBar = menuBarRef.current?.contains(target);
+      const isInDropdown = dropdownRef.current?.contains(target);
+      if (!isInMenuBar && !isInDropdown) {
         setActiveMenuIndex(null);
       }
     };
@@ -37,12 +43,19 @@ export function AppMenuBar({ menuConfig, menuState, onAction }: AppMenuBarProps)
     };
   }, [activeMenuIndex]);
 
-  const handleMenuClick = useCallback((index: number) => {
-    setActiveMenuIndex(prev => prev === index ? null : index);
+  const handleMenuClick = useCallback((index: number, buttonEl: HTMLButtonElement) => {
+    setActiveMenuIndex(prev => {
+      if (prev === index) return null;
+      const rect = buttonEl.getBoundingClientRect();
+      setDropdownPos({ top: rect.bottom, left: rect.left });
+      return index;
+    });
   }, []);
 
-  const handleMenuHover = useCallback((index: number) => {
-    if (activeMenuIndex !== null) {
+  const handleMenuHover = useCallback((index: number, buttonEl: HTMLButtonElement) => {
+    if (activeMenuIndex !== null && activeMenuIndex !== index) {
+      const rect = buttonEl.getBoundingClientRect();
+      setDropdownPos({ top: rect.bottom, left: rect.left });
       setActiveMenuIndex(index);
     }
   }, [activeMenuIndex]);
@@ -53,18 +66,16 @@ export function AppMenuBar({ menuConfig, menuState, onAction }: AppMenuBarProps)
   }, [onAction]);
 
   return (
-    <div
-      ref={menuBarRef}
-      className="h-8 flex items-center px-2 bg-background border-b border-border select-none"
-    >
-      {menuConfig.map((menu, index) => (
-        <div
-          key={menu.label}
-          className="relative"
-        >
+    <>
+      <div
+        ref={menuBarRef}
+        className="h-8 flex items-center px-2 bg-background border-b border-border select-none"
+      >
+        {menuConfig.map((menu, index) => (
           <button
-            onClick={() => handleMenuClick(index)}
-            onMouseEnter={() => handleMenuHover(index)}
+            key={menu.label}
+            onClick={(e) => handleMenuClick(index, e.currentTarget)}
+            onMouseEnter={(e) => handleMenuHover(index, e.currentTarget)}
             className={cn(
               'px-3 py-1 text-sm transition-colors rounded',
               activeMenuIndex === index
@@ -74,18 +85,23 @@ export function AppMenuBar({ menuConfig, menuState, onAction }: AppMenuBarProps)
           >
             {menu.label}
           </button>
+        ))}
+      </div>
 
-          {activeMenuIndex === index && (
-            <MenuDropdown
-              items={menu.items}
-              menuState={menuState}
-              onAction={handleAction}
-              onClose={() => setActiveMenuIndex(null)}
-            />
-          )}
-        </div>
-      ))}
-    </div>
+      {/* Render dropdown via portal to avoid overflow clipping */}
+      {activeMenuIndex !== null && dropdownPos && createPortal(
+        <div ref={dropdownRef}>
+          <MenuDropdown
+            items={menuConfig[activeMenuIndex].items}
+            menuState={menuState}
+            onAction={handleAction}
+            onClose={() => setActiveMenuIndex(null)}
+            fixedPosition={dropdownPos}
+          />
+        </div>,
+        document.body
+      )}
+    </>
   );
 }
 
@@ -94,9 +110,11 @@ interface MenuDropdownProps {
   menuState: AppMenuState;
   onAction: (action: string) => void;
   onClose: () => void;
+  /** When provided, use fixed positioning at these coordinates (first-level dropdown via portal) */
+  fixedPosition?: { top: number; left: number };
 }
 
-function MenuDropdown({ items, menuState, onAction, onClose }: MenuDropdownProps) {
+function MenuDropdown({ items, menuState, onAction, onClose, fixedPosition }: MenuDropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [subMenuIndex, setSubMenuIndex] = useState<number | null>(null);
 
@@ -148,10 +166,23 @@ function MenuDropdown({ items, menuState, onAction, onClose }: MenuDropdownProps
     return key ? menuState[key] : false;
   };
 
+  // First-level dropdown uses fixed positioning via portal, submenus use absolute
+  const positionStyle = fixedPosition
+    ? { position: 'fixed' as const, top: fixedPosition.top, left: fixedPosition.left, zIndex: 9999 }
+    : undefined;
+
+  const positionClassName = fixedPosition
+    ? '' // fixed positioning handled by style
+    : 'absolute left-full top-0 ml-1'; // submenu positioning
+
   return (
     <div
       ref={dropdownRef}
-      className="absolute top-full left-0 z-50 min-w-[200px] py-1 bg-popover border border-border rounded-md shadow-lg animate-in fade-in zoom-in-95 duration-100"
+      style={positionStyle}
+      className={cn(
+        'z-[9999] min-w-[200px] py-1 bg-popover border border-border rounded-md shadow-lg',
+        positionClassName
+      )}
     >
       {items.map((item, index) => {
         if (item.type === 'separator') {
@@ -194,14 +225,12 @@ function MenuDropdown({ items, menuState, onAction, onClose }: MenuDropdownProps
             </button>
 
             {hasSubmenu && subMenuIndex === index && (
-              <div className="absolute left-full top-0 ml-1">
-                <MenuDropdown
-                  items={item.submenu!}
-                  menuState={menuState}
-                  onAction={onAction}
-                  onClose={onClose}
-                />
-              </div>
+              <MenuDropdown
+                items={item.submenu!}
+                menuState={menuState}
+                onAction={onAction}
+                onClose={onClose}
+              />
             )}
           </div>
         );

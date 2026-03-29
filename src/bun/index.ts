@@ -1363,13 +1363,76 @@ async function main() {
         },
 
         sendMenuAction: async ({ action }: { action: string }) => {
-          // Forward menu action from Windows frontend menu to renderer
+          // Forward menu action from Windows frontend menu.
+          // Mirrors the macOS 'application-menu-clicked' handler so both platforms behave identically.
           try {
             const fw = focusedWindow;
-            if (fw) {
+            if (!fw) return { success: true };
+
+            // Actions that need native backend handling (same as macOS handler)
+            switch (action) {
+              case 'help-open': {
+                const helpDir = await mkdtemp(join(tmpdir(), 'markbun-help-'));
+                const tmpPath = join(helpDir, 'MarkBun Help.md');
+                await writeFile(tmpPath, HELP_CONTENT, 'utf-8');
+                pendingOpenFilePath = tmpPath;
+                pendingCloseSidebar = true;
+                pendingSkipRecentFile = true;
+                await createAppWindow();
+                return { success: true };
+              }
+              case 'file-open-folder': {
+                try {
+                  const result = await openFolder();
+                  if (result?.success === true && result.path) {
+                    fw.state.workspaceRoot = result.path;
+                    // @ts-ignore
+                    fw.win.webview.rpc.send.folderOpened({ path: result.path });
+                  }
+                } catch (err) {
+                  console.error('Error in file-open-folder handler:', err);
+                }
+                return { success: true };
+              }
+              case 'view-toggle-devtools':
+                // @ts-ignore
+                fw.win.webview.toggleDevTools();
+                return { success: true };
+              case 'window-new':
+                await createAppWindow();
+                return { success: true };
+              case 'app-quit':
+                process.exit(0);
+            }
+
+            // Map action strings to RPC message names (camelCase)
+            const actionToEvent: Record<string, string> = {
+              'file-new': 'fileNew',
+              'file-open': 'fileOpenRequest',
+              'file-save': 'fileSaveRequest',
+              'file-save-as': 'fileSaveAsRequest',
+              'view-toggle-sidebar': 'toggleSidebar',
+              'view-toggle-titlebar': 'toggleTitlebar',
+              'view-toggle-toolbar': 'toggleToolbar',
+              'view-toggle-statusbar': 'toggleStatusbar',
+              'view-toggle-source-mode': 'toggleSourceMode',
+              'view-toggle-theme': 'toggleTheme',
+              'view-quick-open': 'openQuickOpen',
+              'app-preferences': 'openSettings',
+              'file-history': 'openFileHistory',
+              'app-about': 'showAbout',
+            };
+
+            const eventName = actionToEvent[action];
+            if (eventName) {
+              // @ts-ignore - dynamic event name
+              fw.win.webview.rpc.send[eventName]({});
+            } else {
+              // Format/paragraph/table/edit/export actions: forward to renderer as menuAction
               // @ts-ignore
               fw.win.webview.rpc.send.menuAction({ action });
             }
+
             return { success: true };
           } catch (error) {
             console.error('[RPC] Failed to send menu action:', error);
@@ -1464,6 +1527,25 @@ async function main() {
     windowHeight = currentUIState?.windowHeight ?? 800;
   }
 
+  // Validate window dimensions - ensure minimum valid size
+  const MIN_WIDTH = 800;
+  const MIN_HEIGHT = 600;
+  const DEFAULT_WIDTH = 1200;
+  const DEFAULT_HEIGHT = 800;
+
+  if (!windowWidth || windowWidth < MIN_WIDTH || windowWidth > 10000) {
+    windowWidth = DEFAULT_WIDTH;
+  }
+  if (!windowHeight || windowHeight < MIN_HEIGHT || windowHeight > 10000) {
+    windowHeight = DEFAULT_HEIGHT;
+  }
+  if (!windowX || windowX < -10000 || windowX > 10000) {
+    windowX = 200;
+  }
+  if (!windowY || windowY < -10000 || windowY > 10000) {
+    windowY = 200;
+  }
+
 
   // Multi-monitor support: Check if the window is within any available display
   try {
@@ -1523,15 +1605,18 @@ async function main() {
   const win = new BrowserWindow({
     title: 'MarkBun',
     url,
-    ...(isDev || process.platform === "linux" ? { renderer: "cef" as const } : {}),
+    // 只在 macOS 开发模式下使用 CEF（用于调试），其他平台使用原生 WebView
+    ...(process.platform === "darwin" && isDev ? { renderer: "cef" as const } : {}),
     frame: {
-      width: windowWidth,
-      height: windowHeight,
-      x: windowX,
-      y: windowY,
+      width: Math.round(windowWidth),
+      height: Math.round(windowHeight),
+      x: Math.round(windowX),
+      y: Math.round(windowY),
     },
     rpc,
   });
+
+  console.log(`[Window] Created with size: ${Math.round(windowWidth)}x${Math.round(windowHeight)} at (${Math.round(windowX)}, ${Math.round(windowY)})`);
 
   // Save window state when it changes
   let windowStateTimeout: NodeJS.Timeout | null = null;
