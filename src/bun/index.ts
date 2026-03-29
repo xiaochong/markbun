@@ -1,5 +1,5 @@
 import Electrobun, { BrowserWindow, BrowserView, Updater, Utils, ApplicationMenu, ContextMenu, Screen } from 'electrobun/bun';
-import { setupMenu, type ViewMenuState } from './menu';
+import { setupMenu, getMenuConfig, type ViewMenuState } from './menu';
 import { initI18n, changeLanguage, t } from './i18n';
 import { resolveLanguage } from '../shared/i18n/config';
 import type { MarkBunRPC } from '../shared/types';
@@ -1348,6 +1348,31 @@ async function main() {
             const language = locale.split('.')[0].replace('_', '-');
             return { success: true, language };
           } catch (error) {
+            return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+          }
+        },
+
+        getMenuConfig: async () => {
+          try {
+            const config = getMenuConfig();
+            return { success: true, config };
+          } catch (error) {
+            console.error('[RPC] Failed to get menu config:', error);
+            return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+          }
+        },
+
+        sendMenuAction: async ({ action }: { action: string }) => {
+          // Forward menu action from Windows frontend menu to renderer
+          try {
+            const fw = focusedWindow;
+            if (fw) {
+              // @ts-ignore
+              fw.win.webview.rpc.send.menuAction({ action });
+            }
+            return { success: true };
+          } catch (error) {
+            console.error('[RPC] Failed to send menu action:', error);
             return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
           }
         },

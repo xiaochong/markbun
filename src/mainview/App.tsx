@@ -1,4 +1,11 @@
-import { useRef, useCallback, useEffect, useState } from 'react';
+/**
+ * App.tsx - Main application component
+ *
+ * Hook ordering constraint: sidebar/fileExplorer/outline/quickOpen must be declared
+ * before any effects that reference them (e.g., the UI state loading effect).
+ */
+
+import { useRef, useCallback, useEffect, useState, useMemo } from 'react';
 import { flushSync } from 'react-dom';
 import { cn } from '@/lib/utils';
 import { MilkdownEditor, MilkdownEditorRef, SourceEditor, SourceEditorRef } from './components/editor';
@@ -32,85 +39,33 @@ import {
   restoreOriginalImagePaths,
   getDirectoryPath,
 } from './lib/image';
-import type { FileNode, AppSettings, UIState, RecoveryInfo } from '@/shared/types';
+import type { FileNode, AppSettings, UIState, RecoveryInfo, MenuConfig } from '@/shared/types';
+import { AppMenuBar } from './components/menu';
+import type { AppMenuState } from './components/menu';
+
+// Platform detection (constant at module level to avoid recomputation)
+const isWindows = navigator.platform.toLowerCase().includes('win');
 
 function App() {
   const editorRef = useRef<MilkdownEditorRef>(null);
   const sourceEditorRef = useRef<SourceEditorRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [editorContent, setEditorContent] = useState('');
-
-  // Flag to ignore editor changes during file switching
   const isSwitchingFileRef = useRef(false);
-
-  // Image viewer state
+  const [editorContent, setEditorContent] = useState('');
   const [imagePreviewPath, setImagePreviewPath] = useState<string | null>(null);
-
-  // Phase 3: Settings
-  const [settings, setSettings] = useState<AppSettings | null>(null);
-  const [showSettingsDialog, setShowSettingsDialog] = useState(false);
-
-  // Load settings on mount
-  useEffect(() => {
-    const loadSettings = async () => {
-      const result = await electrobun.getSettings() as { success: boolean; settings?: AppSettings };
-      if (result.success && result.settings) {
-        setSettings(result.settings);
-        // Apply saved language
-        if (result.settings.language) {
-          void i18n.changeLanguage(result.settings.language);
-        }
-      }
-    };
-    void loadSettings();
-  }, []);
-
-  useEffect(() => {
-    if (settings) {
-      document.documentElement.style.setProperty('--editor-font-size', `${settings.fontSize}px`);
-      document.documentElement.style.setProperty('--editor-line-height', String(settings.lineHeight));
-    }
-  }, [settings?.fontSize, settings?.lineHeight]);
-
-  // Recovery dialog
   const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
   const [pendingRecoveries, setPendingRecoveries] = useState<RecoveryInfo[]>([]);
-
-  // File history dialog
+  const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
   const [showFileHistoryDialog, setShowFileHistoryDialog] = useState(false);
-
-  // About dialog
   const [showAboutDialog, setShowAboutDialog] = useState(false);
 
-  // Check for crash-recovery files on startup
-  useEffect(() => {
-    const timer = setTimeout(async () => {
-      try {
-        const result = await electrobun.checkRecovery() as { success: boolean; recoveries?: RecoveryInfo[] };
-        if (result.success && result.recoveries && result.recoveries.length > 0) {
-          setPendingRecoveries(result.recoveries);
-          setShowRecoveryDialog(true);
-        }
-      } catch {
-        // Recovery check is best-effort
-      }
-    }, 1200); // slight delay so the app is fully rendered first
-    return () => clearTimeout(timer);
-  }, []);
+  const { theme, toggleTheme } = useTheme();
 
-  // Theme management from settings
-  const { theme, toggleTheme } = useTheme({
-    initialTheme: settings?.theme ?? 'system',
-    onThemeChange: async (newTheme) => {
-      if (settings) {
-        const newSettings = { ...settings, theme: newTheme };
-        setSettings(newSettings);
-        await electrobun.saveSettings(newSettings);
-      }
-    },
-  });
+  // Windows frontend menu (config only, state is derived below)
+  const [menuConfig, setMenuConfig] = useState<MenuConfig[]>([]);
 
-  // Visibility states for UI components (loaded from settings or defaults)
+  // UI visibility state
   const [showTitleBar, setShowTitleBar] = useState(false);
   const [showToolbar, setShowToolbar] = useState(false);
   const [showStatusBar, setShowStatusBar] = useState(false);
@@ -122,10 +77,7 @@ function App() {
     sourceModeRef.current = sourceMode;
   }, [sourceMode]);
 
-  // Image insert dialog state
-  const [showImageDialog, setShowImageDialog] = useState(false);
-
-  // Phase 2: Sidebar and file management - MUST be declared before UI state effects
+  // Phase 2: Sidebar and file management - MUST be declared before any effects that use them
   const sidebar = useSidebar();
   const fileExplorer = useFileExplorer({
     enablePolling: true,
@@ -137,6 +89,49 @@ function App() {
   fileExplorerRef.current = fileExplorer;
   const outline = useOutline();
   const quickOpen = useQuickOpen(handleQuickOpenSelect);
+
+  // Derive menu state from existing UI state (avoids sync issues)
+  // Must be after sidebar and UI state declarations
+  const appMenuState = useMemo<AppMenuState>(() => ({
+    showSidebar: sidebar.isOpen,
+    showTitleBar,
+    showToolBar: showToolbar,
+    showStatusBar,
+    sourceMode,
+  }), [sidebar.isOpen, showTitleBar, showToolbar, showStatusBar, sourceMode]);
+
+  // Load menu config on mount (Windows only)
+  useEffect(() => {
+    if (!isWindows) return;
+
+    const loadMenuConfig = async () => {
+      const result = await electrobun.getMenuConfig() as { success: boolean; config?: MenuConfig[] };
+      if (result.success && result.config) {
+        // Transform MenuItemConfig to MenuConfig format
+        const transformed = result.config.map(menu => ({
+          label: menu.label,
+          items: menu.items?.map(item => ({
+            label: item.label,
+            action: item.action,
+            accelerator: item.accelerator,
+            checked: item.checked,
+            type: item.type === 'separator' ? 'separator' as const : undefined,
+            submenu: item.submenu,
+          })) || [],
+        }));
+        setMenuConfig(transformed);
+      }
+    };
+    void loadMenuConfig();
+  }, [isWindows]);
+
+  // Handle menu action from Windows frontend menu
+  const handleMenuAction = useCallback((action: string) => {
+    void electrobun.sendMenuAction(action);
+  }, []);
+
+  // Image insert dialog state
+  const [showImageDialog, setShowImageDialog] = useState(false);
 
   // Load UI state then check for pending file on mount (sequential to avoid race condition:
   // closeSidebar from pending file must override saved sidebar state)
@@ -1213,6 +1208,15 @@ function App() {
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
+      {/* Windows Frontend Menu Bar */}
+      {isWindows && menuConfig.length > 0 && (
+        <AppMenuBar
+          menuConfig={menuConfig}
+          menuState={appMenuState}
+          onAction={handleMenuAction}
+        />
+      )}
+
       {/* Title Bar */}
       {showTitleBar && (
         <TitleBar

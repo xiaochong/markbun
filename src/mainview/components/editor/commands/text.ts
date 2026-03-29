@@ -104,8 +104,7 @@ export function insertText(crepeRef: CrepeRef, text: string): boolean {
     view.dispatch(tr);
 
     return true;
-  } catch (e) {
-    console.error('Failed to insert text:', e);
+  } catch {
     return false;
   }
 }

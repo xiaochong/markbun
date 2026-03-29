@@ -69,7 +69,6 @@ export async function readFolder(
 
     return { success: true, nodes };
   } catch (error) {
-    console.error('Failed to read folder:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

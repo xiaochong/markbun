@@ -222,6 +222,10 @@ export const electrobun = {
     return await electroview.rpc.request.getSystemLanguage({});
   },
 
+  async getMenuConfig() {
+    return await electroview.rpc.request.getMenuConfig({});
+  },
+
   async getUIState() {
     return await electroview.rpc.request.getUIState({});
   },
@@ -290,7 +294,7 @@ export const electrobun = {
   },
 
   // Export
-  async saveExportedFile(params: { content: string; isBase64: boolean; defaultName: string; extension: string }) {
+  async saveExportedFile(params: { content: string; isBase64: boolean; filePath: string }) {
     return await electroview.rpc.request.saveExportedFile(params) as { success: boolean; path?: string; error?: string };
   },
 
@@ -323,6 +327,11 @@ export const electrobun = {
     return await electroview.rpc.request.getCommonPaths({}) as
       | { success: true; paths: { home: string; desktop: string; documents: string; downloads: string; pictures?: string } }
       | { success: false; error: string };
+  },
+
+  // Send menu action to main process (for Windows frontend menu)
+  async sendMenuAction(action: string) {
+    return await electroview.rpc.request.sendMenuAction({ action });
   },
 
   // Subscribe to messages from main process

@@ -1,6 +1,21 @@
 // Shared types and RPC type definitions for MarkBun
 import type { RPCSchema } from "electrobun/bun";
 
+// Menu configuration for Windows frontend menu
+export interface MenuItemConfig {
+  label?: string;
+  action?: string;
+  accelerator?: string;
+  checked?: boolean;
+  type?: 'separator' | 'submenu';
+  submenu?: MenuItemConfig[];
+}
+
+export interface MenuConfig {
+  label: string;
+  items: MenuItemConfig[];
+}
+
 // ============================================================================
 // Phase 1: Basic Types
 // ============================================================================
@@ -247,6 +262,10 @@ export type MarkBunRPC = {
       // i18n
       setLanguage: { params: { language: 'en' | 'zh-CN' | 'de' | 'fr' | 'ja' | 'ko' | 'pt' | 'es' }; response: { success: boolean; error?: string } };
       getSystemLanguage: { params: {}; response: { success: boolean; language?: string; error?: string } };
+
+      // Menu configuration (Windows frontend menu)
+      getMenuConfig: { params: {}; response: { success: boolean; config?: MenuConfig[]; error?: string } };
+      sendMenuAction: { params: { action: string }; response: { success: boolean; error?: string } };
 
       // External links
       openExternal: { params: { url: string }; response: { success: boolean; error?: string } };

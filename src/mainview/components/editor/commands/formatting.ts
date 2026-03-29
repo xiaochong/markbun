@@ -173,7 +173,6 @@ export function toggleLink(
 export function toggleUnderline(_crepeRef: React.RefObject<Crepe | null>): boolean {
   // Underline is not a standard Markdown feature
   // Would require custom mark plugin
-  console.warn('Underline is not supported in standard Markdown');
   return false;
 }
 
@@ -217,7 +216,6 @@ export function insertInlineMath(crepeRef: React.RefObject<Crepe | null>): boole
 
 export function insertComment(_crepeRef: React.RefObject<Crepe | null>): boolean {
   // HTML comments are not supported in Milkdown's default schema
-  console.warn('HTML comments are not supported');
   return false;
 }
 
@@ -225,7 +223,6 @@ export function insertComment(_crepeRef: React.RefObject<Crepe | null>): boolean
 
 export function insertLocalImage(_crepeRef: React.RefObject<Crepe | null>): boolean {
   // TODO: Implement local image insertion dialog
-  console.warn('Local image insertion not implemented yet');
   return false;
 }
 

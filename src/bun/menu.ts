@@ -21,8 +21,18 @@ const defaultState: ViewMenuState = {
   sourceMode: false,
 };
 
+// Platform detection
+const isMac = process.platform === 'darwin';
+const isWindows = process.platform === 'win32';
+
+// Store menu config for frontend access
+let currentMenuConfig: ApplicationMenuItemConfig[] | null = null;
+
+export function getMenuConfig(): ApplicationMenuItemConfig[] | null {
+  return currentMenuConfig;
+}
+
 export function setupMenu(state: ViewMenuState = defaultState, tFn: (key: string) => string = defaultT): void {
-  const isMac = process.platform === 'darwin';
   const t = tFn;
 
   const menu: ApplicationMenuItemConfig[] = [
@@ -187,5 +197,10 @@ export function setupMenu(state: ViewMenuState = defaultState, tFn: (key: string
     },
   ];
 
-  ApplicationMenu.setApplicationMenu(menu);
+  currentMenuConfig = menu;
+
+  // Windows uses frontend menu, skip native menu setup
+  if (!isWindows) {
+    ApplicationMenu.setApplicationMenu(menu);
+  }
 }
