@@ -2,6 +2,7 @@
    MarkBun Website — Main JS
    Theme Toggle + i18n (EN / ZH)
    ========================================== */
+const APP_VERSION = "v0.4.0";
 
 // ==========================================
 // Translations
@@ -16,7 +17,7 @@ const T = {
     nav_cta:            "Download Free",
 
     // ---- Home — Hero ----
-    home_badge:         "v0.4.0 Preview",
+    home_badge:         `${APP_VERSION} Preview`,
     home_h1_a:          "The Free, Open-Source",
     home_h1_b:          "Markdown Editor",
     home_h1_c:          "You Deserve",
@@ -65,8 +66,8 @@ const T = {
 
     // ---- Home — Download CTA ----
     home_cta_title:     "Ready to write without limits?",
-    home_cta_desc:      "Join thousands of writers using MarkBun today. v0.4.0 preview release.",
-    home_cta_version:   "Version v0.4.0 • Open Source MIT",
+    home_cta_desc:      `Join thousands of writers using MarkBun today. ${APP_VERSION} preview release.`,
+    home_cta_version:   `Version ${APP_VERSION} • Open Source MIT`,
 
     // ---- Features Page ----
     feat_hero_badge:    "Professional Markdown Editor",
@@ -143,7 +144,7 @@ const T = {
     dl_badge:           "Preview Release",
     dl_title:           "Download MarkBun",
     dl_sub:             "Free for everyone. Always.",
-    dl_version:         "v0.4.0",
+    dl_version:         APP_VERSION,
     dl_latest:          "Preview Build",
 
     dl_mac:             "macOS",
@@ -175,7 +176,7 @@ const T = {
     dl_src_title:       "Build from Source",
     dl_src_desc:        "Want to customize MarkBun? Build it directly using Bun runtime.",
     dl_notes_title:     "Release Notes",
-    dl_notes_sub:       "See what's new in v0.4.0",
+    dl_notes_sub:       `See what's new in ${APP_VERSION}`,
     dl_notes_link:      "Full Changelog",
 
     dl_faq_title:       "Frequently Asked Questions",
@@ -265,7 +266,7 @@ const T = {
     nav_github:         "GitHub",
     nav_cta:            "免费下载",
 
-    home_badge:         "v0.4.0 预览版",
+    home_badge:         `${APP_VERSION} 预览版`,
     home_h1_a:          "免费开源的",
     home_h1_b:          "Markdown 编辑器",
     home_h1_c:          "你值得拥有",
@@ -309,8 +310,8 @@ const T = {
     home_tech_label:    "尖端技术驱动",
 
     home_cta_title:     "准备好无拘无束地写作了吗？",
-    home_cta_desc:      "立即加入数千名使用 MarkBun 的写作者。v0.4.0 预览版。",
-    home_cta_version:   "版本 v0.4.0 • MIT 开源协议",
+    home_cta_desc:      `立即加入数千名使用 MarkBun 的写作者。${APP_VERSION} 预览版。`,
+    home_cta_version:   `版本 ${APP_VERSION} • MIT 开源协议`,
 
     feat_hero_badge:    "专业 Markdown 编辑器",
     feat_hero_title:    "强大功能，零成本",
@@ -385,7 +386,7 @@ const T = {
     dl_badge:           "预览版本",
     dl_title:           "下载 MarkBun",
     dl_sub:             "永久免费，人人皆可使用。",
-    dl_version:         "v0.4.0",
+    dl_version:         APP_VERSION,
     dl_latest:          "预览构建",
 
     dl_mac:             "macOS",
@@ -417,7 +418,7 @@ const T = {
     dl_src_title:       "从源码构建",
     dl_src_desc:        "想要自定义 MarkBun？使用 Bun 运行时直接构建。",
     dl_notes_title:     "发布说明",
-    dl_notes_sub:       "查看 v0.4.0 的新内容",
+    dl_notes_sub:       `查看 ${APP_VERSION} 的新内容`,
     dl_notes_link:      "完整更新日志",
 
     dl_faq_title:       "常见问题",
