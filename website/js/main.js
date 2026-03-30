@@ -148,15 +148,15 @@ const T = {
     dl_latest:          "Preview Build",
 
     dl_mac:             "macOS",
-    dl_mac_desc:        "Universal build supporting both Apple Silicon (M1/M2/M3) and Intel processors.",
+    dl_mac_desc:        "Universal build for Apple Silicon (M1/M2/M3/M4) processors.",
     dl_mac_req1:        "Monterey 12.0+",
     dl_mac_req2:        ".dmg Installer",
     dl_mac_btn:         "Download .dmg",
 
     dl_win:             "Windows",
-    dl_win_desc:        "Optimized for Windows 10 and 11. Available as an installer or portable zip.",
+    dl_win_desc:        "Optimized for Windows 10 and 11. Available as a setup installer.",
     dl_win_req1:        "Windows 10/11",
-    dl_win_req2:        ".exe / .zip",
+    dl_win_req2:        ".exe Installer",
     dl_win_btn:         "Download .exe",
 
     dl_linux:           "Linux",
@@ -390,15 +390,15 @@ const T = {
     dl_latest:          "预览构建",
 
     dl_mac:             "macOS",
-    dl_mac_desc:        "通用构建，支持 Apple Silicon（M1/M2/M3）和 Intel 处理器。",
+    dl_mac_desc:        "通用构建，支持 Apple Silicon（M1/M2/M3/M4）处理器。",
     dl_mac_req1:        "Monterey 12.0+",
     dl_mac_req2:        ".dmg 安装包",
     dl_mac_btn:         "下载 .dmg",
 
     dl_win:             "Windows",
-    dl_win_desc:        "针对 Windows 10 和 11 优化，提供安装程序和便携 zip 两种版本。",
+    dl_win_desc:        "针对 Windows 10 和 11 优化，提供安装程序。",
     dl_win_req1:        "Windows 10/11",
-    dl_win_req2:        ".exe / .zip",
+    dl_win_req2:        ".exe 安装包",
     dl_win_btn:         "下载 .exe",
 
     dl_linux:           "Linux",
