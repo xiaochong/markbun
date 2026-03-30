@@ -1618,6 +1618,40 @@ async function main() {
 
   console.log(`[Window] Created with size: ${Math.round(windowWidth)}x${Math.round(windowHeight)} at (${Math.round(windowX)}, ${Math.round(windowY)})`);
 
+  // 设置窗口图标（Windows 平台）— 直接调用 Win32 API
+  if (process.platform === 'win32' && win.ptr) {
+    try {
+      const { dlopen, FFIType, ptr } = await import('bun:ffi');
+      const iconPath = join(process.cwd(), '..', 'Resources', 'app.ico');
+      if (existsSync(iconPath)) {
+        const user32 = dlopen("user32.dll", {
+          LoadImageA: {
+            args: [FFIType.ptr, FFIType.cstring, FFIType.u32, FFIType.i32, FFIType.i32, FFIType.u32],
+            returns: FFIType.ptr,
+          },
+          SendMessageA: {
+            args: [FFIType.ptr, FFIType.u32, FFIType.i64, FFIType.i64],
+            returns: FFIType.i64,
+          },
+        });
+        // IMAGE_ICON=1, LR_LOADFROMFILE=0x10, LR_DEFAULTSIZE=0x40
+        const iconPathBuf = Buffer.from(iconPath + '\0');
+        const hIcon = user32.symbols.LoadImageA(null, iconPathBuf, 1, 0, 0, 0x50);
+        if (hIcon) {
+          const iconPtr = BigInt(typeof hIcon === 'number' ? hIcon : Number(hIcon));
+          // WM_SETICON=0x80, ICON_SMALL=0, ICON_BIG=1
+          user32.symbols.SendMessageA(win.ptr, 0x80, 0n, iconPtr);
+          user32.symbols.SendMessageA(win.ptr, 0x80, 1n, iconPtr);
+          console.log('[Icon] Set window icon via Win32 API, hIcon:', hIcon);
+        } else {
+          console.warn('[Icon] LoadImageA returned null for:', iconPath);
+        }
+      }
+    } catch (e) {
+      console.warn('[Icon] Failed to set window icon:', e);
+    }
+  }
+
   // Save window state when it changes
   let windowStateTimeout: NodeJS.Timeout | null = null;
   const saveWindowState = async () => {
