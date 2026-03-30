@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
-import { existsSync, readdirSync, renameSync, unlinkSync, rmSync, mkdirSync } from 'fs';
-import { join, resolve } from 'path';
+import { existsSync, readdirSync, renameSync, unlinkSync, rmSync, mkdirSync, copyFileSync, readFileSync, writeFileSync } from 'fs';
+import { join, resolve, basename } from 'path';
 
 // macOS-only post-build steps: create wrapper app, and package DMG
 if (process.platform === 'darwin') {
@@ -91,6 +91,44 @@ if (process.platform === 'win32') {
         console.log('[post-build] Icon embedded into MarkBun-Setup.exe');
       } catch (e: any) {
         console.warn('[post-build] Failed to embed icon into Setup.exe:', e.message);
+      }
+    }
+
+    // Step 3: Refresh artifacts zip with modified files
+    const artifactDir = resolve('artifacts');
+    const zipName = 'stable-win-x64-MarkBun-Setup.zip';
+    const artifactZip = join(artifactDir, zipName);
+    if (existsSync(artifactZip) && existsSync(setupExe) && existsSync(absZstPath)) {
+      try {
+        const zipStaging = join(buildDir, '.zip-staging');
+        if (existsSync(zipStaging)) rmSync(zipStaging, { recursive: true });
+        mkdirSync(join(zipStaging, '.installer'), { recursive: true });
+
+        // Copy Setup.exe to staging root
+        copyFileSync(setupExe, join(zipStaging, basename(setupExe)));
+        // Copy tar.zst to .installer/
+        copyFileSync(absZstPath, join(zipStaging, '.installer', zstName));
+        // Copy or generate metadata.json
+        const metadataSrc = join(buildDir, 'MarkBun-Setup.metadata.json');
+        if (existsSync(metadataSrc)) {
+          copyFileSync(metadataSrc, join(zipStaging, '.installer', basename(metadataSrc)));
+        }
+
+        // Delete old zip and create new one
+        unlinkSync(artifactZip);
+        // Use PowerShell Compress-Archive (same as Electrobun)
+        execSync(
+          `powershell -command "Compress-Archive -Path '${zipStaging}\\\\*' -DestinationPath '${artifactZip}' -Force"`,
+          { stdio: 'pipe' },
+        );
+        console.log(`[post-build] Refreshed artifacts/${zipName}`);
+
+        // Cleanup
+        rmSync(zipStaging, { recursive: true });
+      } catch (e: any) {
+        console.warn('[post-build] Failed to refresh artifacts zip:', e.message);
+        const zipStaging = join(buildDir, '.zip-staging');
+        if (existsSync(zipStaging)) rmSync(zipStaging, { recursive: true });
       }
     }
   }
