@@ -106,4 +106,5 @@ jobs:
             --repo="${{ github.repository }}" \
             --title="MarkBun $TAG" \
             --generate-notes \
-            release-artifacts/*
+            release-artifacts/macos-arm64-MarkBun.dmg \
+            release-artifacts/win-x64-MarkBun-Setup.zip

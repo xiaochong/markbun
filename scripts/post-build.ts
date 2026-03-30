@@ -6,6 +6,17 @@ import { join, resolve, basename } from 'path';
 if (process.platform === 'darwin') {
   execSync('bash scripts/create-wrapper.sh', { stdio: 'inherit' });
   execSync('bash scripts/create-dmg.sh', { stdio: 'inherit' });
+
+  // Copy DMG to artifacts directory
+  const dmgPath = resolve('build', 'MarkBun.dmg');
+  const artifactDir = resolve('artifacts');
+  if (existsSync(dmgPath)) {
+    if (!existsSync(artifactDir)) mkdirSync(artifactDir, { recursive: true });
+    copyFileSync(dmgPath, join(artifactDir, 'macos-arm64-MarkBun.dmg'));
+    console.log('[post-build] Copied MarkBun.dmg to artifacts/macos-arm64-MarkBun.dmg');
+  } else {
+    console.warn('[post-build] DMG not found at', dmgPath);
+  }
 }
 
 // Windows: Electrobun build may fail to embed icons via rcedit (bun.exe too large, path issues).
@@ -130,6 +141,14 @@ if (process.platform === 'win32') {
         const zipStaging = join(buildDir, '.zip-staging');
         if (existsSync(zipStaging)) rmSync(zipStaging, { recursive: true });
       }
+    }
+
+    // Step 4: Rename artifacts zip to win-x64-MarkBun-Setup.zip
+    const renamedZip = join(artifactDir, 'win-x64-MarkBun-Setup.zip');
+    if (existsSync(artifactZip)) {
+      if (existsSync(renamedZip)) unlinkSync(renamedZip);
+      renameSync(artifactZip, renamedZip);
+      console.log('[post-build] Renamed artifacts zip to win-x64-MarkBun-Setup.zip');
     }
   }
 }
