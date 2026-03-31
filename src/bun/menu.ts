@@ -174,9 +174,9 @@ export function setupMenu(state: ViewMenuState = defaultState, tFn: (key: string
     {
       label: t('view.title'),
       submenu: [
-        { label: t('view.toggleDarkMode'), action: 'view-toggle-theme', accelerator: 'CmdOrCtrl+Shift+T' },
+        { label: t('view.toggleDarkMode'), action: 'view-toggle-theme', accelerator: 'CmdOrCtrl+Shift+D' },
         { type: 'separator' },
-        { label: t('view.showSidebar'), action: 'view-toggle-sidebar', accelerator: 'CmdOrCtrl+B', checked: state.showSidebar },
+        { label: t('view.showSidebar'), action: 'view-toggle-sidebar', accelerator: 'CmdOrCtrl+Shift+B', checked: state.showSidebar },
         { type: 'separator' },
         { label: t('view.showTitleBar'), action: 'view-toggle-titlebar', checked: state.showTitleBar },
         { label: t('view.showToolBar'), action: 'view-toggle-toolbar', checked: state.showToolBar },

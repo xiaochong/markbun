@@ -1185,8 +1185,11 @@ function App() {
           quickOpen.open();
           break;
         case 'b':
-          e.preventDefault();
-          sidebar.toggle();
+          if (e.shiftKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            sidebar.toggle();
+          }
           break;
         case 'h':
           if (e.shiftKey) {
@@ -1209,8 +1212,8 @@ function App() {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [handleSave, handleSaveAs, handleOpen, handleOpenFolder, updateContent, quickOpen.open, sidebar.toggle, clipboard, sourceMode, cancelPendingSave, outline.setHeadings, fileExplorer.setRootPath, fileExplorer.selectFile]);
 
   return (

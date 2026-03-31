@@ -206,8 +206,8 @@ MarkBun uses a **chromeless interface** — all toolbars and UI elements are hid
 | Title Bar | `View → Show Title Bar` | Hidden |
 | Toolbar | `View → Show Tool Bar` | Hidden |
 | Status Bar | `View → Show Status Bar` | Hidden |
-| Sidebar | `View → Show Sidebar` | Hidden (`Cmd/Ctrl + B`) |
-| Dark Mode | `View → Toggle Dark Mode` | `Cmd/Ctrl + Shift + T` |
+| Sidebar | `View → Show Sidebar` | Hidden (`Cmd/Ctrl + Shift + B`) |
+| Dark Mode | `View → Toggle Dark Mode` | `Cmd/Ctrl + Shift + D` |
 | Source Mode | `View → Toggle Source Mode` | `Cmd/Ctrl + /` |
 | Settings | `MarkBun → Preferences` | `Cmd/Ctrl + ,` |
 
