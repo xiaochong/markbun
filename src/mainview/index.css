@@ -1306,3 +1306,22 @@ body {
 .dark .search-match-active {
   background-color: rgba(255, 150, 50, 0.55);
 }
+
+/* CodeMirror search match highlighting */
+.search-cm-match {
+  background-color: rgba(255, 213, 0, 0.4);
+  border-radius: 2px;
+}
+
+.search-cm-match-active {
+  background-color: rgba(255, 150, 50, 0.6);
+  border-radius: 2px;
+}
+
+.dark .search-cm-match {
+  background-color: rgba(255, 213, 0, 0.35);
+}
+
+.dark .search-cm-match-active {
+  background-color: rgba(255, 150, 50, 0.55);
+}

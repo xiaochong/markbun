@@ -11,6 +11,9 @@ import { Plugin, PluginKey } from '@milkdown/prose/state';
 import type { EditorView } from '@milkdown/prose/view';
 import { Decoration, DecorationSet } from '@milkdown/prose/view';
 import type { Node as ProseNode } from '@milkdown/prose/model';
+import { EditorView as CMEditorView, Decoration as CMDecoration } from '@codemirror/view';
+import type { DecorationSet as CMDecorationSet } from '@codemirror/view';
+import { StateEffect, StateField } from '@codemirror/state';
 
 // ── Public types ────────────────────────────────────────────────────
 
@@ -45,6 +48,49 @@ type SearchAction =
 
 export const searchPluginKey = new PluginKey('SEARCH');
 
+// ── CodeMirror search highlight extension ────────────────────────────
+
+interface CMHighlightInfo {
+  from: number;
+  to: number;
+  isActive: boolean;
+}
+
+const setSearchCMHighlights = StateEffect.define<CMHighlightInfo[]>();
+
+const cmSearchHighlightField = StateField.define<CMDecorationSet>({
+  create() { return CMDecoration.none; },
+  update(deco, tr) {
+    for (const effect of tr.effects) {
+      if (effect.is(setSearchCMHighlights)) {
+        const highlights = effect.value;
+        if (highlights.length === 0) return CMDecoration.none;
+        const widgets = highlights.map(h =>
+          CMDecoration.mark({
+            class: h.isActive
+              ? 'search-cm-match search-cm-match-active'
+              : 'search-cm-match',
+          }).range(h.from, h.to)
+        );
+        return CMDecoration.set(widgets, true);
+      }
+    }
+    return deco.map(tr.changes);
+  },
+  provide: f => CMEditorView.decorations.from(f),
+});
+
+/** Ensure the CM search highlight extension is installed on a CM editor. */
+function ensureCMHighlightExtension(cmView: CMEditorView) {
+  try {
+    cmView.state.field(cmSearchHighlightField);
+  } catch {
+    cmView.dispatch({
+      effects: StateEffect.appendConfig.of([cmSearchHighlightField]),
+    });
+  }
+}
+
 // ── Constants ───────────────────────────────────────────────────────
 
 const EMPTY_STATE: SearchPluginState = {
@@ -65,11 +111,12 @@ interface TextblockInfo {
   pos: number;
 }
 
-/** Walk every textblock in the document (depth-first, document order). */
+/** Walk every textblock in the document (depth-first, document order).
+ *  Includes code_block nodes because they contain searchable text. */
 function collectTextblocks(doc: ProseNode): TextblockInfo[] {
   const result: TextblockInfo[] = [];
   doc.descendants((node, pos) => {
-    if (node.inlineContent) {
+    if (node.inlineContent || node.type.name === 'code_block') {
       result.push({ node, pos });
     }
   });
@@ -219,8 +266,14 @@ function buildDecorations(
   if (matches.length === 0) return DecorationSet.empty;
 
   const decorations: Decoration[] = [];
+
   for (let i = 0; i < matches.length; i++) {
     const { from, to } = matches[i];
+    const $pos = doc.resolve(from);
+
+    // Code block matches are handled via CodeMirror decorations (see syncCodeMirrorHighlights)
+    if ($pos.parent.type.name === 'code_block') continue;
+
     decorations.push(
       Decoration.inline(from, to, {
         class: i === activeIndex
@@ -229,7 +282,109 @@ function buildDecorations(
       }),
     );
   }
+
   return DecorationSet.create(doc, decorations);
+}
+
+// ── CodeMirror highlight sync ────────────────────────────────────────
+
+/** Group matches by the code_block node that contains them. */
+function groupMatchesByCodeBlock(
+  doc: ProseNode,
+  matches: MatchRange[],
+): Map<number, { cmFrom: number; cmTo: number; matchIndex: number }[]> {
+  const groups = new Map<number, { cmFrom: number; cmTo: number; matchIndex: number }[]>();
+
+  for (let i = 0; i < matches.length; i++) {
+    const { from, to } = matches[i];
+    const $pos = doc.resolve(from);
+    if ($pos.parent.type.name !== 'code_block') continue;
+
+    const cbPos = $pos.pos - $pos.parentOffset - 1;
+    // Convert ProseMirror positions to CodeMirror positions
+    // code_block content starts at cbPos + 1 in ProseMirror
+    const cmFrom = from - cbPos - 1;
+    const cmTo = to - cbPos - 1;
+
+    let list = groups.get(cbPos);
+    if (!list) {
+      list = [];
+      groups.set(cbPos, list);
+    }
+    list.push({ cmFrom, cmTo, matchIndex: i });
+  }
+
+  return groups;
+}
+
+/** Push search highlights into every visible CodeMirror editor. */
+function syncCodeMirrorHighlights(view: EditorView, state: SearchPluginState): void {
+  const { matches, activeIndex } = state;
+  if (matches.length === 0) {
+    clearAllCMHighlights(view);
+    return;
+  }
+
+  const doc = view.state.doc;
+  const groups = groupMatchesByCodeBlock(doc, matches);
+
+  // For each code block that has matches, find its CM EditorView and dispatch highlights
+  for (const [cbPos, cmMatches] of groups) {
+    const dom = view.nodeDOM(cbPos);
+    if (!dom) continue;
+
+    // Find the CodeMirror editor inside this code block
+    const cmEditorDom = (dom as HTMLElement).querySelector('.cm-editor');
+    if (!cmEditorDom) continue;
+
+    let cmView: CMEditorView | null;
+    try {
+      cmView = CMEditorView.findFromDOM(cmEditorDom as HTMLElement);
+    } catch {
+      continue;
+    }
+    if (!cmView) continue;
+
+    ensureCMHighlightExtension(cmView);
+
+    const highlights = cmMatches.map(m => ({
+      from: m.cmFrom,
+      to: m.cmTo,
+      isActive: m.matchIndex === activeIndex,
+    }));
+
+    cmView.dispatch({
+      effects: setSearchCMHighlights.of(highlights),
+    });
+  }
+}
+
+/** Clear CM search highlights from all visible code block editors. */
+function clearAllCMHighlights(view: EditorView): void {
+  // Find all code block nodes in the document
+  view.state.doc.descendants((node, pos) => {
+    if (node.type.name !== 'code_block') return false;
+    const dom = view.nodeDOM(pos);
+    if (!dom) return false;
+
+    const cmEditorDom = (dom as HTMLElement).querySelector('.cm-editor');
+    if (!cmEditorDom) return false;
+
+    try {
+      const cmView = CMEditorView.findFromDOM(cmEditorDom as HTMLElement);
+      if (cmView) {
+        try {
+          cmView.state.field(cmSearchHighlightField);
+          cmView.dispatch({ effects: setSearchCMHighlights.of([]) });
+        } catch {
+          // Extension not installed, nothing to clear
+        }
+      }
+    } catch {
+      // Ignore
+    }
+    return false;
+  });
 }
 
 // ── Plugin factory ──────────────────────────────────────────────────
@@ -350,9 +505,10 @@ export function createSearchPlugin(cb?: SearchStateCallback) {
       view() {
         return {
           update(view: EditorView) {
-            if (callback) {
-              const state = searchPluginKey.getState(view.state);
-              if (state) callback(state);
+            const state = searchPluginKey.getState(view.state);
+            if (state) {
+              syncCodeMirrorHighlights(view, state);
+              if (callback) callback(state);
             }
           },
         };
