@@ -28,7 +28,9 @@
     "cut": "Ausschneiden",
     "copy": "Kopieren",
     "paste": "Einfügen",
-    "selectAll": "Alles auswählen"
+    "selectAll": "Alles auswählen",
+    "find": "Suchen",
+    "findAndReplace": "Suchen und Ersetzen"
   },
   "format": {
     "title": "Format",

@@ -94,6 +94,9 @@ export function setupMenu(state: ViewMenuState = defaultState, tFn: (key: string
         { label: t('edit.paste'), action: 'editor-paste', accelerator: 'CmdOrCtrl+V' },
         { type: 'separator' },
         { label: t('edit.selectAll'), action: 'editor-select-all', accelerator: 'CmdOrCtrl+A' },
+        { type: 'separator' },
+        { label: t('edit.find'), action: 'edit-find', accelerator: 'CmdOrCtrl+F' },
+        { label: t('edit.findAndReplace'), action: 'edit-find-and-replace', accelerator: 'CmdOrCtrl+Option+F' },
       ],
     },
     {

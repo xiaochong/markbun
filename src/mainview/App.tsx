@@ -20,6 +20,7 @@ import { FileDialog } from './components/file-dialog';
 import { RecoveryDialog } from './components/recovery-dialog/RecoveryDialog';
 import { FileHistoryDialog } from './components/file-history/FileHistoryDialog';
 import { AboutDialog } from './components/about/AboutDialog';
+import { SearchBar } from './components/search-bar/SearchBar';
 import { useFileOperations } from './hooks/useFileOperations';
 import { useTheme } from './hooks/useTheme';
 import { useSidebar } from './hooks/useSidebar';
@@ -76,6 +77,10 @@ function App() {
   useEffect(() => {
     sourceModeRef.current = sourceMode;
   }, [sourceMode]);
+
+  // Search bar state
+  const [searchVisible, setSearchVisible] = useState(false);
+  const [searchShowReplace, setSearchShowReplace] = useState(false);
 
   // Phase 2: Sidebar and file management - MUST be declared before any effects that use them
   const sidebar = useSidebar();
@@ -1068,6 +1073,18 @@ function App() {
           editorRef.current?.focus();
           document.execCommand('selectAll');
           break;
+        case 'edit-find':
+          if (!sourceModeRef.current) {
+            setSearchVisible(true);
+            setSearchShowReplace(false);
+          }
+          break;
+        case 'edit-find-and-replace':
+          if (!sourceModeRef.current) {
+            setSearchVisible(true);
+            setSearchShowReplace(true);
+          }
+          break;
         case 'file-export-html': {
           const result = await generateHTML(contentRef.current, path);
           if (result) {
@@ -1209,6 +1226,29 @@ function App() {
           e.preventDefault();
           void clipboard.paste();
           break;
+        case 'f':
+          if (!sourceModeRef.current) {
+            e.preventDefault();
+            if (e.altKey) {
+              // Cmd+Option+F → Find and Replace
+              setSearchVisible(true);
+              setSearchShowReplace(true);
+            } else {
+              // Cmd+F → Find
+              setSearchVisible(true);
+            }
+          }
+          break;
+        case 'g':
+          if (searchVisible) {
+            e.preventDefault();
+            if (e.shiftKey) {
+              // Shift+Cmd+G → prev match (dispatched via plugin key)
+            } else {
+              // Cmd+G → next match
+            }
+          }
+          break;
       }
     };
 
@@ -1294,6 +1334,18 @@ function App() {
               onList={handleList}
               onOrderedList={handleOrderedList}
               onTaskList={handleTaskList}
+            />
+          )}
+          {/* Search Bar - only in WYSIWYG mode */}
+          {searchVisible && !sourceMode && !imagePreviewPath && (
+            <SearchBar
+              getEditorView={editorRef.current?.getEditorView ?? null}
+              isVisible={searchVisible}
+              onClose={() => {
+                setSearchVisible(false);
+                setSearchShowReplace(false);
+              }}
+              showReplace={searchShowReplace}
             />
           )}
           {imagePreviewPath ? (

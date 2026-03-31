@@ -64,6 +64,8 @@ export interface MilkdownEditorRef {
   insertImage: (src: string, alt?: string, title?: string) => boolean;
   // Insert text at current cursor position
   insertText: (text: string) => boolean;
+  // Access ProseMirror EditorView for search integration
+  getEditorView: () => import('@milkdown/prose/view').EditorView | null;
 }
 
 // 编辑器实例引用类型

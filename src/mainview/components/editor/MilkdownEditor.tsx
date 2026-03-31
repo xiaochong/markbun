@@ -1,5 +1,6 @@
 import { forwardRef, useImperativeHandle, useState, useCallback, memo } from 'react';
 import { Milkdown } from '@milkdown/react';
+import { editorViewCtx } from '@milkdown/kit/core';
 import type { MilkdownEditorProps, MilkdownEditorRef } from './types';
 import { useCrepeEditor, useThemeLoader, useContextMenu } from './hooks';
 import { hasSelection, execCommand } from './utils/editorActions';
@@ -105,6 +106,17 @@ export const MilkdownEditor = memo(forwardRef<MilkdownEditorRef, MilkdownEditorP
 
       // Insert text
       insertText: (text: string) => textCommands.insertText(crepeRef, text),
+
+      // Search integration — expose EditorView
+      getEditorView: () => {
+        const editor = crepeRef.current?.editor;
+        if (!editor?.ctx) return null;
+        try {
+          return editor.ctx.get(editorViewCtx);
+        } catch {
+          return null;
+        }
+      },
     }), [
       isReady,
       loading,

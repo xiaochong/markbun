@@ -13,6 +13,7 @@ import { clipboard } from '@milkdown/plugin-clipboard';
 import { history } from '@milkdown/plugin-history';
 import { gfm, remarkGFMPlugin } from '@milkdown/preset-gfm';
 import { clipboardBlobConverter } from '../plugins/clipboardBlobConverter';
+import { createSearchPlugin } from '../plugins/searchPlugin';
 import { electrobun } from '@/lib/electrobun';
 import { workspaceManager, loadLocalImage, imageCache } from '@/lib/image';
 import type { MilkdownEditorProps } from '../types';
@@ -217,6 +218,8 @@ export function useCrepeEditor(
     crepe.editor.use(breaksPlugin);
     // Register remark parsers for highlight/superscript/subscript
     crepe.editor.use(inlineMarksParsersPlugin);
+    // Enable search & replace plugin for find/replace functionality
+    crepe.editor.use(createSearchPlugin());
     // Serialize hardbreaks back to plain \n (not \\ or trailing spaces)
     crepe.editor.config((ctx) => {
       // Disable single-tilde strikethrough so ~text~ can be used as subscript

@@ -1931,6 +1931,9 @@ async function main() {
       case 'editor-copy':
       case 'editor-paste':
       case 'editor-select-all':
+      // Search menu actions
+      case 'edit-find':
+      case 'edit-find-and-replace':
       // Format menu actions
       case 'format-strong':
       case 'format-emphasis':

@@ -28,7 +28,9 @@
     "cut": "剪切",
     "copy": "复制",
     "paste": "粘贴",
-    "selectAll": "全选"
+    "selectAll": "全选",
+    "find": "查找",
+    "findAndReplace": "查找和替换"
   },
   "format": {
     "title": "格式",
