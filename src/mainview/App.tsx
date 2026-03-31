@@ -1214,17 +1214,40 @@ function App() {
             editorRef.current?.toggleHighlight();
           }
           break;
-        case 'c':
-          // Don't intercept in input fields (e.g., search bar)
-          if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') break;
-          e.preventDefault();
-          void clipboard.copy();
+        case 'c': {
+          const cTarget = e.target as HTMLElement;
+          if (cTarget.tagName === 'INPUT' || cTarget.tagName === 'TEXTAREA') {
+            // WebView doesn't support native clipboard shortcuts in input fields, handle manually
+            e.preventDefault();
+            const el = cTarget as HTMLInputElement | HTMLTextAreaElement;
+            const start = el.selectionStart ?? 0;
+            const end = el.selectionEnd ?? start;
+            if (start === end) break; // No selection, don't overwrite clipboard
+            void electrobun.writeToClipboard(el.value.substring(start, end));
+          } else {
+            e.preventDefault();
+            void clipboard.copy();
+          }
           break;
-        case 'x':
-          if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') break;
-          e.preventDefault();
-          void clipboard.cut();
+        }
+        case 'x': {
+          const xTarget = e.target as HTMLElement;
+          if (xTarget.tagName === 'INPUT' || xTarget.tagName === 'TEXTAREA') {
+            // WebView doesn't support native clipboard shortcuts in input fields, handle manually
+            e.preventDefault();
+            const el = xTarget as HTMLInputElement | HTMLTextAreaElement;
+            const start = el.selectionStart ?? 0;
+            const end = el.selectionEnd ?? start;
+            if (start === end) break; // No selection, don't overwrite clipboard
+            const selectedText = el.value.substring(start, end);
+            el.setRangeText('');
+            void electrobun.writeToClipboard(selectedText);
+          } else {
+            e.preventDefault();
+            void clipboard.cut();
+          }
           break;
+        }
         case 'v': {
           const vTarget = e.target as HTMLElement;
           if (vTarget.tagName === 'INPUT' || vTarget.tagName === 'TEXTAREA') {
