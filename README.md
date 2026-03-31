@@ -434,7 +434,6 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 ### v0.5.0 ⏳ Planned
 - [ ] Find & Replace
 - [ ] Command Palette (Ctrl/Cmd+Shift+P)
-- [ ] Tabbed Editing (multiple documents)
 
 ### v0.6.0 ⏳ Planned
 - [ ] AI Writing Assistant (continue writing, generate content)
@@ -455,6 +454,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 - [ ] Performance Optimization (large files)
 - [ ] Cross-platform Distribution (macOS/Windows/Linux)
 - [ ] Workspace Management
+- [ ] Tabbed Editing (multiple documents)
 
 ### v0.10.0 ⏳ Planned
 - [ ] Auto Updater
