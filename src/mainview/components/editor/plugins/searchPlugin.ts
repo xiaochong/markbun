@@ -42,6 +42,7 @@ type SearchAction =
   | { type: 'prevMatch' }
   | { type: 'replaceCurrent'; replacement: string }
   | { type: 'replaceAll'; replacement: string }
+  | { type: 'replaceDone' }
   | { type: 'clear' };
 
 // ── Plugin key ──────────────────────────────────────────────────────
@@ -454,40 +455,20 @@ export function createSearchPlugin(cb?: SearchStateCallback) {
             }
 
             case 'replaceCurrent': {
-              if (prev.activeIndex < 0 || prev.activeIndex >= prev.matches.length)
-                return prev;
-              // Apply replacement on the transaction
-              const match = prev.matches[prev.activeIndex];
-              const marks = tr.doc.resolve(match.from).marksAcross(
-                tr.doc.resolve(match.to),
-              );
-              tr.replaceWith(
-                match.from,
-                match.to,
-                tr.doc.type.schema.text(meta.replacement, marks ?? undefined),
-              );
-              // Return temporary state; re-search will happen on next apply() via doc change
-              const remaining = prev.matches.filter((_, i) => i !== prev.activeIndex);
-              let newActive = prev.activeIndex;
-              if (newActive >= remaining.length) newActive = remaining.length > 0 ? 0 : -1;
-              return { ...prev, matches: remaining, activeIndex: newActive, decorationSet: DecorationSet.empty };
+              // Actual text replacement is done by the caller (useSearch hook) via
+              // tr.replaceWith on a fresh transaction, then dispatching with replaceDone.
+              // This case is kept for backward compat but should not modify tr here.
+              return prev;
             }
 
             case 'replaceAll': {
-              if (prev.matches.length === 0) return prev;
-              // Back-to-front to keep positions stable
-              const sorted = [...prev.matches].sort((a, b) => b.from - a.from);
-              for (const match of sorted) {
-                const marks = tr.doc.resolve(match.from).marksAcross(
-                  tr.doc.resolve(match.to),
-                );
-                tr.replaceWith(
-                  match.from,
-                  match.to,
-                  tr.doc.type.schema.text(meta.replacement, marks ?? undefined),
-                );
-              }
-              return EMPTY_STATE;
+              // Same as replaceCurrent — the caller handles the transaction.
+              return prev;
+            }
+
+            case 'replaceDone': {
+              // After a replacement transaction has been applied, re-search the new doc.
+              return reSearch(tr.doc, prev);
             }
 
             default:
@@ -508,6 +489,28 @@ export function createSearchPlugin(cb?: SearchStateCallback) {
             const state = searchPluginKey.getState(view.state);
             if (state) {
               syncCodeMirrorHighlights(view, state);
+              // Scroll active match into view (DOM-based, no transaction dispatch)
+              if (state.activeIndex >= 0 && state.activeIndex < state.matches.length) {
+                requestAnimationFrame(() => {
+                  // First try the ProseMirror decoration element
+                  const activeEl = view.dom.querySelector('.search-match-active');
+                  if (activeEl) {
+                    activeEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                    return;
+                  }
+                  // For code blocks, find the code block node containing the match
+                  const match = state.matches[state.activeIndex];
+                  if (!match) return;
+                  const $pos = view.state.doc.resolve(match.from);
+                  if ($pos.parent.type.name === 'code_block') {
+                    const cbPos = $pos.pos - $pos.parentOffset - 1;
+                    const nodeDom = view.nodeDOM(cbPos);
+                    if (nodeDom) {
+                      (nodeDom as HTMLElement).scrollIntoView({ block: 'center', behavior: 'smooth' });
+                    }
+                  }
+                });
+              }
               if (callback) callback(state);
             }
           },

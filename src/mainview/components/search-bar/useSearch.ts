@@ -26,6 +26,7 @@ export interface UseSearchReturn {
   prevMatch: () => void;
   replaceCurrent: () => void;
   replaceAll: () => void;
+  clear: () => void;
 }
 
 export function useSearch(
@@ -136,15 +137,51 @@ export function useSearch(
     if (!getEditorView) return;
     const view = getEditorView();
     if (!view) return;
-    dispatchSearchAction(view, { type: 'replaceCurrent', replacement });
+    const state = searchPluginKey.getState(view.state);
+    if (!state || state.activeIndex < 0 || state.activeIndex >= state.matches.length) return;
+    const match = state.matches[state.activeIndex];
+    const tr = view.state.tr;
+    const marks = tr.doc.resolve(match.from).marksAcross(
+      tr.doc.resolve(match.to),
+    );
+    tr.replaceWith(
+      match.from,
+      match.to,
+      tr.doc.type.schema.text(replacement, marks ?? undefined),
+    );
+    tr.setMeta(searchPluginKey, { type: 'replaceDone' });
+    view.dispatch(tr);
   }, [getEditorView, replacement]);
 
   const replaceAll = useCallback(() => {
     if (!getEditorView) return;
     const view = getEditorView();
     if (!view) return;
-    dispatchSearchAction(view, { type: 'replaceAll', replacement });
+    const state = searchPluginKey.getState(view.state);
+    if (!state || state.matches.length === 0) return;
+    const tr = view.state.tr;
+    // Back-to-front to keep positions stable
+    const sorted = [...state.matches].sort((a, b) => b.from - a.from);
+    for (const match of sorted) {
+      const marks = tr.doc.resolve(match.from).marksAcross(
+        tr.doc.resolve(match.to),
+      );
+      tr.replaceWith(
+        match.from,
+        match.to,
+        tr.doc.type.schema.text(replacement, marks ?? undefined),
+      );
+    }
+    tr.setMeta(searchPluginKey, { type: 'clear' });
+    view.dispatch(tr);
   }, [getEditorView, replacement]);
+
+  const clear = useCallback(() => {
+    if (!getEditorView) return;
+    const view = getEditorView();
+    if (!view) return;
+    dispatchSearchAction(view, { type: 'clear' });
+  }, [getEditorView]);
 
   return {
     query,
@@ -162,5 +199,6 @@ export function useSearch(
     prevMatch,
     replaceCurrent,
     replaceAll,
+    clear,
   };
 }

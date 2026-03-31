@@ -37,6 +37,7 @@ export function SearchBar({ getEditorView, isVisible, onClose, showReplace }: Se
     prevMatch,
     replaceCurrent,
     replaceAll,
+    clear,
   } = useSearch(isVisible ? getEditorView : null);
 
   // Auto-focus find input when opened
@@ -51,6 +52,7 @@ export function SearchBar({ getEditorView, isVisible, onClose, showReplace }: Se
       if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
+        clear();
         onClose();
         return;
       }
@@ -143,7 +145,7 @@ export function SearchBar({ getEditorView, isVisible, onClose, showReplace }: Se
 
         {/* Close */}
         <button
-          onClick={onClose}
+          onClick={() => { clear(); onClose(); }}
           className="p-1 rounded hover:bg-muted text-muted-foreground"
           title={t('search.close', 'Close')}
         >

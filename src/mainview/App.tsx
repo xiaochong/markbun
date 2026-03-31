@@ -1215,17 +1215,33 @@ function App() {
           }
           break;
         case 'c':
+          // Don't intercept in input fields (e.g., search bar)
+          if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') break;
           e.preventDefault();
           void clipboard.copy();
           break;
         case 'x':
+          if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') break;
           e.preventDefault();
           void clipboard.cut();
           break;
-        case 'v':
-          e.preventDefault();
-          void clipboard.paste();
+        case 'v': {
+          const vTarget = e.target as HTMLElement;
+          if (vTarget.tagName === 'INPUT' || vTarget.tagName === 'TEXTAREA') {
+            // WebView doesn't support native Cmd+V in input fields, handle manually
+            e.preventDefault();
+            void electrobun.readFromClipboard().then((result) => {
+              const res = result as { success: boolean; text?: string };
+              if (res.success && res.text) {
+                document.execCommand('insertText', false, res.text);
+              }
+            });
+          } else {
+            e.preventDefault();
+            void clipboard.paste();
+          }
           break;
+        }
         case 'f':
           if (!sourceModeRef.current) {
             e.preventDefault();
