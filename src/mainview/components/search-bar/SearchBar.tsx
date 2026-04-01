@@ -83,11 +83,12 @@ export function SearchBar({ getEditorView, isVisible, onClose, showReplace }: Se
           onKeyDown={handleKeyDown}
           placeholder={t('search.findPlaceholder', 'Find')}
           className={cn(
-            'flex-1 min-w-0 rounded border bg-transparent px-2 py-1 text-foreground outline-none',
+            'flex-1 min-w-0 rounded border bg-transparent px-2 py-1 text-foreground',
             'placeholder:text-muted-foreground',
+            'transition-all duration-150 focus:outline-none',
             error
-              ? 'border-red-500 focus:border-red-500'
-              : 'border-border focus:border-primary',
+              ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/25'
+              : 'border-border focus:border-primary/70 focus:ring-2 focus:ring-primary/15',
           )}
         />
 
@@ -164,7 +165,7 @@ export function SearchBar({ getEditorView, isVisible, onClose, showReplace }: Se
             onChange={(e) => setReplacement(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t('search.replacePlaceholder', 'Replace')}
-            className="flex-1 min-w-0 rounded border border-border bg-transparent px-2 py-1 text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+            className="flex-1 min-w-0 rounded border border-border bg-transparent px-2 py-1 text-foreground placeholder:text-muted-foreground transition-all duration-150 focus:outline-none focus:border-primary/70 focus:ring-2 focus:ring-primary/15"
           />
           <button
             onClick={replaceCurrent}
