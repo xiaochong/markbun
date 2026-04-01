@@ -484,6 +484,7 @@ export function createSearchPlugin(cb?: SearchStateCallback) {
       },
 
       view() {
+        let pendingRaf: number | null = null;
         return {
           update(view: EditorView) {
             const state = searchPluginKey.getState(view.state);
@@ -491,7 +492,9 @@ export function createSearchPlugin(cb?: SearchStateCallback) {
               syncCodeMirrorHighlights(view, state);
               // Scroll active match into view (DOM-based, no transaction dispatch)
               if (state.activeIndex >= 0 && state.activeIndex < state.matches.length) {
-                requestAnimationFrame(() => {
+                if (pendingRaf !== null) cancelAnimationFrame(pendingRaf);
+                pendingRaf = requestAnimationFrame(() => {
+                  pendingRaf = null;
                   // First try the ProseMirror decoration element
                   const activeEl = view.dom.querySelector('.search-match-active');
                   if (activeEl) {
@@ -513,6 +516,9 @@ export function createSearchPlugin(cb?: SearchStateCallback) {
               }
               if (callback) callback(state);
             }
+          },
+          destroy() {
+            if (pendingRaf !== null) cancelAnimationFrame(pendingRaf);
           },
         };
       },

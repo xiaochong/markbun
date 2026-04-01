@@ -4,6 +4,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { EditorView } from '@milkdown/prose/view';
+import type { Transaction } from '@milkdown/prose/state';
 import {
   searchPluginKey,
   dispatchSearchAction,
@@ -56,15 +57,15 @@ export function useSearch(
     // We piggyback on ProseMirror's dispatch — every time the view updates,
     // read the plugin state and sync to React.
     const origDispatch = view.dispatch.bind(view);
-    const patchedDispatch = (tr: any) => {
+    const patchedDispatch = (tr: Transaction) => {
       origDispatch(tr);
       const state = searchPluginKey.getState(view.state);
       if (state) syncFromPlugin(state);
     };
-    (view as any).dispatch = patchedDispatch;
+    view.dispatch = patchedDispatch;
 
     return () => {
-      (view as any).dispatch = origDispatch;
+      view.dispatch = origDispatch;
     };
   }, [getEditorView]);
 

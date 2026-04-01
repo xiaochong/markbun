@@ -43,7 +43,8 @@ export function SearchBar({ getEditorView, isVisible, onClose, showReplace }: Se
   // Auto-focus find input when opened
   useEffect(() => {
     if (isVisible) {
-      setTimeout(() => inputRef.current?.focus(), 20);
+      const timer = setTimeout(() => inputRef.current?.focus(), 20);
+      return () => clearTimeout(timer);
     }
   }, [isVisible]);
 

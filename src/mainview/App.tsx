@@ -21,6 +21,7 @@ import { RecoveryDialog } from './components/recovery-dialog/RecoveryDialog';
 import { FileHistoryDialog } from './components/file-history/FileHistoryDialog';
 import { AboutDialog } from './components/about/AboutDialog';
 import { SearchBar } from './components/search-bar/SearchBar';
+import { dispatchSearchAction, searchPluginKey } from './components/editor/plugins/searchPlugin';
 import { useFileOperations } from './hooks/useFileOperations';
 import { useTheme } from './hooks/useTheme';
 import { useSidebar } from './hooks/useSidebar';
@@ -1281,10 +1282,13 @@ function App() {
         case 'g':
           if (searchVisible) {
             e.preventDefault();
-            if (e.shiftKey) {
-              // Shift+Cmd+G → prev match (dispatched via plugin key)
-            } else {
-              // Cmd+G → next match
+            const view = editorRef.current?.getEditorView?.();
+            if (view) {
+              if (e.shiftKey) {
+                dispatchSearchAction(view, { type: 'prevMatch' });
+              } else {
+                dispatchSearchAction(view, { type: 'nextMatch' });
+              }
             }
           }
           break;
@@ -1293,7 +1297,7 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown, true);
     return () => window.removeEventListener('keydown', handleKeyDown, true);
-  }, [handleSave, handleSaveAs, handleOpen, handleOpenFolder, updateContent, quickOpen.open, sidebar.toggle, clipboard, sourceMode, cancelPendingSave, outline.setHeadings, fileExplorer.setRootPath, fileExplorer.selectFile]);
+  }, [handleSave, handleSaveAs, handleOpen, handleOpenFolder, updateContent, quickOpen.open, sidebar.toggle, clipboard, sourceMode, cancelPendingSave, outline.setHeadings, fileExplorer.setRootPath, fileExplorer.selectFile, searchVisible, searchShowReplace]);
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">

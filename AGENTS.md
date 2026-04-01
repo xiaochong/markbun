@@ -923,5 +923,6 @@ Check the project documentation:
 - `README.md` - User-facing documentation
 - `doc/architecture.md` - Detailed architecture
 - `findings.md` - Research notes
+- `docs/solutions/` - Documented solutions to past problems (bugs, best practices, workflow patterns), organized by category with YAML frontmatter (`module`, `tags`, `problem_type`). Relevant when implementing or debugging in documented areas.
 
 Or open an issue on GitHub.
