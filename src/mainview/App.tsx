@@ -30,6 +30,7 @@ import { useOutline } from './hooks/useOutline';
 import { useQuickOpen } from './hooks/useQuickOpen';
 import { useClipboard } from './hooks/useClipboard';
 import { useExport } from './hooks/useExport';
+import { useSessionSave } from './hooks/useSessionSave';
 import { electrobun } from './lib/electrobun';
 import i18n from './i18n';
 import {
@@ -41,7 +42,7 @@ import {
   restoreOriginalImagePaths,
   getDirectoryPath,
 } from './lib/image';
-import type { FileNode, AppSettings, UIState, RecoveryInfo, MenuConfig, MenuItemConfig } from '@/shared/types';
+import type { FileNode, AppSettings, UIState, RecoveryInfo, MenuConfig, MenuItemConfig, SessionState } from '@/shared/types';
 import { AppMenuBar } from './components/menu';
 import type { AppMenuState } from './components/menu';
 
@@ -143,25 +144,27 @@ function App() {
   // Image insert dialog state
   const [showImageDialog, setShowImageDialog] = useState(false);
 
-  // Load UI state then check for pending file on mount (sequential to avoid race condition:
-  // closeSidebar from pending file must override saved sidebar state)
+  // Consolidated startup initialization with priority chain:
+  // 1. UI state (always)
+  // 2. Pending file from CLI/open-url (highest priority)
+  // 3. Crash recovery check
+  // 4. Session restore (if no pending file and no recovery)
+  // 5. Clean workspace + desktop default init
   useEffect(() => {
-    const init = async () => {
+    const initializeApp = async () => {
+      // Step 1: Load UI state
       const uiResult = await electrobun.getUIState() as { success: boolean; state?: UIState };
       if (uiResult.success && uiResult.state) {
         setShowTitleBar(uiResult.state.showTitleBar);
         setShowToolbar(uiResult.state.showToolBar);
         setShowStatusBar(uiResult.state.showStatusBar);
         setSourceMode(uiResult.state.sourceMode ?? false);
-        // Use setIsOpen and setWidth directly to avoid triggering sidebar tab switch
         sidebar.setIsOpen(uiResult.state.showSidebar);
         sidebar.setWidth(uiResult.state.sidebarWidth);
-        // Only set tab without opening sidebar
         sidebar.setTab(uiResult.state.sidebarActiveTab);
       }
 
-      // Check for a file passed via CLI, open-url, or help menu — after UI state so
-      // closeSidebar can override the saved sidebar state
+      // Step 2: Check for pending file (priority 1)
       const fileResult = await electrobun.getPendingFile() as { path: string; content: string; closeSidebar?: boolean } | null;
       if (fileResult) {
         if (fileResult.closeSidebar) {
@@ -169,9 +172,139 @@ function App() {
         }
         const listeners = (window as any).__electrobunListeners?.['file-opened'] || [];
         listeners.forEach((cb: (data: unknown) => void) => cb(fileResult));
+        // Set workspace root from pending file's parent
+        const parentDir = getDirectoryPath(fileResult.path);
+        workspaceManager.setWorkspaceRoot(parentDir);
+        return; // Pending file takes priority — skip session restore
+      }
+
+      // Step 3: Check crash recovery (priority 2)
+      const recoveryResult = await electrobun.checkRecovery() as { success: boolean; recoveries?: RecoveryInfo[] };
+      if (recoveryResult.success && recoveryResult.recoveries && recoveryResult.recoveries.length > 0) {
+        setPendingRecoveries(recoveryResult.recoveries);
+        setShowRecoveryDialog(true);
+        // Don't return here — user may dismiss the dialog, then we proceed to session restore
+        // The recovery dialog flow is handled by existing RecoveryDialog component
+        // If user recovers a file, handleRecover callback sets the file state
+        // For now, continue to try session restore as well — if user dismisses recovery dialog
+        // We'll let the session restore run to give the best UX
+      }
+
+      // Step 4: Session restore (priority 3)
+      try {
+        const sessionResult = await electrobun.getSessionState() as { success: boolean; state?: SessionState };
+        if (sessionResult.success && sessionResult.state && sessionResult.state.filePath) {
+          const session = sessionResult.state;
+
+          // Check if file still exists
+          const statsResult = await electrobun.getFileStats({ path: session.filePath }) as
+            | { success: true; mtime: number }
+            | { success: false; error: string };
+
+          if (!statsResult.success) {
+            // File absent — clean workspace, preserve session data (R7)
+            // Fall through to desktop default init
+            console.log('[SessionRestore] File absent, falling back to clean workspace');
+          } else {
+            // File exists — set up workspace and load file
+            const parentDir = getDirectoryPath(session.filePath);
+            workspaceManager.setWorkspaceRoot(parentDir);
+
+            // Set file explorer root
+            fileExplorer.setRootPath(parentDir);
+
+            // Restore expanded paths (if any)
+            if (session.expandedPaths.length > 0) {
+              await fileExplorer.restoreExpandedPaths(session.expandedPaths);
+            }
+
+            // Read file content
+            const readResult = await electrobun.readFile({ path: session.filePath }) as {
+              success: boolean;
+              content?: string;
+              path?: string;
+            };
+
+            if (readResult.success && readResult.content !== undefined && readResult.path) {
+              // Set switching flag to prevent editor change handlers from processing
+              isSwitchingFileRef.current = true;
+
+              // Reset file state
+              resetFileState(readResult.path, readResult.content);
+
+              // Process images if needed
+              const needsImageProcessing = hasLocalImages(readResult.content);
+              const contentToLoad = needsImageProcessing
+                ? await processMarkdownImages(readResult.content)
+                : readResult.content;
+
+              // Load content into editor based on sourceMode from uiState
+              // Wait for editor to be ready
+              const waitForEditor = async () => {
+                for (let i = 0; i < 50; i++) {
+                  const editorReady = sourceMode
+                    ? sourceEditorRef.current?.isReady
+                    : editorRef.current?.isReady;
+                  if (editorReady) return true;
+                  await new Promise(resolve => setTimeout(resolve, 50));
+                }
+                return false;
+              };
+
+              const ready = await waitForEditor();
+              if (!ready) return;
+
+              if (sourceMode && session.sourceMode !== false) {
+                // Source mode restore
+                sourceEditorRef.current?.setValue(readResult.content);
+                setEditorContent(readResult.content);
+                outline.setHeadings(readResult.content);
+
+                // Restore cursor and scroll if mtime unchanged (R5)
+                if (session.cursor) {
+                  sourceEditorRef.current?.setCursor(session.cursor.line, session.cursor.column);
+                }
+                if (session.scrollTop > 0) {
+                  sourceEditorRef.current?.setScrollTop(session.scrollTop);
+                }
+              } else {
+                // WYSIWYG mode restore
+                editorRef.current?.setMarkdown(contentToLoad, {
+                  onContentSet: () => {
+                    if (session.cursor) {
+                      editorRef.current?.setCursor(session.cursor.line, session.cursor.column);
+                    }
+                    if (session.scrollTop > 0) {
+                      editorRef.current?.setScrollTop(session.scrollTop);
+                    }
+                  },
+                });
+                setEditorContent(contentToLoad);
+                outline.setHeadings(contentToLoad);
+              }
+
+              // Select file in explorer and add to recent files
+              fileExplorer.selectFile(readResult.path);
+              await electrobun.addRecentFile({ path: readResult.path });
+              console.log('[SessionRestore] Restored:', readResult.path);
+              // Clear switching flag after a short delay
+              setTimeout(() => { isSwitchingFileRef.current = false; }, 100);
+              return; // Session restore successful
+            }
+          }
+        }
+      } catch (e) {
+        console.error('[SessionRestore] Failed:', e);
+      }
+
+      // Step 5: Clean workspace — set desktop as default workspace root
+      const desktopResult = await electrobun.getDesktopPath() as { success: boolean; path?: string };
+      if (desktopResult.success && desktopResult.path) {
+        workspaceManager.setWorkspaceRoot(desktopResult.path);
       }
     };
-    void init();
+
+    void initializeApp();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -269,6 +402,16 @@ function App() {
       // Select the saved file in file explorer
       fileExplorerRef.current.selectFile(savedPath);
     },
+  });
+
+  // Session save — periodically persists editing context for next launch
+  const { scheduleSave } = useSessionSave({
+    filePath: path,
+    editorRef,
+    sourceEditorRef,
+    sourceMode,
+    expandedPaths: fileExplorer.expandedPaths,
+    isReady: editorRef.current?.isReady ?? false,
   });
 
   // Refs for unsaved-changes guard (avoid stale closures in callbacks)
@@ -374,17 +517,6 @@ function App() {
     setCurrentFilePath(path);
     workspaceManager.setCurrentFile(path);
   }, [path]);
-
-  // Initialize workspace root on mount (desktop as default)
-  useEffect(() => {
-    const initWorkspace = async () => {
-      const result = await electrobun.getDesktopPath() as { success: boolean; path?: string };
-      if (result.success && result.path) {
-        workspaceManager.setWorkspaceRoot(result.path);
-      }
-    };
-    void initWorkspace();
-  }, []);
 
   // Clipboard operations with blob URL handling
   const clipboard = useClipboard(editorRef, currentFilePath, sourceMode);

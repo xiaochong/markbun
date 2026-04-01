@@ -1,13 +1,33 @@
 /**
  * Session State Service 单元测试
  * 测试 session state 加载/保存/合并功能
+ *
+ * 隔离策略：mock `os` 模块（与 backup.test.ts 相同的 TEST_HOME 格式）
+ * 使用 top-level await import 确保 mock 在模块加载前生效
  */
-import { describe, it, expect, beforeEach } from 'bun:test';
-import {
+
+import { mock, describe, it, expect, beforeAll } from 'bun:test';
+import { mkdirSync, unlinkSync, existsSync } from 'fs';
+import { join } from 'path';
+import { tmpdir } from 'os';
+
+// Same TEST_HOME pattern as backup.test.ts to avoid mock conflict
+const TEST_HOME = join(tmpdir(), `markbun-backup-test-${process.pid}`);
+mkdirSync(TEST_HOME, { recursive: true });
+
+mock.module('os', () => ({
+  homedir: () => TEST_HOME,
+  tmpdir,
+}));
+
+const SESSION_STATE_PATH = join(TEST_HOME, '.config', 'markbun', 'session-state.json');
+
+const {
   getDefaultSessionState,
   loadSessionState,
   saveSessionState,
-} from '../../../../src/bun/services/sessionState';
+} = await import('../../../../src/bun/services/sessionState');
+
 import type { SessionState } from '../../../../src/bun/services/sessionState';
 
 describe('getDefaultSessionState', () => {
@@ -23,21 +43,14 @@ describe('getDefaultSessionState', () => {
 
 describe('loadSessionState', () => {
   it('should return default state when no file exists', async () => {
+    // Ensure clean slate
+    try { unlinkSync(SESSION_STATE_PATH); } catch {}
     const state = await loadSessionState();
     expect(state.version).toBe(1);
     expect(state.filePath).toBeNull();
     expect(state.cursor).toBeNull();
     expect(state.scrollTop).toBe(0);
     expect(state.expandedPaths).toEqual([]);
-  });
-
-  it('should have all required properties', async () => {
-    const state = await loadSessionState();
-    expect(typeof state.version).toBe('number');
-    expect(state.filePath === null || typeof state.filePath === 'string').toBe(true);
-    expect(state.cursor === null || (typeof state.cursor === 'object' && typeof state.cursor.line === 'number' && typeof state.cursor.column === 'number')).toBe(true);
-    expect(typeof state.scrollTop).toBe('number');
-    expect(Array.isArray(state.expandedPaths)).toBe(true);
   });
 });
 
@@ -79,7 +92,6 @@ describe('saveSessionState + loadSessionState', () => {
   });
 
   it('should handle partial state via merge', async () => {
-    // Save a full state first
     const fullState: SessionState = {
       version: 1,
       filePath: '/test/file.md',
@@ -89,7 +101,6 @@ describe('saveSessionState + loadSessionState', () => {
     };
     await saveSessionState(fullState);
 
-    // Save a partial update (only filePath)
     const partialState: SessionState = {
       ...fullState,
       filePath: '/test/other.md',
