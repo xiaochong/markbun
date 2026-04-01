@@ -465,6 +465,7 @@ function App() {
   // Handle command palette command selection
   function handleCommandSelect(action: string) {
     void electrobun.sendMenuAction(action);
+    void electrobun.recordCommandUsage(action);
   }
 
   // Open file by path

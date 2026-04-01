@@ -117,10 +117,30 @@ export function useQuickOpen(
       const recentFiles = fileItems
         .filter((f): f is PaletteItem & { type: 'file' } => f.type === 'file' && f.isRecent)
         .slice(0, MAX_PER_GROUP);
-      const recentCommands = commandHistory
-        .map(action => allCommandItems.find(c => c.type === 'command' && c.action === action))
-        .filter((c): c is PaletteItem & { type: 'command' } => c != null)
-        .slice(0, MAX_PER_GROUP);
+
+      let recentCommands: PaletteItem[];
+      if (commandHistory.length > 0) {
+        // Has history: show by recency order
+        recentCommands = commandHistory
+          .map(action => allCommandItems.find(c => c.type === 'command' && c.action === action))
+          .filter((c): c is PaletteItem & { type: 'command' } => c != null)
+          .slice(0, MAX_PER_GROUP);
+      } else {
+        // No history yet: show recommended (most useful) commands
+        const recommended = [
+          'view-quick-open',
+          'edit-find',
+          'file-save',
+          'format-strong',
+          'format-emphasis',
+          'view-toggle-sidebar',
+          'view-toggle-theme',
+        ];
+        recentCommands = recommended
+          .map(action => allCommandItems.find(c => c.type === 'command' && c.action === action))
+          .filter((c): c is PaletteItem & { type: 'command' } => c != null)
+          .slice(0, MAX_PER_GROUP);
+      }
       return { files: recentFiles, commands: recentCommands };
     }
 
