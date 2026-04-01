@@ -23,7 +23,13 @@
     "navigate": "↑↓ で移動",
     "open": "↵ で開く",
     "recent": "最近",
-    "esc": "ESC"
+    "esc": "ESC",
+    "placeholderCommands": "ファイルとコマンドを検索...",
+    "noResultsShort": "結果なし",
+    "resultCount": "{{count}} 件の結果",
+    "filesGroup": "ファイル",
+    "commandsGroup": "コマンド",
+    "switchGroup": "グループ切替"
   },
   "sidebar": {
     "files": "ファイル",

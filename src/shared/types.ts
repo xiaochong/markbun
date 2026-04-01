@@ -164,6 +164,20 @@ export interface QuickOpenItem {
 }
 
 /**
+ * Command palette item (discriminated union)
+ */
+export type PaletteItem =
+  | { type: 'file'; path: string; name: string; isRecent: boolean; score?: number }
+  | { type: 'command'; action: string; label: string; accelerator?: string; score?: number };
+
+export type FocusedGroup = 'files' | 'commands' | null;
+
+export interface GroupedResults {
+  files: PaletteItem[];
+  commands: PaletteItem[];
+}
+
+/**
  * UI State for persistence
  */
 export interface UIState {
@@ -258,6 +272,10 @@ export type MarkBunRPC = {
 
       // Export
       saveExportedFile: { params: { content: string; isBase64: boolean; filePath: string }; response: { success: boolean; path?: string; error?: string } };
+
+      // Command History
+      getCommandHistory: { params: {}; response: { success: boolean; history?: string[]; error?: string } };
+      recordCommandUsage: { params: { action: string }; response: { success: boolean; error?: string } };
 
       // i18n
       setLanguage: { params: { language: 'en' | 'zh-CN' | 'de' | 'fr' | 'ja' | 'ko' | 'pt' | 'es' }; response: { success: boolean; error?: string } };

@@ -334,6 +334,15 @@ export const electrobun = {
     return await electroview.rpc.request.sendMenuAction({ action });
   },
 
+  // Command palette history
+  async getCommandHistory() {
+    return await electroview.rpc.request.getCommandHistory({}) as { success: boolean; history?: string[]; error?: string };
+  },
+
+  async recordCommandUsage(action: string) {
+    return await electroview.rpc.request.recordCommandUsage({ action }) as { success: boolean; error?: string };
+  },
+
   // Subscribe to messages from main process
   on(event: string, callback: (data?: unknown) => void): () => void {
     const win = window as any;

@@ -23,7 +23,13 @@
     "navigate": "↑↓ 탐색",
     "open": "↵ 열기",
     "recent": "최근",
-    "esc": "ESC"
+    "esc": "ESC",
+    "placeholderCommands": "파일 및 명령 검색...",
+    "noResultsShort": "결과 없음",
+    "resultCount": "{{count}}개 결과",
+    "filesGroup": "파일",
+    "commandsGroup": "명령",
+    "switchGroup": "그룹 전환"
   },
   "sidebar": {
     "files": "파일",

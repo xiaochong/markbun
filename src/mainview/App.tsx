@@ -94,7 +94,7 @@ function App() {
   const fileExplorerRef = useRef(fileExplorer);
   fileExplorerRef.current = fileExplorer;
   const outline = useOutline();
-  const quickOpen = useQuickOpen(handleQuickOpenSelect);
+  const quickOpen = useQuickOpen(handleQuickOpenSelect, handleCommandSelect);
 
   // Derive menu state from existing UI state (avoids sync issues)
   // Must be after sidebar and UI state declarations
@@ -460,6 +460,11 @@ function App() {
     openFileByPath(filePath);
     // Close quick open dialog
     quickOpen.close();
+  }
+
+  // Handle command palette command selection
+  function handleCommandSelect(action: string) {
+    void electrobun.sendMenuAction(action);
   }
 
   // Open file by path
@@ -1161,6 +1166,10 @@ function App() {
 
       if (!cmdKey) return;
 
+      // When command palette is open, only allow Cmd+P (toggle close) through
+      // Block all other Cmd+key shortcuts to prevent editor actions
+      if (quickOpen.isOpen && e.key.toLowerCase() !== 'p') return;
+
       switch (e.key.toLowerCase()) {
         case 's':
           e.preventDefault();
@@ -1200,7 +1209,11 @@ function App() {
           break;
         case 'p':
           e.preventDefault();
-          quickOpen.open();
+          if (quickOpen.isOpen) {
+            quickOpen.close();
+          } else {
+            quickOpen.open();
+          }
           break;
         case 'b':
           if (e.shiftKey) {
@@ -1423,17 +1436,21 @@ function App() {
         />
       )}
 
-      {/* Quick Open Dialog */}
+      {/* Quick Open / Command Palette Dialog */}
       <QuickOpen
         isOpen={quickOpen.isOpen}
         query={quickOpen.query}
-        items={quickOpen.items}
+        groupedResults={quickOpen.groupedResults}
         selectedIndex={quickOpen.selectedIndex}
+        focusedGroup={quickOpen.focusedGroup}
         onQueryChange={quickOpen.setQuery}
         onSelect={handleQuickOpenSelect}
+        onCommandSelect={handleCommandSelect}
         onClose={quickOpen.close}
         onSelectNext={quickOpen.selectNext}
         onSelectPrevious={quickOpen.selectPrevious}
+        onTabGroup={quickOpen.onTabGroup}
+        onShiftTabGroup={quickOpen.onShiftTabGroup}
       />
 
       {/* Image Insert Dialog */}

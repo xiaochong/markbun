@@ -23,7 +23,13 @@
     "navigate": "↑↓ navigieren",
     "open": "↵ öffnen",
     "recent": "zuletzt",
-    "esc": "ESC"
+    "esc": "ESC",
+    "placeholderCommands": "Dateien und Befehle suchen...",
+    "noResultsShort": "Keine Ergebnisse",
+    "resultCount": "{{count}} Ergebnisse",
+    "filesGroup": "Dateien",
+    "commandsGroup": "Befehle",
+    "switchGroup": "Gruppe wechseln"
   },
   "sidebar": {
     "files": "Dateien",

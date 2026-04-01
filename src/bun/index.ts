@@ -10,6 +10,7 @@ import { homedir, tmpdir } from 'os';
 import { HELP_CONTENT } from './assets/helpContent';
 import { readFolder } from './ipc/folders';
 import { getRecentFiles, addRecentFile, removeRecentFile, clearRecentFiles } from './ipc/recentFiles';
+import { getCommandHistory, recordCommandUsage } from './ipc/commandHistory';
 import { loadSettings, saveSettings, type Settings } from './services/settings';
 import { loadUIState, saveUIState, type UIState } from './services/uiState';
 import {
@@ -1463,6 +1464,14 @@ async function main() {
             console.error('Failed to open external URL:', error);
             return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
           }
+        },
+
+        getCommandHistory: async () => {
+          return await getCommandHistory();
+        },
+
+        recordCommandUsage: async ({ action }: { action: string }) => {
+          return await recordCommandUsage(action);
         },
 
         getFileStats: async ({ path }: { path: string }) => {

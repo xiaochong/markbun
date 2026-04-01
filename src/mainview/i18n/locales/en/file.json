@@ -17,13 +17,19 @@
   },
   "quickOpen": {
     "placeholder": "Type to search files...",
-    "noResults": "No files found",
+    "placeholderCommands": "Search files and commands...",
+    "noResults": "No results found",
+    "noResultsShort": "No results",
     "startTyping": "Start typing to search files",
-    "fileCount": "{{count}} files",
+    "fileCount": "{{count}} results",
+    "resultCount": "{{count}} results",
     "navigate": "↑↓ to navigate",
     "open": "↵ to open",
     "recent": "recent",
-    "esc": "ESC"
+    "esc": "ESC",
+    "filesGroup": "Files",
+    "commandsGroup": "Commands",
+    "switchGroup": "switch group"
   },
   "sidebar": {
     "files": "Files",

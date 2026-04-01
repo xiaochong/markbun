@@ -4,6 +4,7 @@ import type dialogEn from '../../mainview/i18n/locales/en/dialog.json';
 import type settingsEn from '../../mainview/i18n/locales/en/settings.json';
 import type editorEn from '../../mainview/i18n/locales/en/editor.json';
 import type fileEn from '../../mainview/i18n/locales/en/file.json';
+import type menuEn from '../../bun/i18n/locales/en/menu.json';
 
 export interface I18nResources {
   common: typeof commonEn;
@@ -11,4 +12,5 @@ export interface I18nResources {
   settings: typeof settingsEn;
   editor: typeof editorEn;
   file: typeof fileEn;
+  menu: typeof menuEn;
 }
