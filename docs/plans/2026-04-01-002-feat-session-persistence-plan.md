@@ -1,7 +1,7 @@
 ---
 title: "feat: Workspace Session Persistence"
 type: feat
-status: active
+status: completed
 date: 2026-04-01
 origin: docs/brainstorms/2026-04-01-session-persistence-requirements.md
 ---
@@ -48,7 +48,7 @@ MarkBun currently loses all editing context on restart. Users must manually re-o
 - **SourceEditorRef**: `src/mainview/components/editor/SourceEditor.tsx` — exposes `getValue/setValue/focus/isReady`. Missing cursor/scroll getters and setters.
 - **useFileExplorer**: `src/mainview/hooks/useFileExplorer.ts` — `expandedPaths` Set, `toggleFolder()`, `setRootPath()`. Missing `restoreExpandedPaths()`.
 - **App.tsx startup**: Lines 148-176 load UI state then check pending file. Session restore inserts after pending file check.
-- **setMarkdown scroll reset**: `src/mainview/hooks/useCrepeEditor.ts` lines 276-389 — forcibly resets scrollTop at three points. No "content load complete" signal.
+- **setMarkdown scroll reset**: `src/mainview/components/editor/hooks/useCrepeEditor.ts` lines 276-389 — forcibly resets scrollTop at three points. No "content load complete" signal.
 - **File stat RPC**: `src/bun/index.ts` `getFileStats` returns `mtime` — already available for change detection.
 - **Backup atomic write**: `src/bun/services/backup.ts` — `.tmp` + rename pattern for atomic writes.
 
@@ -60,7 +60,7 @@ MarkBun currently loses all editing context on restart. Users must manually re-o
 ### Key Flow Analysis Findings
 
 - ProseMirror doc offsets are unstable across chunked loads (>500 lines) and shifted by image processing (path→blob URL). **Decision: use line:column representation instead.**
-- `sourceMode` currently in `uiState.json` would create dual source of truth. **Decision: migrate to session state, remove from uiState.**
+- `sourceMode` stays in `uiState.json` (no migration needed — already loaded synchronously, and migration adds complexity without user benefit).
 - `setRootPath` early-returns when path starts with current root. Session restore must handle this.
 - `beforeunload` is unreliable in WKWebView. Periodic save is primary mechanism.
 
@@ -68,11 +68,13 @@ MarkBun currently loses all editing context on restart. Users must manually re-o
 
 - **Unified line:column cursor representation**: Both WYSIWYG and source mode store cursor as `{ line: number, column: number }`. During restore, convert to editor-specific offset (ProseMirror `TextSelection.create()` or CodeMirror `EditorView.dispatch()`). Rationale: avoids ProseMirror offset instability from chunked loading and image processing path-length shifts.
 - **Separate session-state.json**: Stored at `~/.config/markbun/session-state.json`, not merged into `uiState.json`. Different lifecycle (frequently overwritten, disposable on corruption). Includes `version` field.
-- **sourceMode ownership**: `sourceMode` moves from `uiState.json` to `session-state.json` for atomic writes with cursor data. `UIState` interface loses `sourceMode`; `SessionState` gains it. Migration: on first load, if session state has no `sourceMode` but uiState does, use uiState value then remove from uiState.
-- **Startup init restructuring**: Current three independent `useEffect` blocks in `App.tsx` must be consolidated into a single sequential init to support the priority chain. One async `initializeApp()` function replaces the scattered effects.
-- **setMarkdown completion signal**: `setMarkdown` (or its caller) must accept an `onContentSet` callback that fires after all content (including chunks) is loaded. This is the trigger for cursor+scroll restore.
+- **sourceMode stays in uiState**: `sourceMode` remains in `uiState.json` (already loaded synchronously at startup). It is NOT migrated to session state — none of R1-R10 require this, and migration adds complexity (UIState interface changes, migration code, backward-incompatibility) with no user-facing benefit. The session save hook reads `sourceMode` from React state (derived from uiState) and persists it in session state for restore-time reference, but `uiState.json` remains the source of truth for the initial load.
+- **Startup init consolidation**: Multiple independent `useEffect` blocks involved in initialization must be consolidated into a single sequential `initializeApp()` to support the priority chain. The consolidation must cover: UI state load (lines 148-176), desktop workspace init (lines 379-387), crash recovery check, and session restore. Other effects (save listeners, menu config, etc.) remain independent. This restructuring is necessary because the current independent effects race — the desktop workspace init can set a root path that causes `setRootPath` early-return during session restore.
+- **setMarkdown completion signal**: `setMarkdown` must accept an `onContentSet` callback that fires after all content (including chunks) is loaded AND after the internal scroll-reset-to-zero logic completes. When `onContentSet` is provided, the internal scroll-reset logic in `setMarkdown` must be skipped (or the caller takes responsibility for scroll position). This is the trigger for cursor+scroll restore.
 - **Absolute expanded paths**: Stored as absolute paths since session is global single-slot. Failed paths (deleted/unavailable) are silently skipped.
-- **Periodic + close save**: Debounced save (matching auto-save cadence ~2s) is primary. `beforeunload` flush is a safety net only.
+ Restore depth-ordered loading is required for nested paths (`findNode` needs parent in tree before child).
+ `setRootPath` early-return must be handled by ensuring session restore runs before desktop-default init.
+ | **Periodic + close save**: Debounced save (matching auto-save cadence ~2s) is primary. `beforeunload` flush is a safety net only. Content-change events restart the debounce timer; cursor-only updates update a pending ref but do NOT restart the timer. | **Loading state during restore**: The editor renders with default empty content briefly during session restore. Accepted trade-off for v1 — the restore typically completes in <200ms for local files. | **No user feedback on restore fallback**: Silent fallback to clean workspace when file is deleted, session state is corrupt, or cursor is out of bounds. This matches the "disposable on corruption" lifecycle of session state. |
 
 ## Open Questions
 
@@ -89,7 +91,7 @@ MarkBun currently loses all editing context on restart. Users must manually re-o
 
 ## Implementation Units
 
-- [ ] **Unit 1: Session State Service & RPC**
+- [x] **Unit 1: Session State Service & RPC**
 
 **Goal:** Backend service for persisting session state to `session-state.json`, with load/save RPCs exposed to the renderer.
 
@@ -105,8 +107,8 @@ MarkBun currently loses all editing context on restart. Users must manually re-o
 - Test: `tests/unit/bun/services/sessionState.test.ts`
 
 **Approach:**
-- Create `SessionState` interface: `{ version: number, filePath: string | null, cursor: { line: number, column: number } | null, scrollTop: number, sourceMode: boolean, expandedPaths: string[] }`
-- Follow `uiState.ts` pattern: `loadSessionState()`, `saveSessionState()`, `getDefaultSessionState()`, `ensureConfigDir()`, spread-merge-over-defaults on load
+- Create `SessionState` interface: `{ version: number, filePath: string | null, cursor: { line: number, column: number } | null, scrollTop: number, expandedPaths: string[] }`
+- Follow `uiState.ts` pattern for load/merge-with-defaults structure, but use `backup.ts`'s `atomicWrite` for actual disk writes (not `uiState.ts`'s plain `writeFile` — session state is overwritten frequently and needs crash safety)
 - Add `getSessionState` and `saveSessionState` RPCs to `MarkBunRPC` type
 - In-memory `currentSessionState` variable in `index.ts` (same pattern as `currentUIState`)
 - `saveSessionState` accepts `Partial<SessionState>`, merges with current, writes to disk
@@ -130,7 +132,7 @@ MarkBun currently loses all editing context on restart. Users must manually re-o
 
 ---
 
-- [ ] **Unit 2: Editor Ref Extensions**
+- [x] **Unit 2: Editor Ref Extensions**
 
 **Goal:** Add cursor and scroll position getters/setters to both editor refs, plus a content-load completion signal for WYSIWYG mode.
 
@@ -142,13 +144,13 @@ MarkBun currently loses all editing context on restart. Users must manually re-o
 - Modify: `src/mainview/components/editor/types.ts`
 - Modify: `src/mainview/components/editor/MilkdownEditor.tsx`
 - Modify: `src/mainview/components/editor/SourceEditor.tsx`
-- Modify: `src/mainview/hooks/useCrepeEditor.ts`
+- Modify: `src/mainview/components/editor/hooks/useCrepeEditor.ts`
 
 **Approach:**
 
 **MilkdownEditorRef extensions:**
 - Add `setCursor(line: number, column: number): void` — resolves line:column to ProseMirror offset via `view.state.doc` traversal, dispatches `TextSelection.create(view.state.doc, offset)`. Clamps to document length, falls back to doc end if out of bounds.
-- Add `getCursor(): { line: number, column: number } | null` — reads `view.state.selection.from`, resolves to line:column by counting newlines in `view.state.doc.textContent` up to that offset.
+- Add `getCursor(): { line: number, column: number } | null` — reads `view.state.selection.from`, resolves to line:column using `view.state.doc.textBetween(0, from, "\n")` to get the text with block separators, then counting newlines. (Note: `doc.textContent` omits block boundaries — must use `textBetween` with `"\n"` separator.)
 - Add `getScrollTop(): number` — returns `.ProseMirror` container `scrollTop`.
 - Add `setScrollTop(top: number): void` — sets `.ProseMirror` container `scrollTop` after a `requestAnimationFrame` (to ensure layout is complete).
 
@@ -184,7 +186,7 @@ MarkBun currently loses all editing context on restart. Users must manually re-o
 
 ---
 
-- [ ] **Unit 3: Session Save Hook**
+- [x] **Unit 3: Session Save Hook**
 
 **Goal:** Frontend hook that periodically captures and persists session state during editing, with beforeunload flush.
 
@@ -206,8 +208,9 @@ MarkBun currently loses all editing context on restart. Users must manually re-o
 - Skips save when no file is open (filePath is null) — clears filePath in session state
 
 **Cursor capture strategy:**
-- WYSIWYG: subscribe to ProseMirror `update` event via `editorRef.getEditorView()` — on each update, read `getCursor()` and mark dirty
-- Source: subscribe to CodeMirror `update` listener via `sourceEditorRef` — same approach
+- WYSIWYG: subscribe to ProseMirror `update` event via `editorRef.getEditorView()` — on each update where `docChanged` is true, read `getCursor()` and store in a pending ref. Only `docChanged` events restart the 2s debounce timer. Cursor position updates (selection-only) update the pending ref but do NOT restart the timer.
+ This prevents hundreds of cursor-move events from blocking the save.
+
 - Only the active mode's cursor is captured and saved
 
 **Patterns to follow:**
@@ -228,13 +231,13 @@ MarkBun currently loses all editing context on restart. Users must manually re-o
 
 ---
 
-- [ ] **Unit 4: File Explorer Restore**
+- [x] **Unit 4: File Explorer Restore**
 
 **Goal:** Add `restoreExpandedPaths` API to `useFileExplorer` and persist expanded paths in session state.
 
 **Requirements:** R8, R9, R10
 
-**Dependencies:** Unit 1 (RPC), Unit 3 (save hook for expanded paths)
+**Dependencies:** Unit 1 (RPC)
 
 **Files:**
 - Modify: `src/mainview/hooks/useFileExplorer.ts`
@@ -242,7 +245,7 @@ MarkBun currently loses all editing context on restart. Users must manually re-o
 
 **Approach:**
 - Add `restoreExpandedPaths(paths: string[]): Promise<void>` to `useFileExplorer` return value
-- Implementation: for each path (excluding root which is already loaded), call `readFolder` RPC via `Promise.allSettled`
+- Implementation: sort paths by depth (shallowest first), then sequentially for each path (excluding root which is already loaded), call `readFolder` RPC. Sequential depth-ordered loading is required because `toggleFolder` uses `findNode` on the current `nodes` map — parent must exist before child can be expanded.
   - Success: add path to `expandedPaths` Set, merge children into `nodes` map
   - Failure: skip silently (directory deleted/unavailable)
 - After all folders loaded, update `expandedPaths` state atomically
@@ -266,23 +269,23 @@ MarkBun currently loses all editing context on restart. Users must manually re-o
 
 ---
 
-- [ ] **Unit 5: Startup Integration & sourceMode Migration**
+- [x] **Unit 5: Startup Integration**
 
-**Goal:** Integrate session restore into App.tsx startup flow following the priority chain, and migrate sourceMode from uiState to session state.
+**Goal:** Integrate session restore into App.tsx startup flow following the priority chain. Note: crash recovery check is not currently wired into App.tsx startup — it must be implemented as part of this unit.
 
-**Requirements:** R4, R5, R6, R7, R8, R10
+ `checkRecovery()` is called, dialog display, await for user dismiss/rerecover, then session restore proceeds.
+
+ sourceMode stays in uiState (no migration).
+
+ **Requirements:** R4, R5, R6, R7, R8, R10
 
 **Dependencies:** Unit 1, Unit 2, Unit 3, Unit 4
 
-**Files:**
-- Modify: `src/mainview/App.tsx`
-- Modify: `src/bun/services/uiState.ts` (remove sourceMode from UIState)
-- Modify: `src/shared/types.ts` (update UIState type if needed)
-
-**Approach:**
+ **Files:**
+- Modify: `src/mainview/App.tsx`**Approach:**
 
 **Startup restructuring:**
-- Consolidate the three independent `useEffect` blocks into a single async `initializeApp()` function
+- Consolidate the independent init `useEffect` blocks into a single async `initializeApp()` function
 - Priority chain:
   1. `electrobun.getUIState()` — load UI chrome (no sourceMode)
   2. `electrobun.getPendingFile()` — check CLI/open-url (priority 1)
@@ -305,9 +308,9 @@ MarkBun currently loses all editing context on restart. Users must manually re-o
    - Source: `setValue(content)` then `setCursor(line, col); setScrollTop(top);`
 5. Select restored file in file explorer
 
-**sourceMode migration:**
-- Remove `sourceMode` from `UIState` interface in `uiState.ts`
-- On first session state load: if `sessionState.sourceMode` is undefined, check old `uiState.sourceMode` value and use it as initial value, then save to session state
+**sourceMode handling:**
+- `sourceMode` stays in `uiState.json` (no migration). Read from React state at session restore to determine editor mode.
+ The session save hook reads `sourceMode` from React state (derived from uiState) and persists it in session state for restore-time reference, but `uiState.json` remains the initial source of truth for startup.- On first session state load: if `sessionState.sourceMode` is undefined, check old `uiState.sourceMode` value and use it as initial value, then save to session state
 - The `saveUIState` calls in App.tsx that persist sourceMode are replaced by the session save hook
 
 **Patterns to follow:**
@@ -322,9 +325,12 @@ MarkBun currently loses all editing context on restart. Users must manually re-o
 - Edge case: file deleted → clean workspace, session data preserved in session-state.json
 - Edge case: no previous session → clean workspace, no errors
 - Edge case: corrupt session-state.json → treated as absent, clean workspace
-- Integration: crash recovery dialog shown → user dismisses → session restore runs → correct file opens
+- Integration: crash recovery dialog shown → user dismisses (recovery files remain on disk for next launch) → session restore runs → correct file opens
 - Integration: crash recovery dialog shown → user recovers → session restore skipped
-- Integration: sourceMode migration — old uiState has sourceMode=true, session state has no sourceMode → sourceMode=true applied from uiState
+- Integration: sourceMode stays in uiState → session restore reads sourceMode from React state (set by uiState load) → correct editor mode activated
+ The restored file
+- Edge case: global session — user works on Project A (file at ~/proj-a/notes.md), then opens Project B (file at ~/proj-b/README.md) → restart → Project B restored (Project A's session overwritten as expected)
+this is the accepted trade-off of global single-slot sessions)
 
 **Verification:**
 - Full end-to-end: open file, scroll to middle, quit, restart → exact restore
@@ -337,7 +343,7 @@ MarkBun currently loses all editing context on restart. Users must manually re-o
 - **Interaction graph:** Session save hook subscribes to ProseMirror update events and CodeMirror update listeners. `beforeunload` event handler added (coexists with auto-save's handler). File open/close flows in `useFileOperations` trigger immediate session save.
 - **Error propagation:** Session state write failures are silent (non-blocking). Session state load failures fall back to clean workspace. Editor ref methods return null when editor is not ready.
 - **State lifecycle risks:** Race between periodic session save and file switch — `isSwitchingFileRef` guard in App.tsx prevents capturing stale state. Source mode toggle updates session state immediately via the save hook.
-- **API surface parity:** `sourceMode` moves from `UIState` to `SessionState` — all code reading `sourceMode` from UI state must be updated to read from session state or from the React state variable that reflects session state.
+- **API surface parity:** `sourceMode` stays in `UIState` — no interface changes needed. Session save hook reads `sourceMode` from React state (derived from uiState) for session-state persistence only.
 - **Integration coverage:** Full end-to-end startup restore sequence cannot be tested by unit tests alone — requires manual verification or CDP-based self-test.
 
 ## Risks & Dependencies
@@ -347,8 +353,9 @@ MarkBun currently loses all editing context on restart. Users must manually re-o
 | ProseMirror line:column → offset conversion is wrong for complex markdown (tables, code blocks) | Clamp out-of-bounds, fall back to cursor-at-top. Test with real markdown files containing complex structures. |
 | `setMarkdown` completion callback timing is unreliable for chunked loads | Defer to implementation: if `onContentSet` fires too early, add explicit chunk-completion tracking. |
 | `setRootPath` early-return prevents explorer root from updating during restore | Add force-refresh option or ensure restore calls setRootPath before desktop-default initialization. |
-| Startup init restructuring breaks existing flows (pending file, crash recovery) | Restructure incrementally: first add session restore as new code path, then consolidate effects. Verify each existing path still works. |
-| sourceMode migration breaks existing installs | Read old uiState value as fallback when session state has no sourceMode. Write to session state immediately. |
+| Startup init restructuring breaks existing flows (pending file, crash recovery) | Restructure incrementally: first wire crash recovery into the startup, then add session restore as new code path. Verify each existing path still works. |
+| `setMarkdown` scroll-reset race with cursor/scroll restore | When `onContentSet` is provided, skip the internal scroll-reset. Otherwise restore happens after scroll-reset — user may see brief flash. Accepted trade-off for v1. |
+| `setRootPath` early-return in session restore | Session restore must call `setRootPath` before desktop-default init, or add force-refresh. The consolidated `initializeApp()` resolves this by sequencing init. |
 
 ## Sources & References
 
@@ -356,6 +363,6 @@ MarkBun currently loses all editing context on restart. Users must manually re-o
 - UI state service: `src/bun/services/uiState.ts`
 - Auto-save hook: `src/mainview/hooks/useAutoSave.ts`
 - Editor types: `src/mainview/components/editor/types.ts`
-- Crepe editor hook: `src/mainview/hooks/useCrepeEditor.ts`
+- Crepe editor hook: `src/mainview/components/editor/hooks/useCrepeEditor.ts`
 - File explorer hook: `src/mainview/hooks/useFileExplorer.ts`
 - App component: `src/mainview/App.tsx`
