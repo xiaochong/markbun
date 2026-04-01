@@ -200,6 +200,19 @@ export interface UIState {
 }
 
 // ============================================================================
+// Session State Types
+// ============================================================================
+
+export interface SessionState {
+  version: number;
+  filePath: string | null;
+  cursor: { line: number; column: number } | null;
+  scrollTop: number;
+  expandedPaths: string[];
+  sourceMode?: boolean;
+}
+
+// ============================================================================
 // RPC Type Definitions
 // ============================================================================
 
@@ -276,6 +289,10 @@ export type MarkBunRPC = {
       // Command History
       getCommandHistory: { params: {}; response: { success: boolean; history?: string[]; error?: string } };
       recordCommandUsage: { params: { action: string }; response: { success: boolean; error?: string } };
+
+      // Session State
+      getSessionState: { params: {}; response: { success: boolean; state?: SessionState; error?: string } };
+      saveSessionState: { params: { state: Partial<SessionState> }; response: { success: boolean; error?: string } };
 
       // i18n
       setLanguage: { params: { language: 'en' | 'zh-CN' | 'de' | 'fr' | 'ja' | 'ko' | 'pt' | 'es' }; response: { success: boolean; error?: string } };

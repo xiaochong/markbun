@@ -343,6 +343,15 @@ export const electrobun = {
     return await electroview.rpc.request.recordCommandUsage({ action }) as { success: boolean; error?: string };
   },
 
+  // Session State
+  async getSessionState() {
+    return await electroview.rpc.request.getSessionState({}) as { success: boolean; state?: import('@/shared/types').SessionState; error?: string };
+  },
+
+  async saveSessionState(state: Partial<import('@/shared/types').SessionState>) {
+    return await electroview.rpc.request.saveSessionState({ state }) as { success: boolean; error?: string };
+  },
+
   // Subscribe to messages from main process
   on(event: string, callback: (data?: unknown) => void): () => void {
     const win = window as any;

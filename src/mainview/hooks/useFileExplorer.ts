@@ -20,6 +20,7 @@ export interface UseFileExplorerReturn {
   toggleFolder: (path: string) => void;
   selectFile: (path: string | null) => void;
   refresh: (silent?: boolean, specificPath?: string) => void;
+  restoreExpandedPaths: (paths: string[]) => Promise<void>;
 }
 
 export function useFileExplorer(options: UseFileExplorerOptions = {}): UseFileExplorerReturn {
@@ -166,6 +167,44 @@ export function useFileExplorer(options: UseFileExplorerOptions = {}): UseFileEx
   // Initialize with empty state - no default folder
   // File explorer stays empty until a file is opened
 
+  const restoreExpandedPaths = useCallback(async (paths: string[]) => {
+    if (!paths.length || !rootPath) return;
+
+    // Sort by depth (shallowest first) so parent nodes are loaded before children
+    const sorted = [...paths]
+      .filter(p => p !== rootPath) // Skip root (already loaded by setRootPath)
+      .sort((a, b) => a.split('/').length - b.split('/').length);
+
+    // Track which paths were successfully expanded
+    const newExpandedPaths = new Set(expandedPaths);
+
+    // Use a ref to the current nodes for finding parents
+    // We need to work with a mutable reference since each loadFolder updates state asynchronously
+    let currentNodes = nodes;
+
+    for (const folderPath of sorted) {
+      try {
+        const result = await electrobun.readFolder({ path: folderPath, maxDepth: 1 }) as {
+          success: boolean;
+          nodes?: FileSystemNode[];
+          error?: string;
+        };
+
+        if (result.success && result.nodes) {
+          newExpandedPaths.add(folderPath);
+          currentNodes = updateFolderChildren(currentNodes, folderPath, result.nodes);
+        }
+        // Silently skip failed paths (deleted/unavailable)
+      } catch {
+        // Silently skip
+      }
+    }
+
+    // Update state atomically
+    setExpandedPaths(newExpandedPaths);
+    setNodes(currentNodes);
+  }, [rootPath, expandedPaths, nodes]);
+
   return {
     rootPath,
     nodes,
@@ -177,6 +216,7 @@ export function useFileExplorer(options: UseFileExplorerOptions = {}): UseFileEx
     toggleFolder,
     selectFile,
     refresh,
+    restoreExpandedPaths,
   };
 }
 

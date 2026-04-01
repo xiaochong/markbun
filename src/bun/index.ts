@@ -24,6 +24,7 @@ import {
   readVersionBackupContent,
   deleteVersionBackup,
 } from './services/backup';
+import { loadSessionState, saveSessionState as saveSessionStateToDisk, getDefaultSessionState, type SessionState } from './services/sessionState';
 import { spawn, exec } from 'child_process';
 
 const DEV_SERVER_PORT = 5173;
@@ -169,6 +170,9 @@ let currentSettings: Settings | null = null;
 
 // Current UI state
 let currentUIState: UIState | null = null;
+
+// Current session state
+let currentSessionState: SessionState | null = null;
 
 // Helper to update view menu state and refresh menu
 function updateViewMenuState(updates: Partial<ViewMenuState>) {
@@ -1472,6 +1476,38 @@ async function main() {
 
         recordCommandUsage: async ({ action }: { action: string }) => {
           return await recordCommandUsage(action);
+        },
+
+        // Session State
+        getSessionState: async () => {
+          try {
+            if (!currentSessionState) {
+              currentSessionState = await loadSessionState();
+            }
+            return { success: true, state: currentSessionState };
+          } catch (error) {
+            console.error('[RPC] Failed to get session state:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            };
+          }
+        },
+        saveSessionState: async ({ state }: { state: Partial<SessionState> }) => {
+          try {
+            currentSessionState = {
+              ...(currentSessionState ?? getDefaultSessionState()),
+              ...state,
+            };
+            const result = await saveSessionStateToDisk(currentSessionState);
+            return result;
+          } catch (error) {
+            console.error('[RPC] Failed to save session state:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            };
+          }
         },
 
         getFileStats: async ({ path }: { path: string }) => {

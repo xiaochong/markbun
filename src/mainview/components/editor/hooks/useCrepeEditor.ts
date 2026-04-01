@@ -91,7 +91,7 @@ export interface UseCrepeEditorReturn {
   loading: boolean;
   isDraggingOver: boolean;
   getMarkdown: () => string;
-  setMarkdown: (markdown: string) => void;
+  setMarkdown: (markdown: string, options?: { onContentSet?: () => void }) => void;
   focus: () => void;
   getSelectedMarkdown: () => string | null;
 }
@@ -273,13 +273,15 @@ export function useCrepeEditor(
   const CHUNK_LOAD_LINE_THRESHOLD = 500; // Lines
   const CHUNK_SIZE_LINES = 100; // Lines per chunk
 
-  const setMarkdown = useCallback((markdown: string) => {
+  const setMarkdown = useCallback((markdown: string, options?: { onContentSet?: () => void }) => {
     const editor = crepeRef.current?.editor;
     if (!editor?.ctx) return;
 
-    // Reset scroll position to top before setting content
+    const onContentSet = options?.onContentSet;
+
+    // Reset scroll position to top before setting content (skip if caller will handle it)
     const container = containerRef.current;
-    if (container) {
+    if (!onContentSet && container) {
       container.scrollTop = 0;
     }
 
@@ -298,24 +300,25 @@ export function useCrepeEditor(
         tr.setMeta("addToHistory", false);  // 不添加到历史记录
         view.dispatch(tr);
 
-        // Ensure scroll is at top after content is set
-        requestAnimationFrame(() => {
-          if (container) {
-            container.scrollTop = 0;
-          }
-          // Also try to scroll the ProseMirror editor element
-          const editorElement = container?.querySelector('.ProseMirror') as HTMLElement | null;
-          if (editorElement) {
-            editorElement.scrollTop = 0;
-          }
-        });
+        if (onContentSet) {
+          // Fire callback after layout completes
+          requestAnimationFrame(() => onContentSet());
+        } else {
+          // Ensure scroll is at top after content is set
+          requestAnimationFrame(() => {
+            if (container) {
+              container.scrollTop = 0;
+            }
+            const editorElement = container?.querySelector('.ProseMirror') as HTMLElement | null;
+            if (editorElement) {
+              editorElement.scrollTop = 0;
+            }
+          });
+        }
         return;
       }
 
       // For large files, use chunked loading.
-      // Split lines into chunks that never break inside a fenced code block,
-      // otherwise blank lines inside the code block get parsed as separate
-      // indented-code-blocks by each independent chunk parser.
       const chunks = splitAtCodeBlockBoundaries(lines, CHUNK_SIZE_LINES);
 
       const view = editor.ctx.get(editorViewCtx);
@@ -326,14 +329,20 @@ export function useCrepeEditor(
       if (!firstDoc) return;
 
       const tr = view.state.tr.replaceWith(0, view.state.doc.content.size, firstDoc.content);
-      tr.setMeta("addToHistory", false);  // 不添加到历史记录
+      tr.setMeta("addToHistory", false);
       view.dispatch(tr);
 
-      // Then load remaining chunks using requestIdleCallback or setTimeout
+      // Then load remaining chunks
       let currentChunkIndex = 1;
 
       const loadNextChunk = () => {
-        if (currentChunkIndex >= chunks.length) return;
+        if (currentChunkIndex >= chunks.length) {
+          // All chunks loaded
+          if (onContentSet) {
+            requestAnimationFrame(() => onContentSet());
+          }
+          return;
+        }
 
         const chunk = chunks[currentChunkIndex].join('\n');
         currentChunkIndex++;
@@ -343,7 +352,7 @@ export function useCrepeEditor(
           if (chunkDoc) {
             const currentSize = view.state.doc.content.size;
             const tr = view.state.tr.insert(currentSize, chunkDoc.content);
-            tr.setMeta("addToHistory", false);  // 不添加到历史记录
+            tr.setMeta("addToHistory", false);
             view.dispatch(tr);
           }
         } catch (e) {
@@ -357,6 +366,11 @@ export function useCrepeEditor(
           } else {
             setTimeout(loadNextChunk, 10);
           }
+        } else {
+          // Last chunk loaded
+          if (onContentSet) {
+            requestAnimationFrame(() => onContentSet());
+          }
         }
       };
 
@@ -367,22 +381,24 @@ export function useCrepeEditor(
         setTimeout(loadNextChunk, 50);
       }
 
-      // After all chunks are loaded, ensure scroll is at top
-      const resetScrollToTop = () => {
-        requestAnimationFrame(() => {
-          if (container) {
-            container.scrollTop = 0;
-          }
-          const editorElement = container?.querySelector('.ProseMirror') as HTMLElement | null;
-          if (editorElement) {
-            editorElement.scrollTop = 0;
-          }
-        });
-      };
+      if (!onContentSet) {
+        // After all chunks are loaded, ensure scroll is at top
+        const resetScrollToTop = () => {
+          requestAnimationFrame(() => {
+            if (container) {
+              container.scrollTop = 0;
+            }
+            const editorElement = container?.querySelector('.ProseMirror') as HTMLElement | null;
+            if (editorElement) {
+              editorElement.scrollTop = 0;
+            }
+          });
+        };
 
-      // Schedule scroll reset after chunks should be loaded (approximate)
-      const estimatedLoadTime = Math.ceil((chunks.length - 1)) * 60;
-      setTimeout(resetScrollToTop, estimatedLoadTime);
+        // Schedule scroll reset after chunks should be loaded (approximate)
+        const estimatedLoadTime = Math.ceil((chunks.length - 1)) * 60;
+        setTimeout(resetScrollToTop, estimatedLoadTime);
+      }
 
     } catch (e) {
       console.error('Set content error:', e);

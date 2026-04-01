@@ -12,7 +12,7 @@ export interface MilkdownEditorProps {
 
 export interface MilkdownEditorRef {
   getMarkdown: () => string;
-  setMarkdown: (markdown: string) => void;
+  setMarkdown: (markdown: string, options?: { onContentSet?: () => void }) => void;
   focus: () => void;
   isReady: boolean;
   getSelectedMarkdown: () => string | null;
@@ -66,6 +66,11 @@ export interface MilkdownEditorRef {
   insertText: (text: string) => boolean;
   // Access ProseMirror EditorView for search integration
   getEditorView: () => import('@milkdown/prose/view').EditorView | null;
+  // Cursor and scroll position
+  getCursor: () => { line: number; column: number } | null;
+  setCursor: (line: number, column: number) => void;
+  getScrollTop: () => number;
+  setScrollTop: (top: number) => void;
 }
 
 // 编辑器实例引用类型

@@ -20,6 +20,10 @@ export interface SourceEditorRef {
   setValue: (value: string) => void;
   focus: () => void;
   isReady: boolean;
+  getCursor: () => { line: number; column: number } | null;
+  setCursor: (line: number, column: number) => void;
+  getScrollTop: () => number;
+  setScrollTop: (top: number) => void;
 }
 
 // Syntax highlighting for light theme
@@ -170,6 +174,35 @@ export const SourceEditor = memo(forwardRef<SourceEditorRef, SourceEditorProps>(
       },
       get isReady() {
         return isReadyRef.current;
+      },
+      getCursor: () => {
+        const view = viewRef.current;
+        if (!view) return null;
+        const pos = view.state.selection.main.head;
+        const line = view.state.doc.lineAt(pos);
+        return { line: line.number, column: pos - line.from + 1 };
+      },
+      setCursor: (line: number, column: number) => {
+        const view = viewRef.current;
+        if (!view) return;
+        const docLine = line <= view.state.doc.lines
+          ? view.state.doc.line(line)
+          : view.state.doc.line(view.state.doc.lines);
+        const col = Math.min(column, docLine.length + 1);
+        const pos = docLine.from + col - 1;
+        view.dispatch({
+          selection: { anchor: pos },
+        });
+      },
+      getScrollTop: () => {
+        return viewRef.current?.scrollDOM.scrollTop ?? 0;
+      },
+      setScrollTop: (top: number) => {
+        const view = viewRef.current;
+        if (!view) return;
+        requestAnimationFrame(() => {
+          view.scrollDOM.scrollTop = top;
+        });
       },
     }), []);
 
