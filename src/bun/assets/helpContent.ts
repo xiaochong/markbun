@@ -46,6 +46,7 @@ Press \`⌘/\` or use **View → Source Mode** to switch to plain-text Markdown 
 | Image | \`⌘⇧I\` |
 | Strikethrough | \`⌘⇧~\` |
 | Highlight | \`⌘⇧H\` |
+| Inline Math | \`Ctrl + M\` |
 
 ### Paragraph Shortcuts
 
@@ -53,6 +54,8 @@ Press \`⌘/\` or use **View → Source Mode** to switch to plain-text Markdown 
 |------|----------|
 | Heading 1–6 | \`⌘1\` — \`⌘6\` |
 | Paragraph | \`⌘0\` |
+| Increase Heading Level | \`⌘=\` |
+| Decrease Heading Level | \`⌘-\` |
 | Quote | \`⌥⌘Q\` |
 | Ordered List | \`⌥⌘O\` |
 | Unordered List | \`⌥⌘U\` |
@@ -66,7 +69,7 @@ Press \`⌘/\` or use **View → Source Mode** to switch to plain-text Markdown 
 
 ## Sidebar
 
-- Toggle with \`⌘B\` or **View → Show Sidebar**
+- Toggle with \`⌘⇧B\` or **View → Show Sidebar**
 - **Files** tab — browse the workspace file tree
 - **Outline** tab — navigate headings in the current document
 - **Search** tab — search files in the workspace
@@ -82,7 +85,7 @@ Press \`⌘/\` or use **View → Source Mode** to switch to plain-text Markdown 
 
 ## View Options
 
-- **Toggle Dark Mode** (\`⌘⇧T\`) — switch between light and dark themes
+- **Toggle Dark Mode** (\`⌘⇧D\`) — switch between light and dark themes
 - **Show Title Bar** — toggle the window title bar
 - **Show Tool Bar** — toggle the formatting toolbar
 - **Show Status Bar** — toggle the bottom word-count bar
