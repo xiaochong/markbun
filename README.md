@@ -45,7 +45,11 @@ MarkBun is an open-source, cross-platform markdown editor designed for seamless 
 > - ✅ Three-layer file protection (v0.4.0)
 > - ✅ Export to PNG/HTML (v0.4.0)
 > - ✅ Math equations (v0.4.0)
-> - ⏳ Editor Productivity (v0.5.0)
+> - ✅ Find & Replace (v0.5.0)
+> - ✅ Command Palette (v0.5.0)
+> - ✅ Session Persistence (v0.5.0)
+> - ✅ Windows Support (v0.5.0)
+> - ⏳ AI Support (v0.6.0)
 >
 > See [ROADMAP.md](./ROADMAP.md) for detailed development phases.
 
@@ -74,6 +78,10 @@ When you need them, every UI element can be instantly toggled via the **View men
 - 🖥️ **Multi-Monitor** - Window position saved per display with smart fallback
 - 🛡️ **File Protection** - Atomic write, crash recovery, and version history
 - 📤 **Export** - Export to PNG and HTML
+- 🔍 **Find & Replace** - Search with highlighting across WYSIWYG and code blocks (`Cmd/Ctrl + F`)
+- 🎛️ **Command Palette** - Unified command palette with fuzzy search and history (`Cmd/Ctrl + P`)
+- 💾 **Session Restore** - Cursor position and scroll state saved between sessions
+- 🪟 **Windows Support** - Native menu bar, icons, and CI for Windows
 - ⌨️ **Keyboard Shortcuts** - Comprehensive shortcuts for formatting and navigation
 - 🔤 **Source Mode** - Toggle between WYSIWYG and source code editing (`Cmd/Ctrl + /`)
 - 🌐 **i18n** - Multi-language support (English, Chinese, Japanese, Korean, etc.)
@@ -431,9 +439,11 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 - [x] Export to HTML
 - [x] Math equations (LaTeX inline and block support)
 
-### v0.5.0 ⏳ Planned
-- [ ] Find & Replace
-- [ ] Command Palette (Ctrl/Cmd+Shift+P)
+### v0.5.0 ✅ Completed
+- [x] Find & Replace with search highlighting (WYSIWYG and code blocks)
+- [x] Unified Command Palette (Ctrl/Cmd+P)
+- [x] Session persistence (cursor/scroll position restore)
+- [x] Windows platform support (menu bar, icons, CI)
 
 ### v0.6.0 ⏳ Planned
 - [ ] AI Writing Assistant (continue writing, generate content)

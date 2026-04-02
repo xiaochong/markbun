@@ -11,7 +11,7 @@ This document outlines the development phases for MarkBun, from MVP to v1.0.
 | Phase 2 | v0.2.0 | File Management | ✅ Complete |
 | Phase 3 | v0.3.0 | Enhanced Editing | ✅ Complete |
 | Phase 4 | v0.4.0 | File Protection & Export | ✅ Complete |
-| Phase 5 | v0.5.0 | Editor Productivity | ⏳ Planned |
+| Phase 5 | v0.5.0 | Editor Productivity | ✅ Complete |
 | Phase 6 | v0.6.0 | AI Support | ⏳ Planned |
 | Phase 7 | v0.7.0 | Writing Experience | ⏳ Planned |
 | Phase 8 | v0.8.0 | Themes & Accessibility | ⏳ Planned |
@@ -206,31 +206,43 @@ This document outlines the development phases for MarkBun, from MVP to v1.0.
 
 ---
 
-## ⏳ Phase 5: Editor Productivity (v0.5.0)
+## ✅ Phase 5: Editor Productivity (v0.5.0)
 
-**Status:** Planned
+**Status:** Complete
 **Target:** Improve editing efficiency with advanced features
 
-### Tasks
+### Completed Tasks
 
 #### Find & Replace
-- [ ] Find in document (Ctrl/Cmd + F)
-- [ ] Find and replace (Ctrl/Cmd + H)
-- [ ] Search highlighting
+- [x] Find in document (Ctrl/Cmd + F)
+- [x] Find and replace (Ctrl/Cmd + H)
+- [x] Search highlighting (WYSIWYG and code blocks)
 - [ ] Regex support
 - [ ] Case sensitivity toggle
 
 #### Command Palette
-- [ ] Command palette dialog (Ctrl/Cmd + Shift + P)
-- [ ] Fuzzy search for all commands
-- [ ] Show keyboard shortcuts
-- [ ] Recent commands
+- [x] Unified command palette (Ctrl/Cmd + P)
+- [x] Fuzzy search for all commands
+- [x] Recent commands and usage tracking
 
-#### Tabbed Editing
-- [ ] Multiple document tabs
-- [ ] Tab switching
-- [ ] Unsaved changes indicator per tab
-- [ ] Drag to reorder tabs
+#### Session Persistence
+- [x] Cursor position saved and restored between sessions
+- [x] Scroll position saved and restored between sessions
+- [x] Session state service with save hook
+
+#### Windows Platform Support
+- [x] Frontend menu bar for Windows
+- [x] Icon embedding in executables
+- [x] CI/release pipeline for Windows
+
+### Implementation Details
+- **Find & Replace**: `src/mainview/components/search/` — search across WYSIWYG and CodeMirror code blocks
+- **Command Palette**: `src/mainview/components/command-palette/` — unified palette replacing Quick Open
+- **Session State**: `src/bun/services/sessionState.ts` — cursor/scroll position persistence
+- **Windows Menu**: `src/mainview/components/menu-bar/` — custom frontend menu for Windows
+
+### Deferred
+- Tabbed Editing → moved to Phase 9 (v0.9.0)
 
 ---
 
@@ -404,4 +416,4 @@ Users retain full control: every UI element can be toggled on demand via the Vie
 
 ---
 
-*Last updated: 2026-03-26*
+*Last updated: 2026-04-02*
