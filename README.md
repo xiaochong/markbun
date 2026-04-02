@@ -400,6 +400,12 @@ Generate coverage report:
 bun test --coverage
 ```
 
+## ⚠️ Known Issues
+
+- **Windows double cursor on high-DPI displays**: On Windows 11 with display scaling above 100% (e.g., 150%), the app may show two mouse cursors — one normal and one enlarged. This is caused by a missing DPI awareness declaration in the Electrobun framework ([electrobun#324](https://github.com/blackboardsh/electrobun/issues/324)). Awaiting an upstream fix.
+- **No native file association support**: Double-clicking a `.md` file or dragging files onto the app icon does not open them ([electrobun#304](https://github.com/blackboardsh/electrobun/issues/304)). On macOS, this is partially worked around with an AppleScript droplet wrapper. Windows remains unresolved.
+- **Windows garbled text for non-ASCII languages**: Menu labels and file dialogs show garbled text for Chinese, Japanese, and other non-ASCII characters on Windows. This is caused by Electrobun using ANSI Win32 APIs instead of Unicode (Wide) APIs ([electrobun#335](https://github.com/blackboardsh/electrobun/issues/335)). Awaiting an upstream fix.
+
 ## 🤝 Contributing
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.

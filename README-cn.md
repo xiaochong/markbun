@@ -403,6 +403,12 @@ bun test           # 运行所有测试
 bun test --coverage
 ```
 
+## ⚠️ 已知问题
+
+- **Windows 高 DPI 显示器双光标**：在显示缩放比例超过 100%（如 150%）的 Windows 11 上，应用可能出现两个鼠标指针——一个正常大小，一个异常放大。这是 Electrobun 框架缺少 DPI 感知声明导致的（[electrobun#324](https://github.com/blackboardsh/electrobun/issues/324)），等待上游修复。
+- **不支持原生文件关联**：双击 `.md` 文件或将文件拖放到应用图标上无法打开（[electrobun#304](https://github.com/blackboardsh/electrobun/issues/304)）。macOS 上已通过 AppleScript droplet 包装器临时解决，Windows 暂无方案。
+- **Windows 非 ASCII 语言乱码**：Windows 上菜单和文件对话框中的中文、日文等非 ASCII 字符显示为乱码。原因是 Electrobun 使用了 ANSI Win32 API 而非 Unicode（Wide）API（[electrobun#335](https://github.com/blackboardsh/electrobun/issues/335)），等待上游修复。
+
 ## 🤝 贡献
 
 欢迎贡献！请参阅 [CONTRIBUTING.md](CONTRIBUTING.md) 了解指南。
