@@ -572,7 +572,8 @@ function App() {
     updateContent(markdown);
     setEditorContent(markdown);
     outline.setHeadings(markdown);
-  }, [updateContent, outline.setHeadings]);
+    scheduleSave();
+  }, [updateContent, outline.setHeadings, scheduleSave]);
 
   // Handle editor content changes from SourceEditor
   const handleSourceEditorChange = useCallback((markdown: string) => {
@@ -584,7 +585,8 @@ function App() {
     updateContent(markdown);
     setEditorContent(markdown);
     outline.setHeadings(markdown);
-  }, [updateContent, outline.setHeadings]);
+    scheduleSave();
+  }, [updateContent, outline.setHeadings, scheduleSave]);
 
   // Handle quick open file selection
   function handleQuickOpenSelect(filePath: string) {

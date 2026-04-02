@@ -6,10 +6,9 @@
  * Uses atomic write (.tmp + rename) for crash safety during frequent overwrites.
  */
 
-import { readFile, access, mkdir } from 'fs/promises';
+import { readFile, writeFile, access, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { homedir } from 'os';
-import { atomicWrite } from './backup';
 
 export interface SessionState {
   version: number;
@@ -64,7 +63,7 @@ export async function loadSessionState(): Promise<SessionState> {
 export async function saveSessionState(state: SessionState): Promise<{ success: boolean; error?: string }> {
   try {
     await ensureConfigDir();
-    await atomicWrite(SESSION_STATE_PATH, JSON.stringify(state, null, 2));
+    await writeFile(SESSION_STATE_PATH, JSON.stringify(state, null, 2), 'utf-8');
     return { success: true };
   } catch (error) {
     console.error('[SessionState] Failed to save:', error);

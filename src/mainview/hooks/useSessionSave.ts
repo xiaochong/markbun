@@ -27,15 +27,6 @@ export function useSessionSave({
   expandedPaths,
   isReady,
 }: UseSessionSaveOptions) {
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const pendingStateRef = useRef<{
-    filePath: string | null;
-    cursor: { line: number; column: number } | null;
-    scrollTop: number;
-    expandedPaths: string[];
-    sourceMode: boolean;
-  } | null>(null);
-
   // Keep latest values in refs to avoid stale closures
   const filePathRef = useRef(filePath);
   filePathRef.current = filePath;
@@ -46,8 +37,13 @@ export function useSessionSave({
   const isReadyRef = useRef(isReady);
   isReadyRef.current = isReady;
 
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const captureAndSave = useCallback(async () => {
     const currentFilePath = filePathRef.current;
+    // Don't save when no file is open — prevents overwriting previous session data
+    if (!currentFilePath) return;
+
     const currentSourceMode = sourceModeRef.current;
     const currentExpandedPaths = Array.from(expandedPathsRef.current);
 
@@ -74,11 +70,11 @@ export function useSessionSave({
         sourceMode: currentSourceMode,
       });
     } catch {
-      // Silent failure — will retry on next interval
+      // Silent failure — will retry on next trigger
     }
   }, [editorRef, sourceEditorRef]);
 
-  // Debounced save — captures current state and schedules write
+  // Debounced save — for content changes
   const scheduleSave = useCallback(() => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -90,6 +86,10 @@ export function useSessionSave({
 
   // Immediate save for file path changes (open/close/new)
   const saveNow = useCallback(() => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
     void captureAndSave();
   }, [captureAndSave]);
 
