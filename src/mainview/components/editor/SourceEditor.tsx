@@ -210,6 +210,7 @@ export const SourceEditor = memo(forwardRef<SourceEditorRef, SourceEditorProps>(
       <div
         ref={containerRef}
         className={`source-editor-container ${className}`}
+        spellCheck={false}
       />
     );
   }

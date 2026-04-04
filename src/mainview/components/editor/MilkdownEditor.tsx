@@ -212,6 +212,7 @@ export const MilkdownEditor = memo(forwardRef<MilkdownEditorRef, MilkdownEditorP
       <div
         ref={containerRef}
         className={`milkdown-crepe-container relative ${className}`}
+        spellCheck={false}
       >
         <Milkdown />
       </div>
