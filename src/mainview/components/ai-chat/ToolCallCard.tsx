@@ -114,7 +114,7 @@ export const ToolCallCard = memo(function ToolCallCard({ message, children }: To
 
   return (
     <div className={cn(
-      'rounded-md border-l-4 my-1 overflow-hidden',
+      'rounded-md border-l-4 my-1 overflow-hidden w-full',
       config?.borderClass || 'border-l-muted-foreground',
       'bg-muted/50',
     )}>
@@ -122,7 +122,7 @@ export const ToolCallCard = memo(function ToolCallCard({ message, children }: To
       <button
         type="button"
         onClick={toggleExpanded}
-        className="flex items-center gap-1.5 w-full px-2.5 py-1.5 text-left hover:bg-muted/80 transition-colors"
+        className="flex items-center gap-1.5 w-full px-2.5 py-1.5 text-left hover:bg-muted/80 transition-colors overflow-hidden min-w-0"
         aria-expanded={expanded}
         aria-label={expanded ? t('message.tool.collapse') : t('message.tool.expand')}
       >
@@ -130,7 +130,7 @@ export const ToolCallCard = memo(function ToolCallCard({ message, children }: To
 
         <span className="text-sm flex-shrink-0">{toolEmoji}</span>
 
-        <span className="text-xs font-medium text-foreground truncate">
+        <span className="text-xs font-medium text-foreground truncate min-w-0">
           {toolLabel}
         </span>
 
@@ -153,7 +153,7 @@ export const ToolCallCard = memo(function ToolCallCard({ message, children }: To
         {errorSnippet && (
           <>
             <span className="text-[10px] text-muted-foreground">·</span>
-            <span className="text-[10px] text-red-500 truncate max-w-[120px]">
+            <span className="text-[10px] text-red-500 truncate max-w-[120px] min-w-0">
               {errorSnippet}
             </span>
           </>

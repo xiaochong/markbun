@@ -31,7 +31,7 @@ export const ChatMessageList = memo(function ChatMessageList({ messages, isStrea
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-3 space-y-3">
+    <div className="flex-1 overflow-y-auto p-3 space-y-3 min-w-0">
       {messages.map(msg => (
         <ChatMessage key={msg.id} message={msg} />
       ))}
@@ -62,7 +62,14 @@ const ChatMessage = memo(function ChatMessage({ message }: ChatMessageProps) {
       : toolName === 'write' ? <WriteToolBody message={message} />
       : null;
 
-    return <ToolCallCard message={message}>{toolBody}</ToolCallCard>;
+    return (
+      <div className="flex flex-col gap-1 items-start min-w-0 w-full">
+        <span className="text-xs text-muted-foreground font-medium">{t('message.assistant')}</span>
+        <div className="max-w-[90%] w-full">
+          <ToolCallCard message={message}>{toolBody}</ToolCallCard>
+        </div>
+      </div>
+    );
   }
 
   const roleLabel = isUser
@@ -70,7 +77,7 @@ const ChatMessage = memo(function ChatMessage({ message }: ChatMessageProps) {
     : t('message.assistant');
 
   return (
-    <div className={cn('flex flex-col gap-1', isUser ? 'items-end' : 'items-start')}>
+    <div className={cn('flex flex-col gap-1 min-w-0', isUser ? 'items-end' : 'items-start')}>
       <span className="text-xs text-muted-foreground font-medium">{roleLabel}</span>
       <div
         className={cn(

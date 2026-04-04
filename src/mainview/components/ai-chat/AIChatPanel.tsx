@@ -33,8 +33,9 @@ export const AIChatPanel = memo(function AIChatPanel({
   const resizeStartWidth = useRef(width);
   const [isResizing, setIsResizing] = useState(false);
 
-  // Clamp width
-  const clampedWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, width));
+  // Clamp width (guard against NaN from corrupted state)
+  const safeWidth = Number.isFinite(width) ? width : MIN_WIDTH;
+  const clampedWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, safeWidth));
 
   // Handle resize (drag left edge of panel)
   const handleResizeMouseDown = useCallback((e: React.MouseEvent) => {
@@ -92,7 +93,7 @@ export const AIChatPanel = memo(function AIChatPanel({
       />
 
       {/* Panel Content */}
-      <div className="flex flex-col h-full bg-background border-l border-border" style={{ width: clampedWidth - 2 }}>
+      <div className="flex flex-col h-full min-w-0 bg-background border-l border-border" style={{ width: clampedWidth - 2 }}>
         <SessionHeader onReset={chat.resetSession} onClose={onClose} />
 
         {isAIEnabled && isAIConfigured ? (

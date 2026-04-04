@@ -1548,8 +1548,7 @@ function App() {
         {/* Editor */}
         <main
           ref={containerRef}
-          className="flex-1 flex flex-col overflow-hidden"
-          style={showAIPanel ? { minWidth: '50%' } : undefined}
+          className="flex-1 flex flex-col overflow-hidden min-w-0"
         >
           {/* Toolbar */}
           {showToolbar && (
