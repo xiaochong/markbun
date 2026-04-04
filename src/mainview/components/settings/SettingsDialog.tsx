@@ -11,27 +11,27 @@ import type { AppSettings, BackupSettings } from '@/shared/types';
 
 interface ProviderDef {
   id: string;
-  group: 'international' | 'domestic' | 'other';
+  group: 'cloud' | 'local' | 'custom';
   defaultBaseUrl?: string;
   needsApiKey: boolean;
 }
 
 const AI_PROVIDERS: ProviderDef[] = [
-  // International
-  { id: 'ollama', group: 'international', defaultBaseUrl: 'http://localhost:11434', needsApiKey: false },
-  { id: 'anthropic', group: 'international', defaultBaseUrl: 'https://api.anthropic.com', needsApiKey: true },
-  { id: 'openai', group: 'international', defaultBaseUrl: 'https://api.openai.com/v1', needsApiKey: true },
-  { id: 'google', group: 'international', defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta', needsApiKey: true },
-  { id: 'openrouter', group: 'international', defaultBaseUrl: 'https://openrouter.ai/api/v1', needsApiKey: true },
-  // Domestic (China)
-  { id: 'deepseek', group: 'domestic', defaultBaseUrl: 'https://api.deepseek.com/v1', needsApiKey: true },
-  { id: 'kimi', group: 'domestic', defaultBaseUrl: 'https://api.moonshot.cn/v1', needsApiKey: true },
-  { id: 'glm', group: 'domestic', defaultBaseUrl: 'https://open.bigmodel.cn/api/paas/v4', needsApiKey: true },
-  { id: 'qwen', group: 'domestic', defaultBaseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', needsApiKey: true },
-  { id: 'minimax', group: 'domestic', defaultBaseUrl: 'https://api.minimax.chat/v1', needsApiKey: true },
-  { id: 'doubao', group: 'domestic', defaultBaseUrl: 'https://ark.cn-beijing.volces.com/api/v3', needsApiKey: true },
-  // Other
-  { id: 'custom', group: 'other', needsApiKey: true },
+  // Cloud API
+  { id: 'anthropic', group: 'cloud', defaultBaseUrl: 'https://api.anthropic.com', needsApiKey: true },
+  { id: 'openai', group: 'cloud', defaultBaseUrl: 'https://api.openai.com/v1', needsApiKey: true },
+  { id: 'google', group: 'cloud', defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta', needsApiKey: true },
+  { id: 'openrouter', group: 'cloud', defaultBaseUrl: 'https://openrouter.ai/api/v1', needsApiKey: true },
+  { id: 'deepseek', group: 'cloud', defaultBaseUrl: 'https://api.deepseek.com/v1', needsApiKey: true },
+  { id: 'kimi', group: 'cloud', defaultBaseUrl: 'https://api.moonshot.cn/v1', needsApiKey: true },
+  { id: 'glm', group: 'cloud', defaultBaseUrl: 'https://open.bigmodel.cn/api/paas/v4', needsApiKey: true },
+  { id: 'qwen', group: 'cloud', defaultBaseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', needsApiKey: true },
+  { id: 'minimax', group: 'cloud', defaultBaseUrl: 'https://api.minimax.chat/v1', needsApiKey: true },
+  { id: 'doubao', group: 'cloud', defaultBaseUrl: 'https://ark.cn-beijing.volces.com/api/v3', needsApiKey: true },
+  // Local
+  { id: 'ollama', group: 'local', defaultBaseUrl: 'http://localhost:11434', needsApiKey: false },
+  // Custom
+  { id: 'custom', group: 'custom', needsApiKey: true },
 ];
 
 // ── AI Tab sub-component ─────────────────────────────────────────────────────
@@ -142,9 +142,9 @@ function AITabContent({ formState, handleChange, ts, tc }: AITabContentProps) {
   }, [ai?.provider]);
 
   const providersByGroup = {
-    international: visibleProviders.filter(p => p.group === 'international'),
-    domestic: visibleProviders.filter(p => p.group === 'domestic'),
-    other: visibleProviders.filter(p => p.group === 'other'),
+    cloud: visibleProviders.filter(p => p.group === 'cloud'),
+    local: visibleProviders.filter(p => p.group === 'local'),
+    custom: visibleProviders.filter(p => p.group === 'custom'),
   };
 
   const showApiKey = !localOnly && selectedProvider?.needsApiKey !== false;
@@ -207,30 +207,27 @@ function AITabContent({ formState, handleChange, ts, tc }: AITabContentProps) {
                 className="w-full px-3 py-2 text-sm bg-background border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 <option value="">{ts('ai.providerDesc')}</option>
-                {!localOnly && providersByGroup.international.length > 0 && (
-                  <optgroup label={ts('ai.providerGroupInternational')}>
-                    {providersByGroup.international.map(p => (
+                {!localOnly && providersByGroup.cloud.length > 0 && (
+                  <optgroup label={ts('ai.providerGroupCloud')}>
+                    {providersByGroup.cloud.map(p => (
                       <option key={p.id} value={p.id}>{ts(`ai.providers.${p.id}`)}</option>
                     ))}
                   </optgroup>
                 )}
-                {!localOnly && providersByGroup.domestic.length > 0 && (
-                  <optgroup label={ts('ai.providerGroupDomestic')}>
-                    {providersByGroup.domestic.map(p => (
+                {providersByGroup.local.length > 0 && (
+                  <optgroup label={ts('ai.providerGroupLocal')}>
+                    {providersByGroup.local.map(p => (
                       <option key={p.id} value={p.id}>{ts(`ai.providers.${p.id}`)}</option>
                     ))}
                   </optgroup>
                 )}
-                {!localOnly && providersByGroup.other.length > 0 && (
-                  <optgroup label={ts('ai.providerGroupOther')}>
-                    {providersByGroup.other.map(p => (
+                {!localOnly && providersByGroup.custom.length > 0 && (
+                  <optgroup label={ts('ai.providerGroupCustom')}>
+                    {providersByGroup.custom.map(p => (
                       <option key={p.id} value={p.id}>{ts(`ai.providers.${p.id}`)}</option>
                     ))}
                   </optgroup>
                 )}
-                {localOnly && providersByGroup.international.map(p => (
-                  <option key={p.id} value={p.id}>{ts(`ai.providers.${p.id}`)}</option>
-                ))}
               </select>
             </div>
 
