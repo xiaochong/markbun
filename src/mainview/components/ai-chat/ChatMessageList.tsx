@@ -30,9 +30,15 @@ export const ChatMessageList = memo(function ChatMessageList({ messages, isStrea
     );
   }
 
+  // Filter out empty assistant messages that have no content and are not streaming
+  // These occur when tool calls happen without text content between them
+  const visibleMessages = messages.filter(msg =>
+    msg.role !== 'assistant' || msg.content.trim() !== '' || msg.isStreaming
+  );
+
   return (
     <div className="flex-1 overflow-y-auto p-3 space-y-3 min-w-0">
-      {messages.map(msg => (
+      {visibleMessages.map(msg => (
         <ChatMessage key={msg.id} message={msg} />
       ))}
       {/* Streaming cursor */}
