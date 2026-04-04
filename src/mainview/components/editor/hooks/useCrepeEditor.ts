@@ -18,6 +18,7 @@ import { clipboardBlobConverter } from '../plugins/clipboardBlobConverter';
 import { createSearchPlugin } from '../plugins/searchPlugin';
 import { electrobun } from '@/lib/electrobun';
 import { workspaceManager, loadLocalImage, imageCache } from '@/lib/image';
+import { convertFrontmatterToCodeBlock, convertCodeBlockToFrontmatter } from '@/lib/frontmatter';
 import type { MilkdownEditorProps } from '../types';
 
 // Helper to extract base64 data from data URL
@@ -27,38 +28,6 @@ function extractBase64FromDataUrl(dataUrl: string): string {
 }
 
 const SCROLL_HIDE_DELAY = 800;
-
-// Frontmatter conversion utilities
-// Convert ---\ncontent\n--- to ```yaml\ncontent\n``` for display
-function convertFrontmatterToCodeBlock(markdown: string): string {
-  const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)/;
-  const match = markdown.match(frontmatterRegex);
-
-  if (match) {
-    const frontmatter = match[1];
-    const content = markdown.slice(match[0].length);
-    return "```yaml\n" + frontmatter + "\n```\n" + content;
-  }
-
-  return markdown;
-}
-
-// Convert ```yaml\ncontent\n``` back to ---\ncontent\n--- for saving
-function convertCodeBlockToFrontmatter(markdown: string): string {
-  // Match yaml code block at the very beginning of the document
-  const codeBlockRegex = /^```yaml\s*\n([\s\S]*?)\n```\s*(?:\n|$)/;
-  const match = markdown.match(codeBlockRegex);
-
-  if (match) {
-    const frontmatter = match[1];
-    const content = markdown.slice(match[0].length);
-    // Ensure frontmatter ends with newline before closing ---
-    const normalizedFrontmatter = frontmatter.endsWith('\n') ? frontmatter : frontmatter + '\n';
-    return "---\n" + normalizedFrontmatter + "---\n\n" + content;
-  }
-
-  return markdown;
-}
 // Insert remark-breaks BEFORE remarkLineBreak (commonmark preset) so single \n → <br> not <span>
 const breaksPlugin: MilkdownPlugin = (ctx) => async () => {
   await ctx.wait(InitReady);
@@ -128,6 +97,7 @@ export interface UseCrepeEditorReturn {
   setMarkdown: (markdown: string, options?: { onContentSet?: () => void }) => void;
   focus: () => void;
   getSelectedMarkdown: () => string | null;
+  insertMarkdown: (markdown: string) => boolean;
 }
 
 export function useCrepeEditor(
@@ -788,6 +758,27 @@ export function useCrepeEditor(
     };
   }, []);
 
+  const insertMarkdown = useCallback((markdown: string): boolean => {
+    const crepe = crepeRef.current;
+    if (!crepe?.editor.ctx) return false;
+
+    try {
+      crepe.editor.action((ctx) => {
+        const view = ctx.get(editorViewCtx);
+        const parser = ctx.get(parserCtx);
+        const doc = parser(markdown);
+        if (doc && doc.content.size > 0) {
+          const { from } = view.state.selection;
+          const tr = view.state.tr.replaceWith(from, from, doc.content);
+          view.dispatch(tr);
+        }
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
   return {
     crepeRef,
     containerRef,
@@ -798,5 +789,6 @@ export function useCrepeEditor(
     setMarkdown,
     focus,
     getSelectedMarkdown,
+    insertMarkdown,
   };
 }

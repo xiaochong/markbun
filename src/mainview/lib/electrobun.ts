@@ -182,8 +182,8 @@ export const electrobun = {
     return await electroview.rpc.request.writeToClipboard({ text });
   },
 
-  async readFromClipboard() {
-    return await electroview.rpc.request.readFromClipboard({});
+  async readFromClipboard(options?: { html?: boolean; image?: boolean }) {
+    return await electroview.rpc.request.readFromClipboard(options ?? {});
   },
 
   async selectImageFile() {

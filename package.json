@@ -32,6 +32,7 @@
 		"@milkdown/react": "^7.19.0",
 		"@milkdown/theme-nord": "^7.19.0",
 		"@milkdown/utils": "^7.19.0",
+		"@types/turndown": "^5.0.6",
 		"clsx": "^2.1.1",
 		"electrobun": "1.16.0",
 		"html2canvas": "^1.4.1",
@@ -43,6 +44,7 @@
 		"react-i18next": "^16.6.0",
 		"remark-breaks": "^4.0.0",
 		"tailwind-merge": "^3.5.0",
+		"turndown": "^7.2.4",
 		"zod": "^4.3.6"
 	},
 	"devDependencies": {

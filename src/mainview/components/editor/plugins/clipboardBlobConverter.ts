@@ -3,6 +3,7 @@ import { schemaCtx, serializerCtx } from '@milkdown/kit/core';
 import { Plugin, PluginKey } from '@milkdown/prose/state';
 import { Slice } from '@milkdown/prose/model';
 import { prepareForClipboard } from '@/lib/image';
+import { convertCodeBlockToFrontmatter } from '@/lib/frontmatter';
 
 /**
  * Milkdown plugin to convert blob URLs back to original paths when copying
@@ -30,7 +31,12 @@ export const clipboardBlobConverter = $prose((ctx) => {
         let markdown = serializer(doc);
 
         // Convert blob URLs to original paths
-        return prepareForClipboard(markdown);
+        markdown = prepareForClipboard(markdown);
+
+        // Convert yaml code block back to frontmatter format
+        markdown = convertCodeBlockToFrontmatter(markdown);
+
+        return markdown;
       },
     },
   });

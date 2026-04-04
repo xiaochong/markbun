@@ -1231,15 +1231,23 @@ function App() {
           }
           break;
         }
-        case 'editor-cut':
-          await clipboard.cut();
+        case 'editor-cut': {
+          if (sourceModeRef.current) break;
+          editorRef.current?.focus();
+          document.execCommand('cut');
           break;
-        case 'editor-copy':
-          await clipboard.copy();
+        }
+        case 'editor-copy': {
+          if (sourceModeRef.current) break;
+          editorRef.current?.focus();
+          document.execCommand('copy');
           break;
-        case 'editor-paste':
-          await clipboard.paste();
+        }
+        case 'editor-paste': {
+          if (sourceModeRef.current) break;
+          void clipboard.paste(false);
           break;
+        }
         case 'editor-select-all':
           editorRef.current?.focus();
           document.execCommand('selectAll');
@@ -1406,41 +1414,34 @@ function App() {
         case 'c': {
           const cTarget = e.target as HTMLElement;
           if (cTarget.tagName === 'INPUT' || cTarget.tagName === 'TEXTAREA') {
-            // WebView doesn't support native clipboard shortcuts in input fields, handle manually
             e.preventDefault();
             const el = cTarget as HTMLInputElement | HTMLTextAreaElement;
             const start = el.selectionStart ?? 0;
             const end = el.selectionEnd ?? start;
-            if (start === end) break; // No selection, don't overwrite clipboard
+            if (start === end) break;
             void electrobun.writeToClipboard(el.value.substring(start, end));
-          } else {
-            e.preventDefault();
-            void clipboard.copy();
           }
+          // Editor: native menu intercepts Cmd+C, fires menuAction → execCommand('copy')
           break;
         }
         case 'x': {
           const xTarget = e.target as HTMLElement;
           if (xTarget.tagName === 'INPUT' || xTarget.tagName === 'TEXTAREA') {
-            // WebView doesn't support native clipboard shortcuts in input fields, handle manually
             e.preventDefault();
             const el = xTarget as HTMLInputElement | HTMLTextAreaElement;
             const start = el.selectionStart ?? 0;
             const end = el.selectionEnd ?? start;
-            if (start === end) break; // No selection, don't overwrite clipboard
+            if (start === end) break;
             const selectedText = el.value.substring(start, end);
             el.setRangeText('');
             void electrobun.writeToClipboard(selectedText);
-          } else {
-            e.preventDefault();
-            void clipboard.cut();
           }
+          // Editor: native menu intercepts Cmd+X, fires menuAction → execCommand('cut')
           break;
         }
         case 'v': {
           const vTarget = e.target as HTMLElement;
           if (vTarget.tagName === 'INPUT' || vTarget.tagName === 'TEXTAREA') {
-            // WebView doesn't support native Cmd+V in input fields, handle manually
             e.preventDefault();
             void electrobun.readFromClipboard().then((result) => {
               const res = result as { success: boolean; text?: string };
@@ -1448,10 +1449,14 @@ function App() {
                 document.execCommand('insertText', false, res.text);
               }
             });
-          } else {
+          } else if (!sourceModeRef.current) {
+            // WYSIWYG: paste via IPC (paste events don't fire in WebView)
+            // Handles Cmd+Shift+V (not registered as menu accelerator)
+            // and is a safety net for Cmd+V if native menu doesn't intercept
             e.preventDefault();
-            void clipboard.paste();
+            void clipboard.paste(e.shiftKey);
           }
+          // Source mode: let WebView handle natively
           break;
         }
         case 'f':

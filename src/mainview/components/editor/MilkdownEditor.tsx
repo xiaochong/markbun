@@ -28,6 +28,7 @@ export const MilkdownEditor = memo(forwardRef<MilkdownEditorRef, MilkdownEditorP
       setMarkdown,
       focus,
       getSelectedMarkdown,
+      insertMarkdown,
     } = useCrepeEditor(defaultValue, onChange, setIsReady, darkMode);
 
     // Theme loading hook
@@ -107,6 +108,9 @@ export const MilkdownEditor = memo(forwardRef<MilkdownEditorRef, MilkdownEditorP
 
       // Insert text
       insertText: (text: string) => textCommands.insertText(crepeRef, text),
+
+      // Insert parsed markdown at cursor
+      insertMarkdown,
 
       // Search integration — expose EditorView
       getEditorView: () => {
@@ -201,6 +205,7 @@ export const MilkdownEditor = memo(forwardRef<MilkdownEditorRef, MilkdownEditorP
       setMarkdown,
       focus,
       getSelectedMarkdown,
+      insertMarkdown,
       crepeRef,
       containerRef,
     ]);

@@ -663,9 +663,12 @@ async function main() {
             };
           }
         },
-        readFromClipboard: async () => {
+        readFromClipboard: async (params: { html?: boolean; image?: boolean }) => {
           try {
+            const { html: wantHtml, image: wantImage } = params ?? {};
             const platform = process.platform;
+
+            // Always read text (backward compatible)
             let cmd: string;
             let args: string[];
             if (platform === 'win32') {
@@ -678,7 +681,7 @@ async function main() {
               cmd = 'pbpaste';
               args = [];
             }
-            const result = await new Promise<{ success: boolean; text?: string; error?: string }>((resolve) => {
+            const textResult = await new Promise<{ success: boolean; text?: string }>((resolve) => {
               const proc = spawn(cmd, args, { stdio: ['ignore', 'pipe', 'pipe'] });
               let output = '';
               let errorOutput = '';
@@ -695,14 +698,143 @@ async function main() {
                 if (code === 0) {
                   resolve({ success: true, text: output });
                 } else {
-                  resolve({ success: false, error: errorOutput || `${cmd} exited with code ${code}` });
+                  resolve({ success: true }); // Empty clipboard is not an error
                 }
               });
 
-              proc.on('error', (error: Error) => {
-                resolve({ success: false, error: error.message });
+              proc.on('error', () => {
+                resolve({ success: true });
               });
             });
+
+            const result: { success: boolean; text?: string; html?: string; imageData?: string; imageFormat?: string; error?: string } = {
+              success: true,
+              text: textResult.text,
+            };
+
+            // Read HTML from clipboard if requested
+            if (wantHtml && platform === 'darwin') {
+              try {
+                const htmlResult = await new Promise<string | null>((resolve) => {
+                  const proc = spawn('osascript', ['-e', 'the clipboard as «class HTML»'], { stdio: ['ignore', 'pipe', 'pipe'] });
+                  let output = '';
+                  let errOutput = '';
+
+                  proc.stdout.on('data', (data: Buffer) => {
+                    output += data.toString();
+                  });
+
+                  proc.stderr.on('data', (data: Buffer) => {
+                    errOutput += data.toString();
+                  });
+
+                  proc.on('close', (code: number | null) => {
+                    if (code === 0 && output) {
+                      // osascript returns HTML as hex-encoded «data HTMLXXXX...»
+                      const hexMatch = output.match(/«data HTML([0-9A-Fa-f]+)»/);
+                      if (hexMatch && hexMatch[1]) {
+                        const hex = hexMatch[1];
+                        const bytes = Buffer.from(hex, 'hex');
+                        resolve(bytes.toString('utf-8'));
+                      } else {
+                        resolve(null);
+                      }
+                    } else {
+                      resolve(null);
+                    }
+                  });
+
+                  proc.on('error', () => resolve(null));
+                });
+                if (htmlResult) {
+                  result.html = htmlResult;
+                }
+              } catch {
+                // No HTML in clipboard is not an error
+              }
+            } else if (wantHtml && platform === 'linux') {
+              try {
+                const htmlResult = await new Promise<string | null>((resolve) => {
+                  const proc = spawn('xclip', ['-selection', 'clipboard', '-t', 'text/html', '-o'], { stdio: ['ignore', 'pipe', 'pipe'] });
+                  let output = '';
+
+                  proc.stdout.on('data', (data: Buffer) => {
+                    output += data.toString();
+                  });
+
+                  proc.on('close', () => resolve(output || null));
+                  proc.on('error', () => resolve(null));
+                });
+                if (htmlResult) {
+                  result.html = htmlResult;
+                }
+              } catch {
+                // No HTML in clipboard is not an error
+              }
+            } else if (wantHtml && platform === 'win32') {
+              try {
+                const htmlResult = await new Promise<string | null>((resolve) => {
+                  const proc = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', 'Get-Clipboard -Format Html'], { stdio: ['ignore', 'pipe', 'pipe'] });
+                  let output = '';
+
+                  proc.stdout.on('data', (data: Buffer) => {
+                    output += data.toString();
+                  });
+
+                  proc.on('close', () => resolve(output || null));
+                  proc.on('error', () => resolve(null));
+                });
+                if (htmlResult) {
+                  result.html = htmlResult;
+                }
+              } catch {
+                // No HTML in clipboard is not an error
+              }
+            }
+
+            // Read image from clipboard if requested (macOS only for now)
+            if (wantImage && platform === 'darwin') {
+              try {
+                const tmpPath = `${tmpdir()}/markbun-clipboard-${Date.now()}.png`;
+                const imageResult = await new Promise<string | null>((resolve) => {
+                  const proc = spawn('osascript', ['-e', `
+                    set theClipboard to the clipboard as «class PNGf»
+                    set fp to open for access POSIX file "${tmpPath}" with write permission
+                    write theClipboard to fp
+                    close access fp
+                  `.trim()], { stdio: ['ignore', 'pipe', 'pipe'] });
+                  let errOutput = '';
+
+                  proc.stderr.on('data', (data: Buffer) => {
+                    errOutput += data.toString();
+                  });
+
+                  proc.on('close', async (code: number | null) => {
+                    if (code === 0) {
+                      try {
+                        const data = await readFile(tmpPath);
+                        resolve(data.toString('base64'));
+                        // Cleanup temp file
+                        await unlink(tmpPath);
+                      } catch {
+                        resolve(null);
+                      }
+                    } else {
+                      resolve(null);
+                    }
+                  });
+
+                  proc.on('error', () => resolve(null));
+                });
+                if (imageResult) {
+                  result.imageData = imageResult;
+                  result.imageFormat = 'png';
+                }
+              } catch {
+                // No image in clipboard is not an error
+              }
+            }
+
             return result;
           } catch (error) {
             console.error('Failed to read from clipboard:', error);

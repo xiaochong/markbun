@@ -276,7 +276,7 @@ export type MarkBunRPC = {
       showTableContextMenu: { params: {}; response: { success: boolean } };
       showDefaultContextMenu: { params: {}; response: { success: boolean } };
       writeToClipboard: { params: { text: string }; response: { success: boolean; error?: string } };
-      readFromClipboard: { params: {}; response: { success: boolean; text?: string; error?: string } };
+      readFromClipboard: { params: { html?: boolean; image?: boolean }; response: { success: boolean; text?: string; html?: string; imageData?: string; imageFormat?: string; error?: string } };
 
       // Settings (Phase 3)
       getSettings: { params: {}; response: { success: boolean; settings?: AppSettings; error?: string } };
