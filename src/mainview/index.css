@@ -1325,3 +1325,34 @@ body {
 .dark .search-cm-match-active {
   background-color: rgba(255, 150, 50, 0.55);
 }
+
+/* ===========================================
+   Frontmatter (YAML) Styles - Typora-like
+   =========================================== */
+
+/* Frontmatter is rendered as a code block with language 'yaml' at the start of document */
+.milkdown-crepe-container .ProseMirror pre[data-language="yaml"]:first-child {
+  background: #f5f5f5 !important;
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin: 0 0 16px 0;
+  font-family: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, Monaco, 'Courier New', monospace !important;
+  font-size: 0.85em;
+  line-height: 1.5;
+  color: #666;
+  border: none;
+}
+
+.dark .milkdown-crepe-container .ProseMirror pre[data-language="yaml"]:first-child {
+  background: #2d2d2d !important;
+  color: #999;
+}
+
+/* Frontmatter code content styling */
+.milkdown-crepe-container .ProseMirror pre[data-language="yaml"]:first-child code {
+  color: inherit;
+  font-family: inherit;
+  background: transparent !important;
+  padding: 0;
+  font-size: inherit;
+}

@@ -27,6 +27,38 @@ function extractBase64FromDataUrl(dataUrl: string): string {
 }
 
 const SCROLL_HIDE_DELAY = 800;
+
+// Frontmatter conversion utilities
+// Convert ---\ncontent\n--- to ```yaml\ncontent\n``` for display
+function convertFrontmatterToCodeBlock(markdown: string): string {
+  const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)/;
+  const match = markdown.match(frontmatterRegex);
+
+  if (match) {
+    const frontmatter = match[1];
+    const content = markdown.slice(match[0].length);
+    return "```yaml\n" + frontmatter + "\n```\n" + content;
+  }
+
+  return markdown;
+}
+
+// Convert ```yaml\ncontent\n``` back to ---\ncontent\n--- for saving
+function convertCodeBlockToFrontmatter(markdown: string): string {
+  // Match yaml code block at the very beginning of the document
+  const codeBlockRegex = /^```yaml\s*\n([\s\S]*?)\n```\s*(?:\n|$)/;
+  const match = markdown.match(codeBlockRegex);
+
+  if (match) {
+    const frontmatter = match[1];
+    const content = markdown.slice(match[0].length);
+    // Ensure frontmatter ends with newline before closing ---
+    const normalizedFrontmatter = frontmatter.endsWith('\n') ? frontmatter : frontmatter + '\n';
+    return "---\n" + normalizedFrontmatter + "---\n\n" + content;
+  }
+
+  return markdown;
+}
 // Insert remark-breaks BEFORE remarkLineBreak (commonmark preset) so single \n → <br> not <span>
 const breaksPlugin: MilkdownPlugin = (ctx) => async () => {
   await ctx.wait(InitReady);
@@ -107,7 +139,8 @@ export function useCrepeEditor(
   const crepeRef = useRef<Crepe | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const onChangeRef = useRef(onChange);
-  const initialValueRef = useRef(defaultValue);
+  // Convert frontmatter to yaml code block for display
+  const initialValueRef = useRef(convertFrontmatterToCodeBlock(defaultValue));
   const darkModeRef = useRef(darkMode);
   darkModeRef.current = darkMode;
   const [isDraggingOver, setIsDraggingOver] = useState(false);
@@ -263,7 +296,8 @@ export function useCrepeEditor(
                 const markdown = serializer(view.state.doc);
                 if (markdown !== lastSerializedMarkdown) {
                   lastSerializedMarkdown = markdown;
-                  onChangeRef.current?.(markdown);
+                  // Convert yaml code block back to frontmatter format for onChange callback
+                  onChangeRef.current?.(convertCodeBlockToFrontmatter(markdown));
                 }
               } catch (e) {
                 console.error('[ChangeListener] Serialization failed:', e);
@@ -288,7 +322,8 @@ export function useCrepeEditor(
   }, []); // Empty deps - only create once
 
   const getMarkdown = useCallback(() => {
-    return crepeRef.current?.getMarkdown() ?? '';
+    const content = crepeRef.current?.getMarkdown() ?? '';
+    return convertCodeBlockToFrontmatter(content);
   }, []);
 
   const CHUNK_LOAD_LINE_THRESHOLD = 500; // Lines
@@ -307,14 +342,17 @@ export function useCrepeEditor(
     }
 
     try {
-      const lines = markdown.split('\n');
+      // Convert frontmatter to yaml code block for display
+      const convertedMarkdown = convertFrontmatterToCodeBlock(markdown);
+
+      const lines = convertedMarkdown.split('\n');
       const totalLines = lines.length;
 
       // For small files, use direct parsing
       if (totalLines <= CHUNK_LOAD_LINE_THRESHOLD) {
         const view = editor.ctx.get(editorViewCtx);
         const parser = editor.ctx.get(parserCtx);
-        const doc = parser(markdown);
+        const doc = parser(convertedMarkdown);
         if (!doc) return;
 
         const tr = view.state.tr.replaceWith(0, view.state.doc.content.size, doc.content);
