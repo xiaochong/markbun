@@ -49,7 +49,7 @@ MarkBun is an open-source, cross-platform markdown editor designed for seamless 
 > - ✅ Command Palette (v0.5.0)
 > - ✅ Session Persistence (v0.5.0)
 > - ✅ Windows Support (v0.5.0)
-> - ⏳ AI Support (v0.6.0)
+> - ✅ AI Chat Assistant (v0.6.0)
 >
 > See [ROADMAP.md](./ROADMAP.md) for detailed development phases.
 
@@ -84,6 +84,7 @@ When you need them, every UI element can be instantly toggled via the **View men
 - 🪟 **Windows Support** - Native menu bar, icons, and CI for Windows
 - ⌨️ **Keyboard Shortcuts** - Comprehensive shortcuts for formatting and navigation
 - 🔤 **Source Mode** - Toggle between WYSIWYG and source code editing (`Cmd/Ctrl + /`)
+- 🤖 **AI Assistant** - Multi-provider AI chat with document editing tools (OpenAI, Anthropic, Ollama, etc.)
 - 🌐 **i18n** - Multi-language support (English, Chinese, Japanese, Korean, etc.)
 
 ![MarkBun Preview](docs/assets/preview1.png)
@@ -451,10 +452,11 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 - [x] Session persistence (cursor/scroll position restore)
 - [x] Windows platform support (menu bar, icons, CI)
 
-### v0.6.0 ⏳ Planned
-- [ ] AI Writing Assistant (continue writing, generate content)
-- [ ] AI Editor (polish, summarize, translate)
-- [ ] AI Agent (auto-optimize structure, title suggestions)
+### v0.6.0 ✅ Completed
+- [x] AI Chat Assistant with streaming responses
+- [x] Multi-provider support (OpenAI, Anthropic, Google, Ollama, DeepSeek, etc.)
+- [x] Document editing tools (read, edit, write)
+- [x] Session history persistence and management
 
 ### v0.7.0 ⏳ Planned
 - [ ] Focus Mode (distraction-free writing)

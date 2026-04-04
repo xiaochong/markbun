@@ -12,7 +12,7 @@ This document outlines the development phases for MarkBun, from MVP to v1.0.
 | Phase 3 | v0.3.0 | Enhanced Editing | ✅ Complete |
 | Phase 4 | v0.4.0 | File Protection & Export | ✅ Complete |
 | Phase 5 | v0.5.0 | Editor Productivity | ✅ Complete |
-| Phase 6 | v0.6.0 | AI Support | ⏳ Planned |
+| Phase 6 | v0.6.0 | AI Support | ✅ Complete |
 | Phase 7 | v0.7.0 | Writing Experience | ⏳ Planned |
 | Phase 8 | v0.8.0 | Themes & Accessibility | ⏳ Planned |
 | Phase 9 | v0.9.0 | Performance & Distribution | ⏳ Planned |
@@ -246,28 +246,53 @@ This document outlines the development phases for MarkBun, from MVP to v1.0.
 
 ---
 
-## ⏳ Phase 6: AI Support (v0.6.0)
+## ✅ Phase 6: AI Support (v0.6.0)
 
-**Status:** Planned
-**Target:** AI-assisted writing and optimization
+**Status:** Complete
+**Target:** AI assistant with multi-provider support, tool calling, and session persistence
 
-### Tasks
+### Completed Tasks
 
-#### AI Writing Assistant
-- [ ] AI continue writing from selection
-- [ ] Generate content from prompt
-- [ ] Multiple writing styles (formal, casual, technical, creative)
+#### AI Chat Interface
+- [x] Resizable AI chat panel (280–600px width)
+- [x] Real-time streaming responses with smart buffering (50ms/3 tokens)
+- [x] Multi-turn conversation with tool call loop
+- [x] Rich message display (markdown rendering, tool call cards with status)
+- [x] Abort support for in-progress responses
+- [x] Setup guide when AI is not configured
 
-#### AI Editor
-- [ ] Polish and rewrite (improve expression, fix grammar)
-- [ ] Text summarization
-- [ ] Translation (Chinese/English)
+#### AI Tools (Document Manipulation)
+- [x] `read` tool — retrieve full document content
+- [x] `edit` tool — find and replace text in document
+- [x] `write` tool — replace entire document content
+- [x] Tool call visualization (status indicators, duration, expandable details)
 
-#### AI Agent
-- [ ] Auto-optimize document structure
-- [ ] Smart title suggestions
-- [ ] Image/chart suggestions
-- [ ] Document consistency check (terminology, formatting)
+#### Multi-Provider Support
+- [x] OpenAI-compatible provider support (OpenAI, DeepSeek, Kimi, GLM, Qwen, etc.)
+- [x] Native provider support (Anthropic, Google, xAI, Mistral, Groq, etc.)
+- [x] Local model support (Ollama)
+- [x] OpenRouter aggregator support
+- [x] Custom base URL for any OpenAI-compatible API
+- [x] Model selector with combobox, synced from pi-ai
+
+#### Session Persistence
+- [x] Session history saved to `~/.config/markbun/ai-sessions/`
+- [x] Auto-restore latest session on app launch
+- [x] Session history dialog (browse, restore, auto-cleanup at 50 sessions)
+- [x] Session title generation from first user message
+
+#### Settings & i18n
+- [x] AI settings tab (provider, model, base URL, local-only mode)
+- [x] Full i18n support for AI features (8 locales)
+- [x] Context-aware system prompt (file name, document language)
+
+### Implementation Details
+- **AI Streaming**: `src/bun/services/ai-stream.ts` — buffered streaming with retryable error classification
+- **AI Tools**: `src/mainview/lib/ai-tools.ts` — 3 atomic tools via `window.__markbunAI`
+- **AI Session**: `src/bun/services/ai-session.ts` — persistent session storage
+- **Chat Hook**: `src/mainview/hooks/useAIChat.ts` — conversation state management
+- **Chat Components**: `src/mainview/components/ai-chat/` — panel, messages, input, tool cards
+- **Provider**: `@mariozechner/pi-ai` + `@anthropic-ai/sdk`
 
 ---
 
@@ -416,4 +441,4 @@ Users retain full control: every UI element can be toggled on demand via the Vie
 
 ---
 
-*Last updated: 2026-04-02*
+*Last updated: 2026-04-04*
