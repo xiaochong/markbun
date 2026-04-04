@@ -37,7 +37,7 @@ export const ChatMessageList = memo(function ChatMessageList({ messages, isStrea
   );
 
   return (
-    <div className="flex-1 overflow-y-auto p-3 space-y-3 min-w-0">
+    <div className="flex-1 overflow-y-auto p-5 space-y-3 min-w-0">
       {visibleMessages.map(msg => (
         <ChatMessage key={msg.id} message={msg} />
       ))}
@@ -71,7 +71,7 @@ const ChatMessage = memo(function ChatMessage({ message }: ChatMessageProps) {
     return (
       <div className="flex flex-col gap-1 items-start min-w-0 w-full">
         <span className="text-xs text-muted-foreground font-medium">{t('message.assistant')}</span>
-        <div className="max-w-[90%] w-full">
+        <div className="max-w-[100%]">
           <ToolCallCard message={message}>{toolBody}</ToolCallCard>
         </div>
       </div>
@@ -83,16 +83,14 @@ const ChatMessage = memo(function ChatMessage({ message }: ChatMessageProps) {
     : t('message.assistant');
 
   return (
-    <div className={cn('flex flex-col gap-1 min-w-0', isUser ? 'items-end' : 'items-start')}>
+    <div className={cn('flex flex-col gap-1 min-w-0 w-full', isUser ? 'items-end' : 'items-start')}>
       <span className="text-xs text-muted-foreground font-medium">{roleLabel}</span>
       <div
         className={cn(
-          'rounded-lg px-3 py-2 text-sm max-w-[90%] break-words whitespace-pre-wrap',
+          'rounded-lg px-3 py-2 text-sm break-words whitespace-pre-wrap',
           isUser
-            ? 'bg-primary text-primary-foreground'
-            : isTool
-            ? 'bg-muted border border-border text-muted-foreground text-xs font-mono'
-            : 'bg-muted text-foreground',
+            ? 'bg-primary text-primary-foreground max-w-[90%]'
+            : 'bg-muted text-foreground max-w-[100%] w-fit',
           message.error && 'border border-destructive/50 bg-destructive/10'
         )}
       >

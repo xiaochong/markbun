@@ -114,7 +114,7 @@ export const ToolCallCard = memo(function ToolCallCard({ message, children }: To
 
   return (
     <div className={cn(
-      'rounded-md border-l-4 my-1 overflow-hidden w-full',
+      'rounded-md border-l-4 my-1 overflow-hidden w-fit',
       config?.borderClass || 'border-l-muted-foreground',
       'bg-muted/50',
     )}>
