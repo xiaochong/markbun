@@ -1,15 +1,13 @@
 /**
  * AI Tool Calls - Editor Integration
  *
- * Registers `window.__markbunAI` with tool functions that the Bun main process
- * calls via RPC during AI streaming.
+ * Registers `window.__markbunAI` with 3 atomic tools:
+ *  - read()          → { content } | { error }
+ *  - edit(old_text, new_text) → { success, replacements } | { error }
+ *  - write(content)  → { success } | { error }
  *
- * Tools:
- *  - readDocument()  -> { content: string }
- *  - readSelection() -> { selection: string } | { error: string }
- *  - insertAtCursor(text)  -> { success: true } | { error: string }
- *  - replaceSelection(text) -> { success: true } | { error: string }
- *  - replaceInDocument(oldText, newText) -> { success: true, replacements } | { error: string }
+ * All operations work on raw markdown text via getMarkdown/setMarkdown,
+ * no dependency on editor focus, cursor position, or selection state.
  */
 
 import type { MilkdownEditorRef } from '../components/editor/types';
@@ -20,60 +18,36 @@ import type { MilkdownEditorRef } from '../components/editor/types';
  */
 export function registerAITools(editorRef: React.RefObject<MilkdownEditorRef | null>) {
   (window as any).__markbunAI = {
-    readDocument: () => {
+    read: () => {
       const editor = editorRef.current;
       if (!editor) return { error: 'Editor not ready' };
-      const markdown = editor.getMarkdown();
-      return { content: markdown };
+      return { content: editor.getMarkdown() };
     },
 
-    readSelection: () => {
+    edit: (args: { old_text: string; new_text: string }) => {
       const editor = editorRef.current;
       if (!editor) return { error: 'Editor not ready' };
-      const selection = editor.getSelectedMarkdown();
-      if (!selection) return { error: 'No text selected' };
-      return { selection };
-    },
-
-    insertAtCursor: (args: { text: string }) => {
-      const editor = editorRef.current;
-      if (!editor) return { error: 'Editor not ready' };
-      const text = typeof args === 'string' ? args : args?.text;
-      if (!text) return { error: 'text is required' };
-      // When AI panel is open, editor likely has no focus.
-      // Use setMarkdown directly to ensure content is written reliably.
-      const content = editor.getMarkdown();
-      const separator = content.endsWith('\n') ? '' : '\n';
-      editor.setMarkdown(content + separator + text);
-      return { success: true, appended: true };
-    },
-
-    replaceSelection: (args: { text: string }) => {
-      const editor = editorRef.current;
-      if (!editor) return { error: 'Editor not ready' };
-      const text = typeof args === 'string' ? args : args?.text;
-      if (!text) return { error: 'text is required' };
-      // Verify there is a selection to replace
-      if (!editor.hasSelection()) return { error: 'No text selected' };
-      const ok = editor.insertText(text);
-      if (!ok) return { error: 'Replace failed' };
-      return { success: true };
-    },
-
-    replaceInDocument: (args: { oldText: string; newText: string }) => {
-      const editor = editorRef.current;
-      if (!editor) return { error: 'Editor not ready' };
-      if (!args?.oldText || args.newText === undefined || args.newText === null) {
-        return { error: 'oldText and newText are required' };
+      if (!args?.old_text || args.new_text === undefined || args.new_text === null) {
+        return { error: 'old_text and new_text are required' };
       }
       const content = editor.getMarkdown();
-      if (!content.includes(args.oldText)) {
-        return { error: `Text not found in document: "${args.oldText.substring(0, 50)}"` };
+      if (!content.includes(args.old_text)) {
+        return { error: `Text not found: "${args.old_text.substring(0, 80)}"` };
       }
-      const newContent = content.split(args.oldText).join(args.newText);
-      const replacements = content.split(args.oldText).length - 1;
+      const replacements = content.split(args.old_text).length - 1;
+      const newContent = content.split(args.old_text).join(args.new_text);
       editor.setMarkdown(newContent);
       return { success: true, replacements };
+    },
+
+    write: (args: { content: string }) => {
+      const editor = editorRef.current;
+      if (!editor) return { error: 'Editor not ready' };
+      if (args?.content === undefined || args?.content === null) {
+        return { error: 'content is required' };
+      }
+      editor.setMarkdown(args.content);
+      return { success: true };
     },
   };
 }

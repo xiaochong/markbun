@@ -1693,43 +1693,31 @@ async function main() {
                 messages: [],
                 tools: [
                   {
-                    name: 'readDocument',
-                    description: 'Read the full content of the current document',
+                    name: 'read',
+                    description: 'Read the full content of the current document. Use this to understand what is in the document before making changes.',
                     parameters: { type: 'object' as const, properties: {} },
                   },
                   {
-                    name: 'readSelection',
-                    description: 'Read the currently selected text in the editor',
-                    parameters: { type: 'object' as const, properties: {} },
-                  },
-                  {
-                    name: 'insertAtCursor',
-                    description: 'Insert text at the current cursor position. If the editor has no focus (e.g. AI panel is active), appends to the end of the document. Prefer replaceInDocument for modifying existing content.',
-                    parameters: {
-                      type: 'object' as const,
-                      properties: { text: { type: 'string' as const, description: 'Text to insert' } },
-                      required: ['text'] as const,
-                    },
-                  },
-                  {
-                    name: 'replaceSelection',
-                    description: 'Replace the currently selected text with new content',
-                    parameters: {
-                      type: 'object' as const,
-                      properties: { text: { type: 'string' as const, description: 'Replacement text' } },
-                      required: ['text'] as const,
-                    },
-                  },
-                  {
-                    name: 'replaceInDocument',
-                    description: 'Find and replace text in the document. Use this to modify specific text without needing to select it first.',
+                    name: 'edit',
+                    description: 'Find and replace text in the document. Provide the exact text to find (old_text) and what to replace it with (new_text). All occurrences will be replaced. Returns the number of replacements made.',
                     parameters: {
                       type: 'object' as const,
                       properties: {
-                        oldText: { type: 'string' as const, description: 'The exact text to find and replace' },
-                        newText: { type: 'string' as const, description: 'The replacement text' },
+                        old_text: { type: 'string' as const, description: 'The exact text to find in the document' },
+                        new_text: { type: 'string' as const, description: 'The text to replace it with' },
                       },
-                      required: ['oldText', 'newText'] as const,
+                      required: ['old_text', 'new_text'] as const,
+                    },
+                  },
+                  {
+                    name: 'write',
+                    description: 'Replace the entire document content with new content. Use this for major rewrites, reformatting, or when you need to replace a large portion of the document.',
+                    parameters: {
+                      type: 'object' as const,
+                      properties: {
+                        content: { type: 'string' as const, description: 'The complete new document content' },
+                      },
+                      required: ['content'] as const,
                     },
                   },
                 ],
