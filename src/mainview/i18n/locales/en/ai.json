@@ -5,7 +5,8 @@
   },
   "session": {
     "newChat": "New Chat",
-    "resetConfirm": "Start a new conversation?"
+    "resetConfirm": "Start a new conversation?",
+    "history": "View History"
   },
   "message": {
     "user": "You",
@@ -45,5 +46,14 @@
   },
   "resize": {
     "handle": "Resize panel"
+  },
+  "sessionHistory": {
+    "title": "Session History",
+    "loading": "Loading sessions...",
+    "empty": "No previous sessions",
+    "restore": "Restore",
+    "delete": "Delete Session",
+    "confirmDelete": "Confirm?",
+    "close": "Close"
   }
 }

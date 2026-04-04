@@ -27,6 +27,7 @@ import {
 import { loadSessionState, saveSessionState as saveSessionStateToDisk, getDefaultSessionState, type SessionState } from './services/sessionState';
 import { saveAIKey, getAIKey, deleteAIKey as deleteAIKeyFromStore, getMaskedKeys } from './services/ai-keys';
 import { startStream, abortStream, isStreaming, createDefaultToolExecutor, type AIStreamEvent } from './services/ai-stream';
+import * as aiSessions from './services/ai-sessions';
 import type { Api, Model } from '@mariozechner/pi-ai';
 import { getModel as piAiGetModel, stream as piAiStream } from '@mariozechner/pi-ai';
 import { spawn, exec } from 'child_process';
@@ -1759,6 +1760,23 @@ async function main() {
         resetAIContext: async () => {
           activeAIContext = null;
           return { success: true };
+        },
+
+        // AI Session History
+        getAISessionList: async () => {
+          return await aiSessions.loadSessionIndex();
+        },
+        getAISession: async ({ id }: { id: string }) => {
+          return await aiSessions.loadSession(id);
+        },
+        saveAISession: async ({ session }: { session: aiSessions.AISession }) => {
+          return await aiSessions.saveSession(session);
+        },
+        deleteAISession: async ({ id }: { id: string }) => {
+          return await aiSessions.deleteSession(id);
+        },
+        getLatestAISession: async () => {
+          return await aiSessions.getLatestSession();
         },
       },
       messages: {

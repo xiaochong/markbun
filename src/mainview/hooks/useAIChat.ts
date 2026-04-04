@@ -1,6 +1,8 @@
 // AI Chat hook — manages conversation state, streaming, send/abort
+// Enhanced with session persistence (auto-save, restore, history)
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { electrobun } from '../lib/electrobun';
+import type { AISessionData } from '@/shared/types';
 
 export interface AIMessage {
   id: string;
@@ -28,12 +30,17 @@ export interface UseAIChatReturn {
   send: (message: string) => Promise<void>;
   abort: () => Promise<void>;
   resetSession: () => void;
+  // Session persistence
+  sessionId: string | null;
+  loadSession: (session: AISessionData) => void;
+  restoreLatestSession: () => Promise<void>;
 }
 
 export function useAIChat(): UseAIChatReturn {
   const [messages, setMessages] = useState<AIMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   // Track current assistant message id for streaming updates
   const currentAssistantIdRef = useRef<string | null>(null);
@@ -42,7 +49,103 @@ export function useAIChat(): UseAIChatReturn {
   // Guard against double-send race condition
   const sendingRef = useRef(false);
 
-  // Subscribe to stream events
+  // ── Session Persistence Refs ───────────────────────────────────────────────
+  const filePathRef = useRef<string | null>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const messagesRef = useRef<AIMessage[]>([]);
+  const sessionIdRef = useRef<string | null>(null);
+
+  // Keep refs in sync
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+  useEffect(() => { sessionIdRef.current = sessionId; }, [sessionId]);
+
+  // ── Session Save ───────────────────────────────────────────────────────────
+
+  const saveCurrentSession = useCallback(async (msgs?: AIMessage[]) => {
+    const id = sessionIdRef.current;
+    if (!id) return;
+    const currentMessages = msgs ?? messagesRef.current;
+    if (currentMessages.length === 0) return;
+    // Don't save if any message is still streaming or executing
+    if (currentMessages.some(m => m.isStreaming || m.status === 'executing')) return;
+
+    const now = Date.now();
+    const firstUserMsg = currentMessages.find(m => m.role === 'user');
+    const title = firstUserMsg
+      ? (firstUserMsg.content.trim().length > 40 ? firstUserMsg.content.trim().substring(0, 40) + '...' : firstUserMsg.content.trim())
+      : 'Untitled Session';
+
+    const sessionData: AISessionData = {
+      id,
+      title,
+      model: '',
+      filePath: filePathRef.current,
+      createdAt: now,
+      updatedAt: now,
+      messageCount: currentMessages.length,
+      messages: currentMessages.map(m => ({
+        id: m.id,
+        role: m.role,
+        content: m.content,
+        timestamp: m.timestamp,
+        isStreaming: m.isStreaming,
+        error: m.error,
+        toolName: m.toolName,
+        toolResult: m.toolResult,
+        toolArgs: m.toolArgs,
+        status: m.status,
+        startTime: m.startTime,
+        duration: m.duration,
+      })),
+    };
+
+    try {
+      await electrobun.saveAISession(sessionData);
+    } catch (err) {
+      console.error('[AIChat] Failed to save session:', err);
+    }
+  }, []);
+
+  const scheduleSave = useCallback(() => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      void saveCurrentSession();
+    }, 2000);
+  }, [saveCurrentSession]);
+
+  // ── Load / Restore ─────────────────────────────────────────────────────────
+
+  const loadSession = useCallback((session: AISessionData) => {
+    setSessionId(session.id);
+    sessionIdRef.current = session.id;
+    filePathRef.current = session.filePath;
+
+    const loaded: AIMessage[] = session.messages.map(m => ({
+      ...m,
+      isStreaming: false,
+    }));
+
+    setMessages(loaded);
+    setError(null);
+    setIsStreaming(false);
+    currentAssistantIdRef.current = null;
+    activeSessionIdRef.current = null;
+    sendingRef.current = false;
+  }, []);
+
+  const restoreLatestSession = useCallback(async () => {
+    try {
+      const result = await electrobun.getLatestAISession();
+      if (result.success && result.session && result.session.messages.length > 0) {
+        loadSession(result.session);
+      }
+    } catch (err) {
+      console.error('[AIChat] Failed to restore latest session:', err);
+    }
+  }, [loadSession]);
+
+  // ── Subscribe to stream events ─────────────────────────────────────────────
+
   useEffect(() => {
     const unsubscribe = electrobun.on('ai-stream-event', (data) => {
       const event = data as {
@@ -96,7 +199,6 @@ export function useAIChat(): UseAIChatReturn {
         case 'toolcall_delta': {
           const toolName = event.data?.toolName as string | undefined;
           if (!toolName) break;
-          // Update the last tool message's toolName if it still undefined
           setMessages(prev => {
             const lastToolMsg = [...prev].reverse().find(m => m.role === 'tool' && m.status === 'executing');
             if (!lastToolMsg) return prev;
@@ -121,10 +223,8 @@ export function useAIChat(): UseAIChatReturn {
           const status = isTimeout ? 'timeout' : isError ? 'failed' : 'success';
           const duration = Date.now();
 
-          // Finalize current assistant message and update executing tool message
           const newAssistantId = generateId();
           setMessages(prev => {
-            // Find the LAST executing tool message (most recent tool call)
             let toolMsgIndex = -1;
             for (let i = prev.length - 1; i >= 0; i--) {
               if (prev[i].role === 'tool' && prev[i].status === 'executing') {
@@ -158,7 +258,6 @@ export function useAIChat(): UseAIChatReturn {
               },
             ];
           });
-          // Update ref so subsequent text_delta events write to the new message
           currentAssistantIdRef.current = newAssistantId;
           break;
         }
@@ -175,6 +274,8 @@ export function useAIChat(): UseAIChatReturn {
           currentAssistantIdRef.current = null;
           activeSessionIdRef.current = null;
           sendingRef.current = false;
+          // Auto-save after streaming ends
+          scheduleSave();
           break;
         }
 
@@ -192,13 +293,17 @@ export function useAIChat(): UseAIChatReturn {
           currentAssistantIdRef.current = null;
           activeSessionIdRef.current = null;
           sendingRef.current = false;
+          // Save even on error
+          scheduleSave();
           break;
         }
       }
     });
 
     return unsubscribe;
-  }, []);
+  }, [scheduleSave]);
+
+  // ── Send ───────────────────────────────────────────────────────────────────
 
   const send = useCallback(async (message: string) => {
     if (!message.trim() || isStreaming || sendingRef.current) return;
@@ -228,6 +333,13 @@ export function useAIChat(): UseAIChatReturn {
     setMessages(prev => [...prev, userMsg, assistantMsg]);
     currentAssistantIdRef.current = assistantId;
     setIsStreaming(true);
+
+    // Auto-generate session ID if needed
+    if (!sessionIdRef.current) {
+      const newId = generateId();
+      setSessionId(newId);
+      sessionIdRef.current = newId;
+    }
 
     try {
       const result = await electrobun.aiChat(message.trim());
@@ -274,7 +386,7 @@ export function useAIChat(): UseAIChatReturn {
     }
 
     // Mark current streaming message as stopped
- const assistantId = currentAssistantIdRef.current;
+    const assistantId = currentAssistantIdRef.current;
     if (assistantId) {
       setMessages(prev =>
         prev.map(msg => {
@@ -298,15 +410,22 @@ export function useAIChat(): UseAIChatReturn {
   }, []);
 
   const resetSession = useCallback(() => {
+    // Save current session before clearing (if we have messages)
+    if (sessionIdRef.current && messagesRef.current.length > 0) {
+      void saveCurrentSession();
+    }
+
     setMessages([]);
     setIsStreaming(false);
     setError(null);
+    setSessionId(null);
+    sessionIdRef.current = null;
     currentAssistantIdRef.current = null;
     activeSessionIdRef.current = null;
     sendingRef.current = false;
     // Reset server-side AI context so next message starts fresh
     electrobun.resetAIContext().catch(() => {});
-  }, []);
+  }, [saveCurrentSession]);
 
   return {
     messages,
@@ -315,5 +434,9 @@ export function useAIChat(): UseAIChatReturn {
     send,
     abort,
     resetSession,
+    // Session persistence
+    sessionId,
+    loadSession,
+    restoreLatestSession,
   };
 }

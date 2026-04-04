@@ -6,7 +6,8 @@ import { ChatMessageList } from './ChatMessageList';
 import { ChatInput } from './ChatInput';
 import { SessionHeader } from './SessionHeader';
 import { AISetupGuide } from './AISetupGuide';
-import type { AISettings } from '@/shared/types';
+import { SessionHistoryDialog } from './SessionHistoryDialog';
+import type { AISessionData, AISettings } from '@/shared/types';
 
 const MIN_WIDTH = 280;
 const MAX_WIDTH = 600;
@@ -32,6 +33,7 @@ export const AIChatPanel = memo(function AIChatPanel({
   const resizeStartX = useRef(0);
   const resizeStartWidth = useRef(width);
   const [isResizing, setIsResizing] = useState(false);
+  const [showSessionHistory, setShowSessionHistory] = useState(false);
 
   // Clamp width (guard against NaN from corrupted state)
   const safeWidth = Number.isFinite(width) ? width : MIN_WIDTH;
@@ -69,49 +71,76 @@ export const AIChatPanel = memo(function AIChatPanel({
     };
   }, [isResizing, onWidthChange]);
 
+  const handleViewHistory = useCallback(() => {
+    setShowSessionHistory(true);
+  }, []);
+
+  const handleRestoreSession = useCallback((session: AISessionData) => {
+    chat.loadSession(session);
+    setShowSessionHistory(false);
+  }, [chat]);
+
+  // Auto-restore latest session on first open (if no active session)
+  const hasRestoredRef = useRef(false);
+  useEffect(() => {
+    if (isOpen && !hasRestoredRef.current && !chat.sessionId) {
+      hasRestoredRef.current = true;
+      void chat.restoreLatestSession();
+    }
+  }, [isOpen, chat.sessionId, chat.restoreLatestSession]);
+
   const isAIEnabled = aiSettings?.enabled;
   const isAIConfigured = aiSettings ? (aiSettings.provider || aiSettings.localOnly) : false;
 
   if (!isOpen) return null;
 
   return (
-    <div
-      className={cn(
-        'flex h-full flex-shrink-0 overflow-hidden',
-        isResizing && 'select-none'
-      )}
-      style={{ width: clampedWidth }}
-    >
-      {/* Resize Handle (left edge) */}
+    <>
       <div
         className={cn(
-          'w-[2px] h-full cursor-col-resize relative flex-shrink-0',
-          'hover:bg-border/80 active:bg-border transition-colors',
-          isResizing && 'bg-border'
+          'flex h-full flex-shrink-0 overflow-hidden',
+          isResizing && 'select-none'
         )}
-        onMouseDown={handleResizeMouseDown}
-      />
+        style={{ width: clampedWidth }}
+      >
+        {/* Resize Handle (left edge) */}
+        <div
+          className={cn(
+            'w-[2px] h-full cursor-col-resize relative flex-shrink-0',
+            'hover:bg-border/80 active:bg-border transition-colors',
+            isResizing && 'bg-border'
+          )}
+          onMouseDown={handleResizeMouseDown}
+        />
 
-      {/* Panel Content */}
-      <div className="flex flex-col h-full min-w-0 bg-background border-l border-border" style={{ width: clampedWidth - 2 }}>
-        <SessionHeader onReset={chat.resetSession} onClose={onClose} />
+        {/* Panel Content */}
+        <div className="flex flex-col h-full min-w-0 bg-background border-l border-border" style={{ width: clampedWidth - 2 }}>
+          <SessionHeader onReset={chat.resetSession} onClose={onClose} onViewHistory={handleViewHistory} />
 
-        {isAIEnabled && isAIConfigured ? (
-          <>
-            <ChatMessageList messages={chat.messages} isStreaming={chat.isStreaming} />
-            <ChatInput
-              onSend={chat.send}
-              onStop={chat.abort}
-              isStreaming={chat.isStreaming}
+          {isAIEnabled && isAIConfigured ? (
+            <>
+              <ChatMessageList messages={chat.messages} isStreaming={chat.isStreaming} />
+              <ChatInput
+                onSend={chat.send}
+                onStop={chat.abort}
+                isStreaming={chat.isStreaming}
+              />
+            </>
+          ) : (
+            <AISetupGuide
+              isDisabled={isAIEnabled === false}
+              onOpenSettings={onOpenSettings}
             />
-          </>
-        ) : (
-          <AISetupGuide
-            isDisabled={isAIEnabled === false}
-            onOpenSettings={onOpenSettings}
-          />
-        )}
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Session History Dialog */}
+      <SessionHistoryDialog
+        isOpen={showSessionHistory}
+        onClose={() => setShowSessionHistory(false)}
+        onRestore={handleRestoreSession}
+      />
+    </>
   );
 });

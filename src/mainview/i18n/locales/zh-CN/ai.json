@@ -5,7 +5,8 @@
   },
   "session": {
     "newChat": "新对话",
-    "resetConfirm": "开始新的对话？"
+    "resetConfirm": "开始新的对话？",
+    "history": "查看历史"
   },
   "message": {
     "user": "你",
@@ -45,5 +46,14 @@
   },
   "resize": {
     "handle": "调整面板大小"
+  },
+  "sessionHistory": {
+    "title": "会话历史",
+    "loading": "加载中...",
+    "empty": "暂无历史会话",
+    "restore": "恢复",
+    "delete": "删除会话",
+    "confirmDelete": "确认删除？",
+    "close": "关闭"
   }
 }

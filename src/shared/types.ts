@@ -225,6 +225,39 @@ export interface SessionState {
 }
 
 // ============================================================================
+// AI Session History Types
+// ============================================================================
+
+export interface AIMessageData {
+  id: string;
+  role: 'user' | 'assistant' | 'tool';
+  content: string;
+  timestamp: number;
+  isStreaming?: boolean;
+  error?: string;
+  toolName?: string;
+  toolResult?: unknown;
+  toolArgs?: Record<string, unknown>;
+  status?: 'executing' | 'success' | 'failed' | 'timeout';
+  startTime?: number;
+  duration?: number;
+}
+
+export interface AISessionSummaryData {
+  id: string;
+  title: string;
+  model: string;
+  filePath: string | null;
+  createdAt: number;
+  updatedAt: number;
+  messageCount: number;
+}
+
+export interface AISessionData extends AISessionSummaryData {
+  messages: AIMessageData[];
+}
+
+// ============================================================================
 // RPC Type Definitions
 // ============================================================================
 
@@ -325,6 +358,13 @@ export type MarkBunRPC = {
       aiChat: { params: { message: string }; response: { success: boolean; sessionId?: string; error?: string } };
       aiAbort: { params: {}; response: { success: boolean; wasAborted?: boolean; error?: string } };
       resetAIContext: { params: {}; response: { success: boolean } };
+
+      // AI Session History
+      getAISessionList: { params: {}; response: { success: boolean; sessions?: AISessionSummaryData[]; error?: string } };
+      getAISession: { params: { id: string }; response: { success: boolean; session?: AISessionData; error?: string } };
+      saveAISession: { params: { session: AISessionData }; response: { success: boolean; error?: string } };
+      deleteAISession: { params: { id: string }; response: { success: boolean; error?: string } };
+      getLatestAISession: { params: {}; response: { success: boolean; session?: AISessionData; error?: string } };
     };
     messages: {
       fileOpened: { path: string; content: string };

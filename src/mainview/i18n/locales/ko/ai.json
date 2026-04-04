@@ -45,5 +45,14 @@
   },
   "resize": {
     "handle": "패널 크기 조절"
+  },
+  "sessionHistory": {
+    "title": "세션 기록",
+    "loading": "로딩 중...",
+    "empty": "이전 세션 없음",
+    "restore": "복원",
+    "delete": "세션 삭제",
+    "confirmDelete": "확인?",
+    "close": "닫기"
   }
 }

@@ -45,5 +45,14 @@
   },
   "resize": {
     "handle": "Redimensionner le panneau"
+  },
+  "sessionHistory": {
+    "title": "Historique des sessions",
+    "loading": "Chargement des sessions...",
+    "empty": "Aucune session précédente",
+    "restore": "Restaurer",
+    "delete": "Supprimer la session",
+    "confirmDelete": "Confirmer ?",
+    "close": "Fermer"
   }
 }

@@ -45,5 +45,14 @@
   },
   "resize": {
     "handle": "Bedienfeldgröße anpassen"
+  },
+  "sessionHistory": {
+    "title": "Sitzungsverlauf",
+    "loading": "Sitzungen werden geladen...",
+    "empty": "Keine vorherigen Sitzungen",
+    "restore": "Wiederherstellen",
+    "delete": "Sitzung löschen",
+    "confirmDelete": "Bestätigen?",
+    "close": "Schließen"
   }
 }

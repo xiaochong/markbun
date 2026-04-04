@@ -1,13 +1,14 @@
-// SessionHeader — AI chat session header with reset button
+// SessionHeader — AI chat session header with reset and history buttons
 import { memo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface SessionHeaderProps {
   onReset: () => void;
   onClose: () => void;
+  onViewHistory: () => void;
 }
 
-export const SessionHeader = memo(function SessionHeader({ onReset, onClose }: SessionHeaderProps) {
+export const SessionHeader = memo(function SessionHeader({ onReset, onClose, onViewHistory }: SessionHeaderProps) {
   const { t } = useTranslation('ai');
 
   const handleReset = useCallback(() => {
@@ -18,6 +19,13 @@ export const SessionHeader = memo(function SessionHeader({ onReset, onClose }: S
     <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-muted/30">
       <h2 className="text-sm font-medium text-foreground">{t('panel.title')}</h2>
       <div className="flex items-center gap-1">
+        <button
+          onClick={onViewHistory}
+          className="p-1.5 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+          title={t('session.history')}
+        >
+          <HistoryIcon />
+        </button>
         <button
           onClick={handleReset}
           className="p-1.5 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
@@ -34,6 +42,14 @@ export const SessionHeader = memo(function SessionHeader({ onReset, onClose }: S
         </button>
       </div>
     </div>
+  );
+});
+
+const HistoryIcon = memo(function HistoryIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
   );
 });
 

@@ -412,6 +412,32 @@ export const electrobun = {
     return await electroview.rpc.request.resetAIContext({});
   },
 
+  // AI Session History
+  async getAISessionList() {
+    return await electroview.rpc.request.getAISessionList({}) as
+      { success: boolean; sessions?: import('@/shared/types').AISessionSummaryData[]; error?: string };
+  },
+
+  async getAISession(id: string) {
+    return await electroview.rpc.request.getAISession({ id }) as
+      { success: boolean; session?: import('@/shared/types').AISessionData; error?: string };
+  },
+
+  async saveAISession(session: import('@/shared/types').AISessionData) {
+    return await electroview.rpc.request.saveAISession({ session }) as
+      { success: boolean; error?: string };
+  },
+
+  async deleteAISession(id: string) {
+    return await electroview.rpc.request.deleteAISession({ id }) as
+      { success: boolean; error?: string };
+  },
+
+  async getLatestAISession() {
+    return await electroview.rpc.request.getLatestAISession({}) as
+      { success: boolean; session?: import('@/shared/types').AISessionData; error?: string };
+  },
+
   // Subscribe to messages from main process
   on(event: string, callback: (data?: unknown) => void): () => void {
     const win = window as any;
