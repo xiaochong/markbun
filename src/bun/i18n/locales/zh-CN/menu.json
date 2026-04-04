@@ -84,6 +84,7 @@
     "title": "视图",
     "toggleDarkMode": "切换深色模式",
     "showSidebar": "显示侧栏",
+    "toggleAIPanel": "切换 AI 面板",
     "showTitleBar": "显示标题栏",
     "showToolBar": "显示工具栏",
     "showStatusBar": "显示状态栏",

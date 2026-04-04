@@ -1,0 +1,31 @@
+{
+  "panel": {
+    "title": "AI 어시스턴트",
+    "placeholder": "AI에게 무엇이든 물어보세요..."
+  },
+  "session": {
+    "newChat": "새 채팅",
+    "resetConfirm": "새 대화를 시작하시겠습니까?"
+  },
+  "message": {
+    "user": "나",
+    "assistant": "AI",
+    "thinking": "생각 중...",
+    "error": "오류: {{error}}",
+    "empty": "아직 메시지가 없습니다. 대화를 시작하세요!"
+  },
+  "setup": {
+    "title": "AI 미설정",
+    "description": "AI가 아직 설정되지 않았습니다. 설정 → AI 탭에서 제공자를 설정하세요.",
+    "openSettings": "AI 설정 열기",
+    "disabled": "AI가 현재 비활성화되어 있습니다. 설정 → AI 탭에서 활성화하세요."
+  },
+  "input": {
+    "send": "보내기",
+    "stop": "중지",
+    "sendHint": "Enter로 전송, Shift+Enter로 새 줄"
+  },
+  "resize": {
+    "handle": "패널 크기 조절"
+  }
+}

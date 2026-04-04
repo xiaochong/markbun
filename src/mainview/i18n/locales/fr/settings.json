@@ -5,7 +5,8 @@
     "editor": "Éditeur",
     "appearance": "Apparence",
     "backup": "Sauvegarde",
-    "language": "Langue"
+    "language": "Langue",
+    "ai": "IA"
   },
   "general": {
     "autoSave": "Enregistrement automatique",
@@ -39,5 +40,47 @@
   "language": {
     "label": "Langue",
     "desc": "Choisir la langue d'affichage"
+  },
+  "ai": {
+    "title": "Assistant IA",
+    "enabled": "Activer l'IA",
+    "enabledDesc": "Activer l'assistance à l'écriture par IA",
+    "localOnly": "Mode local uniquement",
+    "localOnlyDesc": "Utiliser uniquement les modèles locaux via Ollama (pas d'API cloud, pas de clé API nécessaire)",
+    "provider": "Fournisseur",
+    "providerDesc": "Choisir un fournisseur d'IA",
+    "providerGroupInternational": "International",
+    "providerGroupDomestic": "National (Chine)",
+    "providerGroupOther": "Autres",
+    "model": "Modèle",
+    "modelDesc": "Sélectionner ou saisir un nom de modèle",
+    "apiKey": "Clé API",
+    "apiKeyDesc": "Saisir votre clé API pour le fournisseur sélectionné",
+    "apiKeySaved": "Clé enregistrée",
+    "apiKeyPlaceholder": "Saisir la clé API...",
+    "baseUrl": "URL de base",
+    "baseUrlDesc": "Remplacer le point de terminaison API par défaut (facultatif)",
+    "baseUrlPlaceholder": "https://api.example.com/v1",
+    "testConnection": "Tester la connexion",
+    "testing": "Test en cours...",
+    "testSuccess": "Connexion réussie ({{latency}}ms)",
+    "testFailed": "Connexion échouée : {{error}}",
+    "saveKey": "Enregistrer la clé",
+    "deleteKey": "Supprimer la clé",
+    "keyDeleteConfirm": "Êtes-vous sûr de vouloir supprimer la clé API enregistrée ?",
+    "providers": {
+      "ollama": "Ollama (Local)",
+      "anthropic": "Anthropic",
+      "openai": "OpenAI",
+      "google": "Google Gemini",
+      "openrouter": "OpenRouter",
+      "deepseek": "DeepSeek",
+      "kimi": "Kimi (Moonshot)",
+      "glm": "GLM (Zhipu)",
+      "qwen": "Qwen (Tongyi)",
+      "minimax": "MiniMax",
+      "doubao": "Doubao (Volcano Engine)",
+      "custom": "Personnalisé (compatible OpenAI)"
+    }
   }
 }

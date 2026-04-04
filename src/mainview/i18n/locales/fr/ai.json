@@ -1,0 +1,31 @@
+{
+  "panel": {
+    "title": "Assistant IA",
+    "placeholder": "Posez une question à l'IA..."
+  },
+  "session": {
+    "newChat": "Nouvelle conversation",
+    "resetConfirm": "Démarrer une nouvelle conversation ?"
+  },
+  "message": {
+    "user": "Vous",
+    "assistant": "IA",
+    "thinking": "Réflexion...",
+    "error": "Erreur : {{error}}",
+    "empty": "Aucun message pour l'instant. Commencez une conversation !"
+  },
+  "setup": {
+    "title": "IA non configurée",
+    "description": "L'IA n'est pas encore configurée. Allez dans Paramètres → onglet IA pour configurer un fournisseur.",
+    "openSettings": "Ouvrir les paramètres IA",
+    "disabled": "L'IA est actuellement désactivée. Activez-la dans Paramètres → onglet IA."
+  },
+  "input": {
+    "send": "Envoyer",
+    "stop": "Arrêter",
+    "sendHint": "Appuyez sur Entrée pour envoyer, Shift+Entrée pour un nouvelle ligne"
+  },
+  "resize": {
+    "handle": "Redimensionner le panneau"
+  }
+}

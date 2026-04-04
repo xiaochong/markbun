@@ -1,13 +1,27 @@
 // Electrobun view client for renderer process
 import { Electroview } from 'electrobun/view';
-import type { MarkBunRPC } from '../../shared/types';
+import type { MarkBunRPC, AppSettings } from '../../shared/types';
 
 // Define RPC for the view side with standard timeout
 // @ts-ignore - Type complexity with RPCSchema
 const rpc = Electroview.defineRPC<MarkBunRPC>({
   maxRequestTime: 30000, // 30 seconds timeout
   handlers: {
-    requests: {},
+    requests: {
+      executeAITool: ({ tool, args }: { tool: string; args?: string }) => {
+        const aiTools = (window as any).__markbunAI;
+        if (!aiTools || !aiTools[tool]) {
+          return { success: false, error: `Tool not found: ${tool}` };
+        }
+        try {
+          const parsedArgs = args ? JSON.parse(args) : undefined;
+          const result = aiTools[tool](parsedArgs);
+          return { success: true, result: typeof result === 'string' ? result : JSON.stringify(result) };
+        } catch (err: any) {
+          return { success: false, error: err.message || String(err) };
+        }
+      },
+    },
     messages: {
       fileOpened: ({ path, content }) => {
         const listeners = (window as any).__electrobunListeners?.['file-opened'] || [];
@@ -80,6 +94,14 @@ const rpc = Electroview.defineRPC<MarkBunRPC>({
       languageChanged: ({ language }) => {
         const listeners = (window as any).__electrobunListeners?.['language-changed'] || [];
         listeners.forEach((cb: (data: unknown) => void) => cb({ language }));
+      },
+      aiStreamEvent: ({ sessionId, type, data }) => {
+        const listeners = (window as any).__electrobunListeners?.['ai-stream-event'] || [];
+        listeners.forEach((cb: (data: unknown) => void) => cb({ sessionId, type, data }));
+      },
+      toggleAIPanel: () => {
+        const listeners = (window as any).__electrobunListeners?.['toggle-ai-panel'] || [];
+        listeners.forEach((cb: () => void) => cb());
       },
     },
   },
@@ -210,7 +232,7 @@ export const electrobun = {
     return await electroview.rpc.request.getSettings({});
   },
 
-  async saveSettings(params: { theme: 'light' | 'dark' | 'system'; fontSize: number; lineHeight: number; autoSave: boolean; autoSaveInterval: number; language: 'en' | 'zh-CN' | 'de' | 'fr' | 'ja' | 'ko' | 'pt' | 'es' }) {
+  async saveSettings(params: AppSettings) {
     return await electroview.rpc.request.saveSettings({ settings: params });
   },
 
@@ -230,7 +252,7 @@ export const electrobun = {
     return await electroview.rpc.request.getUIState({});
   },
 
-  async saveUIState(params: Partial<{ showTitleBar: boolean; showToolBar: boolean; showStatusBar: boolean; showSidebar: boolean; sidebarWidth: number; sidebarActiveTab: 'files' | 'outline' | 'search' }>) {
+  async saveUIState(params: Partial<import('@/shared/types').UIState>) {
     return await electroview.rpc.request.saveUIState({ state: params });
   },
 
@@ -350,6 +372,44 @@ export const electrobun = {
 
   async saveSessionState(state: Partial<import('@/shared/types').SessionState>) {
     return await electroview.rpc.request.saveSessionState({ state }) as { success: boolean; error?: string };
+  },
+
+  // AI
+  async testAIConnection(provider: string, model: string, baseUrl?: string) {
+    return await electroview.rpc.request.testAIConnection({ provider, model, baseUrl }) as
+      { success: boolean; latency?: number; error?: string };
+  },
+
+  async getAIKeyMasked(provider: string) {
+    return await electroview.rpc.request.getAIKeyMasked({ provider }) as
+      { success: boolean; maskedKey?: string; error?: string };
+  },
+
+  async saveAIKey(provider: string, apiKey: string) {
+    return await electroview.rpc.request.saveAIKey({ provider, apiKey }) as
+      { success: boolean; error?: string };
+  },
+
+  async deleteAIKey(provider: string) {
+    return await electroview.rpc.request.deleteAIKey({ provider }) as
+      { success: boolean; error?: string };
+  },
+
+  // AI Chat — send a message to AI and start streaming
+  async aiChat(message: string) {
+    return await electroview.rpc.request.aiChat({ message }) as
+      { success: boolean; sessionId?: string; error?: string };
+  },
+
+  // AI Abort — stop current AI generation
+  async aiAbort() {
+    return await electroview.rpc.request.aiAbort({}) as
+      { success: boolean; wasAborted?: boolean; error?: string };
+  },
+
+  async resetAIContext() {
+    // @ts-ignore - RPC request not fully typed
+    return await electroview.rpc.request.resetAIContext({});
   },
 
   // Subscribe to messages from main process

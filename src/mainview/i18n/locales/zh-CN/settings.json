@@ -5,7 +5,8 @@
     "editor": "编辑器",
     "appearance": "外观",
     "backup": "备份",
-    "language": "语言"
+    "language": "语言",
+    "ai": "AI"
   },
   "general": {
     "autoSave": "自动保存",
@@ -39,5 +40,47 @@
   "language": {
     "label": "语言",
     "desc": "选择界面显示语言"
+  },
+  "ai": {
+    "title": "AI 助手",
+    "enabled": "启用 AI",
+    "enabledDesc": "启用 AI 驱动的写作辅助功能",
+    "localOnly": "仅本地模式",
+    "localOnlyDesc": "仅通过 Ollama 使用本地模型（无需云 API，无需 API 密钥）",
+    "provider": "提供商",
+    "providerDesc": "选择 AI 提供商",
+    "providerGroupInternational": "国际",
+    "providerGroupDomestic": "国内",
+    "providerGroupOther": "其他",
+    "model": "模型",
+    "modelDesc": "选择或输入模型名称",
+    "apiKey": "API 密钥",
+    "apiKeyDesc": "输入所选提供商的 API 密钥",
+    "apiKeySaved": "密钥已保存",
+    "apiKeyPlaceholder": "输入 API 密钥...",
+    "baseUrl": "Base URL",
+    "baseUrlDesc": "覆盖默认的 API 端点（可选）",
+    "baseUrlPlaceholder": "https://api.example.com/v1",
+    "testConnection": "测试连接",
+    "testing": "测试中...",
+    "testSuccess": "连接成功（{{latency}}ms）",
+    "testFailed": "连接失败：{{error}}",
+    "saveKey": "保存密钥",
+    "deleteKey": "删除密钥",
+    "keyDeleteConfirm": "确定要删除已保存的 API 密钥吗？",
+    "providers": {
+      "ollama": "Ollama（本地）",
+      "anthropic": "Anthropic",
+      "openai": "OpenAI",
+      "google": "Google Gemini",
+      "openrouter": "OpenRouter",
+      "deepseek": "DeepSeek",
+      "kimi": "Kimi（月之暗面）",
+      "glm": "GLM（智谱）",
+      "qwen": "Qwen（通义千问）",
+      "minimax": "MiniMax",
+      "doubao": "豆包（火山引擎）",
+      "custom": "自定义（OpenAI 兼容）"
+    }
   }
 }

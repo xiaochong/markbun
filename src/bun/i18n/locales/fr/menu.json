@@ -84,6 +84,7 @@
     "title": "Affichage",
     "toggleDarkMode": "Basculer le mode sombre",
     "showSidebar": "Afficher la barre latérale",
+    "toggleAIPanel": "Basculer le panneau IA",
     "showTitleBar": "Afficher la barre de titre",
     "showToolBar": "Afficher la barre d'outils",
     "showStatusBar": "Afficher la barre d'état",

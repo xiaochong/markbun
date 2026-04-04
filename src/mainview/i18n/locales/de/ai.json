@@ -1,0 +1,31 @@
+{
+  "panel": {
+    "title": "KI-Assistent",
+    "placeholder": "Fragen Sie die KI etwas..."
+  },
+  "session": {
+    "newChat": "Neuer Chat",
+    "resetConfirm": "Eine neue Unterhaltung starten?"
+  },
+  "message": {
+    "user": "Sie",
+    "assistant": "KI",
+    "thinking": "Denke nach...",
+    "error": "Fehler: {{error}}",
+    "empty": "Noch keine Nachrichten. Starten Sie eine Unterhaltung!"
+  },
+  "setup": {
+    "title": "KI nicht konfiguriert",
+    "description": "KI ist noch nicht konfiguriert. Gehen Sie zu Einstellungen → KI-Tab, um einen Anbieter einzurichten.",
+    "openSettings": "KI-Einstellungen öffnen",
+    "disabled": "KI ist derzeit deaktiviert. Aktivieren Sie sie unter Einstellungen → KI-Tab."
+  },
+  "input": {
+    "send": "Senden",
+    "stop": "Stoppen",
+    "sendHint": "Enter zum Senden, Shift+Enter für neue Zeile"
+  },
+  "resize": {
+    "handle": "Bedienfeldgröße anpassen"
+  }
+}

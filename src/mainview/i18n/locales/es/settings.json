@@ -5,7 +5,8 @@
     "editor": "Editor",
     "appearance": "Apariencia",
     "backup": "Copia de seguridad",
-    "language": "Idioma"
+    "language": "Idioma",
+    "ai": "IA"
   },
   "general": {
     "autoSave": "Guardado Automático",
@@ -39,5 +40,47 @@
   "language": {
     "label": "Idioma",
     "desc": "Elegir el idioma de visualización"
+  },
+  "ai": {
+    "title": "Asistente de IA",
+    "enabled": "Habilitar IA",
+    "enabledDesc": "Habilitar asistencia de escritura con IA",
+    "localOnly": "Solo modo local",
+    "localOnlyDesc": "Usar solo modelos locales vía Ollama (sin API en la nube, sin clave API necesaria)",
+    "provider": "Proveedor",
+    "providerDesc": "Elegir un proveedor de IA",
+    "providerGroupInternational": "Internacional",
+    "providerGroupDomestic": "Nacional (China)",
+    "providerGroupOther": "Otros",
+    "model": "Modelo",
+    "modelDesc": "Seleccionar o escribir un nombre de modelo",
+    "apiKey": "Clave API",
+    "apiKeyDesc": "Introducir la clave API para el proveedor seleccionado",
+    "apiKeySaved": "Clave guardada",
+    "apiKeyPlaceholder": "Introducir clave API...",
+    "baseUrl": "URL base",
+    "baseUrlDesc": "Sobrescribir el endpoint de API predeterminado (opcional)",
+    "baseUrlPlaceholder": "https://api.example.com/v1",
+    "testConnection": "Probar conexión",
+    "testing": "Probando...",
+    "testSuccess": "Conexión exitosa ({{latency}}ms)",
+    "testFailed": "Conexión fallida: {{error}}",
+    "saveKey": "Guardar clave",
+    "deleteKey": "Eliminar clave",
+    "keyDeleteConfirm": "¿Está seguro de que desea eliminar la clave API guardada?",
+    "providers": {
+      "ollama": "Ollama (Local)",
+      "anthropic": "Anthropic",
+      "openai": "OpenAI",
+      "google": "Google Gemini",
+      "openrouter": "OpenRouter",
+      "deepseek": "DeepSeek",
+      "kimi": "Kimi (Moonshot)",
+      "glm": "GLM (Zhipu)",
+      "qwen": "Qwen (Tongyi)",
+      "minimax": "MiniMax",
+      "doubao": "Doubao (Volcano Engine)",
+      "custom": "Personalizado (compatible con OpenAI)"
+    }
   }
 }

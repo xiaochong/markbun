@@ -5,7 +5,8 @@
     "editor": "편집기",
     "appearance": "외관",
     "backup": "백업",
-    "language": "언어"
+    "language": "언어",
+    "ai": "AI"
   },
   "general": {
     "autoSave": "자동 저장",
@@ -39,5 +40,47 @@
   "language": {
     "label": "언어",
     "desc": "표시 언어 선택"
+  },
+  "ai": {
+    "title": "AI 어시스턴트",
+    "enabled": "AI 활성화",
+    "enabledDesc": "AI 기반 작성 보조 활성화",
+    "localOnly": "로컬 전용 모드",
+    "localOnlyDesc": "Ollama를 통한 로컬 모델만 사용 (클라우드 API 없음, API 키 불필요)",
+    "provider": "제공자",
+    "providerDesc": "AI 제공자 선택",
+    "providerGroupInternational": "국제",
+    "providerGroupDomestic": "국내 (중국)",
+    "providerGroupOther": "기타",
+    "model": "모델",
+    "modelDesc": "모델 이름을 선택하거나 입력",
+    "apiKey": "API 키",
+    "apiKeyDesc": "선택한 제공자의 API 키 입력",
+    "apiKeySaved": "키 저장됨",
+    "apiKeyPlaceholder": "API 키 입력...",
+    "baseUrl": "기본 URL",
+    "baseUrlDesc": "기본 API 엔드포인트 재정의 (선택사항)",
+    "baseUrlPlaceholder": "https://api.example.com/v1",
+    "testConnection": "연결 테스트",
+    "testing": "테스트 중...",
+    "testSuccess": "연결 성공 ({{latency}}ms)",
+    "testFailed": "연결 실패: {{error}}",
+    "saveKey": "키 저장",
+    "deleteKey": "키 삭제",
+    "keyDeleteConfirm": "저장된 API 키를 삭제하시겠습니까?",
+    "providers": {
+      "ollama": "Ollama (로컬)",
+      "anthropic": "Anthropic",
+      "openai": "OpenAI",
+      "google": "Google Gemini",
+      "openrouter": "OpenRouter",
+      "deepseek": "DeepSeek",
+      "kimi": "Kimi (Moonshot)",
+      "glm": "GLM (Zhipu)",
+      "qwen": "Qwen (Tongyi)",
+      "minimax": "MiniMax",
+      "doubao": "Doubao (Volcano Engine)",
+      "custom": "사용자 정의 (OpenAI 호환)"
+    }
   }
 }

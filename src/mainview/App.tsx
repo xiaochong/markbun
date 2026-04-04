@@ -21,6 +21,7 @@ import { RecoveryDialog } from './components/recovery-dialog/RecoveryDialog';
 import { FileHistoryDialog } from './components/file-history/FileHistoryDialog';
 import { AboutDialog } from './components/about/AboutDialog';
 import { SearchBar } from './components/search-bar/SearchBar';
+import { AIChatPanel } from './components/ai-chat/AIChatPanel';
 import { dispatchSearchAction, searchPluginKey } from './components/editor/plugins/searchPlugin';
 import { useFileOperations } from './hooks/useFileOperations';
 import { useTheme } from './hooks/useTheme';
@@ -32,6 +33,7 @@ import { useClipboard } from './hooks/useClipboard';
 import { useExport } from './hooks/useExport';
 import { useSessionSave } from './hooks/useSessionSave';
 import { electrobun } from './lib/electrobun';
+import { registerAITools } from './lib/ai-tools';
 import i18n from './i18n';
 import {
   workspaceManager,
@@ -60,6 +62,15 @@ function App() {
   const [pendingRecoveries, setPendingRecoveries] = useState<RecoveryInfo[]>([]);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [settings, setSettings] = useState<AppSettings | null>(null);
+
+  // Load settings from main process on mount
+  useEffect(() => {
+    electrobun.getSettings().then(result => {
+      if ((result as { success?: boolean })?.success && (result as { settings?: AppSettings }).settings) {
+        setSettings((result as { settings: AppSettings }).settings);
+      }
+    }).catch(console.error);
+  }, []);
   const [showFileHistoryDialog, setShowFileHistoryDialog] = useState(false);
   const [showAboutDialog, setShowAboutDialog] = useState(false);
 
@@ -83,6 +94,10 @@ function App() {
   // Search bar state
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchShowReplace, setSearchShowReplace] = useState(false);
+
+  // AI Panel state
+  const [showAIPanel, setShowAIPanel] = useState(false);
+  const [aiPanelWidth, setAIPanelWidth] = useState(360);
 
   // Phase 2: Sidebar and file management - MUST be declared before any effects that use them
   const sidebar = useSidebar();
@@ -162,6 +177,8 @@ function App() {
         sidebar.setIsOpen(uiResult.state.showSidebar);
         sidebar.setWidth(uiResult.state.sidebarWidth);
         sidebar.setTab(uiResult.state.sidebarActiveTab);
+        setShowAIPanel(uiResult.state.showAIPanel ?? false);
+        setAIPanelWidth(uiResult.state.aiPanelWidth ?? 360);
       }
 
       // Step 2: Check for pending file (priority 1)
@@ -318,6 +335,8 @@ function App() {
     sourceMode: boolean;
     sidebarWidth: number;
     sidebarActiveTab: 'files' | 'outline' | 'search';
+    showAIPanel: boolean;
+    aiPanelWidth: number;
   } | null>(null);
 
   const flushUIState = useCallback(async () => {
@@ -337,6 +356,8 @@ function App() {
       sourceMode,
       sidebarWidth: sidebar.width,
       sidebarActiveTab: sidebar.activeTab,
+      showAIPanel,
+      aiPanelWidth,
     };
 
     if (uiStateTimeoutRef.current) {
@@ -345,12 +366,12 @@ function App() {
     uiStateTimeoutRef.current = setTimeout(() => {
       void flushUIState();
     }, 300);
-  }, [showTitleBar, showToolbar, showStatusBar, sidebar.isOpen, sidebar.width, sidebar.activeTab, flushUIState, sourceMode]);
+  }, [showTitleBar, showToolbar, showStatusBar, sidebar.isOpen, sidebar.width, sidebar.activeTab, flushUIState, sourceMode, showAIPanel, aiPanelWidth]);
 
   // Save UI state when visibility changes
   useEffect(() => {
     saveUIState();
-  }, [showTitleBar, showToolbar, showStatusBar, sourceMode, sidebar.isOpen, sidebar.width, sidebar.activeTab, saveUIState]);
+  }, [showTitleBar, showToolbar, showStatusBar, sourceMode, sidebar.isOpen, sidebar.width, sidebar.activeTab, showAIPanel, aiPanelWidth, saveUIState]);
 
   // Save UI state before window closes
   useEffect(() => {
@@ -1122,6 +1143,18 @@ function App() {
     });
   }, []);
 
+  // Listen for AI panel toggle
+  useEffect(() => {
+    return electrobun.on('toggle-ai-panel', () => {
+      setShowAIPanel(prev => !prev);
+    });
+  }, []);
+
+  // Register AI tool calls bridge (window.__markbunAI) for editor integration
+  useEffect(() => {
+    registerAITools(editorRef);
+  }, []);
+
   // Menu action handler
   useEffect(() => {
     return electrobun.on('menuAction', async (data) => {
@@ -1254,6 +1287,9 @@ function App() {
           }
           break;
         }
+        case 'toggle-ai-panel':
+          setShowAIPanel(prev => !prev);
+          break;
       }
     });
   }, [clipboard, generateHTML, generateImage]);
@@ -1355,6 +1391,13 @@ function App() {
             e.preventDefault();
             e.stopPropagation();
             sidebar.toggle();
+          }
+          break;
+        case 'a':
+          if (e.shiftKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowAIPanel(prev => !prev);
           }
           break;
         case 'h':
@@ -1506,7 +1549,11 @@ function App() {
         </Sidebar>
 
         {/* Editor */}
-        <main ref={containerRef} className="flex-1 flex flex-col overflow-hidden">
+        <main
+          ref={containerRef}
+          className="flex-1 flex flex-col overflow-hidden"
+          style={showAIPanel ? { minWidth: '50%' } : undefined}
+        >
           {/* Toolbar */}
           {showToolbar && (
             <Toolbar
@@ -1559,6 +1606,16 @@ function App() {
             />
           )}
         </main>
+
+        {/* AI Chat Panel */}
+        <AIChatPanel
+          isOpen={showAIPanel}
+          width={aiPanelWidth}
+          onWidthChange={setAIPanelWidth}
+          onClose={() => setShowAIPanel(false)}
+          aiSettings={settings?.ai ?? null}
+          onOpenSettings={() => setShowSettingsDialog(true)}
+        />
       </div>
 
       {/* Status Bar */}

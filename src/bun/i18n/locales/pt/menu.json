@@ -84,6 +84,7 @@
     "title": "Visualizar",
     "toggleDarkMode": "Alternar Modo Escuro",
     "showSidebar": "Mostrar Barra Lateral",
+    "toggleAIPanel": "Alternar Painel de IA",
     "showTitleBar": "Mostrar Barra de Título",
     "showToolBar": "Mostrar Barra de Ferramentas",
     "showStatusBar": "Mostrar Barra de Status",

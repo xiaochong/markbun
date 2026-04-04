@@ -1,0 +1,31 @@
+{
+  "panel": {
+    "title": "AI Assistant",
+    "placeholder": "Ask AI anything..."
+  },
+  "session": {
+    "newChat": "New Chat",
+    "resetConfirm": "Start a new conversation?"
+  },
+  "message": {
+    "user": "You",
+    "assistant": "AI",
+    "thinking": "Thinking...",
+    "error": "Error: {{error}}",
+    "empty": "No messages yet. Start a conversation!"
+  },
+  "setup": {
+    "title": "AI Not Configured",
+    "description": "AI is not configured yet. Go to Settings → AI tab to set up a provider.",
+    "openSettings": "Open AI Settings",
+    "disabled": "AI is currently disabled. Enable it in Settings → AI tab."
+  },
+  "input": {
+    "send": "Send",
+    "stop": "Stop",
+    "sendHint": "Press Enter to send, Shift+Enter for new line"
+  },
+  "resize": {
+    "handle": "Resize panel"
+  }
+}

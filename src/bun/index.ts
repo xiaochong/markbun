@@ -25,7 +25,61 @@ import {
   deleteVersionBackup,
 } from './services/backup';
 import { loadSessionState, saveSessionState as saveSessionStateToDisk, getDefaultSessionState, type SessionState } from './services/sessionState';
+import { saveAIKey, getAIKey, deleteAIKey as deleteAIKeyFromStore, getMaskedKeys } from './services/ai-keys';
+import { startStream, abortStream, isStreaming, createDefaultToolExecutor, type AIStreamEvent } from './services/ai-stream';
+import type { Api, Model } from '@mariozechner/pi-ai';
+import { getModel as piAiGetModel, stream as piAiStream } from '@mariozechner/pi-ai';
 import { spawn, exec } from 'child_process';
+
+// ── AI Provider Resolution ────────────────────────────────────────────────────
+
+/**
+ * Map MarkBun provider IDs to pi-ai Model objects.
+ *
+ * MarkBun uses friendly provider names (deepseek, kimi, glm, qwen, etc.)
+ * that aren't registered in pi-ai. These providers all use OpenAI-compatible
+ * APIs, so we construct Model objects manually for them.
+ */
+function resolveAIModel(provider: string, modelId: string, baseUrl?: string): Model<Api> {
+  const knownProviders = new Set([
+    'ollama', 'anthropic', 'openai', 'google', 'openrouter', 'groq', 'xai',
+    'mistral', 'minimax', 'minimax-cn', 'huggingface', 'cerebras', 'kimi-coding',
+  ]);
+
+  if (knownProviders.has(provider)) {
+    const m = piAiGetModel(provider as any, modelId);
+    if (!m) {
+      // Model not found in pi-ai registry — treat as OpenAI-compatible
+      return {
+        id: modelId,
+        name: modelId,
+        api: 'openai-completions' as Api,
+        provider: provider as any,
+        baseUrl: baseUrl || '',
+        reasoning: false,
+        input: ['text'] as ('text')[],
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+        contextWindow: 128_000,
+        maxTokens: 8192,
+      };
+    }
+    return baseUrl ? { ...m, baseUrl } : m;
+  }
+
+  // Domestic / custom providers — construct OpenAI-compatible model
+  return {
+    id: modelId,
+    name: modelId,
+    api: 'openai-completions' as Api,
+    provider: provider as any,
+    baseUrl: baseUrl || '',
+    reasoning: false,
+    input: ['text'] as ('text')[],
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    contextWindow: 128_000,
+    maxTokens: 8192,
+  };
+}
 
 const DEV_SERVER_PORT = 5173;
 const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`;
@@ -38,6 +92,13 @@ interface WindowState {
 
 // Track the focused window (for routing menu actions)
 let focusedWindow: { win: BrowserWindow; state: WindowState } | null = null;
+
+// Active AI conversation context (pi-ai Context object, persisted in memory)
+let activeAIContext: {
+  systemPrompt: string;
+  messages: any[];
+  tools: any[];
+} | null = null;
 
 // Pending file IPC (written by AppleScript wrapper when user opens .md file)
 const PENDING_DIR = '/tmp/markbun';
@@ -995,6 +1056,7 @@ async function main() {
               autoSaveInterval: currentSettings.general.autoSaveInterval,
               backup: currentSettings.backup,
               language: currentSettings.general.language ?? 'en',
+              ai: currentSettings.ai,
             };
             return { success: true, settings: appSettings };
           } catch (error) {
@@ -1024,6 +1086,7 @@ async function main() {
                 sidebarWidth: currentSettings?.appearance.sidebarWidth ?? 280,
               },
               backup: settings.backup ?? currentSettings?.backup ?? defaultBackup,
+              ai: (settings as any).ai ?? currentSettings?.ai ?? { enabled: false, provider: '', model: '', baseUrl: undefined, localOnly: false },
             };
             const result = await saveSettings(currentSettings);
             return result;
@@ -1421,6 +1484,7 @@ async function main() {
               'view-toggle-toolbar': 'toggleToolbar',
               'view-toggle-statusbar': 'toggleStatusbar',
               'view-toggle-source-mode': 'toggleSourceMode',
+              'toggle-ai-panel': 'toggleAIPanel',
               'view-toggle-theme': 'toggleTheme',
               'view-quick-open': 'openQuickOpen',
               'app-preferences': 'openSettings',
@@ -1547,8 +1611,177 @@ async function main() {
             };
           }
         },
+
+        // ── AI ──────────────────────────────────────────────────────────────────────
+
+        getAIKeyMasked: async ({ provider }: { provider: string }) => {
+          try {
+            const maskedKeys = await getMaskedKeys();
+            const maskedKey = maskedKeys[provider];
+            if (maskedKey) {
+              return { success: true, maskedKey };
+            }
+            return { success: true };
+          } catch (error) {
+            return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+          }
+        },
+
+        saveAIKey: async ({ provider, apiKey }: { provider: string; apiKey: string }) => {
+          return await saveAIKey(provider, apiKey);
+        },
+
+        deleteAIKey: async ({ provider }: { provider: string }) => {
+          return await deleteAIKeyFromStore(provider);
+        },
+
+        testAIConnection: async ({ provider, model, baseUrl }: { provider: string; model: string; baseUrl?: string }) => {
+          try {
+            const apiKey = provider !== 'ollama' ? await getAIKey(provider) : undefined;
+            const aiModel = resolveAIModel(provider, model, baseUrl);
+            const start = Date.now();
+            const ctx = {
+              messages: [{ role: 'user' as const, content: [{ type: 'text' as const, text: 'Hi' }], timestamp: Date.now() }],
+            };
+            const eventStream = piAiStream(aiModel, ctx, {
+              ...(apiKey ? { apiKey } : {}),
+            });
+            for await (const event of eventStream) {
+              if (event.type === 'done' || event.type === 'error') break;
+            }
+            const latency = Date.now() - start;
+            return { success: true, latency };
+          } catch (error) {
+            return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+          }
+        },
+
+        aiChat: async ({ message }: { message: string }) => {
+          try {
+            const fw = focusedWindow;
+            if (!fw) return { success: false as const, error: 'No active window' };
+
+            const currentSettings = await loadSettings();
+            const aiConfig = currentSettings.ai;
+            if (!aiConfig?.enabled || !aiConfig.provider || !aiConfig.model) {
+              return { success: false as const, error: 'AI not configured' };
+            }
+
+            const apiKey = aiConfig.provider !== 'ollama' ? await getAIKey(aiConfig.provider) : undefined;
+            const aiModel = resolveAIModel(aiConfig.provider, aiConfig.model, aiConfig.baseUrl);
+
+            const sendEvent = (event: AIStreamEvent) => {
+              // @ts-ignore - RPC send not fully typed
+              fw.win.webview.rpc.send.aiStreamEvent(event);
+            };
+
+            // RPC-based tool executor: calls executeAITool in the WebView
+            const executeToolRPC = async (tool: string, args?: string): Promise<{ success: boolean; result?: string; error?: string }> => {
+              try {
+                // @ts-ignore - webview RPC request types not fully resolved
+                return await fw.win.webview.rpc.request.executeAITool({ tool, args });
+              } catch (err) {
+                return { success: false, error: err instanceof Error ? err.message : String(err) };
+              }
+            };
+
+            const systemPrompt = `You are an AI assistant embedded in MarkBun, a Markdown editor. Current file: ${fw.state.filePath || '(untitled)'}. UI language: ${currentSettings.general.language}. Respond in the same language as the document content. If the document is mixed-language, prefer the UI language (${currentSettings.general.language}).`;
+
+            if (!activeAIContext) {
+              activeAIContext = {
+                systemPrompt,
+                messages: [],
+                tools: [
+                  {
+                    name: 'readDocument',
+                    description: 'Read the full content of the current document',
+                    parameters: { type: 'object' as const, properties: {} },
+                  },
+                  {
+                    name: 'readSelection',
+                    description: 'Read the currently selected text in the editor',
+                    parameters: { type: 'object' as const, properties: {} },
+                  },
+                  {
+                    name: 'insertAtCursor',
+                    description: 'Insert text at the current cursor position. If the editor has no focus (e.g. AI panel is active), appends to the end of the document. Prefer replaceInDocument for modifying existing content.',
+                    parameters: {
+                      type: 'object' as const,
+                      properties: { text: { type: 'string' as const, description: 'Text to insert' } },
+                      required: ['text'] as const,
+                    },
+                  },
+                  {
+                    name: 'replaceSelection',
+                    description: 'Replace the currently selected text with new content',
+                    parameters: {
+                      type: 'object' as const,
+                      properties: { text: { type: 'string' as const, description: 'Replacement text' } },
+                      required: ['text'] as const,
+                    },
+                  },
+                  {
+                    name: 'replaceInDocument',
+                    description: 'Find and replace text in the document. Use this to modify specific text without needing to select it first.',
+                    parameters: {
+                      type: 'object' as const,
+                      properties: {
+                        oldText: { type: 'string' as const, description: 'The exact text to find and replace' },
+                        newText: { type: 'string' as const, description: 'The replacement text' },
+                      },
+                      required: ['oldText', 'newText'] as const,
+                    },
+                  },
+                ],
+              } as any;
+            }
+
+            // Update system prompt with current file path
+            // If file changed, reset message history to avoid stale context
+            if (activeAIContext.systemPrompt !== systemPrompt) {
+              activeAIContext.messages = [];
+            }
+            activeAIContext.systemPrompt = systemPrompt;
+
+            // Add user message
+            activeAIContext.messages.push({
+              role: 'user',
+              content: [{ type: 'text', text: message }],
+              timestamp: Date.now(),
+            });
+
+            const result = startStream({
+              model: aiModel,
+              context: activeAIContext,
+              apiKey: apiKey ?? undefined,
+              sendEvent,
+              executeToolRPC,
+            });
+
+            return { success: true as const, sessionId: result.sessionId };
+          } catch (error) {
+            return { success: false as const, error: error instanceof Error ? error.message : 'Unknown error' };
+          }
+        },
+
+        aiAbort: async () => {
+          const wasAborted = abortStream();
+          return { success: true, wasAborted };
+        },
+        resetAIContext: async () => {
+          activeAIContext = null;
+          return { success: true };
+        },
       },
-      messages: {},
+      messages: {
+        toggleAIPanel: () => {
+          const fw = focusedWindow;
+          if (fw) {
+            // @ts-ignore - RPC send not fully typed
+            fw.win.webview.rpc.send.toggleAIPanel({});
+          }
+        },
+      },
     },
   });
 
@@ -1787,7 +2020,13 @@ async function main() {
   // @ts-ignore
   if (win.on) {
     // @ts-ignore
-    win.on('focus', () => { focusedWindow = { win, state }; });
+    win.on('focus', () => {
+      // Reset AI context when switching windows to avoid cross-window state leak
+      if (focusedWindow?.win !== win) {
+        activeAIContext = null;
+      }
+      focusedWindow = { win, state };
+    });
   }
 
     return { win, state };
@@ -1954,6 +2193,11 @@ async function main() {
         updateViewMenuState({ sourceMode: !viewMenuState.sourceMode });
         // @ts-ignore
         fw?.win.webview.rpc.send.toggleSourceMode({});
+        break;
+
+      case 'toggle-ai-panel':
+        // @ts-ignore
+        fw?.win.webview.rpc.send.toggleAIPanel({});
         break;
 
       // Table menu actions

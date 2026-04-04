@@ -84,6 +84,7 @@
     "title": "보기",
     "toggleDarkMode": "다크 모드 전환",
     "showSidebar": "사이드바 표시",
+    "toggleAIPanel": "AI 패널 전환",
     "showTitleBar": "제목 표시줄 표시",
     "showToolBar": "도구 모음 표시",
     "showStatusBar": "상태 표시줄 표시",

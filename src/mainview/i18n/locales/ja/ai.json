@@ -1,0 +1,31 @@
+{
+  "panel": {
+    "title": "AIアシスタント",
+    "placeholder": "AIに何でも聞いてください..."
+  },
+  "session": {
+    "newChat": "新しいチャット",
+    "resetConfirm": "新しい会話を開始しますか？"
+  },
+  "message": {
+    "user": "あなた",
+    "assistant": "AI",
+    "thinking": "考え中...",
+    "error": "エラー：{{error}}",
+    "empty": "まだメッセージがありません。会話を始めましょう！"
+  },
+  "setup": {
+    "title": "AI未設定",
+    "description": "AIはまだ設定されていません。設定 → AIタブでプロバイダーを設定してください。",
+    "openSettings": "AI設定を開く",
+    "disabled": "AIは現在無効です。設定 → AIタブで有効にしてください。"
+  },
+  "input": {
+    "send": "送信",
+    "stop": "停止",
+    "sendHint": "Enterで送信、Shift+Enterで改行"
+  },
+  "resize": {
+    "handle": "パネルのサイズを変更"
+  }
+}

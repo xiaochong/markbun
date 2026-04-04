@@ -84,6 +84,7 @@
     "title": "View",
     "toggleDarkMode": "Toggle Dark Mode",
     "showSidebar": "Show Sidebar",
+    "toggleAIPanel": "Toggle AI Panel",
     "showTitleBar": "Show Title Bar",
     "showToolBar": "Show Tool Bar",
     "showStatusBar": "Show Status Bar",

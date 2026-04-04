@@ -5,7 +5,8 @@
     "editor": "Editor",
     "appearance": "Aparência",
     "backup": "Backup",
-    "language": "Idioma"
+    "language": "Idioma",
+    "ai": "IA"
   },
   "general": {
     "autoSave": "Salvamento Automático",
@@ -39,5 +40,47 @@
   "language": {
     "label": "Idioma",
     "desc": "Escolha o idioma de exibição"
+  },
+  "ai": {
+    "title": "Assistente de IA",
+    "enabled": "Ativar IA",
+    "enabledDesc": "Ativar assistência de escrita com IA",
+    "localOnly": "Somente modo local",
+    "localOnlyDesc": "Usar apenas modelos locais via Ollama (sem API em nuvem, sem chave API necessária)",
+    "provider": "Provedor",
+    "providerDesc": "Escolher um provedor de IA",
+    "providerGroupInternational": "Internacional",
+    "providerGroupDomestic": "Nacional (China)",
+    "providerGroupOther": "Outros",
+    "model": "Modelo",
+    "modelDesc": "Selecionar ou digitar um nome de modelo",
+    "apiKey": "Chave API",
+    "apiKeyDesc": "Digite sua chave API para o provedor selecionado",
+    "apiKeySaved": "Chave salva",
+    "apiKeyPlaceholder": "Digite a chave API...",
+    "baseUrl": "URL base",
+    "baseUrlDesc": "Substituir o endpoint de API padrão (opcional)",
+    "baseUrlPlaceholder": "https://api.example.com/v1",
+    "testConnection": "Testar conexão",
+    "testing": "Testando...",
+    "testSuccess": "Conexão bem-sucedida ({{latency}}ms)",
+    "testFailed": "Conexão falhou: {{error}}",
+    "saveKey": "Salvar chave",
+    "deleteKey": "Excluir chave",
+    "keyDeleteConfirm": "Tem certeza de que deseja excluir a chave API salva?",
+    "providers": {
+      "ollama": "Ollama (Local)",
+      "anthropic": "Anthropic",
+      "openai": "OpenAI",
+      "google": "Google Gemini",
+      "openrouter": "OpenRouter",
+      "deepseek": "DeepSeek",
+      "kimi": "Kimi (Moonshot)",
+      "glm": "GLM (Zhipu)",
+      "qwen": "Qwen (Tongyi)",
+      "minimax": "MiniMax",
+      "doubao": "Doubao (Volcano Engine)",
+      "custom": "Personalizado (compatível com OpenAI)"
+    }
   }
 }

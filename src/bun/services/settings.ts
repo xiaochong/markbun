@@ -100,6 +100,10 @@ function mergeWithDefaults(partial: Partial<Settings>): Settings {
       ...defaultSettings.backup,
       ...partial.backup,
     },
+    ai: {
+      ...defaultSettings.ai,
+      ...partial.ai,
+    },
   };
 }
 

@@ -5,7 +5,8 @@
     "editor": "Editor",
     "appearance": "Erscheinungsbild",
     "backup": "Sicherung",
-    "language": "Sprache"
+    "language": "Sprache",
+    "ai": "KI"
   },
   "general": {
     "autoSave": "Automatisch speichern",
@@ -39,5 +40,47 @@
   "language": {
     "label": "Sprache",
     "desc": "Anzeigesprache auswählen"
+  },
+  "ai": {
+    "title": "KI-Assistent",
+    "enabled": "KI aktivieren",
+    "enabledDesc": "KI-gestützte Schreibhilfe aktivieren",
+    "localOnly": "Nur lokaler Modus",
+    "localOnlyDesc": "Nur lokale Modelle über Ollama verwenden (kein Cloud-API, kein API-Schlüssel erforderlich)",
+    "provider": "Anbieter",
+    "providerDesc": "Einen KI-Anbieter auswählen",
+    "providerGroupInternational": "International",
+    "providerGroupDomestic": "Inländisch (China)",
+    "providerGroupOther": "Sonstige",
+    "model": "Modell",
+    "modelDesc": "Modellnamen auswählen oder eingeben",
+    "apiKey": "API-Schlüssel",
+    "apiKeyDesc": "API-Schlüssel für den ausgewählten Anbieter eingeben",
+    "apiKeySaved": "Schlüssel gespeichert",
+    "apiKeyPlaceholder": "API-Schlüssel eingeben...",
+    "baseUrl": "Basis-URL",
+    "baseUrlDesc": "Standard-API-Endpunkt überschreiben (optional)",
+    "baseUrlPlaceholder": "https://api.example.com/v1",
+    "testConnection": "Verbindung testen",
+    "testing": "Teste...",
+    "testSuccess": "Verbindung erfolgreich ({{latency}}ms)",
+    "testFailed": "Verbindung fehlgeschlagen: {{error}}",
+    "saveKey": "Schlüssel speichern",
+    "deleteKey": "Schlüssel löschen",
+    "keyDeleteConfirm": "Sind Sie sicher, dass Sie den gespeicherten API-Schlüssel löschen möchten?",
+    "providers": {
+      "ollama": "Ollama (Lokal)",
+      "anthropic": "Anthropic",
+      "openai": "OpenAI",
+      "google": "Google Gemini",
+      "openrouter": "OpenRouter",
+      "deepseek": "DeepSeek",
+      "kimi": "Kimi (Moonshot)",
+      "glm": "GLM (Zhipu)",
+      "qwen": "Qwen (Tongyi)",
+      "minimax": "MiniMax",
+      "doubao": "Doubao (Volcano Engine)",
+      "custom": "Benutzerdefiniert (OpenAI-kompatibel)"
+    }
   }
 }

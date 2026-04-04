@@ -5,7 +5,8 @@
     "editor": "エディタ",
     "appearance": "外観",
     "backup": "バックアップ",
-    "language": "言語"
+    "language": "言語",
+    "ai": "AI"
   },
   "general": {
     "autoSave": "自動保存",
@@ -39,5 +40,47 @@
   "language": {
     "label": "言語",
     "desc": "表示言語を選択"
+  },
+  "ai": {
+    "title": "AIアシスタント",
+    "enabled": "AIを有効にする",
+    "enabledDesc": "AI搭載の執筆支援を有効にする",
+    "localOnly": "ローカルのみモード",
+    "localOnlyDesc": "Ollama経由でローカルモデルのみ使用（クラウドAPI不要、APIキー不要）",
+    "provider": "プロバイダー",
+    "providerDesc": "AIプロバイダーを選択",
+    "providerGroupInternational": "インターナショナル",
+    "providerGroupDomestic": "国内（中国）",
+    "providerGroupOther": "その他",
+    "model": "モデル",
+    "modelDesc": "モデル名を選択または入力",
+    "apiKey": "APIキー",
+    "apiKeyDesc": "選択したプロバイダーのAPIキーを入力",
+    "apiKeySaved": "キーを保存しました",
+    "apiKeyPlaceholder": "APIキーを入力...",
+    "baseUrl": "ベースURL",
+    "baseUrlDesc": "デフォルトのAPIエンドポイントを上書き（オプション）",
+    "baseUrlPlaceholder": "https://api.example.com/v1",
+    "testConnection": "接続テスト",
+    "testing": "テスト中...",
+    "testSuccess": "接続成功（{{latency}}ms）",
+    "testFailed": "接続失敗：{{error}}",
+    "saveKey": "キーを保存",
+    "deleteKey": "キーを削除",
+    "keyDeleteConfirm": "保存されたAPIキーを削除してもよろしいですか？",
+    "providers": {
+      "ollama": "Ollama（ローカル）",
+      "anthropic": "Anthropic",
+      "openai": "OpenAI",
+      "google": "Google Gemini",
+      "openrouter": "OpenRouter",
+      "deepseek": "DeepSeek",
+      "kimi": "Kimi（Moonshot）",
+      "glm": "GLM（Zhipu）",
+      "qwen": "Qwen（Tongyi）",
+      "minimax": "MiniMax",
+      "doubao": "Doubao（Volcano Engine）",
+      "custom": "カスタム（OpenAI互換）"
+    }
   }
 }

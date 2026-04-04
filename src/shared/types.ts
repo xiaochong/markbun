@@ -60,6 +60,14 @@ export interface RecoveryInfo {
 
 // ============================================================================
 
+export interface AISettings {
+  enabled: boolean;
+  provider: string;
+  model: string;
+  baseUrl?: string;
+  localOnly: boolean;
+}
+
 export interface AppSettings {
   theme: 'light' | 'dark' | 'system';
   fontSize: number;
@@ -68,6 +76,7 @@ export interface AppSettings {
   autoSaveInterval: number;
   backup: BackupSettings;
   language: 'en' | 'zh-CN' | 'de' | 'fr' | 'ja' | 'ko' | 'pt' | 'es';
+  ai: AISettings;
 }
 
 export interface EditorStats {
@@ -188,6 +197,9 @@ export interface UIState {
   sourceMode: boolean;
   sidebarWidth: number;
   sidebarActiveTab: SidebarTab;
+  // AI Panel
+  showAIPanel?: boolean;
+  aiPanelWidth?: number;
   // Window state
   windowX: number;
   windowY: number;
@@ -304,6 +316,15 @@ export type MarkBunRPC = {
 
       // External links
       openExternal: { params: { url: string }; response: { success: boolean; error?: string } };
+
+      // AI
+      getAIKeyMasked: { params: { provider: string }; response: { success: boolean; maskedKey?: string; error?: string } };
+      saveAIKey: { params: { provider: string; apiKey: string }; response: { success: boolean; error?: string } };
+      deleteAIKey: { params: { provider: string }; response: { success: boolean; error?: string } };
+      testAIConnection: { params: { provider: string; model: string; baseUrl?: string }; response: { success: boolean; latency?: number; error?: string } };
+      aiChat: { params: { message: string }; response: { success: boolean; sessionId?: string; error?: string } };
+      aiAbort: { params: {}; response: { success: boolean; wasAborted?: boolean; error?: string } };
+      resetAIContext: { params: {}; response: { success: boolean } };
     };
     messages: {
       fileOpened: { path: string; content: string };
@@ -334,10 +355,22 @@ export type MarkBunRPC = {
 
       // i18n
       languageChanged: { language: 'en' | 'zh-CN' | 'de' | 'fr' | 'ja' | 'ko' | 'pt' | 'es' };
+
+      // AI streaming events
+      aiStreamEvent: {
+        sessionId: string;
+        type: 'text_delta' | 'toolcall_start' | 'toolcall_delta' | 'toolcall_end' | 'done' | 'error';
+        data: Record<string, unknown>;
+      };
+
+      // AI panel toggle
+      toggleAIPanel: {};
     };
   }>;
   webview: RPCSchema<{
-    requests: {};
+    requests: {
+      executeAITool: { params: { tool: string; args?: string }; response: { success: boolean; result?: string; error?: string } };
+    };
     messages: {};
   }>;
 };

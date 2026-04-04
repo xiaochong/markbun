@@ -8,6 +8,7 @@ import dialogEn from './locales/en/dialog.json';
 import settingsEn from './locales/en/settings.json';
 import editorEn from './locales/en/editor.json';
 import fileEn from './locales/en/file.json';
+import aiEn from './locales/en/ai.json';
 import menuEn from '../../bun/i18n/locales/en/menu.json';
 
 import commonZhCN from './locales/zh-CN/common.json';
@@ -15,6 +16,7 @@ import dialogZhCN from './locales/zh-CN/dialog.json';
 import settingsZhCN from './locales/zh-CN/settings.json';
 import editorZhCN from './locales/zh-CN/editor.json';
 import fileZhCN from './locales/zh-CN/file.json';
+import aiZhCN from './locales/zh-CN/ai.json';
 import menuZhCN from '../../bun/i18n/locales/zh-CN/menu.json';
 
 import commonDe from './locales/de/common.json';
@@ -22,6 +24,7 @@ import dialogDe from './locales/de/dialog.json';
 import settingsDe from './locales/de/settings.json';
 import editorDe from './locales/de/editor.json';
 import fileDe from './locales/de/file.json';
+import aiDe from './locales/de/ai.json';
 import menuDe from '../../bun/i18n/locales/de/menu.json';
 
 import commonFr from './locales/fr/common.json';
@@ -29,6 +32,7 @@ import dialogFr from './locales/fr/dialog.json';
 import settingsFr from './locales/fr/settings.json';
 import editorFr from './locales/fr/editor.json';
 import fileFr from './locales/fr/file.json';
+import aiFr from './locales/fr/ai.json';
 import menuFr from '../../bun/i18n/locales/fr/menu.json';
 
 import commonJa from './locales/ja/common.json';
@@ -36,6 +40,7 @@ import dialogJa from './locales/ja/dialog.json';
 import settingsJa from './locales/ja/settings.json';
 import editorJa from './locales/ja/editor.json';
 import fileJa from './locales/ja/file.json';
+import aiJa from './locales/ja/ai.json';
 import menuJa from '../../bun/i18n/locales/ja/menu.json';
 
 import commonKo from './locales/ko/common.json';
@@ -43,6 +48,7 @@ import dialogKo from './locales/ko/dialog.json';
 import settingsKo from './locales/ko/settings.json';
 import editorKo from './locales/ko/editor.json';
 import fileKo from './locales/ko/file.json';
+import aiKo from './locales/ko/ai.json';
 import menuKo from '../../bun/i18n/locales/ko/menu.json';
 
 import commonPt from './locales/pt/common.json';
@@ -50,6 +56,7 @@ import dialogPt from './locales/pt/dialog.json';
 import settingsPt from './locales/pt/settings.json';
 import editorPt from './locales/pt/editor.json';
 import filePt from './locales/pt/file.json';
+import aiPt from './locales/pt/ai.json';
 import menuPt from '../../bun/i18n/locales/pt/menu.json';
 
 import commonEs from './locales/es/common.json';
@@ -57,13 +64,14 @@ import dialogEs from './locales/es/dialog.json';
 import settingsEs from './locales/es/settings.json';
 import editorEs from './locales/es/editor.json';
 import fileEs from './locales/es/file.json';
+import aiEs from './locales/es/ai.json';
 import menuEs from '../../bun/i18n/locales/es/menu.json';
 
 i18next.use(initReactI18next).init({
   lng: 'en',
   fallbackLng: 'en',
   defaultNS: 'common',
-  ns: ['common', 'dialog', 'settings', 'editor', 'file', 'menu'],
+  ns: ['common', 'dialog', 'settings', 'editor', 'file', 'ai', 'menu'],
   interpolation: {
     escapeValue: false, // React 已处理 XSS
   },
@@ -74,6 +82,7 @@ i18next.use(initReactI18next).init({
       settings: settingsEn,
       editor: editorEn,
       file: fileEn,
+      ai: aiEn,
       menu: menuEn,
     },
     'zh-CN': {
@@ -82,6 +91,7 @@ i18next.use(initReactI18next).init({
       settings: settingsZhCN,
       editor: editorZhCN,
       file: fileZhCN,
+      ai: aiZhCN,
       menu: menuZhCN,
     },
     de: {
@@ -90,6 +100,7 @@ i18next.use(initReactI18next).init({
       settings: settingsDe,
       editor: editorDe,
       file: fileDe,
+      ai: aiDe,
       menu: menuDe,
     },
     fr: {
@@ -98,6 +109,7 @@ i18next.use(initReactI18next).init({
       settings: settingsFr,
       editor: editorFr,
       file: fileFr,
+      ai: aiFr,
       menu: menuFr,
     },
     ja: {
@@ -106,6 +118,7 @@ i18next.use(initReactI18next).init({
       settings: settingsJa,
       editor: editorJa,
       file: fileJa,
+      ai: aiJa,
       menu: menuJa,
     },
     ko: {
@@ -114,6 +127,7 @@ i18next.use(initReactI18next).init({
       settings: settingsKo,
       editor: editorKo,
       file: fileKo,
+      ai: aiKo,
       menu: menuKo,
     },
     pt: {
@@ -122,6 +136,7 @@ i18next.use(initReactI18next).init({
       settings: settingsPt,
       editor: editorPt,
       file: filePt,
+      ai: aiPt,
       menu: menuPt,
     },
     es: {
@@ -130,6 +145,7 @@ i18next.use(initReactI18next).init({
       settings: settingsEs,
       editor: editorEs,
       file: fileEs,
+      ai: aiEs,
       menu: menuEs,
     },
   },

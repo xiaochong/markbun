@@ -181,6 +181,8 @@ export function setupMenu(state: ViewMenuState = defaultState, tFn: (key: string
         { type: 'separator' },
         { label: t('view.showSidebar'), action: 'view-toggle-sidebar', accelerator: 'CmdOrCtrl+Shift+B', checked: state.showSidebar },
         { type: 'separator' },
+        { label: t('view.toggleAIPanel'), action: 'toggle-ai-panel', accelerator: 'CmdOrCtrl+Shift+A' },
+        { type: 'separator' },
         { label: t('view.showTitleBar'), action: 'view-toggle-titlebar', checked: state.showTitleBar },
         { label: t('view.showToolBar'), action: 'view-toggle-toolbar', checked: state.showToolBar },
         { label: t('view.showStatusBar'), action: 'view-toggle-statusbar', checked: state.showStatusBar },

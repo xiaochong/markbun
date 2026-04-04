@@ -1,0 +1,31 @@
+{
+  "panel": {
+    "title": "AI 助手",
+    "placeholder": "向 AI 提问..."
+  },
+  "session": {
+    "newChat": "新对话",
+    "resetConfirm": "开始新的对话？"
+  },
+  "message": {
+    "user": "你",
+    "assistant": "AI",
+    "thinking": "思考中...",
+    "error": "错误：{{error}}",
+    "empty": "暂无消息，开始对话吧！"
+  },
+  "setup": {
+    "title": "AI 未配置",
+    "description": "AI 尚未配置。请前往 设置 → AI 选项卡配置提供商。",
+    "openSettings": "打开 AI 设置",
+    "disabled": "AI 当前已禁用。请在 设置 → AI 选项卡中启用。"
+  },
+  "input": {
+    "send": "发送",
+    "stop": "停止",
+    "sendHint": "按 Enter 发送，Shift+Enter 换行"
+  },
+  "resize": {
+    "handle": "调整面板大小"
+  }
+}

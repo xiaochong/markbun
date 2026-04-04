@@ -26,6 +26,19 @@ export const settingsSchema = z.object({
     retentionDays: 30,
     recoveryInterval: 30000,
   }),
+  ai: z.object({
+    enabled: z.boolean().default(false),
+    provider: z.string().default(''),
+    model: z.string().default(''),
+    baseUrl: z.string().optional(),
+    localOnly: z.boolean().default(false),
+  }).default({
+    enabled: false,
+    provider: '',
+    model: '',
+    baseUrl: undefined,
+    localOnly: false,
+  }),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;
@@ -51,5 +64,12 @@ export const defaultSettings: Settings = {
     maxVersions: 20,
     retentionDays: 30,
     recoveryInterval: 30000,
+  },
+  ai: {
+    enabled: false,
+    provider: '',
+    model: '',
+    baseUrl: undefined,
+    localOnly: false,
   },
 };

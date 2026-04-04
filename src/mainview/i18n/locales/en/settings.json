@@ -5,7 +5,8 @@
     "editor": "Editor",
     "appearance": "Appearance",
     "backup": "Backup",
-    "language": "Language"
+    "language": "Language",
+    "ai": "AI"
   },
   "general": {
     "autoSave": "Auto Save",
@@ -39,5 +40,47 @@
   "language": {
     "label": "Language",
     "desc": "Choose the display language"
+  },
+  "ai": {
+    "title": "AI Assistant",
+    "enabled": "Enable AI",
+    "enabledDesc": "Enable AI-powered writing assistance",
+    "localOnly": "Local Only Mode",
+    "localOnlyDesc": "Only use local models via Ollama (no cloud API, no API key needed)",
+    "provider": "Provider",
+    "providerDesc": "Choose an AI provider",
+    "providerGroupInternational": "International",
+    "providerGroupDomestic": "Domestic (China)",
+    "providerGroupOther": "Other",
+    "model": "Model",
+    "modelDesc": "Select or type a model name",
+    "apiKey": "API Key",
+    "apiKeyDesc": "Enter your API key for the selected provider",
+    "apiKeySaved": "Key saved",
+    "apiKeyPlaceholder": "Enter API key...",
+    "baseUrl": "Base URL",
+    "baseUrlDesc": "Override the default API endpoint (optional)",
+    "baseUrlPlaceholder": "https://api.example.com/v1",
+    "testConnection": "Test Connection",
+    "testing": "Testing...",
+    "testSuccess": "Connection successful ({{latency}}ms)",
+    "testFailed": "Connection failed: {{error}}",
+    "saveKey": "Save Key",
+    "deleteKey": "Delete Key",
+    "keyDeleteConfirm": "Are you sure you want to delete the saved API key?",
+    "providers": {
+      "ollama": "Ollama (Local)",
+      "anthropic": "Anthropic",
+      "openai": "OpenAI",
+      "google": "Google Gemini",
+      "openrouter": "OpenRouter",
+      "deepseek": "DeepSeek",
+      "kimi": "Kimi (Moonshot)",
+      "glm": "GLM (Zhipu)",
+      "qwen": "Qwen (Tongyi)",
+      "minimax": "MiniMax",
+      "doubao": "Doubao (Volcano Engine)",
+      "custom": "Custom (OpenAI-compatible)"
+    }
   }
 }

@@ -84,6 +84,7 @@
     "title": "表示",
     "toggleDarkMode": "ダークモードを切り替え",
     "showSidebar": "サイドバーを表示",
+    "toggleAIPanel": "AIパネルを切り替え",
     "showTitleBar": "タイトルバーを表示",
     "showToolBar": "ツールバーを表示",
     "showStatusBar": "ステータスバーを表示",
