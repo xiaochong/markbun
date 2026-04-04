@@ -12,7 +12,25 @@
     "assistant": "AI",
     "thinking": "考え中...",
     "error": "エラー：{{error}}",
-    "empty": "まだメッセージがありません。会話を始めましょう！"
+    "empty": "まだメッセージがありません。会話を始めましょう！",
+    "tool": {
+      "read": "ドキュメントを読み取り",
+      "edit": "ドキュメントを編集",
+      "write": "ドキュメントを書き込み",
+      "executing": "実行中...",
+      "completed": "完了",
+      "failed": "失敗",
+      "timeout": "タイムアウト",
+      "viewFullContent": "全文を表示",
+      "collapse": "折りたたむ",
+      "expand": "展開",
+      "rawData": "生データ",
+      "chars": "{{count}}文字",
+      "lines": "{{count}}行",
+      "tokens": "約{{count}}トークン",
+      "replacements": "{{count}}箇所を置換",
+      "affectedChars": "{{count}}文字が影響"
+    }
   },
   "setup": {
     "title": "AI未設定",

@@ -12,7 +12,25 @@
     "assistant": "IA",
     "thinking": "Pensando...",
     "error": "Erro: {{error}}",
-    "empty": "Nenhuma mensagem ainda. Comece uma conversa!"
+    "empty": "Nenhuma mensagem ainda. Comece uma conversa!",
+    "tool": {
+      "read": "Ler documento",
+      "edit": "Editar documento",
+      "write": "Gravar documento",
+      "executing": "Executando...",
+      "completed": "Concluído",
+      "failed": "Falhou",
+      "timeout": "Tempo esgotado",
+      "viewFullContent": "Ver conteúdo completo",
+      "collapse": "Recolher",
+      "expand": "Expandir",
+      "rawData": "Dados brutos",
+      "chars": "{{count}} caracteres",
+      "lines": "{{count}} linhas",
+      "tokens": "~{{count}} tokens",
+      "replacements": "{{count}} substituições",
+      "affectedChars": "{{count}} caracteres afetados"
+    }
   },
   "setup": {
     "title": "IA não configurada",

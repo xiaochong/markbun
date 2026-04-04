@@ -12,7 +12,25 @@
     "assistant": "AI",
     "thinking": "생각 중...",
     "error": "오류: {{error}}",
-    "empty": "아직 메시지가 없습니다. 대화를 시작하세요!"
+    "empty": "아직 메시지가 없습니다. 대화를 시작하세요!",
+    "tool": {
+      "read": "문서 읽기",
+      "edit": "문서 편집",
+      "write": "문서 쓰기",
+      "executing": "실행 중...",
+      "completed": "완료",
+      "failed": "실패",
+      "timeout": "시간 초과",
+      "viewFullContent": "전체 내용 보기",
+      "collapse": "접기",
+      "expand": "펼치기",
+      "rawData": "원본 데이터",
+      "chars": "{{count}}자",
+      "lines": "{{count}}줄",
+      "tokens": "약 {{count}}토큰",
+      "replacements": "{{count}}건 교체",
+      "affectedChars": "{{count}}자 영향 받음"
+    }
   },
   "setup": {
     "title": "AI 미설정",

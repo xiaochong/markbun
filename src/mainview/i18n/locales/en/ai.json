@@ -12,7 +12,25 @@
     "assistant": "AI",
     "thinking": "Thinking...",
     "error": "Error: {{error}}",
-    "empty": "No messages yet. Start a conversation!"
+    "empty": "No messages yet. Start a conversation!",
+    "tool": {
+      "read": "Read Document",
+      "edit": "Edit Document",
+      "write": "Write Document",
+      "executing": "Executing...",
+      "completed": "Completed",
+      "failed": "Failed",
+      "timeout": "Timed Out",
+      "viewFullContent": "View Full Content",
+      "collapse": "Collapse",
+      "expand": "Expand",
+      "rawData": "Raw Data",
+      "chars": "{{count}} chars",
+      "lines": "{{count}} lines",
+      "tokens": "~{{count}} tokens",
+      "replacements": "{{count}} replacements",
+      "affectedChars": "{{count}} chars affected"
+    }
   },
   "setup": {
     "title": "AI Not Configured",

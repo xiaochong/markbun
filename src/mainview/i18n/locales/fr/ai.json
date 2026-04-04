@@ -12,7 +12,25 @@
     "assistant": "IA",
     "thinking": "Réflexion...",
     "error": "Erreur : {{error}}",
-    "empty": "Aucun message pour l'instant. Commencez une conversation !"
+    "empty": "Aucun message pour l'instant. Commencez une conversation !",
+    "tool": {
+      "read": "Lire le document",
+      "edit": "Modifier le document",
+      "write": "Écrire le document",
+      "executing": "Exécution...",
+      "completed": "Terminé",
+      "failed": "Échoué",
+      "timeout": "Délai dépassé",
+      "viewFullContent": "Voir le contenu complet",
+      "collapse": "Réduire",
+      "expand": "Développer",
+      "rawData": "Données brutes",
+      "chars": "{{count}} caractères",
+      "lines": "{{count}} lignes",
+      "tokens": "~{{count}} tokens",
+      "replacements": "{{count}} remplacements",
+      "affectedChars": "{{count}} caractères affectés"
+    }
   },
   "setup": {
     "title": "IA non configurée",

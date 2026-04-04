@@ -12,7 +12,25 @@
     "assistant": "AI",
     "thinking": "思考中...",
     "error": "错误：{{error}}",
-    "empty": "暂无消息，开始对话吧！"
+    "empty": "暂无消息，开始对话吧！",
+    "tool": {
+      "read": "读取文档",
+      "edit": "修改文档",
+      "write": "写入文档",
+      "executing": "执行中...",
+      "completed": "完成",
+      "failed": "失败",
+      "timeout": "超时",
+      "viewFullContent": "查看完整内容",
+      "collapse": "收起",
+      "expand": "展开",
+      "rawData": "原始数据",
+      "chars": "{{count}} 字",
+      "lines": "{{count}} 行",
+      "tokens": "约 {{count}} tokens",
+      "replacements": "替换 {{count}} 处",
+      "affectedChars": "影响 {{count}} 字"
+    }
   },
   "setup": {
     "title": "AI 未配置",

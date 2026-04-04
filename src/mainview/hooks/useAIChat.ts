@@ -11,6 +11,10 @@ export interface AIMessage {
   error?: string;
   toolName?: string;
   toolResult?: unknown;
+  toolArgs?: Record<string, unknown>;
+  status?: 'executing' | 'success' | 'failed' | 'timeout';
+  startTime?: number;
+  duration?: number;
 }
 
 function generateId(): string {
@@ -67,12 +71,9 @@ export function useAIChat(): UseAIChatReturn {
           break;
         }
 
-        case 'toolcall_end': {
-          const toolName = (event.data?.name as string) || ((event.data?.toolCall as any)?.name as string) || 'unknown';
-          const toolResult = event.data?.result ?? event.data?.toolResult;
-
-          // Finalize current assistant message, add tool result, create new assistant message
-          const newAssistantId = generateId();
+        case 'toolcall_start': {
+          const toolName = (event.data?.toolName as string) || undefined;
+          const toolId = generateId();
           setMessages(prev => [
             ...prev.map(msg =>
               msg.id === assistantId
@@ -80,21 +81,83 @@ export function useAIChat(): UseAIChatReturn {
                 : msg
             ),
             {
-              id: generateId(),
+              id: toolId,
               role: 'tool',
-              content: typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult),
-              timestamp: Date.now(),
-              toolName,
-              toolResult,
-            },
-            {
-              id: newAssistantId,
-              role: 'assistant',
               content: '',
               timestamp: Date.now(),
-              isStreaming: true,
+              toolName: toolName || 'tool',
+              status: 'executing',
+              startTime: Date.now(),
             },
           ]);
+          break;
+        }
+
+        case 'toolcall_delta': {
+          const toolName = event.data?.toolName as string | undefined;
+          if (!toolName) break;
+          // Update the last tool message's toolName if it still undefined
+          setMessages(prev => {
+            const lastToolMsg = [...prev].reverse().find(m => m.role === 'tool' && m.status === 'executing');
+            if (!lastToolMsg) return prev;
+            return prev.map(msg =>
+              msg.id === lastToolMsg.id && msg.toolName === 'tool'
+                ? { ...msg, toolName }
+                : msg
+            );
+          });
+          break;
+        }
+
+        case 'toolcall_end': {
+          const toolName = (event.data?.name as string) || ((event.data?.toolCall as any)?.name as string) || 'unknown';
+          const toolResult = event.data?.result ?? event.data?.toolResult;
+          const isError = Boolean(event.data?.isError);
+          const toolCallData = event.data?.toolCall as Record<string, unknown> | undefined;
+          const toolArgs = toolCallData?.arguments as Record<string, unknown> | undefined;
+          const errorMsg = typeof toolResult === 'string' ? toolResult : (toolResult as any)?.error as string;
+
+          const isTimeout = isError && errorMsg?.includes('timed out');
+          const status = isTimeout ? 'timeout' : isError ? 'failed' : 'success';
+          const duration = Date.now();
+
+          // Finalize current assistant message and update executing tool message
+          const newAssistantId = generateId();
+          setMessages(prev => {
+            // Find the LAST executing tool message (most recent tool call)
+            let toolMsgIndex = -1;
+            for (let i = prev.length - 1; i >= 0; i--) {
+              if (prev[i].role === 'tool' && prev[i].status === 'executing') {
+                toolMsgIndex = i;
+                break;
+              }
+            }
+            return [
+              ...prev.map(msg => {
+                if (msg.id === assistantId) return { ...msg, isStreaming: false };
+                if (toolMsgIndex !== -1 && msg.id === prev[toolMsgIndex].id) {
+                  const finalized: AIMessage = {
+                    ...msg,
+                    status,
+                    duration: duration - (msg.startTime || duration),
+                    toolName: msg.toolName === 'tool' ? toolName : msg.toolName,
+                    toolResult,
+                    toolArgs,
+                    content: typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult),
+                  };
+                  return finalized;
+                }
+                return msg;
+              }),
+              {
+                id: newAssistantId,
+                role: 'assistant',
+                content: '',
+                timestamp: Date.now(),
+                isStreaming: true,
+              },
+            ];
+          });
           // Update ref so subsequent text_delta events write to the new message
           currentAssistantIdRef.current = newAssistantId;
           break;
@@ -211,14 +274,21 @@ export function useAIChat(): UseAIChatReturn {
     }
 
     // Mark current streaming message as stopped
-    const assistantId = currentAssistantIdRef.current;
+ const assistantId = currentAssistantIdRef.current;
     if (assistantId) {
       setMessages(prev =>
-        prev.map(msg =>
-          msg.id === assistantId
-            ? { ...msg, isStreaming: false }
-            : msg
-        )
+        prev.map(msg => {
+          if (msg.id === assistantId) return { ...msg, isStreaming: false };
+          // Clean up executing tool messages on abort
+          if (msg.role === 'tool' && msg.status === 'executing') {
+            return {
+              ...msg,
+              status: 'failed',
+              duration: Date.now() - (msg.startTime || Date.now()),
+            };
+          }
+          return msg;
+        })
       );
     }
     setIsStreaming(false);

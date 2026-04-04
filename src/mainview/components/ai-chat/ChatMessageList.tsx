@@ -3,6 +3,10 @@ import { memo, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import type { AIMessage } from '../../hooks/useAIChat';
+import { ToolCallCard } from './ToolCallCard';
+import { ReadToolBody } from './ReadToolBody';
+import { EditToolBody } from './EditToolBody';
+import { WriteToolBody } from './WriteToolBody';
 
 interface ChatMessageListProps {
   messages: AIMessage[];
@@ -50,10 +54,19 @@ const ChatMessage = memo(function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === 'user';
   const isTool = message.role === 'tool';
 
+  // Tool messages: render as ToolCallCard
+  if (isTool) {
+    const toolName = message.toolName || 'tool';
+    const toolBody = toolName === 'read' ? <ReadToolBody message={message} />
+      : toolName === 'edit' ? <EditToolBody message={message} />
+      : toolName === 'write' ? <WriteToolBody message={message} />
+      : null;
+
+    return <ToolCallCard message={message}>{toolBody}</ToolCallCard>;
+  }
+
   const roleLabel = isUser
     ? t('message.user')
-    : isTool
-    ? message.toolName || 'Tool'
     : t('message.assistant');
 
   return (

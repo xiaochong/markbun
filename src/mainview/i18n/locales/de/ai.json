@@ -12,7 +12,25 @@
     "assistant": "KI",
     "thinking": "Denke nach...",
     "error": "Fehler: {{error}}",
-    "empty": "Noch keine Nachrichten. Starten Sie eine Unterhaltung!"
+    "empty": "Noch keine Nachrichten. Starten Sie eine Unterhaltung!",
+    "tool": {
+      "read": "Dokument lesen",
+      "edit": "Dokument bearbeiten",
+      "write": "Dokument schreiben",
+      "executing": "Wird ausgeführt...",
+      "completed": "Abgeschlossen",
+      "failed": "Fehlgeschlagen",
+      "timeout": "Zeitüberschreitung",
+      "viewFullContent": "Vollständigen Inhalt anzeigen",
+      "collapse": "Einklappen",
+      "expand": "Erweitern",
+      "rawData": "Rohdaten",
+      "chars": "{{count}} Zeichen",
+      "lines": "{{count}} Zeilen",
+      "tokens": "~{{count}} Tokens",
+      "replacements": "{{count}} Ersetzungen",
+      "affectedChars": "{{count}} Zeichen betroffen"
+    }
   },
   "setup": {
     "title": "KI nicht konfiguriert",

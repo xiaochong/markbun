@@ -174,24 +174,34 @@ function piEventToStreamEvent(
         },
       };
 
-    case 'toolcall_start':
+    case 'toolcall_start': {
+      // Extract tool name from the partial AssistantMessage when available
+      const startBlock = event.partial?.content?.[event.contentIndex];
+      const startToolName = startBlock?.type === 'toolCall' ? startBlock.name : undefined;
       return {
         sessionId,
         type: 'toolcall_start',
         data: {
           contentIndex: event.contentIndex,
+          toolName: startToolName,
         },
       };
+    }
 
-    case 'toolcall_delta':
+    case 'toolcall_delta': {
+      // Extract tool name from partial AssistantMessage when available
+      const deltaBlock = event.partial?.content?.[event.contentIndex];
+      const deltaToolName = deltaBlock?.type === 'toolCall' ? deltaBlock.name : undefined;
       return {
         sessionId,
         type: 'toolcall_delta',
         data: {
           delta: event.delta,
           contentIndex: event.contentIndex,
+          toolName: deltaToolName,
         },
       };
+    }
 
     // toolcall_end during streaming is used only for internal bookkeeping
     // (tracking the partial assistant message). The definitive toolcall_end
