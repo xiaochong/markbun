@@ -1,6 +1,7 @@
 // AIChatPanel — main AI chat panel container (resizable, right sidebar)
 import { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { cn } from '@/lib/utils';
+import { electrobun } from '../../lib/electrobun';
 import { useAIChat } from '../../hooks/useAIChat';
 import { ChatMessageList } from './ChatMessageList';
 import { ChatInput } from './ChatInput';
@@ -88,6 +89,17 @@ export const AIChatPanel = memo(function AIChatPanel({
       void chat.restoreLatestSession();
     }
   }, [isOpen, chat.sessionId, chat.restoreLatestSession]);
+
+  // Reset AI session when a new file is created or a different file is opened
+  useEffect(() => {
+    const unsubNew = electrobun.on('file-new', () => {
+      chat.resetSession();
+    });
+    const unsubOpened = electrobun.on('file-opened', () => {
+      chat.resetSession();
+    });
+    return () => { unsubNew(); unsubOpened(); };
+  }, [chat]);
 
   const isAIEnabled = aiSettings?.enabled;
   const isAIConfigured = aiSettings ? (aiSettings.provider || aiSettings.localOnly) : false;
