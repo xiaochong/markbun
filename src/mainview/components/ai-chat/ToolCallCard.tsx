@@ -4,107 +4,38 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import type { AIMessage } from '../../hooks/useAIChat';
 
-// ── Inline SVG icons (project pattern) ──────────────────────────────────────
+// ── Emoji icons ──────────────────────────────────────────────────────────────
 
-const EyeIcon = memo(function EyeIcon() {
-  return (
-    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-        d="M1 12s4-8 11-8 11 8-4 8-11 8-11-8zm" />
-      <circle cx="12" cy="12" r="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
-    </svg>
-  );
-});
+const TOOL_EMOJI: Record<string, string> = {
+  read: '👁',
+  edit: '✏️',
+  write: '📝',
+};
 
-const PencilIcon = memo(function PencilIcon() {
-  return (
-    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-        d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" />
-    </svg>
-  );
-});
-
-const FileTextIcon = memo(function FileTextIcon() {
-  return (
-    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-        d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-      <polyline points="14,2 14,8 20,8" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
-      <line x1="16" y1="13" x2="8" y2="13" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
-      <line x1="16" y1="17" x2="8" y2="17" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
-      <polyline points="10,9 9,9 8,9" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
-    </svg>
-  );
-});
-
-const CheckCircleIcon = memo(function CheckCircleIcon() {
-  return (
-    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  );
-});
-
-const XCircleIcon = memo(function XCircleIcon() {
-  return (
-    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  );
-});
-
-const AlertTriangleIcon = memo(function AlertTriangleIcon() {
-  return (
-    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15.75h.007v.008H12v-.008z" />
-    </svg>
-  );
-});
-
-const ChevronIcon = memo(function ChevronIcon({ expanded }: { expanded: boolean }) {
-  return (
-    <svg className={cn('w-3 h-3 transition-transform duration-150', expanded && 'rotate-90')}
-      fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-    </svg>
-  );
-});
+const STATUS_EMOJI: Record<string, string> = {
+  executing: '⏳',
+  success: '✅',
+  failed: '❌',
+  timeout: '⚠️',
+};
 
 // ── Tool configuration ────────────────────────────────────────────────────────
 
 const TOOL_CONFIG = {
-  read:  { icon: EyeIcon,       colorClass: 'text-blue-500',   borderClass: 'border-l-blue-500' },
-  edit:  { icon: PencilIcon,   colorClass: 'text-amber-500',  borderClass: 'border-l-amber-500' },
-  write: { icon: FileTextIcon, colorClass: 'text-green-500',  borderClass: 'border-l-green-500' },
+  read:  { colorClass: 'text-blue-500',   borderClass: 'border-l-blue-500' },
+  edit:  { colorClass: 'text-amber-500',  borderClass: 'border-l-amber-500' },
+  write: { colorClass: 'text-green-500',  borderClass: 'border-l-green-500' },
 } as const;
-
-type ToolConfig = typeof TOOL_CONFIG[keyof typeof TOOL_CONFIG];
 
 // ── Status indicator ───────────────────────────────────────────────────────────
 
 function StatusIndicator({ status }: { status: AIMessage['status'] }) {
-  switch (status) {
-    case 'executing':
-      return (
-        <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-current opacity-75" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-current" />
-        </span>
-      );
-    case 'success':
-      return <CheckCircleIcon />;
-    case 'failed':
-      return <XCircleIcon />;
-    case 'timeout':
-      return <AlertTriangleIcon />;
-    default:
-      return null;
+  const emoji = status ? STATUS_EMOJI[status] : null;
+  if (!emoji) return null;
+  if (status === 'executing') {
+    return <span className="animate-pulse">{emoji}</span>;
   }
+  return <span>{emoji}</span>;
 }
 
 // ── Duration formatter ─────────────────────────────────────────────────────────
@@ -157,8 +88,8 @@ export const ToolCallCard = memo(function ToolCallCard({ message, children }: To
   const [expanded, setExpanded] = useState(false);
 
   const toolName = message.toolName || 'tool';
-  const config = TOOL_CONFIG[toolName];
-  const ToolIcon = config?.icon;
+  const config = TOOL_CONFIG[toolName as keyof typeof TOOL_CONFIG];
+  const toolEmoji = TOOL_EMOJI[toolName] || '🔧';
   const status = message.status;
   const isExecuting = status === 'executing';
 
@@ -195,13 +126,9 @@ export const ToolCallCard = memo(function ToolCallCard({ message, children }: To
         aria-expanded={expanded}
         aria-label={expanded ? t('message.tool.collapse') : t('message.tool.expand')}
       >
-        <ChevronIcon expanded={expanded} />
+        <span className={cn('text-[10px] transition-transform duration-150', expanded && 'rotate-90')}>▶</span>
 
-        {ToolIcon && (
-          <span className={cn('flex-shrink-0', config?.colorClass)}>
-            <ToolIcon />
-          </span>
-        )}
+        <span className="text-sm flex-shrink-0">{toolEmoji}</span>
 
         <span className="text-xs font-medium text-foreground truncate">
           {toolLabel}
