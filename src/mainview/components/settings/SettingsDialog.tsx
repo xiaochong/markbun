@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { electrobun } from '@/lib/electrobun';
+import { Combobox } from '@/components/ui/Combobox';
+import { getModelIds } from '@/lib/models';
 import { SUPPORTED_LANGUAGES, LANGUAGE_LABELS, type SupportedLanguage } from '../../../shared/i18n/config';
 import type { AppSettings, BackupSettings } from '@/shared/types';
 
@@ -11,26 +13,25 @@ interface ProviderDef {
   id: string;
   group: 'international' | 'domestic' | 'other';
   defaultBaseUrl?: string;
-  models: string[];
   needsApiKey: boolean;
 }
 
 const AI_PROVIDERS: ProviderDef[] = [
   // International
-  { id: 'ollama', group: 'international', defaultBaseUrl: 'http://localhost:11434', models: ['llama3.1', 'llama3.2', 'mistral', 'codellama', 'gemma2', 'qwen2.5', 'deepseek-r1'], needsApiKey: false },
-  { id: 'anthropic', group: 'international', defaultBaseUrl: 'https://api.anthropic.com', models: ['claude-sonnet-4-20250514', 'claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229'], needsApiKey: true },
-  { id: 'openai', group: 'international', defaultBaseUrl: 'https://api.openai.com/v1', models: ['gpt-4.1', 'gpt-4.1-mini', 'gpt-4.1-nano', 'gpt-4o', 'gpt-4o-mini', 'o3-mini'], needsApiKey: true },
-  { id: 'google', group: 'international', defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta', models: ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash'], needsApiKey: true },
-  { id: 'openrouter', group: 'international', defaultBaseUrl: 'https://openrouter.ai/api/v1', models: ['anthropic/claude-sonnet-4', 'openai/gpt-4.1', 'google/gemini-2.5-pro', 'deepseek/deepseek-r1', 'meta-llama/llama-3.1-405b-instruct'], needsApiKey: true },
+  { id: 'ollama', group: 'international', defaultBaseUrl: 'http://localhost:11434', needsApiKey: false },
+  { id: 'anthropic', group: 'international', defaultBaseUrl: 'https://api.anthropic.com', needsApiKey: true },
+  { id: 'openai', group: 'international', defaultBaseUrl: 'https://api.openai.com/v1', needsApiKey: true },
+  { id: 'google', group: 'international', defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta', needsApiKey: true },
+  { id: 'openrouter', group: 'international', defaultBaseUrl: 'https://openrouter.ai/api/v1', needsApiKey: true },
   // Domestic (China)
-  { id: 'deepseek', group: 'domestic', defaultBaseUrl: 'https://api.deepseek.com/v1', models: ['deepseek-chat', 'deepseek-reasoner'], needsApiKey: true },
-  { id: 'kimi', group: 'domestic', defaultBaseUrl: 'https://api.moonshot.cn/v1', models: ['moonshot-v1-8k', 'moonshot-v1-32k', 'moonshot-v1-128k'], needsApiKey: true },
-  { id: 'glm', group: 'domestic', defaultBaseUrl: 'https://open.bigmodel.cn/api/paas/v4', models: ['glm-4-plus', 'glm-4-flash', 'glm-4-air', 'glm-4-long'], needsApiKey: true },
-  { id: 'qwen', group: 'domestic', defaultBaseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', models: ['qwen-max', 'qwen-plus', 'qwen-turbo', 'qwen-long'], needsApiKey: true },
-  { id: 'minimax', group: 'domestic', defaultBaseUrl: 'https://api.minimax.chat/v1', models: ['MiniMax-Text-01', 'abab6.5s-chat'], needsApiKey: true },
-  { id: 'doubao', group: 'domestic', defaultBaseUrl: 'https://ark.cn-beijing.volces.com/api/v3', models: ['doubao-1.5-pro-32k', 'doubao-1.5-lite-32k', 'doubao-pro-32k', 'doubao-lite-32k'], needsApiKey: true },
+  { id: 'deepseek', group: 'domestic', defaultBaseUrl: 'https://api.deepseek.com/v1', needsApiKey: true },
+  { id: 'kimi', group: 'domestic', defaultBaseUrl: 'https://api.moonshot.cn/v1', needsApiKey: true },
+  { id: 'glm', group: 'domestic', defaultBaseUrl: 'https://open.bigmodel.cn/api/paas/v4', needsApiKey: true },
+  { id: 'qwen', group: 'domestic', defaultBaseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', needsApiKey: true },
+  { id: 'minimax', group: 'domestic', defaultBaseUrl: 'https://api.minimax.chat/v1', needsApiKey: true },
+  { id: 'doubao', group: 'domestic', defaultBaseUrl: 'https://ark.cn-beijing.volces.com/api/v3', needsApiKey: true },
   // Other
-  { id: 'custom', group: 'other', models: [], needsApiKey: true },
+  { id: 'custom', group: 'other', needsApiKey: true },
 ];
 
 // ── AI Tab sub-component ─────────────────────────────────────────────────────
@@ -53,7 +54,6 @@ function AITabContent({ formState, handleChange, ts, tc }: AITabContentProps) {
   const ai = formState.ai;
   const localOnly = ai?.localOnly ?? false;
   const selectedProvider = AI_PROVIDERS.find(p => p.id === ai?.provider);
-  const currentModels = selectedProvider?.models ?? [];
 
   // Providers visible based on localOnly mode
   const visibleProviders = localOnly
@@ -238,26 +238,12 @@ function AITabContent({ formState, handleChange, ts, tc }: AITabContentProps) {
             {ai?.provider && (
               <div className="space-y-2">
                 <label className="text-sm font-medium">{ts('ai.model')}</label>
-                {currentModels.length > 0 ? (
-                  <select
-                    value={ai?.model ?? ''}
-                    onChange={(e) => updateAI('model', e.target.value)}
-                    className="w-full px-3 py-2 text-sm bg-background border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
-                  >
-                    <option value="">{ts('ai.modelDesc')}</option>
-                    {currentModels.map(m => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    value={ai?.model ?? ''}
-                    onChange={(e) => updateAI('model', e.target.value)}
-                    placeholder={ts('ai.modelDesc')}
-                    className="w-full px-3 py-2 text-sm bg-background border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
-                  />
-                )}
+                <Combobox
+                  value={ai?.model ?? ''}
+                  onChange={(value) => updateAI('model', value)}
+                  suggestions={getModelIds(ai.provider)}
+                  placeholder={ts('ai.modelDesc')}
+                />
               </div>
             )}
 
