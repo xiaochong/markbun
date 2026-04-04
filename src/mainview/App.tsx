@@ -586,10 +586,7 @@ function App() {
   // Handle editor content changes from Milkdown
   const handleEditorChange = useCallback((markdown: string) => {
     // Ignore changes during file switching to prevent race conditions
-    if (isSwitchingFileRef.current) {
-      console.log('[Editor] Ignoring change during file switch');
-      return;
-    }
+    if (isSwitchingFileRef.current) return;
     updateContent(markdown);
     setEditorContent(markdown);
     outline.setHeadings(markdown);

@@ -87,7 +87,6 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
   // Auto-save callback
   const handleAutoSave = useCallback(async () => {
     const state = fileStateRef.current;
-    console.log('[AutoSave] Triggered for:', state.path, 'isDirty:', state.isDirty);
     if (!state.path || !state.isDirty) return;
 
     // Record the file we're about to save
@@ -98,7 +97,6 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
     try {
       // Check again if the file has changed before saving
       if (fileStateRef.current.path !== targetPath) {
-        console.log('[AutoSave] Aborting save, file changed from', targetPath, 'to', fileStateRef.current.path);
         setSaveStatus(null);
         return;
       }
@@ -107,7 +105,6 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
 
       // Double-check path before actual save operation
       if (fileStateRef.current.path !== targetPath) {
-        console.log('[AutoSave] Aborting save before write, file changed from', targetPath, 'to', fileStateRef.current.path);
         setSaveStatus(null);
         return;
       }
@@ -116,7 +113,6 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
 
       // After save completes, verify we're still on the same file before updating state
       if (fileStateRef.current.path !== targetPath) {
-        console.log('[AutoSave] File changed during save, ignoring result for:', targetPath);
         setSaveStatus(null);
         return;
       }
@@ -149,7 +145,14 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
   // Update content
   const updateContent = useCallback((newContent: string) => {
     setFileState(prev => {
-      const isDirty = prev.path !== null ? newContent !== prev.content : newContent.length > 0;
+      // Only change isDirty when content actually changes.
+      // If content is the same, keep the previous isDirty value.
+      // This prevents spurious ProseMirror dispatches (e.g., normalization)
+      // from resetting isDirty to false.
+      const contentChanged = newContent !== prev.content;
+      const isDirty = prev.path !== null
+        ? (contentChanged ? true : prev.isDirty)
+        : newContent.length > 0;
       return {
         ...prev,
         content: newContent,
@@ -170,7 +173,6 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
 
   // Reset file state for file switching - clears dirty flag to prevent auto-save race
   const resetFileState = useCallback((newPath: string | null, newContent: string) => {
-    console.log('[FileOperations] Resetting file state:', { path: newPath, contentLength: newContent.length });
     setFileState({
       path: newPath,
       content: newContent,
@@ -203,7 +205,6 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
     }
 
     if (!state.isDirty) {
-      // Nothing to save
       return;
     }
 

@@ -4,6 +4,8 @@ import { useEditor } from '@milkdown/react';
 import { editorViewCtx, parserCtx, serializerCtx, schemaCtx, commandsCtx } from '@milkdown/kit/core';
 import { InitReady, remarkPluginsCtx, remarkStringifyOptionsCtx } from '@milkdown/core';
 import type { MilkdownPlugin } from '@milkdown/ctx';
+import { $prose } from '@milkdown/utils';
+import { Plugin, PluginKey } from '@milkdown/prose/state';
 import remarkBreaks from 'remark-breaks';
 import remarkHighlight from '../plugins/remarkHighlight';
 import remarkSuperSub from '../plugins/remarkSuperSub';
@@ -245,14 +247,33 @@ export function useCrepeEditor(
       }));
     });
 
-    // Listen for content changes
-    crepe.on((listener) => {
-      listener.markdownUpdated((_ctx, markdown, prevMarkdown) => {
-        if (markdown !== prevMarkdown) {
-          onChangeRef.current?.(markdown);
-        }
+    // Listen for content changes via ProseMirror plugin (Crepe's markdownUpdated is unreliable)
+    // Deduplicate change notifications: ProseMirror may dispatch multiple transactions
+    // (e.g., normalization) that produce the same serialized markdown. Only notify
+    // when the serialized content actually changes to prevent spurious isDirty resets.
+    let lastSerializedMarkdown = '';
+    const changeListenerPlugin = $prose((ctx) => {
+      return new Plugin({
+        key: new PluginKey('markbun-change-listener'),
+        view: () => ({
+          update: (view, prevState) => {
+            if (!view.state.doc.eq(prevState.doc)) {
+              try {
+                const serializer = ctx.get(serializerCtx);
+                const markdown = serializer(view.state.doc);
+                if (markdown !== lastSerializedMarkdown) {
+                  lastSerializedMarkdown = markdown;
+                  onChangeRef.current?.(markdown);
+                }
+              } catch (e) {
+                console.error('[ChangeListener] Serialization failed:', e);
+              }
+            }
+          },
+        }),
       });
     });
+    crepe.editor.use(changeListenerPlugin);
 
     // Mark as ready after creation
     requestAnimationFrame(() => setIsReady(true));

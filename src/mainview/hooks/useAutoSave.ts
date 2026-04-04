@@ -34,6 +34,12 @@ export function useAutoSave({
   const isSavingRef = useRef<boolean>(false);
   const pendingSaveRef = useRef<boolean>(false);
 
+  // Use refs to avoid stale closures — triggerSave/executeSave always read the latest value
+  const isDirtyRef = useRef(isDirty);
+  isDirtyRef.current = isDirty;
+  const enabledRef = useRef(enabled);
+  enabledRef.current = enabled;
+
   // Clear all timers
   const clearAllTimers = useCallback(() => {
     if (throttleTimerRef.current) {
@@ -56,7 +62,7 @@ export function useAutoSave({
 
   // Execute save
   const executeSave = useCallback(async () => {
-    if (isSavingRef.current || !isDirty) {
+    if (isSavingRef.current || !isDirtyRef.current) {
       return;
     }
 
@@ -72,15 +78,20 @@ export function useAutoSave({
       isSavingRef.current = false;
 
       // If a save was triggered while we were saving, save again
-      if (pendingSaveRef.current && isDirty) {
+      if (pendingSaveRef.current && isDirtyRef.current) {
         void executeSave();
       }
     }
-  }, [onSave, isDirty]);
+  }, [onSave]);
 
-  // Trigger save with hybrid strategy
+  // Trigger save with hybrid strategy.
+  // NOTE: We intentionally do NOT check isDirtyRef here. The caller (updateContent)
+  // already knows the content changed. At call time, the isDirty ref may still be stale
+  // because React hasn't re-rendered yet. The actual isDirty check happens in
+  // executeSave — by the time the debounce timer fires, React will have re-rendered
+  // and the ref will be up to date.
   const triggerSave = useCallback(async () => {
-    if (!enabled || !isDirty) {
+    if (!enabledRef.current) {
       return;
     }
 
@@ -113,14 +124,14 @@ export function useAutoSave({
     // Start max wait timer if not running
     if (!maxWaitTimerRef.current) {
       maxWaitTimerRef.current = setTimeout(() => {
-        if (isDirty) {
+        if (isDirtyRef.current) {
           clearAllTimers();
           void executeSave();
         }
         clearMaxWaitTimer();
       }, 10000); // Force save after 10 seconds
     }
-  }, [enabled, isDirty, interval, executeSave, clearAllTimers, clearMaxWaitTimer]);
+  }, [interval, executeSave, clearAllTimers, clearMaxWaitTimer]);
 
   // Cancel pending save
   const cancelPendingSave = useCallback(() => {
@@ -138,10 +149,8 @@ export function useAutoSave({
 
   // Save on blur event
   useEffect(() => {
-    if (!enabled) return;
-
     const handleBlur = () => {
-      if (isDirty) {
+      if (enabledRef.current && isDirtyRef.current) {
         clearAllTimers();
         void executeSave();
       }
@@ -149,14 +158,12 @@ export function useAutoSave({
 
     window.addEventListener('blur', handleBlur);
     return () => window.removeEventListener('blur', handleBlur);
-  }, [enabled, isDirty, executeSave, clearAllTimers]);
+  }, [executeSave, clearAllTimers]);
 
   // Save on beforeunload (auto-save enabled: save silently, no dialog)
   useEffect(() => {
-    if (!enabled) return;
-
     const handleBeforeUnload = () => {
-      if (isDirty) {
+      if (enabledRef.current && isDirtyRef.current) {
         clearAllTimers();
         void executeSave();
       }
@@ -164,7 +171,7 @@ export function useAutoSave({
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [enabled, isDirty, executeSave, clearAllTimers]);
+  }, [executeSave, clearAllTimers]);
 
   return {
     triggerSave,
