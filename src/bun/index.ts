@@ -719,6 +719,16 @@ async function main() {
                   const proc = spawn('osascript', ['-e', 'the clipboard as «class HTML»'], { stdio: ['ignore', 'pipe', 'pipe'] });
                   let output = '';
                   let errOutput = '';
+                  let resolved = false;
+
+                  // 3s timeout — osascript can hang if clipboard access requires permissions
+                  const timer = setTimeout(() => {
+                    if (!resolved) {
+                      resolved = true;
+                      proc.kill();
+                      resolve(null);
+                    }
+                  }, 3000);
 
                   proc.stdout.on('data', (data: Buffer) => {
                     output += data.toString();
@@ -729,6 +739,9 @@ async function main() {
                   });
 
                   proc.on('close', (code: number | null) => {
+                    if (resolved) return;
+                    resolved = true;
+                    clearTimeout(timer);
                     if (code === 0 && output) {
                       // osascript returns HTML as hex-encoded «data HTMLXXXX...»
                       const hexMatch = output.match(/«data HTML([0-9A-Fa-f]+)»/);
@@ -744,7 +757,12 @@ async function main() {
                     }
                   });
 
-                  proc.on('error', () => resolve(null));
+                  proc.on('error', () => {
+                    if (resolved) return;
+                    resolved = true;
+                    clearTimeout(timer);
+                    resolve(null);
+                  });
                 });
                 if (htmlResult) {
                   result.html = htmlResult;
@@ -804,12 +822,25 @@ async function main() {
                     close access fp
                   `.trim()], { stdio: ['ignore', 'pipe', 'pipe'] });
                   let errOutput = '';
+                  let resolved = false;
+
+                  // 3s timeout — osascript can hang if clipboard access requires permissions
+                  const timer = setTimeout(() => {
+                    if (!resolved) {
+                      resolved = true;
+                      proc.kill();
+                      resolve(null);
+                    }
+                  }, 3000);
 
                   proc.stderr.on('data', (data: Buffer) => {
                     errOutput += data.toString();
                   });
 
                   proc.on('close', async (code: number | null) => {
+                    if (resolved) return;
+                    resolved = true;
+                    clearTimeout(timer);
                     if (code === 0) {
                       try {
                         const data = await readFile(tmpPath);
@@ -824,7 +855,12 @@ async function main() {
                     }
                   });
 
-                  proc.on('error', () => resolve(null));
+                  proc.on('error', () => {
+                    if (resolved) return;
+                    resolved = true;
+                    clearTimeout(timer);
+                    resolve(null);
+                  });
                 });
                 if (imageResult) {
                   result.imageData = imageResult;

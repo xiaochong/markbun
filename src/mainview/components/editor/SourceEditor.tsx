@@ -19,6 +19,7 @@ export interface SourceEditorRef {
   getValue: () => string;
   setValue: (value: string) => void;
   focus: () => void;
+  insertText: (text: string) => void;
   isReady: boolean;
   getCursor: () => { line: number; column: number } | null;
   setCursor: (line: number, column: number) => void;
@@ -171,6 +172,13 @@ export const SourceEditor = memo(forwardRef<SourceEditorRef, SourceEditorProps>(
       },
       focus: () => {
         viewRef.current?.focus();
+      },
+      insertText: (text: string) => {
+        const view = viewRef.current;
+        if (!view) return;
+        view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: text },
+        });
       },
       get isReady() {
         return isReadyRef.current;

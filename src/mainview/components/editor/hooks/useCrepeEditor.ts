@@ -774,7 +774,8 @@ export function useCrepeEditor(
         }
       });
       return true;
-    } catch {
+    } catch (e) {
+      console.error('[insertMarkdown] Failed to insert:', e);
       return false;
     }
   }, []);

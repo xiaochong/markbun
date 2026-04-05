@@ -540,7 +540,7 @@ function App() {
   }, [path]);
 
   // Clipboard operations with blob URL handling
-  const clipboard = useClipboard(editorRef, currentFilePath, sourceMode);
+  const clipboard = useClipboard(editorRef, sourceEditorRef, currentFilePath, sourceMode);
 
   // Ref to latest content so export handlers don't need content in their dep array
   const contentRef = useRef(content);
@@ -1233,18 +1233,19 @@ function App() {
         }
         case 'editor-cut': {
           if (sourceModeRef.current) break;
-          editorRef.current?.focus();
-          document.execCommand('cut');
+          void clipboard.cut();
           break;
         }
         case 'editor-copy': {
           if (sourceModeRef.current) break;
-          editorRef.current?.focus();
-          document.execCommand('copy');
+          void clipboard.copy();
           break;
         }
         case 'editor-paste': {
-          if (sourceModeRef.current) break;
+          if (sourceModeRef.current) {
+            // Source mode: let WebView's native paste handle the textarea
+            sourceEditorRef.current?.focus();
+          }
           void clipboard.paste(false);
           break;
         }

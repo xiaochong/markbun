@@ -16,9 +16,10 @@
 import { useCallback, useRef } from 'react';
 import { electrobun } from '@/lib/electrobun';
 import { processFromClipboard, loadLocalImage, workspaceManager } from '@/lib/image';
-import { convertFrontmatterToCodeBlock } from '@/lib/frontmatter';
+import { prepareForClipboard } from '@/lib/image/clipboard';
+import { convertCodeBlockToFrontmatter, convertFrontmatterToCodeBlock } from '@/lib/frontmatter';
 import { turndownService } from '@/lib/turndown';
-import type { MilkdownEditorRef } from '@/components/editor';
+import type { MilkdownEditorRef, SourceEditorRef } from '@/components/editor';
 
 export interface ClipboardOperations {
   /** Copy current selection to clipboard */
@@ -91,12 +92,15 @@ function looksLikeMarkdown(text: string): boolean {
 
 export function useClipboard(
   editorRef: React.RefObject<MilkdownEditorRef | null>,
+  sourceEditorRef?: React.RefObject<SourceEditorRef | null>,
   currentFilePath?: string | null,
   isSourceMode: boolean = false
 ): ClipboardOperations {
   // Use ref to avoid stale closure issues
   const editorRefStable = useRef(editorRef);
   editorRefStable.current = editorRef;
+  const sourceEditorRefStable = useRef(sourceEditorRef);
+  sourceEditorRefStable.current = sourceEditorRef;
   const isSourceModeRef = useRef(isSourceMode);
   isSourceModeRef.current = isSourceMode;
 
@@ -104,7 +108,9 @@ export function useClipboard(
     const selectedText = getSelectedText(editorRefStable.current, isSourceModeRef.current);
     if (!selectedText) return false;
 
-    const textToCopy = prepareTextForClipboard(selectedText, isSourceModeRef.current);
+    // Apply blob URL resolution + frontmatter conversion
+    let textToCopy = prepareForClipboard(selectedText);
+    textToCopy = convertCodeBlockToFrontmatter(textToCopy);
 
     try {
       const result = await electrobun.writeToClipboard(textToCopy) as { success: boolean };
@@ -119,7 +125,9 @@ export function useClipboard(
     const selectedText = getSelectedText(editorRefStable.current, isSourceModeRef.current);
     if (!selectedText) return false;
 
-    const textToCopy = prepareTextForClipboard(selectedText, isSourceModeRef.current);
+    // Apply blob URL resolution + frontmatter conversion
+    let textToCopy = prepareForClipboard(selectedText);
+    textToCopy = convertCodeBlockToFrontmatter(textToCopy);
 
     try {
       const result = await electrobun.writeToClipboard(textToCopy) as { success: boolean };
@@ -137,6 +145,28 @@ export function useClipboard(
     return getSelectedText(editorRefStable.current, isSourceModeRef.current) !== null;
   }, []);
 
+  /**
+   * Try to insert content into the editor with fallback chain:
+   * insertMarkdown → insertText → document.execCommand
+   */
+  const insertIntoEditor = useCallback((content: string): boolean => {
+    const editor = editorRefStable.current;
+    // Try insertMarkdown first (parses markdown to ProseMirror nodes)
+    if (editor?.current?.insertMarkdown) {
+      const ok = editor.current.insertMarkdown(content);
+      if (ok) return true;
+      console.warn('[paste] insertMarkdown failed, falling back to insertText');
+    }
+    // Fallback: insertText (literal text insertion)
+    if (editor?.current?.isReady) {
+      editor.current.insertText(content);
+      return true;
+    }
+    // Last resort: execCommand
+    document.execCommand('insertText', false, content);
+    return true;
+  }, []);
+
   const paste = useCallback(async (plainText?: boolean): Promise<boolean> => {
     try {
       const result = await electrobun.readFromClipboard({
@@ -151,7 +181,10 @@ export function useClipboard(
         error?: string;
       };
 
-      if (!result.success) return false;
+      if (!result.success) {
+        console.warn('[paste] readFromClipboard returned success=false');
+        return false;
+      }
 
       // Image paste: check image data before HTML/text
       if (result.imageData) {
@@ -186,21 +219,22 @@ export function useClipboard(
           }
 
           const imageMarkdown = `\n![](${blobUrl})\n`;
-          const editor = editorRefStable.current;
-          if (editor?.current?.insertMarkdown) {
-            return editor.current.insertMarkdown(imageMarkdown);
-          }
-          document.execCommand('insertText', false, imageMarkdown);
-          return true;
+          return insertIntoEditor(imageMarkdown);
         } catch (error) {
           console.error('[Clipboard] Image paste failed:', error);
           return false;
         }
       }
 
-      // Source mode: paste as plain text via execCommand
+      // Source mode: paste as plain text
       if (isSourceModeRef.current) {
         if (result.text) {
+          // Use SourceEditor's insertText if available (more reliable than execCommand)
+          const sourceEditor = sourceEditorRefStable.current?.current;
+          if (sourceEditor?.insertText) {
+            sourceEditor.insertText(result.text);
+            return true;
+          }
           document.execCommand('insertText', false, result.text);
           return true;
         }
@@ -226,16 +260,7 @@ export function useClipboard(
         // Self-copy: use text/plain directly (already clean markdown)
         const processed = await processFromClipboard(result.text);
         const forEditor = convertFrontmatterToCodeBlock(processed);
-        const editor = editorRefStable.current;
-        if (editor?.current?.insertMarkdown) {
-          return editor.current.insertMarkdown(forEditor);
-        }
-        if (editor?.current?.isReady) {
-          editor.current.insertText(forEditor);
-          return true;
-        }
-        document.execCommand('insertText', false, forEditor);
-        return true;
+        return insertIntoEditor(forEditor);
       }
 
       // HTML paste: convert via turndown
@@ -243,40 +268,23 @@ export function useClipboard(
         const markdown = turndownService.turndown(result.html);
         const processed = await processFromClipboard(markdown);
         const forEditor = convertFrontmatterToCodeBlock(processed);
-        const editor = editorRefStable.current;
-        if (editor?.current?.insertMarkdown) {
-          return editor.current.insertMarkdown(forEditor);
-        }
-        if (editor?.current?.isReady) {
-          editor.current.insertText(forEditor);
-          return true;
-        }
-        document.execCommand('insertText', false, forEditor);
-        return true;
+        return insertIntoEditor(forEditor);
       }
 
       // Text-only paste: process and insert as markdown
       if (result.text) {
         const processed = await processFromClipboard(result.text);
         const forEditor = convertFrontmatterToCodeBlock(processed);
-        const editor = editorRefStable.current;
-        if (editor?.current?.insertMarkdown) {
-          return editor.current.insertMarkdown(forEditor);
-        }
-        if (editor?.current?.isReady) {
-          editor.current.insertText(forEditor);
-          return true;
-        }
-        document.execCommand('insertText', false, forEditor);
-        return true;
+        return insertIntoEditor(forEditor);
       }
 
+      console.warn('[paste] no usable content in clipboard');
       return false;
     } catch (error) {
       console.error('Paste failed:', error);
       return false;
     }
-  }, []);
+  }, [insertIntoEditor]);
 
   return { copy, cut, paste, hasSelection };
 }
