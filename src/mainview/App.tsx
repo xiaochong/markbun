@@ -797,34 +797,47 @@ function App() {
   }, [toggleTheme]);
 
   const handleToggleSourceMode = useCallback(() => {
-    setSourceMode(prev => {
-      const newMode = !prev;
+    const newMode = !sourceModeRef.current;
 
-      // Sync content between editors when switching modes
-      if (newMode) {
-        // Switching to source mode: get content from Milkdown and restore original image paths
-        const markdown = editorRef.current?.getMarkdown() ?? '';
-        const markdownWithOriginalPaths = restoreOriginalImagePaths(markdown);
-        // Use setTimeout to ensure the source editor is ready
-        setTimeout(() => {
-          sourceEditorRef.current?.setValue(markdownWithOriginalPaths);
-          sourceEditorRef.current?.focus();
-        }, 0);
-      } else {
-        // Switching to preview mode: get content from source editor
-        const markdown = sourceEditorRef.current?.getValue() ?? '';
-        // Process images to convert local paths to blob URLs
-        void processMarkdownImages(markdown).then((processedMarkdown) => {
-          // Use setTimeout to ensure the Milkdown editor is ready
-          setTimeout(() => {
-            editorRef.current?.setMarkdown(processedMarkdown);
-            editorRef.current?.focus();
-          }, 0);
-        });
-      }
+    if (newMode) {
+      // Switching to source mode: get content from Milkdown and restore original image paths
+      // Must read before setSourceMode, because Milkdown unmounts after state change
+      const markdown = editorRef.current?.getMarkdown() ?? '';
+      const markdownWithOriginalPaths = restoreOriginalImagePaths(markdown);
 
-      return newMode;
-    });
+      setSourceMode(true);
+
+      // Poll until source editor is ready, then set content
+      // (useEffect creating the editor may not have run yet)
+      const trySetContent = () => {
+        if (sourceEditorRef.current?.isReady) {
+          sourceEditorRef.current.setValue(markdownWithOriginalPaths);
+          sourceEditorRef.current.focus();
+        } else {
+          requestAnimationFrame(trySetContent);
+        }
+      };
+      requestAnimationFrame(trySetContent);
+    } else {
+      // Switching to preview mode: get content from source editor
+      // Must read before setSourceMode, because SourceEditor unmounts after state change
+      const markdown = sourceEditorRef.current?.getValue() ?? '';
+
+      setSourceMode(false);
+
+      // Process images to convert local paths to blob URLs
+      void processMarkdownImages(markdown).then((processedMarkdown) => {
+        const trySetContent = () => {
+          if (editorRef.current?.isReady) {
+            editorRef.current.setMarkdown(processedMarkdown);
+            editorRef.current.focus();
+          } else {
+            requestAnimationFrame(trySetContent);
+          }
+        };
+        requestAnimationFrame(trySetContent);
+      });
+    }
   }, []);
 
   // Listen for source mode toggle event from main process
