@@ -458,31 +458,25 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 - [x] Document editing tools (read, edit, write)
 - [x] Session history persistence and management
 
-### v0.7.0 ⏳ Planned
+### v1.0.0
+- Stable release
+
+## 📋 TODO
+
+Features under consideration for future releases:
 - [ ] Focus Mode (distraction-free writing)
 - [ ] Document Statistics (word count, writing speed)
 - [ ] Typewriter Mode (cursor centered)
-
-### v0.8.0 ⏳ Planned
 - [ ] Custom Themes
 - [ ] Advanced Keybindings
 - [ ] Accessibility Support
-
-### v0.9.0 ⏳ Planned
 - [ ] Performance Optimization (large files)
 - [ ] Cross-platform Distribution (macOS/Windows/Linux)
 - [ ] Workspace Management
 - [ ] Tabbed Editing (multiple documents)
-
-### v0.10.0 ⏳ Planned
 - [ ] Auto Updater
 - [ ] Cloud Sync (iCloud, Dropbox, OneDrive, Google Drive)
 - [ ] Final Polish
-
-### v1.0.0
-- Stable release
-
-### Post v1.0
 - [ ] Plugin System
 - [ ] Git Integration
 - [ ] Real-time Collaboration

@@ -13,11 +13,7 @@ This document outlines the development phases for MarkBun, from MVP to v1.0.
 | Phase 4 | v0.4.0 | File Protection & Export | ✅ Complete |
 | Phase 5 | v0.5.0 | Editor Productivity | ✅ Complete |
 | Phase 6 | v0.6.0 | AI Support | ✅ Complete |
-| Phase 7 | v0.7.0 | Writing Experience | ⏳ Planned |
-| Phase 8 | v0.8.0 | Themes & Accessibility | ⏳ Planned |
-| Phase 9 | v0.9.0 | Performance & Distribution | ⏳ Planned |
-| Phase 10 | v0.10.0 | Polish & Cloud Sync | ⏳ Planned |
-| Phase 11 | v1.0.0 | Production Ready | ⏳ Planned |
+| Phase 7 | - | Backlog (see TODO below) | 📋 Backlog |
 
 ---
 
@@ -296,134 +292,53 @@ This document outlines the development phases for MarkBun, from MVP to v1.0.
 
 ---
 
-## ⏳ Phase 7: Writing Experience (v0.7.0)
+## 📋 TODO (Backlog)
 
-**Status:** Planned
-**Target:** Immersive writing environment
+Features under consideration for future releases, no version assignment yet.
 
-### Tasks
-
-#### Focus Mode
+### Writing Experience
 - [ ] Highlight current paragraph, dim others
 - [ ] Optional typewriter mode (cursor centered)
 - [ ] Full-screen distraction-free writing
-- [ ] Optional background white noise
-
-#### Document Statistics
 - [ ] Word count, character count, line count
 - [ ] Reading time estimation
 - [ ] Writing speed tracking (words/hour)
-- [ ] Daily writing goal setting
-
-#### Typewriter Mode
 - [ ] Current line fixed at screen center
-- [ ] Smooth scroll animation
-- [ ] Reduced visual fatigue
 
----
-
-## ⏳ Phase 8: Themes & Accessibility (v0.8.0)
-
-**Status:** Planned
-**Target:** Personalization and accessibility
-
-### Tasks
-
-#### Custom Themes
+### Personalization & Accessibility
 - [ ] Theme configuration files (~/.markbun/themes/)
-- [ ] Theme marketplace/preset themes
 - [ ] Editor colors, fonts, line height customization
-- [ ] Syntax highlighting themes
-
-#### Advanced Keybindings
 - [ ] Keybindings configuration UI
-- [ ] Support modifying all shortcuts
 - [ ] VS Code / Sublime presets
-- [ ] Keybinding conflict detection
-
-#### Accessibility
 - [ ] Screen reader support
-- [ ] Keyboard navigation optimization
 - [ ] High contrast mode
-- [ ] Quick font size adjustment
 
----
-
-## ⏳ Phase 9: Performance & Distribution (v0.9.0)
-
-**Status:** Planned
-**Target:** Large file support and cross-platform distribution
-
-### Tasks
-
-#### Performance Optimization
+### Performance & Distribution
 - [ ] Smooth editing for large files (>10MB)
 - [ ] Virtual scroll optimization
-- [ ] Lazy image loading
-- [ ] Memory usage optimization
-- [ ] Startup speed optimization
-
-#### Distribution
-- [ ] macOS DMG installer
-- [ ] Windows MSI/EXE installer
-- [ ] Linux AppImage/Snap/Flatpak
+- [ ] macOS DMG / Windows MSI / Linux AppImage installers
 - [ ] Code signing
+- [ ] Auto-detect and install updates
 
-#### Workspace Management
+### Workspace & Multi-document
 - [ ] Multi-folder workspaces
-- [ ] Workspace switching
-- [ ] Workspace-specific settings
+- [ ] Tabbed editing (multiple documents)
 
----
-
-## ⏳ Phase 10: Polish & Cloud Sync (v0.10.0)
-
-**Status:** Planned
-**Target:** Final polish and cloud service integration
-
-### Tasks
-
-#### Auto Updater
-- [ ] Auto-detect new versions
-- [ ] Background download
-- [ ] One-click update install
-- [ ] Changelog display
-
-#### Cloud Sync (Basic)
+### Cloud & Sync
 - [ ] Config export/import
 - [ ] Third-party cloud integration (iCloud Drive, Dropbox, OneDrive, Google Drive)
-- [ ] Recent documents cross-device sync
-- [ ] Cloud backup recovery
 
-#### Polish & Bugfix
-- [ ] Comprehensive error handling
-- [ ] Edge case fixes
-- [ ] Accessibility improvements
-- [ ] Internationalization completion
-- [ ] Final performance optimization
-
----
-
-## ⏳ Phase 11: Production Ready (v1.0.0)
-
-**Status:** Planned
-**Target:** Stable, feature-complete editor release
+### Long-term Ideas
+- [ ] Plugin System
+- [ ] Git Integration
+- [ ] Real-time Collaboration
+- [ ] Mobile Companion
 
 ### v1.0.0 Goals
 - Stable core functionality
 - Comprehensive documentation
 - Full platform distribution
 - User community building
-
----
-
-## 🎯 Long-term Ideas (Post v1.0)
-
-- **Plugin System** - Extensible plugin architecture
-- **Git Integration** - Version control integration
-- **Real-time Collaboration** - Multi-user editing
-- **Mobile Companion** - Mobile companion app
-- **Plugin Marketplace** - Plugin discovery and distribution
 
 ---
 
