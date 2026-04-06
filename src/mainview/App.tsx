@@ -297,6 +297,7 @@ function App() {
                     if (session.scrollTop > 0) {
                       editorRef.current?.setScrollTop(session.scrollTop);
                     }
+                    isSwitchingFileRef.current = false;
                   },
                 });
                 setEditorContent(contentToLoad);
@@ -307,14 +308,13 @@ function App() {
               fileExplorer.selectFile(readResult.path);
               await electrobun.addRecentFile({ path: readResult.path });
               console.log('[SessionRestore] Restored:', readResult.path);
-              // Clear switching flag after a short delay
-              setTimeout(() => { isSwitchingFileRef.current = false; }, 100);
               return; // Session restore successful
             }
           }
         }
       } catch (e) {
         console.error('[SessionRestore] Failed:', e);
+        isSwitchingFileRef.current = false;
       }
 
       // Step 5: Clean workspace — set desktop as default workspace root
@@ -726,11 +726,17 @@ function App() {
             outline.setHeadings(result.content);
           } else {
             // In preview mode, load into MilkdownEditor (with blob URLs for image display)
-            requestAnimationFrame(() => {
-              editorRef.current?.setMarkdown(contentToLoad);
+            // Use setTimeout(0) instead of requestAnimationFrame — RAF may not fire reliably
+            // in Electrobun's WebView during startup when the window isn't visible.
+            setTimeout(() => {
+              editorRef.current?.setMarkdown(contentToLoad, {
+                onContentSet: () => {
+                  isSwitchingFileRef.current = false;
+                },
+              });
               setEditorContent(contentToLoad);
               outline.setHeadings(contentToLoad);
-            });
+            }, 0);
           }
         };
 
@@ -743,11 +749,10 @@ function App() {
     } catch (error) {
       console.error('[FileLoad] Failed to open file:', filePath, error);
     } finally {
-      // Clear the switching flag after a short delay to ensure all editor events are processed
-      setTimeout(() => {
-        isSwitchingFileRef.current = false;
-        console.log('[FileLoad] File switch flag cleared:', filePath);
-      }, 100);
+      // Clear the switching flag immediately for error/cancel paths.
+      // The success path clears it via onContentSet after setMarkdown completes.
+      isSwitchingFileRef.current = false;
+      console.log('[FileLoad] File switch flag cleared:', filePath);
     }
   }, [checkUnsavedChanges, fileExplorer.setRootPath, fileExplorer.selectFile, outline.setHeadings, cancelPendingSave, resetFileState, sourceMode]);
 
@@ -940,18 +945,23 @@ function App() {
             outline.setHeadings(fileContent);
           } else {
             // In preview mode, load into MilkdownEditor (with blob URLs for image display)
-            requestAnimationFrame(() => {
-              editorRef.current?.setMarkdown(contentToLoad);
+            // Use setTimeout(0) instead of requestAnimationFrame — RAF may not fire reliably
+            // in Electrobun's WebView during startup when the window isn't visible.
+            setTimeout(() => {
+              editorRef.current?.setMarkdown(contentToLoad, {
+                onContentSet: () => {
+                  isSwitchingFileRef.current = false;
+                },
+              });
               setEditorContent(contentToLoad);
               outline.setHeadings(contentToLoad);
-            });
+            }, 0);
           }
         } finally {
-          // Clear the switching flag after a short delay to ensure all editor events are processed
-          setTimeout(() => {
-            isSwitchingFileRef.current = false;
-            console.log('[FileLoad] Event file switch flag cleared:', filePath);
-          }, 100);
+          // Clear the switching flag immediately for error/cancel paths.
+          // The success path clears it via onContentSet after setMarkdown completes.
+          isSwitchingFileRef.current = false;
+          console.log('[FileLoad] Event file switch flag cleared:', filePath);
         }
       };
 

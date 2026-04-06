@@ -118,7 +118,11 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
       }
 
       if (result.success) {
-        setFileState(prev => ({ ...prev, isDirty: false }));
+        const savedContent = state.content;
+        setFileState(prev => ({
+          ...prev,
+          isDirty: savedContent === fileStateRef.current.content ? false : true,
+        }));
         setSaveStatus('saved');
         setTimeout(() => setSaveStatus(null), 2000);
       } else {
@@ -214,7 +218,11 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
       const result = await electrobun.saveFile(contentToSave, state.path) as { success: boolean; error?: string };
 
       if (result.success) {
-        setFileState(prev => ({ ...prev, isDirty: false }));
+        const savedContent = state.content;
+        setFileState(prev => ({
+          ...prev,
+          isDirty: savedContent === fileStateRef.current.content ? false : true,
+        }));
         setSaveStatus('saved');
         onSaveSuccessRef.current?.(state.path);
         setTimeout(() => setSaveStatus(null), 2000);

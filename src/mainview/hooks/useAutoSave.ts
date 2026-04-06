@@ -88,8 +88,9 @@ export function useAutoSave({
   // NOTE: We intentionally do NOT check isDirtyRef here. The caller (updateContent)
   // already knows the content changed. At call time, the isDirty ref may still be stale
   // because React hasn't re-rendered yet. The actual isDirty check happens in
-  // executeSave — by the time the debounce timer fires, React will have re-rendered
-  // and the ref will be up to date.
+  // executeSave. We always schedule executeSave via setTimeout (even with 0ms delay
+  // for the throttle path) so React has a chance to flush the state update and update
+  // isDirtyRef before the save runs.
   const triggerSave = useCallback(async () => {
     if (!enabledRef.current) {
       return;
@@ -106,20 +107,14 @@ export function useAutoSave({
     const now = Date.now();
     const timeSinceLastSave = now - lastSaveRef.current;
 
-    // Throttle: If enough time has passed since last save, save immediately
-    if (timeSinceLastSave >= interval) {
+    // Throttle: If enough time has passed since last save, schedule save with 0ms delay.
+    // Debounce: Otherwise wait a bit after typing stops (500ms) plus remaining throttle time.
+    const remainingTime = interval - timeSinceLastSave;
+    const debounceTime = timeSinceLastSave >= interval ? 0 : Math.max(500, remainingTime);
+
+    throttleTimerRef.current = setTimeout(() => {
       void executeSave();
-    } else {
-      // Otherwise, schedule save after remaining throttle time
-      const remainingTime = interval - timeSinceLastSave;
-
-      // Debounce: Wait a bit after typing stops (500ms)
-      const debounceTime = Math.max(500, remainingTime);
-
-      throttleTimerRef.current = setTimeout(() => {
-        void executeSave();
-      }, debounceTime);
-    }
+    }, debounceTime);
 
     // Start max wait timer if not running
     if (!maxWaitTimerRef.current) {

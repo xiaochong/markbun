@@ -116,6 +116,25 @@ export function useCrepeEditor(
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const dragCounterRef = useRef(0);
 
+  // Guard: synchronous flag set during programmatic content loading.
+  // ProseMirror calls the change-listener's update() synchronously inside
+  // view.dispatch(), so we set this flag before dispatch and clear it
+  // immediately after. No setTimeout/RAF needed — the guard only needs to
+  // be active for the duration of the synchronous dispatch call.
+  const isSettingContentRef = useRef(false);
+
+  // Ref for the last serialized markdown baseline, shared between the change
+  // listener and setMarkdown. After loading content, setMarkdown updates this
+  // baseline so the dedup check in the change listener will correctly skip
+  // the programmatic load.
+  const lastSerializedRef = useRef('');
+
+  // Time-based guard: after setMarkdown completes (especially on app startup
+  // during session restore), ProseMirror plugins may dispatch asynchronous
+  // normalization transactions. We suppress onChange for 500ms after loading
+  // so those spurious changes don't trigger auto-save.
+  const suppressChangesUntilRef = useRef(0);
+
   // Keep onChange callback up to date
   onChangeRef.current = onChange;
 
@@ -231,6 +250,12 @@ export function useCrepeEditor(
       ctx.set(remarkGFMPlugin.options.key, { singleTilde: false });
       ctx.update(remarkStringifyOptionsCtx, (options) => ({
         ...options,
+        bullet: '-' as const,
+        bulletOther: '*' as const,
+        bulletOrdered: '.' as const,
+        rule: '-' as const,
+        ruleRepetition: 3,
+        ruleSpaces: false,
         handlers: {
           ...options.handlers,
           break: () => '\n',
@@ -254,7 +279,6 @@ export function useCrepeEditor(
     // Deduplicate change notifications: ProseMirror may dispatch multiple transactions
     // (e.g., normalization) that produce the same serialized markdown. Only notify
     // when the serialized content actually changes to prevent spurious isDirty resets.
-    let lastSerializedMarkdown = '';
     const changeListenerPlugin = $prose((ctx) => {
       return new Plugin({
         key: new PluginKey('markbun-change-listener'),
@@ -264,8 +288,17 @@ export function useCrepeEditor(
               try {
                 const serializer = ctx.get(serializerCtx);
                 const markdown = serializer(view.state.doc);
-                if (markdown !== lastSerializedMarkdown) {
-                  lastSerializedMarkdown = markdown;
+                // During programmatic content loading (setMarkdown), just update
+                // the baseline without notifying onChange. The flag is set/cleared
+                // synchronously around view.dispatch() in setMarkdown.
+                // Additionally, suppress changes for 500ms after loading completes
+                // to catch asynchronous ProseMirror normalization (e.g. on startup).
+                if (isSettingContentRef.current || Date.now() < suppressChangesUntilRef.current) {
+                  lastSerializedRef.current = markdown;
+                  return;
+                }
+                if (markdown !== lastSerializedRef.current) {
+                  lastSerializedRef.current = markdown;
                   // Convert yaml code block back to frontmatter format for onChange callback
                   onChangeRef.current?.(convertCodeBlockToFrontmatter(markdown));
                 }
@@ -279,8 +312,10 @@ export function useCrepeEditor(
     });
     crepe.editor.use(changeListenerPlugin);
 
-    // Mark as ready after creation
-    requestAnimationFrame(() => setIsReady(true));
+    // Mark as ready after creation.
+    // Use setTimeout(0) instead of requestAnimationFrame — RAF may not fire reliably
+    // in Electrobun's WebView during startup when the window isn't visible.
+    setTimeout(() => setIsReady(true), 0);
 
     // Setup scroll hide after editor is created
     const container = containerRef.current;
@@ -318,7 +353,7 @@ export function useCrepeEditor(
       const lines = convertedMarkdown.split('\n');
       const totalLines = lines.length;
 
-      // For small files, use direct parsing
+      // For small files, use direct parsing.
       if (totalLines <= CHUNK_LOAD_LINE_THRESHOLD) {
         const view = editor.ctx.get(editorViewCtx);
         const parser = editor.ctx.get(parserCtx);
@@ -326,15 +361,25 @@ export function useCrepeEditor(
         if (!doc) return;
 
         const tr = view.state.tr.replaceWith(0, view.state.doc.content.size, doc.content);
-        tr.setMeta("addToHistory", false);  // 不添加到历史记录
+        tr.setMeta("addToHistory", false);
+        isSettingContentRef.current = true;
         view.dispatch(tr);
+        // Update baseline synchronously after dispatch, then clear guard.
+        // ProseMirror normalization may fire asynchronously; the baseline
+        // ensures the dedup check skips the spurious change.
+        try {
+          const serializer = editor.ctx.get(serializerCtx);
+          lastSerializedRef.current = serializer(view.state.doc);
+        } catch { /* best effort */ }
+        isSettingContentRef.current = false;
+        suppressChangesUntilRef.current = Date.now() + 2000;
 
         if (onContentSet) {
-          // Fire callback after layout completes
-          requestAnimationFrame(() => onContentSet());
+          // Use setTimeout(0) instead of requestAnimationFrame — RAF may not fire reliably
+          // in Electrobun's WebView during startup when the window isn't visible.
+          setTimeout(() => onContentSet(), 0);
         } else {
-          // Ensure scroll is at top after content is set
-          requestAnimationFrame(() => {
+          setTimeout(() => {
             if (container) {
               container.scrollTop = 0;
             }
@@ -342,40 +387,62 @@ export function useCrepeEditor(
             if (editorElement) {
               editorElement.scrollTop = 0;
             }
-          });
+          }, 0);
         }
         return;
       }
 
       // For large files, use chunked loading.
+      // Keep guard active for the ENTIRE chunked loading process.
+      // Individual chunk dispatches set it the guard synchronously, but
+      // we don't clear it until ALL chunks are done, so any
+      // ProseMirror normalization between chunks is suppressed.
       const chunks = splitAtCodeBlockBoundaries(lines, CHUNK_SIZE_LINES);
-
       const view = editor.ctx.get(editorViewCtx);
       const parser = editor.ctx.get(parserCtx);
 
+      // Set the global guard before starting chunked loading
+      isSettingContentRef.current = true;
       // First chunk — show immediately
       const firstDoc = parser(chunks[0].join('\n'));
-      if (!firstDoc) return;
+      if (!firstDoc) {
+        isSettingContentRef.current = false;
+        return;
+      }
 
       const tr = view.state.tr.replaceWith(0, view.state.doc.content.size, firstDoc.content);
       tr.setMeta("addToHistory", false);
       view.dispatch(tr);
+
+      // Update baseline after first chunk
+      try {
+        const serializer = editor.ctx.get(serializerCtx);
+        lastSerializedRef.current = serializer(view.state.doc);
+      } catch { /* best effort */ }
 
       // Then load remaining chunks
       let currentChunkIndex = 1;
 
       const loadNextChunk = () => {
         if (currentChunkIndex >= chunks.length) {
-          // All chunks loaded
+          // All chunks loaded — update baseline and clear guard
+          try {
+            const serializer = editor.ctx.get(serializerCtx);
+            lastSerializedRef.current = serializer(view.state.doc);
+          } catch { /* best effort */ }
+          isSettingContentRef.current = false;
+          suppressChangesUntilRef.current = Date.now() + 2000;
+
           if (onContentSet) {
-            requestAnimationFrame(() => onContentSet());
+            // Use setTimeout(0) instead of requestAnimationFrame — RAF may not fire reliably
+            // in Electrobun's WebView during startup when the window isn't visible.
+            setTimeout(() => onContentSet(), 0);
           }
           return;
         }
 
         const chunk = chunks[currentChunkIndex].join('\n');
         currentChunkIndex++;
-
         try {
           const chunkDoc = parser(chunk);
           if (chunkDoc) {
@@ -396,13 +463,18 @@ export function useCrepeEditor(
             setTimeout(loadNextChunk, 10);
           }
         } else {
-          // Last chunk loaded
+          // All chunks loaded — update baseline and clear guard
+          try {
+            const serializer = editor.ctx.get(serializerCtx);
+            lastSerializedRef.current = serializer(view.state.doc);
+          } catch { /* best effort */ }
+          isSettingContentRef.current = false;
+          suppressChangesUntilRef.current = Date.now() + 2000;
           if (onContentSet) {
-            requestAnimationFrame(() => onContentSet());
+            setTimeout(() => onContentSet(), 0);
           }
         }
       };
-
       // Start loading remaining chunks
       if ('requestIdleCallback' in window) {
         window.requestIdleCallback(() => loadNextChunk(), { timeout: 100 });
@@ -413,7 +485,7 @@ export function useCrepeEditor(
       if (!onContentSet) {
         // After all chunks are loaded, ensure scroll is at top
         const resetScrollToTop = () => {
-          requestAnimationFrame(() => {
+          setTimeout(() => {
             if (container) {
               container.scrollTop = 0;
             }
@@ -421,7 +493,7 @@ export function useCrepeEditor(
             if (editorElement) {
               editorElement.scrollTop = 0;
             }
-          });
+          }, 0);
         };
 
         // Schedule scroll reset after chunks should be loaded (approximate)
