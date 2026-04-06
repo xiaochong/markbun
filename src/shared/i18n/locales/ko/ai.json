@@ -5,7 +5,8 @@
   },
   "session": {
     "newChat": "새 채팅",
-    "resetConfirm": "새 대화를 시작하시겠습니까?"
+    "resetConfirm": "새 대화를 시작하시겠습니까?",
+    "history": "View History"
   },
   "message": {
     "user": "나",

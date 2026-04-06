@@ -31,5 +31,17 @@
   "outline": {
     "empty": "Nenhum título encontrado",
     "emptyHint": "Adicione títulos # ao seu documento"
+  },
+  "search": {
+    "findPlaceholder": "Find",
+    "replacePlaceholder": "Replace",
+    "noResults": "No results",
+    "caseSensitive": "Match Case",
+    "regex": "Use Regular Expression",
+    "prevMatch": "Previous Match",
+    "nextMatch": "Next Match",
+    "replace": "Replace",
+    "replaceAll": "Replace All",
+    "close": "Close"
   }
 }

@@ -1,14 +1,14 @@
 import i18next, { type TFunction } from 'i18next';
 import { resolveLanguage, DEFAULT_LANGUAGE, type SupportedLanguage } from '../../shared/i18n/config';
 
-import menuEn from './locales/en/menu.json';
-import menuZhCN from './locales/zh-CN/menu.json';
-import menuDe from './locales/de/menu.json';
-import menuFr from './locales/fr/menu.json';
-import menuJa from './locales/ja/menu.json';
-import menuKo from './locales/ko/menu.json';
-import menuPt from './locales/pt/menu.json';
-import menuEs from './locales/es/menu.json';
+import menuEn from '../../shared/i18n/locales/en/menu.json';
+import menuZhCN from '../../shared/i18n/locales/zh-CN/menu.json';
+import menuDe from '../../shared/i18n/locales/de/menu.json';
+import menuFr from '../../shared/i18n/locales/fr/menu.json';
+import menuJa from '../../shared/i18n/locales/ja/menu.json';
+import menuKo from '../../shared/i18n/locales/ko/menu.json';
+import menuPt from '../../shared/i18n/locales/pt/menu.json';
+import menuEs from '../../shared/i18n/locales/es/menu.json';
 
 let initialized = false;
 

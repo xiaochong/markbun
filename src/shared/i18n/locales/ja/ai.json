@@ -5,7 +5,8 @@
   },
   "session": {
     "newChat": "新しいチャット",
-    "resetConfirm": "新しい会話を開始しますか？"
+    "resetConfirm": "新しい会話を開始しますか？",
+    "history": "View History"
   },
   "message": {
     "user": "あなた",

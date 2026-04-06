@@ -31,5 +31,17 @@
   "outline": {
     "empty": "제목을 찾을 수 없습니다",
     "emptyHint": "문서에 # 제목을 추가하세요"
+  },
+  "search": {
+    "findPlaceholder": "Find",
+    "replacePlaceholder": "Replace",
+    "noResults": "No results",
+    "caseSensitive": "Match Case",
+    "regex": "Use Regular Expression",
+    "prevMatch": "Previous Match",
+    "nextMatch": "Next Match",
+    "replace": "Replace",
+    "replaceAll": "Replace All",
+    "close": "Close"
   }
 }

@@ -3,69 +3,69 @@ import { initReactI18next } from 'react-i18next';
 import '../../shared/i18n/types'; // 注册类型扩展
 
 // 静态导入翻译资源（Vite 友好，避免动态导入的路径问题）
-import commonEn from './locales/en/common.json';
-import dialogEn from './locales/en/dialog.json';
-import settingsEn from './locales/en/settings.json';
-import editorEn from './locales/en/editor.json';
-import fileEn from './locales/en/file.json';
-import aiEn from './locales/en/ai.json';
-import menuEn from '../../bun/i18n/locales/en/menu.json';
+import commonEn from '../../shared/i18n/locales/en/common.json';
+import dialogEn from '../../shared/i18n/locales/en/dialog.json';
+import settingsEn from '../../shared/i18n/locales/en/settings.json';
+import editorEn from '../../shared/i18n/locales/en/editor.json';
+import fileEn from '../../shared/i18n/locales/en/file.json';
+import aiEn from '../../shared/i18n/locales/en/ai.json';
+import menuEn from '../../shared/i18n/locales/en/menu.json';
 
-import commonZhCN from './locales/zh-CN/common.json';
-import dialogZhCN from './locales/zh-CN/dialog.json';
-import settingsZhCN from './locales/zh-CN/settings.json';
-import editorZhCN from './locales/zh-CN/editor.json';
-import fileZhCN from './locales/zh-CN/file.json';
-import aiZhCN from './locales/zh-CN/ai.json';
-import menuZhCN from '../../bun/i18n/locales/zh-CN/menu.json';
+import commonZhCN from '../../shared/i18n/locales/zh-CN/common.json';
+import dialogZhCN from '../../shared/i18n/locales/zh-CN/dialog.json';
+import settingsZhCN from '../../shared/i18n/locales/zh-CN/settings.json';
+import editorZhCN from '../../shared/i18n/locales/zh-CN/editor.json';
+import fileZhCN from '../../shared/i18n/locales/zh-CN/file.json';
+import aiZhCN from '../../shared/i18n/locales/zh-CN/ai.json';
+import menuZhCN from '../../shared/i18n/locales/zh-CN/menu.json';
 
-import commonDe from './locales/de/common.json';
-import dialogDe from './locales/de/dialog.json';
-import settingsDe from './locales/de/settings.json';
-import editorDe from './locales/de/editor.json';
-import fileDe from './locales/de/file.json';
-import aiDe from './locales/de/ai.json';
-import menuDe from '../../bun/i18n/locales/de/menu.json';
+import commonDe from '../../shared/i18n/locales/de/common.json';
+import dialogDe from '../../shared/i18n/locales/de/dialog.json';
+import settingsDe from '../../shared/i18n/locales/de/settings.json';
+import editorDe from '../../shared/i18n/locales/de/editor.json';
+import fileDe from '../../shared/i18n/locales/de/file.json';
+import aiDe from '../../shared/i18n/locales/de/ai.json';
+import menuDe from '../../shared/i18n/locales/de/menu.json';
 
-import commonFr from './locales/fr/common.json';
-import dialogFr from './locales/fr/dialog.json';
-import settingsFr from './locales/fr/settings.json';
-import editorFr from './locales/fr/editor.json';
-import fileFr from './locales/fr/file.json';
-import aiFr from './locales/fr/ai.json';
-import menuFr from '../../bun/i18n/locales/fr/menu.json';
+import commonFr from '../../shared/i18n/locales/fr/common.json';
+import dialogFr from '../../shared/i18n/locales/fr/dialog.json';
+import settingsFr from '../../shared/i18n/locales/fr/settings.json';
+import editorFr from '../../shared/i18n/locales/fr/editor.json';
+import fileFr from '../../shared/i18n/locales/fr/file.json';
+import aiFr from '../../shared/i18n/locales/fr/ai.json';
+import menuFr from '../../shared/i18n/locales/fr/menu.json';
 
-import commonJa from './locales/ja/common.json';
-import dialogJa from './locales/ja/dialog.json';
-import settingsJa from './locales/ja/settings.json';
-import editorJa from './locales/ja/editor.json';
-import fileJa from './locales/ja/file.json';
-import aiJa from './locales/ja/ai.json';
-import menuJa from '../../bun/i18n/locales/ja/menu.json';
+import commonJa from '../../shared/i18n/locales/ja/common.json';
+import dialogJa from '../../shared/i18n/locales/ja/dialog.json';
+import settingsJa from '../../shared/i18n/locales/ja/settings.json';
+import editorJa from '../../shared/i18n/locales/ja/editor.json';
+import fileJa from '../../shared/i18n/locales/ja/file.json';
+import aiJa from '../../shared/i18n/locales/ja/ai.json';
+import menuJa from '../../shared/i18n/locales/ja/menu.json';
 
-import commonKo from './locales/ko/common.json';
-import dialogKo from './locales/ko/dialog.json';
-import settingsKo from './locales/ko/settings.json';
-import editorKo from './locales/ko/editor.json';
-import fileKo from './locales/ko/file.json';
-import aiKo from './locales/ko/ai.json';
-import menuKo from '../../bun/i18n/locales/ko/menu.json';
+import commonKo from '../../shared/i18n/locales/ko/common.json';
+import dialogKo from '../../shared/i18n/locales/ko/dialog.json';
+import settingsKo from '../../shared/i18n/locales/ko/settings.json';
+import editorKo from '../../shared/i18n/locales/ko/editor.json';
+import fileKo from '../../shared/i18n/locales/ko/file.json';
+import aiKo from '../../shared/i18n/locales/ko/ai.json';
+import menuKo from '../../shared/i18n/locales/ko/menu.json';
 
-import commonPt from './locales/pt/common.json';
-import dialogPt from './locales/pt/dialog.json';
-import settingsPt from './locales/pt/settings.json';
-import editorPt from './locales/pt/editor.json';
-import filePt from './locales/pt/file.json';
-import aiPt from './locales/pt/ai.json';
-import menuPt from '../../bun/i18n/locales/pt/menu.json';
+import commonPt from '../../shared/i18n/locales/pt/common.json';
+import dialogPt from '../../shared/i18n/locales/pt/dialog.json';
+import settingsPt from '../../shared/i18n/locales/pt/settings.json';
+import editorPt from '../../shared/i18n/locales/pt/editor.json';
+import filePt from '../../shared/i18n/locales/pt/file.json';
+import aiPt from '../../shared/i18n/locales/pt/ai.json';
+import menuPt from '../../shared/i18n/locales/pt/menu.json';
 
-import commonEs from './locales/es/common.json';
-import dialogEs from './locales/es/dialog.json';
-import settingsEs from './locales/es/settings.json';
-import editorEs from './locales/es/editor.json';
-import fileEs from './locales/es/file.json';
-import aiEs from './locales/es/ai.json';
-import menuEs from '../../bun/i18n/locales/es/menu.json';
+import commonEs from '../../shared/i18n/locales/es/common.json';
+import dialogEs from '../../shared/i18n/locales/es/dialog.json';
+import settingsEs from '../../shared/i18n/locales/es/settings.json';
+import editorEs from '../../shared/i18n/locales/es/editor.json';
+import fileEs from '../../shared/i18n/locales/es/file.json';
+import aiEs from '../../shared/i18n/locales/es/ai.json';
+import menuEs from '../../shared/i18n/locales/es/menu.json';
 
 i18next.use(initReactI18next).init({
   lng: 'en',

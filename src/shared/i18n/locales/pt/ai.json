@@ -5,7 +5,8 @@
   },
   "session": {
     "newChat": "Novo chat",
-    "resetConfirm": "Iniciar uma nova conversa?"
+    "resetConfirm": "Iniciar uma nova conversa?",
+    "history": "View History"
   },
   "message": {
     "user": "Você",
