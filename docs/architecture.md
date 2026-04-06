@@ -520,6 +520,7 @@ markbun/
 │   │   │   └── useTheme.ts
 │   │   ├── lib/                     # Renderer utilities
 │   │   │   ├── electrobun.ts        # IPC wrapper
+│   │   │   ├── commandHandlers.ts  # Unified command handler registration
 │   │   │   ├── image.ts             # Image processing (workspace, blob URLs)
 │   │   │   ├── imageCache.ts        # Image blob URL cache
 │   │   │   ├── imageProcessor.ts
@@ -532,6 +533,8 @@ markbun/
 │   │
 │   └── shared/                      # Shared between processes
 │       ├── types.ts                 # RPC schema, shared interfaces
+│       ├── commandRegistry.ts      # Command manifest (single source of truth for all commands)
+│       ├── commandDispatch.ts      # Unified command dispatcher
 │       ├── settings/
 │       │   └── schema.ts            # Zod settings schema + defaults
 │       └── i18n/

@@ -188,7 +188,7 @@ markbun/
 │   │   ├── App.tsx           # 主应用组件
 │   │   └── index.html        # HTML 入口
 │   │
-│   └── shared/               # 共享类型、设置 Schema 和工具函数
+│   └── shared/               # 共享类型、设置 Schema、命令清单和工具函数
 │
 ├── docs/                     # 文档
 │   └── architecture.md       # 架构概述

@@ -185,7 +185,7 @@ markbun/
 │   │   ├── App.tsx           # Main App component
 │   │   └── index.html        # HTML entry
 │   │
-│   └── shared/               # Shared types, settings schema, and utilities
+│   └── shared/               # Shared types, settings schema, command registry, and utilities
 │
 ├── docs/                     # Documentation
 │   └── architecture.md       # Architecture overview
