@@ -101,13 +101,14 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
         return;
       }
 
-      const contentToSave = restoreOriginalImagePaths(state.content);
-
-      // Double-check path before actual save operation
-      if (fileStateRef.current.path !== targetPath) {
+      // Re-read latest content before actual save to avoid saving stale data
+      // in case edits came in after this callback started.
+      const latestState = fileStateRef.current;
+      if (latestState.path !== targetPath) {
         setSaveStatus(null);
         return;
       }
+      const contentToSave = restoreOriginalImagePaths(latestState.content);
 
       const result = await electrobun.saveFile(contentToSave, targetPath) as { success: boolean; error?: string };
 
@@ -118,7 +119,7 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
       }
 
       if (result.success) {
-        const savedContent = state.content;
+        const savedContent = latestState.content;
         setFileState(prev => ({
           ...prev,
           isDirty: savedContent === fileStateRef.current.content ? false : true,
@@ -208,23 +209,28 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
       return;
     }
 
-    if (!state.isDirty) {
-      return;
-    }
-
     setSaveStatus('saving');
     try {
-      const contentToSave = restoreOriginalImagePaths(state.content);
-      const result = await electrobun.saveFile(contentToSave, state.path) as { success: boolean; error?: string };
+      // Re-read latest state right before save to avoid race where
+      // React hasn't flushed the pending state update yet (e.g. rapid edit + switch file).
+      const latestState = fileStateRef.current;
+      if (!latestState.path) {
+        setSaveStatus(null);
+        openSaveDialog();
+        return;
+      }
+
+      const contentToSave = restoreOriginalImagePaths(latestState.content);
+      const result = await electrobun.saveFile(contentToSave, latestState.path) as { success: boolean; error?: string };
 
       if (result.success) {
-        const savedContent = state.content;
+        const savedContent = latestState.content;
         setFileState(prev => ({
           ...prev,
           isDirty: savedContent === fileStateRef.current.content ? false : true,
         }));
         setSaveStatus('saved');
-        onSaveSuccessRef.current?.(state.path);
+        onSaveSuccessRef.current?.(latestState.path);
         setTimeout(() => setSaveStatus(null), 2000);
       } else {
         setSaveStatus('error');

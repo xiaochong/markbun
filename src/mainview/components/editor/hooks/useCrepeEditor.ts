@@ -347,6 +347,20 @@ export function useCrepeEditor(
     }
 
     try {
+      // Common finish logic: update baseline, clear guard, set suppression window,
+      // and schedule the onContentSet callback.
+      const finishLoad = () => {
+        try {
+          const serializer = editor.ctx.get(serializerCtx);
+          lastSerializedRef.current = serializer(view.state.doc);
+        } catch { /* best effort */ }
+        isSettingContentRef.current = false;
+        suppressChangesUntilRef.current = Date.now() + 2000;
+        if (onContentSet) {
+          setTimeout(() => onContentSet(), 0);
+        }
+      };
+
       // Convert frontmatter to yaml code block for display
       const convertedMarkdown = convertFrontmatterToCodeBlock(markdown);
 
@@ -364,21 +378,9 @@ export function useCrepeEditor(
         tr.setMeta("addToHistory", false);
         isSettingContentRef.current = true;
         view.dispatch(tr);
-        // Update baseline synchronously after dispatch, then clear guard.
-        // ProseMirror normalization may fire asynchronously; the baseline
-        // ensures the dedup check skips the spurious change.
-        try {
-          const serializer = editor.ctx.get(serializerCtx);
-          lastSerializedRef.current = serializer(view.state.doc);
-        } catch { /* best effort */ }
-        isSettingContentRef.current = false;
-        suppressChangesUntilRef.current = Date.now() + 2000;
+        finishLoad();
 
-        if (onContentSet) {
-          // Use setTimeout(0) instead of requestAnimationFrame — RAF may not fire reliably
-          // in Electrobun's WebView during startup when the window isn't visible.
-          setTimeout(() => onContentSet(), 0);
-        } else {
+        if (!onContentSet) {
           setTimeout(() => {
             if (container) {
               container.scrollTop = 0;
@@ -425,19 +427,8 @@ export function useCrepeEditor(
 
       const loadNextChunk = () => {
         if (currentChunkIndex >= chunks.length) {
-          // All chunks loaded — update baseline and clear guard
-          try {
-            const serializer = editor.ctx.get(serializerCtx);
-            lastSerializedRef.current = serializer(view.state.doc);
-          } catch { /* best effort */ }
-          isSettingContentRef.current = false;
-          suppressChangesUntilRef.current = Date.now() + 2000;
-
-          if (onContentSet) {
-            // Use setTimeout(0) instead of requestAnimationFrame — RAF may not fire reliably
-            // in Electrobun's WebView during startup when the window isn't visible.
-            setTimeout(() => onContentSet(), 0);
-          }
+          // All chunks loaded
+          finishLoad();
           return;
         }
 
@@ -463,16 +454,8 @@ export function useCrepeEditor(
             setTimeout(loadNextChunk, 10);
           }
         } else {
-          // All chunks loaded — update baseline and clear guard
-          try {
-            const serializer = editor.ctx.get(serializerCtx);
-            lastSerializedRef.current = serializer(view.state.doc);
-          } catch { /* best effort */ }
-          isSettingContentRef.current = false;
-          suppressChangesUntilRef.current = Date.now() + 2000;
-          if (onContentSet) {
-            setTimeout(() => onContentSet(), 0);
-          }
+          // All chunks loaded
+          finishLoad();
         }
       };
       // Start loading remaining chunks
