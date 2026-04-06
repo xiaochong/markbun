@@ -768,9 +768,29 @@ export function useCrepeEditor(
         const parser = ctx.get(parserCtx);
         const doc = parser(markdown);
         if (doc && doc.content.size > 0) {
-          const { from } = view.state.selection;
-          const tr = view.state.tr.replaceWith(from, from, doc.content);
-          view.dispatch(tr);
+          const { from, to } = view.state.selection;
+          const { $from } = view.state.selection;
+
+          // Single paragraph: insert inline content at cursor (no new block)
+          if (doc.childCount === 1 && doc.firstChild?.type.name === 'paragraph') {
+            const tr = view.state.tr.replaceWith(from, to, doc.firstChild.content);
+            view.dispatch(tr);
+            return;
+          }
+
+          // Multi-block content (headings, lists, multi-paragraph, etc.)
+          // If cursor is inside an empty paragraph, replace the whole paragraph
+          // to avoid leaving an empty placeholder above the pasted content.
+          const parent = $from.parent;
+          if (parent.type.name === 'paragraph' && parent.content.size === 0) {
+            const paraStart = $from.before();
+            const paraEnd = $from.after();
+            const tr = view.state.tr.replaceWith(paraStart, paraEnd, doc.content);
+            view.dispatch(tr);
+          } else {
+            const tr = view.state.tr.replaceWith(from, to, doc.content);
+            view.dispatch(tr);
+          }
         }
       });
       return true;

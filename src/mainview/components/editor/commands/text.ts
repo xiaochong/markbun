@@ -31,29 +31,12 @@ function containsMarkdown(text: string): boolean {
 }
 
 /**
- * Check if current position is in an empty paragraph
- */
-function isInEmptyParagraph(view: any): boolean {
-  const { $from } = view.state.selection;
-  // Get the paragraph node at current depth
-  const depth = $from.depth;
-  const paraNode = $from.node(depth);
-
-  // Check if it's a paragraph and has no content (or only whitespace)
-  if (paraNode?.type?.name === 'paragraph') {
-    const textContent = paraNode.textContent || '';
-    return textContent.trim() === '';
-  }
-  return false;
-}
-
-/**
  * Insert text or markdown at the current cursor position
  * If text contains markdown syntax, it will be parsed and rendered
  *
  * Logic:
- * - If current cursor is in an empty paragraph: insert at current position
- * - If current paragraph has content: create new paragraph and insert there
+ * - Single-paragraph parsed content: insert inline at cursor (no new block)
+ * - Multi-paragraph / block-level content: insert as blocks
  */
 export function insertText(crepeRef: CrepeRef, text: string): boolean {
   const editor = crepeRef.current?.editor;
@@ -70,31 +53,16 @@ export function insertText(crepeRef: CrepeRef, text: string): boolean {
       const doc = parser(text);
 
       if (doc && doc.content.size > 0) {
-        // Check if we need to create a new paragraph
-        const inEmptyParagraph = isInEmptyParagraph(view);
-
-        let insertPos = from;
-        let tr = view.state.tr;
-
-        if (!inEmptyParagraph) {
-          // Current paragraph has content, insert at end of current paragraph
-          const { $to } = view.state.selection;
-          insertPos = $to.end();
+        // If parsed content is a single paragraph, insert its inline content
+        // at the cursor to avoid creating a new block (new line).
+        if (doc.childCount === 1 && doc.firstChild?.type.name === 'paragraph') {
+          const tr = view.state.tr.replaceWith(from, to, doc.firstChild.content);
+          view.dispatch(tr);
         } else {
-          // In empty paragraph, replace the entire empty paragraph node
-          const { $from } = view.state.selection;
-          // Get paragraph node boundaries (before/after give the positions including the node itself)
-          const paraStart = $from.before();
-          const paraEnd = $from.after();
-          // Delete the empty paragraph
-          tr = tr.delete(paraStart, paraEnd);
-          // Insert at the position where the paragraph was
-          insertPos = paraStart;
+          // Block-level content (headings, lists, multi-paragraph)
+          const tr = view.state.tr.replaceWith(from, to, doc.content);
+          view.dispatch(tr);
         }
-
-        // Insert parsed content
-        tr = tr.replaceWith(insertPos, insertPos, doc.content);
-        view.dispatch(tr);
         return true;
       }
     }
