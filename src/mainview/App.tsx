@@ -1231,10 +1231,18 @@ function App() {
       // Edit actions
       switch (action) {
         case 'editor-undo':
-          editorRef.current?.undo();
+          if (sourceModeRef.current) {
+            sourceEditorRef.current?.undo();
+          } else {
+            editorRef.current?.undo();
+          }
           break;
         case 'editor-redo':
-          editorRef.current?.redo();
+          if (sourceModeRef.current) {
+            sourceEditorRef.current?.redo();
+          } else {
+            editorRef.current?.redo();
+          }
           break;
         case 'table-copy-cell': {
           const cellText = window.__pendingTableCellText;
@@ -1245,26 +1253,44 @@ function App() {
           break;
         }
         case 'editor-cut': {
-          if (sourceModeRef.current) break;
-          void clipboard.cut();
+          if (sourceModeRef.current) {
+            const selectedText = sourceEditorRef.current?.getSelectedText?.();
+            if (selectedText) {
+              // Delete selection BEFORE async clipboard write to avoid race condition
+              sourceEditorRef.current?.insertText('');
+              void electrobun.writeToClipboard(selectedText);
+            }
+          } else {
+            void clipboard.cut();
+          }
           break;
         }
         case 'editor-copy': {
-          if (sourceModeRef.current) break;
-          void clipboard.copy();
+          if (sourceModeRef.current) {
+            const selectedText = sourceEditorRef.current?.getSelectedText?.();
+            if (selectedText) {
+              await electrobun.writeToClipboard(selectedText);
+            }
+          } else {
+            void clipboard.copy();
+          }
           break;
         }
         case 'editor-paste': {
           if (sourceModeRef.current) {
-            // Source mode: let WebView's native paste handle the textarea
             sourceEditorRef.current?.focus();
           }
           void clipboard.paste(false);
           break;
         }
         case 'editor-select-all':
-          editorRef.current?.focus();
-          document.execCommand('selectAll');
+          if (sourceModeRef.current) {
+            sourceEditorRef.current?.focus();
+            sourceEditorRef.current?.selectAll();
+          } else {
+            editorRef.current?.focus();
+            document.execCommand('selectAll');
+          }
           break;
         case 'edit-find':
           if (!sourceModeRef.current) {

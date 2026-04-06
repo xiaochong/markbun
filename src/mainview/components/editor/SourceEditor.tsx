@@ -3,7 +3,7 @@ import { EditorView, keymap, lineNumbers, drawSelection, dropCursor, KeyBinding 
 import { EditorState, Extension } from '@codemirror/state';
 import { markdown } from '@codemirror/lang-markdown';
 import { oneDarkTheme } from '@codemirror/theme-one-dark';
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import { defaultKeymap, history, historyKeymap, undo, redo } from '@codemirror/commands';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { bracketMatching, syntaxHighlighting, HighlightStyle } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
@@ -25,6 +25,10 @@ export interface SourceEditorRef {
   setCursor: (line: number, column: number) => void;
   getScrollTop: () => number;
   setScrollTop: (top: number) => void;
+  undo: () => void;
+  redo: () => void;
+  getSelectedText: () => string | null;
+  selectAll: () => void;
 }
 
 // Syntax highlighting for light theme
@@ -176,8 +180,10 @@ export const SourceEditor = memo(forwardRef<SourceEditorRef, SourceEditorProps>(
       insertText: (text: string) => {
         const view = viewRef.current;
         if (!view) return;
+        const { from, to } = view.state.selection.main;
         view.dispatch({
-          changes: { from: 0, to: view.state.doc.length, insert: text },
+          changes: { from, to, insert: text },
+          selection: { anchor: from + text.length },
         });
       },
       get isReady() {
@@ -210,6 +216,30 @@ export const SourceEditor = memo(forwardRef<SourceEditorRef, SourceEditorProps>(
         if (!view) return;
         requestAnimationFrame(() => {
           view.scrollDOM.scrollTop = top;
+        });
+      },
+      undo: () => {
+        const view = viewRef.current;
+        if (!view) return;
+        undo(view);
+      },
+      redo: () => {
+        const view = viewRef.current;
+        if (!view) return;
+        redo(view);
+      },
+      getSelectedText: () => {
+        const view = viewRef.current;
+        if (!view) return null;
+        const { from, to } = view.state.selection.main;
+        if (from === to) return null;
+        return view.state.doc.sliceString(from, to);
+      },
+      selectAll: () => {
+        const view = viewRef.current;
+        if (!view) return;
+        view.dispatch({
+          selection: { anchor: 0, head: view.state.doc.length },
         });
       },
     }), []);
