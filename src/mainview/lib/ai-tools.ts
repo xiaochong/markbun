@@ -8,9 +8,18 @@
  *
  * All operations work on raw markdown text via getMarkdown/setMarkdown,
  * no dependency on editor focus, cursor position, or selection state.
+ *
+ * Image path convention:
+ *   - read() returns original file paths (blob URLs restored)
+ *   - edit/write accept original paths, convert to blob URLs for display
  */
 
 import type { MilkdownEditorRef } from '../components/editor/types';
+import {
+  restoreOriginalImagePaths,
+  processMarkdownImages,
+  hasLocalImages,
+} from './image';
 
 /**
  * Register the `window.__markbunAI` bridge.
@@ -21,32 +30,43 @@ export function registerAITools(editorRef: React.RefObject<MilkdownEditorRef | n
     read: () => {
       const editor = editorRef.current;
       if (!editor) return { error: 'Editor not ready' };
-      return { content: editor.getMarkdown() };
+      const markdown = editor.getMarkdown();
+      return { content: restoreOriginalImagePaths(markdown) };
     },
 
-    edit: (args: { old_text: string; new_text: string }) => {
+    edit: async (args: { old_text: string; new_text: string }) => {
       const editor = editorRef.current;
       if (!editor) return { error: 'Editor not ready' };
       if (!args?.old_text || args.new_text === undefined || args.new_text === null) {
         return { error: 'old_text and new_text are required' };
       }
-      const content = editor.getMarkdown();
+
+      // Restore original paths so old_text (from read output) can match
+      const content = restoreOriginalImagePaths(editor.getMarkdown());
       if (!content.includes(args.old_text)) {
         return { error: `Text not found: "${args.old_text.substring(0, 80)}"` };
       }
       const replacements = content.split(args.old_text).length - 1;
       const newContent = content.split(args.old_text).join(args.new_text);
-      editor.setMarkdown(newContent);
+
+      // Convert local paths to blob URLs for editor display
+      const contentToLoad = hasLocalImages(newContent)
+        ? await processMarkdownImages(newContent)
+        : newContent;
+      editor.setMarkdown(contentToLoad);
       return { success: true, replacements };
     },
 
-    write: (args: { content: string }) => {
+    write: async (args: { content: string }) => {
       const editor = editorRef.current;
       if (!editor) return { error: 'Editor not ready' };
       if (args?.content === undefined || args?.content === null) {
         return { error: 'content is required' };
       }
-      editor.setMarkdown(args.content);
+      const contentToLoad = hasLocalImages(args.content)
+        ? await processMarkdownImages(args.content)
+        : args.content;
+      editor.setMarkdown(contentToLoad);
       return { success: true };
     },
   };

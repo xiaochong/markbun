@@ -8,14 +8,14 @@ const rpc = Electroview.defineRPC<MarkBunRPC>({
   maxRequestTime: 30000, // 30 seconds timeout
   handlers: {
     requests: {
-      executeAITool: ({ tool, args }: { tool: string; args?: string }) => {
+      executeAITool: async ({ tool, args }: { tool: string; args?: string }) => {
         const aiTools = (window as any).__markbunAI;
         if (!aiTools || !aiTools[tool]) {
           return { success: false, error: `Tool not found: ${tool}` };
         }
         try {
           const parsedArgs = args ? JSON.parse(args) : undefined;
-          const result = aiTools[tool](parsedArgs);
+          const result = await aiTools[tool](parsedArgs);
           return { success: true, result: typeof result === 'string' ? result : JSON.stringify(result) };
         } catch (err: any) {
           return { success: false, error: err.message || String(err) };
