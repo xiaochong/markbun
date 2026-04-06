@@ -34,6 +34,9 @@ import { useExport } from './hooks/useExport';
 import { useSessionSave } from './hooks/useSessionSave';
 import { electrobun } from './lib/electrobun';
 import { registerAITools } from './lib/ai-tools';
+import { setupRendererHandlers, dispatcher } from './lib/commandHandlers';
+import type { HandlerContext } from './lib/commandHandlers';
+import { getCommand } from '../shared/commandRegistry';
 import i18n from './i18n';
 import {
   workspaceManager,
@@ -616,7 +619,14 @@ function App() {
 
   // Handle command palette command selection
   function handleCommandSelect(action: string) {
-    void electrobun.sendMenuAction(action);
+    const entry = getCommand(action);
+    // Renderer-only commands: dispatch directly, no IPC round-trip
+    if (entry?.executionContext === 'renderer') {
+      dispatcher.execute(action);
+    } else {
+      // Cross-process / main-process commands: route through Bun
+      void electrobun.sendMenuAction(action);
+    }
     void electrobun.recordCommandUsage(action);
   }
 
@@ -1165,179 +1175,36 @@ function App() {
     registerAITools(editorRef);
   }, []);
 
-  // Menu action handler
+  // Register unified command handlers with the dispatcher
+  useEffect(() => {
+    const ctx: HandlerContext = {
+      editorRef,
+      sourceEditorRef,
+      sourceModeRef,
+      writeToClipboard: (text: string) => electrobun.writeToClipboard(text),
+      clipboardCut: () => { void clipboard.cut(); },
+      clipboardCopy: () => { void clipboard.copy(); },
+      clipboardPaste: (shiftKey: boolean) => { void clipboard.paste(shiftKey); },
+      generateHTML,
+      generateImage,
+      setShowImageDialog,
+      setSearchVisible,
+      setSearchShowReplace,
+      setExportDialogState,
+      setShowAIPanel,
+      contentRef,
+      filePath: currentFilePath,
+    };
+    setupRendererHandlers(ctx);
+  }, [clipboard, generateHTML, generateImage, currentFilePath]);
+
+  // Menu action handler — routes through unified dispatcher
   useEffect(() => {
     return electrobun.on('menuAction', async (data) => {
       const { action } = data as { action: string };
-
-      // Format menu actions
-      const formatActions: Record<string, () => void> = {
-        'format-strong': () => editorRef.current?.toggleBold(),
-        'format-emphasis': () => editorRef.current?.toggleItalic(),
-        'format-code': () => editorRef.current?.toggleCode(),
-        'format-strikethrough': () => editorRef.current?.toggleStrikethrough(),
-        'format-highlight': () => editorRef.current?.toggleHighlight(),
-        'format-superscript': () => editorRef.current?.toggleSuperscript(),
-        'format-subscript': () => editorRef.current?.toggleSubscript(),
-        'format-inline-math': () => editorRef.current?.insertInlineMath(),
-        'format-link': () => editorRef.current?.toggleLink(),
-        'format-image': () => setShowImageDialog(true),
-      };
-
-      if (formatActions[action]) {
-        formatActions[action]();
-        return;
-      }
-
-      // Paragraph formatting
-      const paragraphActions: Record<string, () => void> = {
-        'para-heading-1': () => editorRef.current?.toggleHeading(1),
-        'para-heading-2': () => editorRef.current?.toggleHeading(2),
-        'para-heading-3': () => editorRef.current?.toggleHeading(3),
-        'para-heading-4': () => editorRef.current?.toggleHeading(4),
-        'para-heading-5': () => editorRef.current?.toggleHeading(5),
-        'para-heading-6': () => editorRef.current?.toggleHeading(6),
-        'para-paragraph': () => editorRef.current?.setParagraph(),
-        'para-increase-heading': () => editorRef.current?.increaseHeadingLevel(),
-        'para-decrease-heading': () => editorRef.current?.decreaseHeadingLevel(),
-        'para-math-block': () => editorRef.current?.insertMathBlock(),
-        'para-code-block': () => editorRef.current?.insertCodeBlock(),
-        'para-quote': () => editorRef.current?.toggleQuote(),
-        'para-ordered-list': () => editorRef.current?.toggleOrderedList(),
-        'para-unordered-list': () => editorRef.current?.toggleList(),
-        'para-task-list': () => editorRef.current?.insertTaskList(),
-        'para-insert-above': () => editorRef.current?.insertParagraphAbove(),
-        'para-insert-below': () => editorRef.current?.insertParagraphBelow(),
-        'para-horizontal-rule': () => editorRef.current?.insertHorizontalRule(),
-        'table-insert': () => editorRef.current?.insertTable(),
-        'table-insert-row-above': () => editorRef.current?.insertTableRowAbove(),
-        'table-insert-row-below': () => editorRef.current?.insertTableRowBelow(),
-        'table-insert-col-left': () => editorRef.current?.insertTableColumnLeft(),
-        'table-insert-col-right': () => editorRef.current?.insertTableColumnRight(),
-        'table-move-row-up': () => editorRef.current?.moveTableRowUp(),
-        'table-move-row-down': () => editorRef.current?.moveTableRowDown(),
-        'table-move-col-left': () => editorRef.current?.moveTableColumnLeft(),
-        'table-move-col-right': () => editorRef.current?.moveTableColumnRight(),
-        'table-delete-row': () => editorRef.current?.deleteTableRow(),
-        'table-delete-col': () => editorRef.current?.deleteTableColumn(),
-        'table-delete': () => editorRef.current?.deleteTable(),
-      };
-
-      if (paragraphActions[action]) {
-        paragraphActions[action]();
-        return;
-      }
-
-      // Edit actions
-      switch (action) {
-        case 'editor-undo':
-          if (sourceModeRef.current) {
-            sourceEditorRef.current?.undo();
-          } else {
-            editorRef.current?.undo();
-          }
-          break;
-        case 'editor-redo':
-          if (sourceModeRef.current) {
-            sourceEditorRef.current?.redo();
-          } else {
-            editorRef.current?.redo();
-          }
-          break;
-        case 'table-copy-cell': {
-          const cellText = window.__pendingTableCellText;
-          if (cellText) {
-            await electrobun.writeToClipboard(cellText);
-            window.__pendingTableCellText = null;
-          }
-          break;
-        }
-        case 'editor-cut': {
-          if (sourceModeRef.current) {
-            const selectedText = sourceEditorRef.current?.getSelectedText?.();
-            if (selectedText) {
-              // Delete selection BEFORE async clipboard write to avoid race condition
-              sourceEditorRef.current?.insertText('');
-              void electrobun.writeToClipboard(selectedText);
-            }
-          } else {
-            void clipboard.cut();
-          }
-          break;
-        }
-        case 'editor-copy': {
-          if (sourceModeRef.current) {
-            const selectedText = sourceEditorRef.current?.getSelectedText?.();
-            if (selectedText) {
-              await electrobun.writeToClipboard(selectedText);
-            }
-          } else {
-            void clipboard.copy();
-          }
-          break;
-        }
-        case 'editor-paste': {
-          if (sourceModeRef.current) {
-            sourceEditorRef.current?.focus();
-          }
-          void clipboard.paste(false);
-          break;
-        }
-        case 'editor-select-all':
-          if (sourceModeRef.current) {
-            sourceEditorRef.current?.focus();
-            sourceEditorRef.current?.selectAll();
-          } else {
-            editorRef.current?.focus();
-            document.execCommand('selectAll');
-          }
-          break;
-        case 'edit-find':
-          if (!sourceModeRef.current) {
-            setSearchVisible(true);
-            setSearchShowReplace(false);
-          }
-          break;
-        case 'edit-find-and-replace':
-          if (!sourceModeRef.current) {
-            setSearchVisible(true);
-            setSearchShowReplace(true);
-          }
-          break;
-        case 'file-export-html': {
-          const result = await generateHTML(contentRef.current, path);
-          if (result) {
-            setExportDialogState({
-              isOpen: true,
-              mode: 'html',
-              content: result.content,
-              isBase64: result.isBase64,
-              defaultName: result.defaultName,
-              extension: result.extension,
-            });
-          }
-          break;
-        }
-        case 'file-export-image': {
-          const result = await generateImage(contentRef.current, path);
-          if (result) {
-            setExportDialogState({
-              isOpen: true,
-              mode: 'image',
-              content: result.content,
-              isBase64: result.isBase64,
-              defaultName: result.defaultName,
-              extension: result.extension,
-            });
-          }
-          break;
-        }
-        case 'toggle-ai-panel':
-          setShowAIPanel(prev => !prev);
-          break;
-      }
+      dispatcher.execute(action);
     });
-  }, [clipboard, generateHTML, generateImage]);
+  }, []);
 
   // Toolbar action handlers
   const handleBold = useCallback(() => editorRef.current?.toggleBold(), []);

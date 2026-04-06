@@ -1,6 +1,8 @@
 import { ApplicationMenu } from 'electrobun/bun';
 import type { ApplicationMenuItemConfig } from 'electrobun/bun';
 import { t as defaultT } from './i18n';
+import { COMMANDS, CATEGORY_MENU_MAP } from '../shared/commandRegistry';
+import type { CommandEntry } from '../shared/commandRegistry';
 
 // Visibility state for UI components
 export interface ViewMenuState {
@@ -11,8 +13,13 @@ export interface ViewMenuState {
   sourceMode: boolean;
 }
 
+// Context for when-condition evaluation on Bun side
+export interface MenuContext extends ViewMenuState {
+  hasOpenFile?: boolean;
+  editorReady?: boolean;
+}
+
 // Default state: all UI chrome hidden for distraction-free writing experience
-// Users can enable specific UI elements via View menu based on their workflow needs
 const defaultState: ViewMenuState = {
   showTitleBar: false,
   showToolBar: false,
@@ -32,12 +39,106 @@ export function getMenuConfig(): ApplicationMenuItemConfig[] | null {
   return currentMenuConfig;
 }
 
+// Map category to top-level menu label i18n key
+const MENU_LABEL_KEYS: Record<string, string> = {
+  file: 'file.title',
+  edit: 'edit.title',
+  format: 'format.title',
+  paragraph: 'paragraph.title',
+  view: 'view.title',
+  help: 'help.title',
+};
+
+/**
+ * Check if a command's when condition is met given the current context.
+ */
+function evaluateWhen(entry: CommandEntry, context: MenuContext): boolean {
+  if (!entry.when) return true;
+  const keys = Array.isArray(entry.when) ? entry.when : [entry.when];
+  for (const key of keys) {
+    if (!(key in context) || !context[key as keyof MenuContext]) return false;
+  }
+  return true;
+}
+
+/**
+ * Resolve the effective accelerator for a command, accounting for platform overrides.
+ */
+function resolveAccelerator(entry: CommandEntry): string | undefined {
+  if (entry.platformOverrides) {
+    if (isMac && entry.platformOverrides.macOS?.accelerator) {
+      return entry.platformOverrides.macOS.accelerator;
+    }
+    if (isWindows && entry.platformOverrides.windows?.accelerator) {
+      return entry.platformOverrides.windows.accelerator;
+    }
+  }
+  return entry.accelerator;
+}
+
+/**
+ * Check if a command is hidden on the current platform.
+ */
+function isHiddenOnPlatform(entry: CommandEntry): boolean {
+  if (entry.hidden) return true;
+  if (entry.platformOverrides) {
+    if (isMac && entry.platformOverrides.macOS?.hidden) return true;
+    if (isWindows && entry.platformOverrides.windows?.hidden) return true;
+  }
+  return false;
+}
+
+/**
+ * Get the effective top-level menu key for a command.
+ */
+function getMenuKey(entry: CommandEntry): string {
+  return entry.menuParent || CATEGORY_MENU_MAP[entry.category];
+}
+
+/**
+ * Build a menu item from a command entry.
+ */
+function buildMenuItem(entry: CommandEntry, tFn: (key: string) => string, context: MenuContext): ApplicationMenuItemConfig {
+  const item: ApplicationMenuItemConfig = {
+    label: tFn(entry.i18nKey),
+    action: entry.action,
+  };
+
+  const accel = resolveAccelerator(entry);
+  if (accel) item.accelerator = accel;
+
+  // Toggle state from context
+  if (entry.toggled && entry.toggled in context) {
+    item.checked = !!context[entry.toggled as keyof MenuContext];
+  }
+
+  // Enable/disable based on when condition
+  if (!evaluateWhen(entry, context)) {
+    item.enabled = false;
+  }
+
+  return item;
+}
+
 export function setupMenu(state: ViewMenuState = defaultState, tFn: (key: string) => string = defaultT): void {
   const t = tFn;
+  const context: MenuContext = { ...state };
 
-  const menu: ApplicationMenuItemConfig[] = [
-    // macOS requires the app menu as the first menu
-    ...(isMac ? [{
+  // Group commands by effective top-level menu
+  const menuGroups = new Map<string, CommandEntry[]>();
+  for (const entry of COMMANDS) {
+    if (isHiddenOnPlatform(entry)) continue;
+    const menuKey = getMenuKey(entry);
+    if (!menuGroups.has(menuKey)) menuGroups.set(menuKey, []);
+    menuGroups.get(menuKey)!.push(entry);
+  }
+
+  // Build each top-level menu
+  const menus: ApplicationMenuItemConfig[] = [];
+
+  // macOS App menu (first)
+  if (isMac) {
+    menus.push({
       label: 'MarkBun',
       submenu: [
         { label: t('app.about'), action: 'app-about' },
@@ -50,162 +151,69 @@ export function setupMenu(state: ViewMenuState = defaultState, tFn: (key: string
         { type: 'separator' },
         { label: t('app.quit'), role: 'quit', accelerator: 'Cmd+Q' },
       ],
-    }] as ApplicationMenuItemConfig[] : []),
-    {
-      label: t('file.title'),
-      submenu: [
-        ...(!isMac ? [
-          { label: t('app.preferences'), action: 'app-preferences', accelerator: 'Ctrl+,' },
-          { type: 'separator' },
-        ] as ApplicationMenuItemConfig[] : []),
-        { label: t('file.new'), action: 'file-new', accelerator: 'CmdOrCtrl+N' },
-        { label: t('file.newWindow'), action: 'window-new', accelerator: 'CmdOrCtrl+Shift+N' },
-        { type: 'separator' },
-        { label: t('file.open'), action: 'file-open', accelerator: 'CmdOrCtrl+O' },
-        { label: t('file.openFolder'), action: 'file-open-folder', accelerator: 'CmdOrCtrl+Shift+O' },
-        { label: t('file.quickOpen'), action: 'view-quick-open', accelerator: 'CmdOrCtrl+P' },
-        { type: 'separator' },
-        { label: t('file.save'), action: 'file-save', accelerator: 'CmdOrCtrl+S' },
-        { label: t('file.saveAs'), action: 'file-save-as', accelerator: 'CmdOrCtrl+Shift+S' },
-        { type: 'separator' },
-        { label: t('file.history'), action: 'file-history', accelerator: 'CmdOrCtrl+Alt+H' },
-        { type: 'separator' },
-        {
-          label: t('file.export'),
-          submenu: [
-            { label: t('file.exportImage'), action: 'file-export-image' },
-            { label: t('file.exportHTML'), action: 'file-export-html' },
-          ],
-        },
-        ...(!isMac ? [
-          { type: 'separator' },
-          { label: t('app.quit'), role: 'quit', accelerator: 'Alt+F4' },
-        ] as ApplicationMenuItemConfig[] : []),
-      ],
-    },
-    {
-      label: t('edit.title'),
-      submenu: [
-        { label: t('edit.undo'), action: 'editor-undo', accelerator: 'CmdOrCtrl+Z' },
-        { label: t('edit.redo'), action: 'editor-redo', accelerator: 'CmdOrCtrl+Shift+Z' },
-        { type: 'separator' },
-        { label: t('edit.cut'), action: 'editor-cut', accelerator: 'CmdOrCtrl+X' },
-        { label: t('edit.copy'), action: 'editor-copy', accelerator: 'CmdOrCtrl+C' },
-        { label: t('edit.paste'), action: 'editor-paste', accelerator: 'CmdOrCtrl+V' },
-        { type: 'separator' },
-        { label: t('edit.selectAll'), action: 'editor-select-all', accelerator: 'CmdOrCtrl+A' },
-        { type: 'separator' },
-        { label: t('edit.find'), action: 'edit-find', accelerator: 'CmdOrCtrl+F' },
-        { label: t('edit.findAndReplace'), action: 'edit-find-and-replace', accelerator: 'CmdOrCtrl+Option+F' },
-      ],
-    },
-    {
-      label: t('format.title'),
-      submenu: [
-        { label: t('format.strong'), action: 'format-strong', accelerator: 'CmdOrCtrl+B' },
-        { label: t('format.emphasis'), action: 'format-emphasis', accelerator: 'CmdOrCtrl+I' },
-        { label: t('format.code'), action: 'format-code', accelerator: 'CmdOrCtrl+Shift+C' },
-        { type: 'separator' },
-        { label: t('format.inlineFormula'), action: 'format-inline-math', accelerator: 'Ctrl+M' },
-        { label: t('format.strikethrough'), action: 'format-strikethrough', accelerator: 'CmdOrCtrl+Shift+~' },
-        { label: t('format.highlight'), action: 'format-highlight', accelerator: 'CmdOrCtrl+Shift+H' },
-        { label: t('format.superscript'), action: 'format-superscript' },
-        { label: t('format.subscript'), action: 'format-subscript' },
-        { type: 'separator' },
-        { label: t('format.hyperlink'), action: 'format-link', accelerator: 'CmdOrCtrl+K' },
-        { type: 'separator' },
-        { label: t('format.image'), action: 'format-image', accelerator: 'CmdOrCtrl+Shift+I' },
-      ],
-    },
-    {
-      label: t('paragraph.title'),
-      submenu: [
-        // Headings
-        { label: t('paragraph.heading1'), action: 'para-heading-1', accelerator: 'CmdOrCtrl+1' },
-        { label: t('paragraph.heading2'), action: 'para-heading-2', accelerator: 'CmdOrCtrl+2' },
-        { label: t('paragraph.heading3'), action: 'para-heading-3', accelerator: 'CmdOrCtrl+3' },
-        { label: t('paragraph.heading4'), action: 'para-heading-4', accelerator: 'CmdOrCtrl+4' },
-        { label: t('paragraph.heading5'), action: 'para-heading-5', accelerator: 'CmdOrCtrl+5' },
-        { label: t('paragraph.heading6'), action: 'para-heading-6', accelerator: 'CmdOrCtrl+6' },
-        { type: 'separator' },
-        { label: t('paragraph.paragraph'), action: 'para-paragraph', accelerator: 'CmdOrCtrl+0' },
-        { type: 'separator' },
-        { label: t('paragraph.increaseHeading'), action: 'para-increase-heading', accelerator: 'CmdOrCtrl+=' },
-        { label: t('paragraph.decreaseHeading'), action: 'para-decrease-heading', accelerator: 'CmdOrCtrl+Minus' },
-        { type: 'separator' },
-        // Block elements
-        {
-          label: t('paragraph.table'),
-          submenu: [
-            { label: t('paragraph.insertTable'), action: 'table-insert', accelerator: 'Alt+CmdOrCtrl+T' },
-            { type: 'separator' },
-            { label: t('paragraph.insertRowAbove'), action: 'table-insert-row-above' },
-            { label: t('paragraph.insertRowBelow'), action: 'table-insert-row-below' },
-            { type: 'separator' },
-            { label: t('paragraph.insertColLeft'), action: 'table-insert-col-left' },
-            { label: t('paragraph.insertColRight'), action: 'table-insert-col-right' },
-            { type: 'separator' },
-            { label: t('paragraph.moveRowUp'), action: 'table-move-row-up' },
-            { label: t('paragraph.moveRowDown'), action: 'table-move-row-down' },
-            { type: 'separator' },
-            { label: t('paragraph.moveColLeft'), action: 'table-move-col-left' },
-            { label: t('paragraph.moveColRight'), action: 'table-move-col-right' },
-            { type: 'separator' },
-            { label: t('paragraph.deleteRow'), action: 'table-delete-row' },
-            { label: t('paragraph.deleteCol'), action: 'table-delete-col' },
-            { type: 'separator' },
-            { label: t('paragraph.deleteTable'), action: 'table-delete' },
-          ],
-        },
-        { label: t('paragraph.mathBlock'), action: 'para-math-block', accelerator: 'Alt+CmdOrCtrl+B' },
-        { label: t('paragraph.codeBlock'), action: 'para-code-block', accelerator: 'Alt+CmdOrCtrl+C' },
-        { type: 'separator' },
-        // Lists and quotes
-        { label: t('paragraph.quote'), action: 'para-quote', accelerator: 'Alt+CmdOrCtrl+Q' },
-        { label: t('paragraph.orderedList'), action: 'para-ordered-list', accelerator: 'Alt+CmdOrCtrl+O' },
-        { label: t('paragraph.unorderedList'), action: 'para-unordered-list', accelerator: 'Alt+CmdOrCtrl+U' },
-        { label: t('paragraph.taskList'), action: 'para-task-list', accelerator: 'Alt+CmdOrCtrl+X' },
-        { type: 'separator' },
-        // Paragraph operations
-        { label: t('paragraph.insertAbove'), action: 'para-insert-above' },
-        { label: t('paragraph.insertBelow'), action: 'para-insert-below' },
-        { type: 'separator' },
-        // Divider
-        { label: t('paragraph.horizontalRule'), action: 'para-horizontal-rule', accelerator: 'Alt+CmdOrCtrl+Minus' },
-      ],
-    },
-    {
-      label: t('view.title'),
-      submenu: [
-        { label: t('view.toggleDarkMode'), action: 'view-toggle-theme', accelerator: 'CmdOrCtrl+Shift+D' },
-        { type: 'separator' },
-        { label: t('view.showSidebar'), action: 'view-toggle-sidebar', accelerator: 'CmdOrCtrl+Shift+B', checked: state.showSidebar },
-        { type: 'separator' },
-        { label: t('view.toggleAIPanel'), action: 'toggle-ai-panel', accelerator: 'CmdOrCtrl+Shift+A' },
-        { type: 'separator' },
-        { label: t('view.showTitleBar'), action: 'view-toggle-titlebar', checked: state.showTitleBar },
-        { label: t('view.showToolBar'), action: 'view-toggle-toolbar', checked: state.showToolBar },
-        { label: t('view.showStatusBar'), action: 'view-toggle-statusbar', checked: state.showStatusBar },
-        { type: 'separator' },
-        { label: t('view.sourceMode'), action: 'view-toggle-source-mode', accelerator: 'CmdOrCtrl+/', checked: state.sourceMode },
-        { type: 'separator' },
-        { label: t('view.toggleDevTools'), action: 'view-toggle-devtools', accelerator: isMac ? 'CmdOrCtrl+Option+I' : 'CmdOrCtrl+Alt+I' },
-      ],
-    },
-    {
-      label: t('help.title'),
-      submenu: [
-        { label: t('help.help'), action: 'help-open' },
-        { type: 'separator' },
-        { label: t('help.about'), action: 'app-about' },
-      ],
-    },
-  ];
+    });
+  }
 
-  currentMenuConfig = menu;
+  // Generate menus from manifest in defined order
+  const menuOrder = ['file', 'edit', 'format', 'paragraph', 'view', 'help'];
+
+  for (const menuKey of menuOrder) {
+    const entries = menuGroups.get(menuKey);
+    if (!entries || entries.length === 0) continue;
+
+    const submenu: ApplicationMenuItemConfig[] = [];
+
+    // Separate entries into direct items and submenu items
+    const directItems: CommandEntry[] = [];
+    const submenuItems = new Map<string, CommandEntry[]>();
+
+    for (const entry of entries) {
+      if (entry.menuSubmenu) {
+        if (!submenuItems.has(entry.menuSubmenu)) submenuItems.set(entry.menuSubmenu, []);
+        submenuItems.get(entry.menuSubmenu)!.push(entry);
+      } else {
+        directItems.push(entry);
+      }
+    }
+
+    // Build direct items with separators between groups
+    let lastGroup: number | undefined;
+    for (const entry of directItems) {
+      if (lastGroup !== undefined && entry.menuGroup !== lastGroup) {
+        submenu.push({ type: 'separator' });
+      }
+      submenu.push(buildMenuItem(entry, t, context));
+      lastGroup = entry.menuGroup;
+    }
+
+    // Build submenus (Export, Table, etc.)
+    Array.from(submenuItems.entries()).forEach(([submenuKey, submenuEntries]) => {
+      const submenuItemsList: ApplicationMenuItemConfig[] = [];
+      for (const entry of submenuEntries) {
+        submenuItemsList.push(buildMenuItem(entry, t, context));
+      }
+      submenu.push({
+        label: t(submenuKey),
+        submenu: submenuItemsList,
+      });
+    });
+
+    // Special handling for File menu on non-macOS
+    if (menuKey === 'file' && !isMac) {
+      submenu.push({ type: 'separator' });
+      submenu.push({ label: t('app.quit'), role: 'quit', accelerator: 'Alt+F4' });
+    }
+
+    menus.push({
+      label: t(MENU_LABEL_KEYS[menuKey] || menuKey),
+      submenu,
+    });
+  }
+
+  currentMenuConfig = menus;
 
   // Windows uses frontend menu, skip native menu setup
   if (!isWindows) {
-    ApplicationMenu.setApplicationMenu(menu);
+    ApplicationMenu.setApplicationMenu(menus);
   }
 }

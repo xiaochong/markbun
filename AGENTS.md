@@ -512,102 +512,63 @@ bun test --coverage
 
 ### Add a New Menu Item
 
-添加新菜单项需要**三个环节**（主进程菜单定义 → Bun 转发 → Web 处理）：
+添加新菜单项现在只需**修改命令清单**，菜单生成和路由自动处理。
 
-#### 1. 添加菜单定义（主进程）
+#### 1. 注册命令（单一来源）
 
-编辑 `src/bun/menu.ts`：
+编辑 `src/shared/commandRegistry.ts`，在 `COMMANDS` 数组中添加条目：
+
 ```typescript
 {
-  label: t('file.export'),  // 使用翻译 key
-  submenu: [
-    { label: t('file.exportHTML'), action: 'file-export-html' },  // action 命名要唯一
-    { label: t('file.exportImage'), action: 'file-export-image' },
-    { label: t('file.exportPDF'), action: 'file-export-pdf' },
-  ],
-}
+  action: 'my-new-action',       // 唯一 action ID
+  i18nKey: 'category.label',     // 翻译 key
+  accelerator: 'CmdOrCtrl+X',   // 快捷键（可选）
+  category: 'file',              // 分类：file/edit/format/paragraph/table/view/help
+  menuGroup: 1,                  // 分隔组（同组内无分隔线，不同组之间自动加分隔线）
+  menuSubmenu: 'file.export',    // 子菜单 i18n key（可选）
+  executionContext: 'renderer',  // renderer | main | cross-process
+  when: 'hasOpenFile',           // 启用条件（可选）
+  hidden: true,                  // 仅上下文菜单可见（可选）
+  platformOverrides: {           // 平台覆盖（可选）
+    macOS: { accelerator: 'Cmd+X', hidden: false },
+    windows: { accelerator: 'Ctrl+X' },
+  },
+},
 ```
+
+**`executionContext` 决定路由：**
+- `renderer`: 仅 WebView 处理（格式、段落、表格、编辑命令）
+- `main`: 仅 Bun 主进程处理（如 `view-toggle-devtools`、`window-new`）
+- `cross-process`: Bun 和 WebView 协调处理（文件操作、视图切换）
 
 #### 2. 添加翻译（所有语言）
 
-编辑 `src/bun/i18n/locales/{en,zh-CN,de,es,fr,ja,ko,pt}/menu.json`：
-```json
-{
-  "file": {
-    "export": "Export",
-    "exportHTML": "Export as HTML",
-    "exportImage": "Export as Image",
-    "exportPDF": "Export as PDF"
-  }
-}
-```
+编辑 `src/bun/i18n/locales/{en,zh-CN,de,es,fr,ja,ko,pt}/menu.json`
 
-#### 3. 注册 Bun 转发（关键！漏了会导致点击无响应）
+#### 3. 注册处理器（按 executionContext）
 
-编辑 `src/bun/index.ts`，找到 `ApplicationMenu.on('application-menu-clicked', ...)` 的 switch 语句，添加 case：
-
+**Renderer-only 命令**：编辑 `src/mainview/lib/commandHandlers.ts`，在 `setupRendererHandlers` 中添加：
 ```typescript
-// 大约在 1740-1792 行附近
-switch (action) {
-  // ... 已有 case ...
-
-  // 添加新 case（放在最后一个 case 块中）
-  case 'file-export-html':
-  case 'file-export-image':
-  case 'file-export-pdf':
-    // @ts-ignore
-    fw?.win.webview.rpc.send.menuAction({ action });
-    break;
-}
+dispatcher.registerHandler('my-new-action', () => { /* ... */ });
 ```
 
-#### 4. Web 端处理（App.tsx）
+**Main-process 命令**：编辑 `src/bun/index.ts`，在 `application-menu-clicked` 和 `sendMenuAction` 处理器中添加。
 
-编辑 `src/mainview/App.tsx`，在 `menuAction` useEffect 中添加处理：
+**Cross-process 命令**：
+1. 在 `ACTION_TO_RPC_EVENT` 映射表中添加 RPC 事件名
+2. 在 `src/mainview/App.tsx` 中添加 `electrobun.on()` 监听器
+3. 如有 Bun 端副作用（如更新菜单状态），在 `application-menu-clicked` 中添加
 
-```typescript
-useEffect(() => {
-  return electrobun.on('menuAction', async (data) => {
-    const { action } = data as { action: string };
-
-    // 可以按功能分组处理
-    switch (action) {
-      case 'file-export-html':
-        await exportAsHTML(contentRef.current);
-        break;
-      case 'file-export-image':
-        await exportAsImage(contentRef.current);
-        break;
-      case 'file-export-pdf':
-        await exportAsPDF(contentRef.current);
-        break;
-    }
-  });
-}, [exportAsHTML, exportAsImage, exportAsPDF]);
-```
-
-#### 5. 调试检查清单
-
-如果点击菜单没有响应，按顺序检查：
-
-1. **Bun 端是否转发**：在 `index.ts` 的 switch 中打印日志确认进入 case
-2. **Web 端是否收到**：在 `App.tsx` 的 menuAction handler 中打印日志
-3. **依赖是否正确**：如果导出涉及第三方库，检查 `vite.config.ts` 的 `optimizeDeps.include`
-
-#### 完整数据流
+#### 数据流
 
 ```
-用户点击菜单
+用户点击菜单 / 快捷键 / 命令面板
     ↓
-ApplicationMenu (原生菜单)
-    ↓
-ApplicationMenu.on('application-menu-clicked')  [src/bun/index.ts]
-    ↓
-fw?.win.webview.rpc.send.menuAction({ action })  [必须显式转发]
-    ↓
-electrobun.on('menuAction')  [src/mainview/App.tsx]
-    ↓
-执行业务逻辑
+commandRegistry.ts → 自动生成菜单 + 路由决策
+    ↓ executionContext
+    ├── renderer → commandHandlers.ts (dispatcher.execute)
+    ├── main → index.ts (inline handler)
+    └── cross-process → index.ts → RPC event → App.tsx listener
 ```
 
 ### Add a Milkdown Plugin
@@ -698,6 +659,8 @@ src/
 └── shared/                  # Shared between main and renderer
     ├── types/
     │   └── index.ts         # Shared TypeScript types
+    ├── commandRegistry.ts   # Single source of truth for all command metadata
+    ├── commandDispatch.ts   # Unified command dispatcher (handler registration, when/toggled)
     └── constants/
         └── index.ts         # Shared constants
 ```

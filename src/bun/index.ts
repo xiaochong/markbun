@@ -3,6 +3,7 @@ import { setupMenu, getMenuConfig, type ViewMenuState } from './menu';
 import { initI18n, changeLanguage, t } from './i18n';
 import { resolveLanguage } from '../shared/i18n/config';
 import type { MarkBunRPC } from '../shared/types';
+import { getCommand } from '../shared/commandRegistry';
 import { readFile, writeFile, stat, mkdir, readdir, open, unlink, rename, rmdir, rm, access, mkdtemp } from 'fs/promises';
 import {existsSync, mkdirSync} from 'fs';
 import { join, dirname, relative } from 'path';
@@ -84,6 +85,27 @@ function resolveAIModel(provider: string, modelId: string, baseUrl?: string): Mo
 
 const DEV_SERVER_PORT = 5173;
 const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`;
+
+// ── Command Routing ──────────────────────────────────────────────────────────
+
+// Map cross-process action IDs to renderer-side RPC event names
+const ACTION_TO_RPC_EVENT: Record<string, string> = {
+  'file-new': 'fileNew',
+  'file-open': 'fileOpenRequest',
+  'file-save': 'fileSaveRequest',
+  'file-save-as': 'fileSaveAsRequest',
+  'view-toggle-sidebar': 'toggleSidebar',
+  'view-toggle-titlebar': 'toggleTitlebar',
+  'view-toggle-toolbar': 'toggleToolbar',
+  'view-toggle-statusbar': 'toggleStatusbar',
+  'view-toggle-source-mode': 'toggleSourceMode',
+  'toggle-ai-panel': 'toggleAIPanel',
+  'view-toggle-theme': 'toggleTheme',
+  'view-quick-open': 'openQuickOpen',
+  'app-preferences': 'openSettings',
+  'file-history': 'openFileHistory',
+  'app-about': 'showAbout',
+};
 
 // Per-window file state
 interface WindowState {
@@ -1606,67 +1628,53 @@ async function main() {
             const fw = focusedWindow;
             if (!fw) return { success: true };
 
-            // Actions that need native backend handling (same as macOS handler)
-            switch (action) {
-              case 'help-open': {
-                const helpDir = await mkdtemp(join(tmpdir(), 'markbun-help-'));
-                const tmpPath = join(helpDir, 'MarkBun Help.md');
-                await writeFile(tmpPath, HELP_CONTENT, 'utf-8');
-                pendingOpenFilePath = tmpPath;
-                pendingCloseSidebar = true;
-                pendingSkipRecentFile = true;
-                await createAppWindow();
-                return { success: true };
-              }
-              case 'file-open-folder': {
-                try {
-                  const result = await openFolder();
-                  if (result?.success === true && result.path) {
-                    fw.state.workspaceRoot = result.path;
-                    // @ts-ignore
-                    fw.win.webview.rpc.send.folderOpened({ path: result.path });
-                  }
-                } catch (err) {
-                  console.error('Error in file-open-folder handler:', err);
+            // Route using manifest's executionContext
+            const entry = getCommand(action);
+
+            // Main-process actions (keep inline for now, Unit 7 will refactor)
+            if (action === 'help-open') {
+              const helpDir = await mkdtemp(join(tmpdir(), 'markbun-help-'));
+              const tmpPath = join(helpDir, 'MarkBun Help.md');
+              await writeFile(tmpPath, HELP_CONTENT, 'utf-8');
+              pendingOpenFilePath = tmpPath;
+              pendingCloseSidebar = true;
+              pendingSkipRecentFile = true;
+              await createAppWindow();
+              return { success: true };
+            }
+            if (action === 'file-open-folder') {
+              try {
+                const result = await openFolder();
+                if (result?.success === true && result.path) {
+                  fw.state.workspaceRoot = result.path;
+                  // @ts-ignore
+                  fw.win.webview.rpc.send.folderOpened({ path: result.path });
                 }
-                return { success: true };
+              } catch (err) {
+                console.error('Error in file-open-folder handler:', err);
               }
-              case 'view-toggle-devtools':
-                // @ts-ignore
-                fw.win.webview.toggleDevTools();
-                return { success: true };
-              case 'window-new':
-                await createAppWindow();
-                return { success: true };
-              case 'app-quit':
-                process.exit(0);
+              return { success: true };
+            }
+            if (action === 'view-toggle-devtools') {
+              // @ts-ignore
+              fw.win.webview.toggleDevTools();
+              return { success: true };
+            }
+            if (action === 'window-new') {
+              await createAppWindow();
+              return { success: true };
+            }
+            if (action === 'app-quit') {
+              process.exit(0);
             }
 
-            // Map action strings to RPC message names (camelCase)
-            const actionToEvent: Record<string, string> = {
-              'file-new': 'fileNew',
-              'file-open': 'fileOpenRequest',
-              'file-save': 'fileSaveRequest',
-              'file-save-as': 'fileSaveAsRequest',
-              'view-toggle-sidebar': 'toggleSidebar',
-              'view-toggle-titlebar': 'toggleTitlebar',
-              'view-toggle-toolbar': 'toggleToolbar',
-              'view-toggle-statusbar': 'toggleStatusbar',
-              'view-toggle-source-mode': 'toggleSourceMode',
-              'toggle-ai-panel': 'toggleAIPanel',
-              'view-toggle-theme': 'toggleTheme',
-              'view-quick-open': 'openQuickOpen',
-              'app-preferences': 'openSettings',
-              'file-history': 'openFileHistory',
-              'app-about': 'showAbout',
-            };
-
-            const eventName = actionToEvent[action];
+            // Cross-process actions: send named RPC event to renderer
+            const eventName = ACTION_TO_RPC_EVENT[action];
             if (eventName) {
               // @ts-ignore - dynamic event name
               fw.win.webview.rpc.send[eventName]({});
-            } else {
-              // Format/paragraph/table/edit/export actions: forward to renderer as menuAction
+            } else if (entry?.executionContext === 'renderer') {
+              // Renderer-only actions: forward as menuAction
               // @ts-ignore
               fw.win.webview.rpc.send.menuAction({ action });
             }
@@ -2222,218 +2230,120 @@ async function main() {
     const action = event.data.action;
     const fw = focusedWindow;
 
-    switch (action) {
-      case 'window-new':
-        await createAppWindow();
-        break;
-
-      case 'help-open': {
-        const helpDir = await mkdtemp(join(tmpdir(), 'markbun-help-'));
-        const tmpPath = join(helpDir, 'MarkBun Help.md');
-        await writeFile(tmpPath, HELP_CONTENT, 'utf-8');
-        pendingOpenFilePath = tmpPath;
-        pendingCloseSidebar = true;
-        pendingSkipRecentFile = true;
-        await createAppWindow();
-        break;
-      }
-
-      case 'file-new':
-        if (fw) {
-          fw.state.filePath = null;
-          // @ts-ignore
-          fw.win.webview.rpc.send.fileNew({});
-        }
-        break;
-
-      case 'file-open': {
-        if (!fw) break;
-        // Send request to frontend to open custom file dialog
-        // @ts-ignore
-        fw.win.webview.rpc.send.fileOpenRequest({});
-        break;
-      }
-
-      case 'file-open-folder': {
-        if (!fw) break;
+    // ── Main-process actions (inline handling) ────────────────────────────
+    if (action === 'window-new') {
+      await createAppWindow();
+      return;
+    }
+    if (action === 'help-open') {
+      const helpDir = await mkdtemp(join(tmpdir(), 'markbun-help-'));
+      const tmpPath = join(helpDir, 'MarkBun Help.md');
+      await writeFile(tmpPath, HELP_CONTENT, 'utf-8');
+      pendingOpenFilePath = tmpPath;
+      pendingCloseSidebar = true;
+      pendingSkipRecentFile = true;
+      await createAppWindow();
+      return;
+    }
+    if (action === 'view-toggle-devtools') {
+      if (!fw) return;
+      // @ts-ignore
+      fw.win.webview.toggleDevTools();
+      // Trigger window resize to fix layout issues after DevTools toggle
+      setTimeout(() => {
         try {
-          const result = await openFolder();
-          if (result?.success === true && result.path) {
-            // Update workspace root
-            fw.state.workspaceRoot = result.path;
+          // @ts-ignore
+          const frame = fw.win.frame;
+          if (frame) {
             // @ts-ignore
-            fw.win.webview.rpc.send.folderOpened({
-              path: result.path,
-            });
-          }
-        } catch (err) {
-          console.error('Error in file-open-folder handler:', err);
-        }
-        break;
-      }
-
-      case 'file-save':
-        // @ts-ignore
-        fw?.win.webview.rpc.send.fileSaveRequest({});
-        break;
-
-      case 'file-save-as':
-        // @ts-ignore
-        fw?.win.webview.rpc.send.fileSaveAsRequest({});
-        break;
-
-      case 'view-toggle-theme':
-        // @ts-ignore
-        fw?.win.webview.rpc.send.toggleTheme({});
-        break;
-
-      case 'view-toggle-devtools':
-        if (!fw) break;
-        // @ts-ignore
-        fw.win.webview.toggleDevTools();
-        // Trigger window resize to fix layout issues after DevTools toggle
-        setTimeout(() => {
-          try {
-            // @ts-ignore
-            const frame = fw.win.frame;
-            if (frame) {
-              // Resize by 1px and back to force WebView relayout
+            fw.win.frame = { ...frame, width: frame.width + 1 };
+            setTimeout(() => {
               // @ts-ignore
-              fw.win.frame = { ...frame, width: frame.width + 1 };
-              setTimeout(() => {
-                // @ts-ignore
-                fw.win.frame = frame;
-              }, 50);
-            }
-            // Also trigger a resize event in the WebView
-            // @ts-ignore
-            fw.win.webview?.evaluateJavaScript?.(`
-              window.dispatchEvent(new Event('resize'));
-              document.body.style.display = 'none';
-              document.body.offsetHeight; // force reflow
-              document.body.style.display = '';
-            `);
-          } catch (e) {
-            console.error('Failed to fix layout after DevTools toggle:', e);
+              fw.win.frame = frame;
+            }, 50);
           }
-        }, 150);
-        break;
+          // @ts-ignore
+          fw.win.webview?.evaluateJavaScript?.(`
+            window.dispatchEvent(new Event('resize'));
+            document.body.style.display = 'none';
+            document.body.offsetHeight;
+            document.body.style.display = '';
+          `);
+        } catch (e) {
+          console.error('Failed to fix layout after DevTools toggle:', e);
+        }
+      }, 150);
+      return;
+    }
 
-      case 'app-about':
+    // ── Cross-process actions with special Bun-side side effects ─────────
+    if (action === 'file-new') {
+      if (fw) {
+        fw.state.filePath = null;
         // @ts-ignore
-        fw?.win.webview.rpc.send.showAbout({});
-        break;
+        fw.win.webview.rpc.send.fileNew({});
+      }
+      return;
+    }
+    if (action === 'file-open-folder') {
+      if (!fw) return;
+      try {
+        const result = await openFolder();
+        if (result?.success === true && result.path) {
+          fw.state.workspaceRoot = result.path;
+          // @ts-ignore
+          fw.win.webview.rpc.send.folderOpened({ path: result.path });
+        }
+      } catch (err) {
+        console.error('Error in file-open-folder handler:', err);
+      }
+      return;
+    }
 
-      case 'app-preferences':
-        // @ts-ignore
-        fw?.win.webview.rpc.send.openSettings({});
-        break;
+    // View toggles: update Bun-side menu state before forwarding to renderer
+    if (action === 'view-toggle-titlebar') {
+      updateViewMenuState({ showTitleBar: !viewMenuState.showTitleBar });
+      // @ts-ignore
+      fw?.win.webview.rpc.send.toggleTitlebar({});
+      return;
+    }
+    if (action === 'view-toggle-toolbar') {
+      updateViewMenuState({ showToolBar: !viewMenuState.showToolBar });
+      // @ts-ignore
+      fw?.win.webview.rpc.send.toggleToolbar({});
+      return;
+    }
+    if (action === 'view-toggle-statusbar') {
+      updateViewMenuState({ showStatusBar: !viewMenuState.showStatusBar });
+      // @ts-ignore
+      fw?.win.webview.rpc.send.toggleStatusbar({});
+      return;
+    }
+    if (action === 'view-toggle-sidebar') {
+      updateViewMenuState({ showSidebar: !viewMenuState.showSidebar });
+      // @ts-ignore
+      fw?.win.webview.rpc.send.toggleSidebar({});
+      return;
+    }
+    if (action === 'view-toggle-source-mode') {
+      updateViewMenuState({ sourceMode: !viewMenuState.sourceMode });
+      // @ts-ignore
+      fw?.win.webview.rpc.send.toggleSourceMode({});
+      return;
+    }
 
-      case 'file-history':
-        // @ts-ignore
-        fw?.win.webview.rpc.send.openFileHistory({});
-        break;
-
-      case 'view-toggle-titlebar':
-        updateViewMenuState({ showTitleBar: !viewMenuState.showTitleBar });
-        // @ts-ignore
-        fw?.win.webview.rpc.send.toggleTitlebar({});
-        break;
-
-      case 'view-toggle-toolbar':
-        updateViewMenuState({ showToolBar: !viewMenuState.showToolBar });
-        // @ts-ignore
-        fw?.win.webview.rpc.send.toggleToolbar({});
-        break;
-
-      case 'view-toggle-statusbar':
-        updateViewMenuState({ showStatusBar: !viewMenuState.showStatusBar });
-        // @ts-ignore
-        fw?.win.webview.rpc.send.toggleStatusbar({});
-        break;
-
-      case 'view-toggle-sidebar':
-        updateViewMenuState({ showSidebar: !viewMenuState.showSidebar });
-        // @ts-ignore
-        fw?.win.webview.rpc.send.toggleSidebar({});
-        break;
-
-      case 'view-quick-open':
-        // @ts-ignore
-        fw?.win.webview.rpc.send.openQuickOpen({});
-        break;
-
-      case 'view-toggle-source-mode':
-        updateViewMenuState({ sourceMode: !viewMenuState.sourceMode });
-        // @ts-ignore
-        fw?.win.webview.rpc.send.toggleSourceMode({});
-        break;
-
-      case 'toggle-ai-panel':
-        // @ts-ignore
-        fw?.win.webview.rpc.send.toggleAIPanel({});
-        break;
-
-      // Table menu actions
-      case 'table-insert':
-      case 'table-insert-row-above':
-      case 'table-insert-row-below':
-      case 'table-insert-col-left':
-      case 'table-insert-col-right':
-      case 'table-move-row-up':
-      case 'table-move-row-down':
-      case 'table-move-col-left':
-      case 'table-move-col-right':
-      case 'table-delete-row':
-      case 'table-delete-col':
-      case 'table-delete':
-      // Edit menu actions
-      case 'editor-undo':
-      case 'editor-redo':
-      case 'editor-cut':
-      case 'editor-copy':
-      case 'editor-paste':
-      case 'editor-select-all':
-      // Search menu actions
-      case 'edit-find':
-      case 'edit-find-and-replace':
-      // Format menu actions
-      case 'format-strong':
-      case 'format-emphasis':
-      case 'format-code':
-      case 'format-strikethrough':
-      case 'format-highlight':
-      case 'format-superscript':
-      case 'format-subscript':
-      case 'format-inline-math':
-      case 'format-link':
-      case 'format-image':
-      // Paragraph menu actions
-      case 'para-heading-1':
-      case 'para-heading-2':
-      case 'para-heading-3':
-      case 'para-heading-4':
-      case 'para-heading-5':
-      case 'para-heading-6':
-      case 'para-paragraph':
-      case 'para-increase-heading':
-      case 'para-decrease-heading':
-      case 'para-math-block':
-      case 'para-code-block':
-      case 'para-quote':
-      case 'para-ordered-list':
-      case 'para-unordered-list':
-      case 'para-task-list':
-      case 'para-insert-above':
-      case 'para-insert-below':
-      case 'para-horizontal-rule':
-      // Export menu actions
-      case 'file-export-html':
-      case 'file-export-image':
-      case 'file-export-pdf':
+    // ── Generic cross-process / renderer routing ─────────────────────────
+    const eventName = ACTION_TO_RPC_EVENT[action];
+    if (eventName) {
+      // @ts-ignore - dynamic event name
+      fw?.win.webview.rpc.send[eventName]({});
+    } else {
+      // Renderer-only actions: forward as menuAction
+      const entry = getCommand(action);
+      if (entry?.executionContext === 'renderer') {
         // @ts-ignore
         fw?.win.webview.rpc.send.menuAction({ action });
-        break;
+      }
     }
   });
 
