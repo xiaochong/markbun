@@ -1123,6 +1123,69 @@ body {
 }
 
 /* ===========================================
+   HTML Code Block - Edit/Preview Mode
+   =========================================== */
+
+/* Default state: only show preview, hide source code and PREVIEW label */
+.milkdown-crepe-container .milkdown-code-block[data-lang="html"]:not(.selected) .codemirror-host {
+  position: absolute !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Hide PREVIEW label and divider when not selected */
+.milkdown-crepe-container .milkdown-code-block[data-lang="html"]:not(.selected) .preview-label,
+.milkdown-crepe-container .milkdown-code-block[data-lang="html"]:not(.selected) .preview-divider {
+  display: none !important;
+}
+
+/* Selected state: show source code */
+.milkdown-crepe-container .milkdown-code-block[data-lang="html"].selected .codemirror-host {
+  position: relative !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  height: auto !important;
+}
+
+/* Show PREVIEW label when selected */
+.milkdown-crepe-container .milkdown-code-block[data-lang="html"].selected .preview-label,
+.milkdown-crepe-container .milkdown-code-block[data-lang="html"].selected .preview-divider {
+  display: block !important;
+}
+
+/* Hide the preview toggle button for HTML blocks */
+.milkdown-crepe-container .milkdown-code-block[data-lang="html"] .preview-toggle-button {
+  display: none !important;
+}
+
+/* Preview panel styling for HTML blocks */
+.milkdown-crepe-container .milkdown-code-block[data-lang="html"]:not(.selected) .preview-panel {
+  margin-top: 0 !important;
+}
+
+.milkdown-crepe-container .milkdown-code-block[data-lang="html"]:not(.selected) .preview {
+  padding-top: 16px !important;
+}
+
+/* Selected state: add top padding to match the layout */
+.milkdown-crepe-container .milkdown-code-block[data-lang="html"].selected .preview {
+  padding-top: 0 !important;
+}
+
+/* Click handling for HTML code blocks - make preview area clickable to select */
+.milkdown-crepe-container .milkdown-code-block[data-lang="html"]:not(.selected) {
+  cursor: pointer;
+}
+
+/* Respect inline width/height attributes on images inside HTML preview */
+.milkdown-crepe-container .milkdown-code-block[data-lang="html"] .preview img {
+  max-width: 100%;
+  display: inline-block;
+}
+
+/* ===========================================
    Mermaid NodeView Styles
    =========================================== */
 

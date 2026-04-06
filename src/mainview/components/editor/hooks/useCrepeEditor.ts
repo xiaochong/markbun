@@ -10,6 +10,8 @@ import remarkBreaks from 'remark-breaks';
 import remarkHighlight from '../plugins/remarkHighlight';
 import remarkSuperSub from '../plugins/remarkSuperSub';
 import { inlineMarksPlugin } from '../plugins/inlineMarksPlugin';
+import remarkHtmlBlock from '../plugins/remarkHtmlBlock';
+import { blockHtmlSchema } from '../plugins/blockHtmlSchema';
 import { NodeSelection } from '@milkdown/kit/prose/state';
 import { clipboard } from '@milkdown/plugin-clipboard';
 import { history } from '@milkdown/plugin-history';
@@ -32,6 +34,12 @@ const SCROLL_HIDE_DELAY = 800;
 const breaksPlugin: MilkdownPlugin = (ctx) => async () => {
   await ctx.wait(InitReady);
   ctx.update(remarkPluginsCtx, (rp) => [{ plugin: remarkBreaks, options: {} }, ...rp]);
+};
+
+const htmlBlockParserPlugin: MilkdownPlugin = (ctx) => async () => {
+  await ctx.wait(InitReady);
+  // Must be BEFORE Milkdown's remarkHtmlTransformer so raw HTML becomes code blocks
+  ctx.update(remarkPluginsCtx, (rp) => [{ plugin: remarkHtmlBlock, options: {} }, ...rp]);
 };
 
 const inlineMarksParsersPlugin: MilkdownPlugin = (ctx) => async () => {
@@ -195,7 +203,40 @@ export function useCrepeEditor(
       featureConfigs: {
         [Crepe.Feature.CodeMirror]: {
           renderPreview: (language: string, content: string, applyPreview: (value: null | string | HTMLElement) => void) => {
-            if (language.toLowerCase() !== 'mermaid' || !content.trim()) return null;
+            const lang = language.toLowerCase();
+
+            if (lang === 'html' && content.trim()) {
+              const parser = new DOMParser();
+              const doc = parser.parseFromString(content.trim(), 'text/html');
+              const images = Array.from(doc.querySelectorAll('img'));
+
+              // Convert width/height attributes to inline styles so they survive CSS resets
+              images.forEach((img) => {
+                const widthAttr = img.getAttribute('width');
+                const heightAttr = img.getAttribute('height');
+                if (widthAttr && !img.style.width) {
+                  img.style.width = /\D/.test(widthAttr) ? widthAttr : `${widthAttr}px`;
+                }
+                if (heightAttr && !img.style.height) {
+                  img.style.height = /\D/.test(heightAttr) ? heightAttr : `${heightAttr}px`;
+                }
+              });
+
+              // Duplicate src to data-src so Milkdown's preview-panel
+              // DOMPurify won't strip the image source permanently.
+              // The MutationObserver restoreHtmlPreviewImages recovers src from data-src.
+              doc.querySelectorAll('img').forEach((img) => {
+                const src = img.getAttribute('src');
+                if (src) {
+                  img.setAttribute('data-src', src);
+                }
+              });
+
+              // Return synchronously to avoid Milkdown showing a 'Loading...' placeholder.
+              return doc.body.innerHTML;
+            }
+
+            if (lang !== 'mermaid' || !content.trim()) return null;
 
             const code = content.trim();
             const id = `mermaid-svg-${Math.random().toString(36).slice(2)}`;
@@ -236,10 +277,14 @@ export function useCrepeEditor(
     crepe.editor.use(history);
     // Enable GFM (GitHub Flavored Markdown) for table support
     crepe.editor.use(gfm);
+    // Extend codeBlockSchema so html blocks serialize back to raw HTML in markdown
+    crepe.editor.use(blockHtmlSchema);
     // Enable highlight (==text==), superscript (^text^), subscript (~text~)
     crepe.editor.use(inlineMarksPlugin);
     // Enable soft line breaks as hard line breaks (like Typora)
     crepe.editor.use(breaksPlugin);
+    // Register remark parser to turn raw HTML nodes into html code blocks
+    crepe.editor.use(htmlBlockParserPlugin);
     // Register remark parsers for highlight/superscript/subscript
     crepe.editor.use(inlineMarksParsersPlugin);
     // Enable search & replace plugin for find/replace functionality
@@ -538,20 +583,60 @@ export function useCrepeEditor(
           // Set data-lang attribute for CSS targeting
           (block as HTMLElement).dataset.lang = lang;
 
-          // If language changed from latex/mermaid to something else, remove selected class
-          if ((prevLang === 'latex' || prevLang === 'mermaid') && lang !== prevLang) {
+          // If language changed from latex/mermaid/html to something else, remove selected class
+          if ((prevLang === 'latex' || prevLang === 'mermaid' || prevLang === 'html') && lang !== prevLang) {
             block.classList.remove('selected');
           }
         }
       });
     };
 
+    const restoreHtmlPreviewImages = () => {
+      const htmlBlocks = container.querySelectorAll('.milkdown-code-block[data-lang="html"]');
+      htmlBlocks.forEach((block) => {
+        const imgs = block.querySelectorAll('.preview img[data-src]');
+        imgs.forEach((img) => {
+          if (img.hasAttribute('data-resolved')) return;
+
+          const dataSrc = img.getAttribute('data-src');
+          if (!dataSrc) return;
+
+          // Step 1: recover src from data-src if DOMPurify stripped it
+          if (!img.getAttribute('src')) {
+            img.setAttribute('src', dataSrc);
+          }
+
+          // Step 2: load blob URL for local images
+          if (!/^(https?:|data:|blob:)/i.test(dataSrc)) {
+            const resolvedPath = workspaceManager.resolvePath(dataSrc);
+            loadLocalImage(resolvedPath, dataSrc)
+              .then((blobUrl) => {
+                if (blobUrl) {
+                  img.setAttribute('src', blobUrl);
+                  img.setAttribute('data-src', blobUrl);
+                }
+              })
+              .catch((e) => {
+                console.error('[HTML Preview] Failed to load local image:', dataSrc, e);
+              });
+          }
+
+          img.setAttribute('data-resolved', 'true');
+        });
+      });
+    };
+
+    const updateAll = () => {
+      updateLatexCodeBlocks();
+      restoreHtmlPreviewImages();
+    };
+
     // Initial update
-    updateLatexCodeBlocks();
+    updateAll();
 
     // Watch for changes
     const observer = new MutationObserver(() => {
-      updateLatexCodeBlocks();
+      updateAll();
     });
 
     observer.observe(container, {
@@ -575,7 +660,7 @@ export function useCrepeEditor(
       // Check if we clicked inside a LaTeX code block
       if (codeBlock) {
         const lang = codeBlock.dataset.lang;
-        if (lang !== 'latex' && lang !== 'LaTeX' && lang !== 'mermaid') return;
+        if (lang !== 'latex' && lang !== 'LaTeX' && lang !== 'mermaid' && lang !== 'html') return;
 
         // Don't handle clicks on the language button or picker
         if (target.closest('.language-button') || target.closest('.language-picker')) {
@@ -639,11 +724,12 @@ export function useCrepeEditor(
           }
         }
       } else {
-        // Clicked outside any code block - deselect all LaTeX/mermaid code blocks
+        // Clicked outside any code block - deselect all LaTeX/mermaid/html code blocks
         const selectedLatexBlocks = container.querySelectorAll(
           '.milkdown-code-block[data-lang="latex"].selected, ' +
           '.milkdown-code-block[data-lang="LaTeX"].selected, ' +
-          '.milkdown-code-block[data-lang="mermaid"].selected'
+          '.milkdown-code-block[data-lang="mermaid"].selected, ' +
+          '.milkdown-code-block[data-lang="html"].selected'
         );
         selectedLatexBlocks.forEach((block) => {
           block.classList.remove('selected');
