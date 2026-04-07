@@ -794,9 +794,9 @@ body {
 
 .milkdown-crepe-container .milkdown-code-block .cm-content {
   font-family: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, Monaco, 'Courier New', monospace !important;
-  font-size: var(--editor-font-size) !important;
-  line-height: var(--editor-line-height) !important;
-  padding: 16px 20px !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  padding: 12px 16px !important;
   color: hsl(var(--foreground)) !important;
 }
 
