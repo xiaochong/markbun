@@ -103,6 +103,8 @@ export const COMMANDS: CommandEntry[] = [
   { action: 'table-delete', i18nKey: 'paragraph.deleteTable', category: 'table', menuSubmenu: 'paragraph.table', menuGroup: 4, executionContext: 'renderer' },
   // Context-menu-only table action
   { action: 'table-copy-cell', i18nKey: 'paragraph.copyCell', category: 'table', executionContext: 'renderer', hidden: true },
+  // Context-menu-only Mermaid action
+  { action: 'mermaid-view-diagram', i18nKey: 'paragraph.viewDiagram', category: 'paragraph', executionContext: 'renderer', hidden: true },
   { action: 'para-math-block', i18nKey: 'paragraph.mathBlock', accelerator: 'Alt+CmdOrCtrl+B', category: 'paragraph', menuGroup: 5, executionContext: 'renderer' },
   { action: 'para-code-block', i18nKey: 'paragraph.codeBlock', accelerator: 'Alt+CmdOrCtrl+C', category: 'paragraph', menuGroup: 5, executionContext: 'renderer' },
   { action: 'para-quote', i18nKey: 'paragraph.quote', accelerator: 'Alt+CmdOrCtrl+Q', category: 'paragraph', menuGroup: 6, executionContext: 'renderer' },

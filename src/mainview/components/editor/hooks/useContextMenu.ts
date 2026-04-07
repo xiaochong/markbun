@@ -82,6 +82,9 @@ export function useContextMenu(
       if (mermaidBlock) {
         try {
           const view = editor.ctx.get(editorViewCtx);
+          let sourceExtracted = false;
+
+          // Method 1: posAtCoords (works for clicks on the code editor area)
           const coords = { left: e.clientX, top: e.clientY };
           const posAtCoords = view.posAtCoords(coords);
           if (posAtCoords) {
@@ -91,9 +94,50 @@ export function useContextMenu(
               const node = $pos.node(d);
               if (node.type.name === 'code_block' || node.type.name === 'fence') {
                 window.__pendingMermaidSource = node.textContent;
+                sourceExtracted = true;
                 break;
               }
             }
+          }
+
+          // Method 2: posAtDOM fallback (works for clicks on the preview panel)
+          if (!sourceExtracted) {
+            try {
+              // Find a child element that maps to the ProseMirror document
+              const blockParent = (mermaidBlock as HTMLElement).closest('[data-node-type]');
+              if (blockParent) {
+                const domPos = view.posAtDOM(blockParent, 0);
+                const $pos = view.state.doc.resolve(domPos);
+                for (let d = $pos.depth; d >= 0; d--) {
+                  const node = $pos.node(d);
+                  if (node.type.name === 'code_block' || node.type.name === 'fence') {
+                    window.__pendingMermaidSource = node.textContent;
+                    sourceExtracted = true;
+                    break;
+                  }
+                }
+              }
+            } catch {
+              // posAtDOM may fail for some elements, continue
+            }
+          }
+
+          // Method 3: Walk the document, match by DOM containment
+          if (!sourceExtracted) {
+            view.state.doc.descendants((node, pos) => {
+              if (node.type.name === 'code_block' || node.type.name === 'fence') {
+                try {
+                  const dom = view.nodeDOM(pos);
+                  if (dom && (mermaidBlock === dom || mermaidBlock.contains(dom) || dom.contains(mermaidBlock))) {
+                    window.__pendingMermaidSource = node.textContent;
+                    sourceExtracted = true;
+                    return false;
+                  }
+                } catch {
+                  // nodeDOM may fail, continue
+                }
+              }
+            });
           }
         } catch {
           // Fall back to default context menu if extraction fails

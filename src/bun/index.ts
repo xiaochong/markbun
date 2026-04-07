@@ -2367,6 +2367,11 @@ async function main() {
       fw?.win.webview.rpc.send.toggleSourceMode({});
       return;
     }
+    if (action === 'mermaid-view-diagram') {
+      // @ts-ignore
+      fw?.win.webview.rpc.send.menuAction({ action });
+      return;
+    }
 
     // ── Generic cross-process / renderer routing ─────────────────────────
     const eventName = ACTION_TO_RPC_EVENT[action];
