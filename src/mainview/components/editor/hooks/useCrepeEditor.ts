@@ -301,6 +301,18 @@ export function useCrepeEditor(
         rule: '-' as const,
         ruleRepetition: 3,
         ruleSpaces: false,
+        join: [
+          ...(options.join || []),
+          // Work around Milkdown bug: bullet_list stores `spread` as string "false"/"true".
+          // mdast-util-to-markdown's joinDefaults checks `typeof parent.spread === 'boolean'`,
+          // so string values fall through to the default `\n\n` and inserts blank lines
+          // between every list item. Force tight lists when spread is the string "false".
+          function listSpreadWorkaround(left: any, right: any, parent: any) {
+            if (parent?.type === 'list' && typeof parent.spread === 'string') {
+              return parent.spread === 'true' ? 1 : 0;
+            }
+          },
+        ],
         handlers: {
           ...options.handlers,
           break: () => '\n',
