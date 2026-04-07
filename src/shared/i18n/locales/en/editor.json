@@ -28,6 +28,14 @@
     "zoomOut": "Zoom Out",
     "reset": "Reset"
   },
+  "mermaidViewer": {
+    "zoomIn": "Zoom In",
+    "zoomOut": "Zoom Out",
+    "reset": "Reset",
+    "rendering": "Rendering diagram...",
+    "renderError": "Failed to render diagram",
+    "close": "Close"
+  },
   "outline": {
     "empty": "No headings found",
     "emptyHint": "Add # headings to your document"

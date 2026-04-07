@@ -28,6 +28,14 @@
     "zoomOut": "Zoom arrière",
     "reset": "Réinitialiser"
   },
+  "mermaidViewer": {
+    "zoomIn": "Zoom avant",
+    "zoomOut": "Zoom arrière",
+    "reset": "Réinitialiser",
+    "rendering": "Rendu du diagramme...",
+    "renderError": "Échec du rendu du diagramme",
+    "close": "Fermer"
+  },
   "outline": {
     "empty": "Aucun titre trouvé",
     "emptyHint": "Ajouter des titres # à votre document"

@@ -28,6 +28,14 @@
     "zoomOut": "Verkleinern",
     "reset": "Zurücksetzen"
   },
+  "mermaidViewer": {
+    "zoomIn": "Vergrößern",
+    "zoomOut": "Verkleinern",
+    "reset": "Zurücksetzen",
+    "rendering": "Diagramm wird gerendert...",
+    "renderError": "Diagramm konnte nicht gerendert werden",
+    "close": "Schließen"
+  },
   "outline": {
     "empty": "Keine Überschriften gefunden",
     "emptyHint": "# Überschriften zum Dokument hinzufügen"

@@ -78,7 +78,8 @@
     "taskList": "Aufgabenliste",
     "insertAbove": "Absatz darüber einfügen",
     "insertBelow": "Absatz darunter einfügen",
-    "horizontalRule": "Horizontale Linie"
+    "horizontalRule": "Horizontale Linie",
+    "viewDiagram": "Diagramm anzeigen"
   },
   "view": {
     "title": "Ansicht",

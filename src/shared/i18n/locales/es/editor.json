@@ -28,6 +28,14 @@
     "zoomOut": "Alejar",
     "reset": "Restablecer"
   },
+  "mermaidViewer": {
+    "zoomIn": "Acercar",
+    "zoomOut": "Alejar",
+    "reset": "Restablecer",
+    "rendering": "Renderizando diagrama...",
+    "renderError": "Error al renderizar el diagrama",
+    "close": "Cerrar"
+  },
   "outline": {
     "empty": "No se encontraron títulos",
     "emptyHint": "Añade títulos # a tu documento"

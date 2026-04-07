@@ -20,6 +20,7 @@ import { FileDialog } from './components/file-dialog';
 import { RecoveryDialog } from './components/recovery-dialog/RecoveryDialog';
 import { FileHistoryDialog } from './components/file-history/FileHistoryDialog';
 import { AboutDialog } from './components/about/AboutDialog';
+import { MermaidDiagramViewer } from './components/mermaid-viewer';
 import { SearchBar } from './components/search-bar/SearchBar';
 import { AIChatPanel } from './components/ai-chat/AIChatPanel';
 import { dispatchSearchAction, searchPluginKey } from './components/editor/plugins/searchPlugin';
@@ -76,6 +77,7 @@ function App() {
   }, []);
   const [showFileHistoryDialog, setShowFileHistoryDialog] = useState(false);
   const [showAboutDialog, setShowAboutDialog] = useState(false);
+  const [mermaidViewerSource, setMermaidViewerSource] = useState<string | null>(null);
 
   const { theme, toggleTheme } = useTheme();
 
@@ -1185,6 +1187,16 @@ function App() {
     registerAITools(editorRef);
   }, []);
 
+  // Register Mermaid viewer bridge (window.__openMermaidViewer) for context menu integration
+  useEffect(() => {
+    (window as unknown as Record<string, unknown>).__openMermaidViewer = (source: string) => {
+      setMermaidViewerSource(source);
+    };
+    return () => {
+      delete (window as unknown as Record<string, unknown>).__openMermaidViewer;
+    };
+  }, []);
+
   // Register unified command handlers with the dispatcher
   useEffect(() => {
     const ctx: HandlerContext = {
@@ -1636,6 +1648,13 @@ function App() {
       <AboutDialog
         isOpen={showAboutDialog}
         onClose={() => setShowAboutDialog(false)}
+      />
+
+      {/* Mermaid Diagram Viewer */}
+      <MermaidDiagramViewer
+        isOpen={mermaidViewerSource !== null}
+        onClose={() => setMermaidViewerSource(null)}
+        mermaidSource={mermaidViewerSource}
       />
     </div>
   );

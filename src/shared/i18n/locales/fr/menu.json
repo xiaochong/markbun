@@ -78,7 +78,8 @@
     "taskList": "Liste de tâches",
     "insertAbove": "Insérer un paragraphe au-dessus",
     "insertBelow": "Insérer un paragraphe en dessous",
-    "horizontalRule": "Règle horizontale"
+    "horizontalRule": "Règle horizontale",
+    "viewDiagram": "Voir le diagramme"
   },
   "view": {
     "title": "Affichage",

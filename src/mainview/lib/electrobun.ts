@@ -149,6 +149,10 @@ export const electrobun = {
     return await electroview.rpc.request.showDefaultContextMenu({});
   },
 
+  async showMermaidContextMenu() {
+    return await electroview.rpc.request.showMermaidContextMenu({});
+  },
+
   // Phase 2: File Management
   async readFile(params: { path: string }) {
     return await electroview.rpc.request.readFile(params);

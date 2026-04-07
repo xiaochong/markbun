@@ -28,6 +28,14 @@
     "zoomOut": "縮小",
     "reset": "リセット"
   },
+  "mermaidViewer": {
+    "zoomIn": "拡大",
+    "zoomOut": "縮小",
+    "reset": "リセット",
+    "rendering": "図を描画中...",
+    "renderError": "図の描画に失敗しました",
+    "close": "閉じる"
+  },
   "outline": {
     "empty": "見出しが見つかりません",
     "emptyHint": "ドキュメントに # 見出しを追加してください"

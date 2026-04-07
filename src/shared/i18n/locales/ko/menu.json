@@ -78,7 +78,8 @@
     "taskList": "작업 목록",
     "insertAbove": "위에 단락 삽입",
     "insertBelow": "아래에 단락 삽입",
-    "horizontalRule": "수평선"
+    "horizontalRule": "수평선",
+    "viewDiagram": "도표 보기"
   },
   "view": {
     "title": "보기",

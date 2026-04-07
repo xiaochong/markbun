@@ -78,7 +78,8 @@
     "taskList": "Lista de Tareas",
     "insertAbove": "Insertar Párrafo Arriba",
     "insertBelow": "Insertar Párrafo Abajo",
-    "horizontalRule": "Línea Horizontal"
+    "horizontalRule": "Línea Horizontal",
+    "viewDiagram": "Ver Diagrama"
   },
   "view": {
     "title": "Ver",

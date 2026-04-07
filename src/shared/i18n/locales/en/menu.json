@@ -78,7 +78,8 @@
     "taskList": "Task List",
     "insertAbove": "Insert Paragraph Above",
     "insertBelow": "Insert Paragraph Below",
-    "horizontalRule": "Horizontal Rule"
+    "horizontalRule": "Horizontal Rule",
+    "viewDiagram": "View Diagram"
   },
   "view": {
     "title": "View",

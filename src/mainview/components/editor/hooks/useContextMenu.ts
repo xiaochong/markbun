@@ -12,6 +12,7 @@ declare global {
       hasBlobUrl: boolean;
     } | null;
     __pendingTableCellText?: string | null;
+    __pendingMermaidSource?: string | null;
   }
 }
 
@@ -74,6 +75,35 @@ export function useContextMenu(
         };
       } else {
         window.__pendingEditorSelection = null;
+      }
+
+      // Check if click is inside a Mermaid code block
+      const mermaidBlock = (target as HTMLElement).closest('.milkdown-code-block[data-lang="mermaid"]');
+      if (mermaidBlock) {
+        try {
+          const view = editor.ctx.get(editorViewCtx);
+          const coords = { left: e.clientX, top: e.clientY };
+          const posAtCoords = view.posAtCoords(coords);
+          if (posAtCoords) {
+            const { pos } = posAtCoords;
+            const $pos = view.state.doc.resolve(pos);
+            for (let d = $pos.depth; d >= 0; d--) {
+              const node = $pos.node(d);
+              if (node.type.name === 'code_block' || node.type.name === 'fence') {
+                window.__pendingMermaidSource = node.textContent;
+                break;
+              }
+            }
+          }
+        } catch {
+          // Fall back to default context menu if extraction fails
+          e.preventDefault();
+          electrobun.showDefaultContextMenu();
+          return;
+        }
+        e.preventDefault();
+        electrobun.showMermaidContextMenu();
+        return;
       }
 
       // Use the click position to check if it's inside a table, and extract cell text

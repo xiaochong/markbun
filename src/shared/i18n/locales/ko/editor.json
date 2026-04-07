@@ -28,6 +28,14 @@
     "zoomOut": "축소",
     "reset": "초기화"
   },
+  "mermaidViewer": {
+    "zoomIn": "확대",
+    "zoomOut": "축소",
+    "reset": "초기화",
+    "rendering": "도표를 렌더링 중...",
+    "renderError": "도표 렌더링 실패",
+    "close": "닫기"
+  },
   "outline": {
     "empty": "제목을 찾을 수 없습니다",
     "emptyHint": "문서에 # 제목을 추가하세요"

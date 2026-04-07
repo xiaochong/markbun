@@ -619,6 +619,41 @@ async function main() {
           ]);
           return { success: true };
         },
+        showMermaidContextMenu: async () => {
+          // Show context menu for Mermaid diagram blocks
+          ContextMenu.showContextMenu([
+            { label: t('paragraph.viewDiagram'), action: 'mermaid-view-diagram' },
+            { type: 'separator' },
+            { label: t('edit.undo'), action: 'editor-undo' },
+            { label: t('edit.redo'), action: 'editor-redo' },
+            { type: 'separator' },
+            { label: t('edit.cut'), action: 'editor-cut' },
+            { label: t('edit.copy'), action: 'editor-copy' },
+            { label: t('edit.paste'), action: 'editor-paste' },
+            { type: 'separator' },
+            { label: t('paragraph.insertTable'), action: 'table-insert' },
+            { type: 'separator' },
+            {
+              label: t('format.title'),
+              submenu: [
+                { label: t('format.strong'), action: 'format-strong' },
+                { label: t('format.emphasis'), action: 'format-emphasis' },
+                { label: t('format.code'), action: 'format-code' },
+                { type: 'separator' },
+                { label: t('format.inlineFormula'), action: 'format-inline-math' },
+                { label: t('format.strikethrough'), action: 'format-strikethrough' },
+                { label: t('format.highlight'), action: 'format-highlight' },
+                { label: t('format.superscript'), action: 'format-superscript' },
+                { label: t('format.subscript'), action: 'format-subscript' },
+                { type: 'separator' },
+                { label: t('format.hyperlink'), action: 'format-link' },
+                { type: 'separator' },
+                { label: t('format.image'), action: 'format-image' },
+              ],
+            },
+          ]);
+          return { success: true };
+        },
         showDefaultContextMenu: async () => {
           // Show default context menu with standard editing actions
           // Note: We use custom actions instead of roles to handle copy/paste in the renderer
@@ -2220,6 +2255,20 @@ async function main() {
   // Handle context menu clicks (global - routes to focused window)
   ContextMenu.on('context-menu-clicked', (event: { data: { action: string } }) => {
     const action = event.data.action;
+
+    // Special handling: open Mermaid viewer via JS evaluation
+    if (action === 'mermaid-view-diagram') {
+      // @ts-ignore
+      focusedWindow?.win.webview.evaluateJavaScript?.(`
+        if (window.__pendingMermaidSource) {
+          var src = window.__pendingMermaidSource;
+          window.__pendingMermaidSource = null;
+          if (window.__openMermaidViewer) window.__openMermaidViewer(src);
+        }
+      `);
+      return;
+    }
+
     // Forward context menu actions to focused window's renderer
     // @ts-ignore
     focusedWindow?.win.webview.rpc.send.menuAction({ action });
