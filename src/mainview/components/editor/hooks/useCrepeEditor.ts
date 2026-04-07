@@ -294,7 +294,10 @@ export function useCrepeEditor(
           // so string values fall through to the default `\n\n` and inserts blank lines
           // between every list item. Force tight lists when spread is the string "false".
           function listSpreadWorkaround(left: any, right: any, parent: any) {
-            if (parent?.type === 'list' && typeof parent.spread === 'string') {
+            if (
+              (parent?.type === 'list' || parent?.type === 'listItem') &&
+              typeof parent.spread === 'string'
+            ) {
               return parent.spread === 'true' ? 1 : 0;
             }
           },
