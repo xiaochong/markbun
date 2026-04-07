@@ -50,6 +50,7 @@ export function MermaidDiagramViewer({ isOpen, onClose, mermaidSource }: Mermaid
           startOnLoad: false,
           theme: isDark ? 'dark' : 'default',
           suppressErrorRendering: true,
+          htmlLabels: false,
         });
 
         const id = `mermaid-viewer-${Date.now()}`;

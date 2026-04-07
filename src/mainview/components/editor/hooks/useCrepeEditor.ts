@@ -252,6 +252,7 @@ export function useCrepeEditor(
                 startOnLoad: false,
                 theme: darkModeRef.current ? 'dark' : 'default',
                 suppressErrorRendering: true,
+                htmlLabels: false,
               });
               mermaid.render(id, code)
                 .then(({ svg }) => {

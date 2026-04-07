@@ -128,7 +128,7 @@ ${html}
     }
     // Render mermaid
     if (typeof mermaid !== 'undefined') {
-      mermaid.initialize({ startOnLoad: false });
+      mermaid.initialize({ startOnLoad: false, htmlLabels: false });
       mermaid.run({ querySelector: '.language-mermaid, .mermaid' });
     }
   });
@@ -304,6 +304,7 @@ ${html}
         win.mermaid.initialize({
           startOnLoad: false,
           theme: isDark ? 'dark' : 'default',
+          htmlLabels: false,
         });
         try {
           await win.mermaid.run({
