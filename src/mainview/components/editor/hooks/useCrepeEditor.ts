@@ -16,6 +16,7 @@ import { NodeSelection } from '@milkdown/kit/prose/state';
 import { clipboard } from '@milkdown/plugin-clipboard';
 import { history } from '@milkdown/plugin-history';
 import { gfm, remarkGFMPlugin } from '@milkdown/preset-gfm';
+import { remarkPreserveEmptyLinePlugin } from '@milkdown/preset-commonmark';
 import { clipboardBlobConverter } from '../plugins/clipboardBlobConverter';
 import { createSearchPlugin } from '../plugins/searchPlugin';
 import { electrobun } from '@/lib/electrobun';
@@ -180,25 +181,10 @@ export function useCrepeEditor(
         [Crepe.Feature.BlockEdit]: false,
         [Crepe.Feature.LinkTooltip]: true,
         [Crepe.Feature.Toolbar]: false,
-        [Crepe.Feature.ImageBlock]: {
-          // Handle local image upload - read as base64
-          onUpload: async (file: File) => {
-            const reader = new FileReader();
-            return new Promise((resolve, reject) => {
-              reader.onload = () => resolve(reader.result as string);
-              reader.onerror = reject;
-              reader.readAsDataURL(file);
-            });
-          },
-          // Proxy URLs (for local files, return as-is)
-          proxyDomURL: (url: string) => {
-            // If it's a local file path or already a data URL, return as-is
-            if (url.startsWith('data:') || url.startsWith('/')) {
-              return url;
-            }
-            return url;
-          },
-        } as any,
+        // Disable ImageBlock — it serializes standalone images with ratio.toFixed(2)
+        // as alt text, destroying the original alt (e.g. "MarkBun Preview" -> "1.00").
+        // Inline images remain fully supported.
+        [Crepe.Feature.ImageBlock]: false,
       },
       featureConfigs: {
         [Crepe.Feature.CodeMirror]: {
@@ -373,6 +359,10 @@ export function useCrepeEditor(
     // Use setTimeout(0) instead of requestAnimationFrame — RAF may not fire reliably
     // in Electrobun's WebView during startup when the window isn't visible.
     setTimeout(() => setIsReady(true), 0);
+
+    // Prevent Milkdown from serializing empty paragraphs as <br />
+    // (it does this to "preserve" blank lines, but it pollutes the markdown source).
+    void crepe.editor.remove(remarkPreserveEmptyLinePlugin);
 
     // Setup scroll hide after editor is created
     const container = containerRef.current;
