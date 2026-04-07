@@ -1167,23 +1167,25 @@ body {
   display: none !important;
 }
 
-/* Preview panel styling for HTML blocks */
+/* Remove code-block chrome from HTML blocks when not selected — compact like Typora */
+.milkdown-crepe-container .milkdown-code-block[data-lang="html"]:not(.selected) {
+  background-color: transparent !important;
+  border-radius: 0 !important;
+  margin: 0.4em 0 !important;
+  cursor: pointer;
+}
+
 .milkdown-crepe-container .milkdown-code-block[data-lang="html"]:not(.selected) .preview-panel {
   margin-top: 0 !important;
 }
 
 .milkdown-crepe-container .milkdown-code-block[data-lang="html"]:not(.selected) .preview {
-  padding-top: 16px !important;
+  padding: 0 !important;
 }
 
-/* Selected state: add top padding to match the layout */
+/* Selected state: restore normal code-block padding */
 .milkdown-crepe-container .milkdown-code-block[data-lang="html"].selected .preview {
   padding-top: 0 !important;
-}
-
-/* Click handling for HTML code blocks - make preview area clickable to select */
-.milkdown-crepe-container .milkdown-code-block[data-lang="html"]:not(.selected) {
-  cursor: pointer;
 }
 
 /* Respect inline width/height attributes on images inside HTML preview */
