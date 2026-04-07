@@ -2256,20 +2256,7 @@ async function main() {
   ContextMenu.on('context-menu-clicked', (event: { data: { action: string } }) => {
     const action = event.data.action;
 
-    // Special handling: open Mermaid viewer via JS evaluation
-    if (action === 'mermaid-view-diagram') {
-      // @ts-ignore
-      focusedWindow?.win.webview.evaluateJavaScript?.(`
-        if (window.__pendingMermaidSource) {
-          var src = window.__pendingMermaidSource;
-          window.__pendingMermaidSource = null;
-          if (window.__openMermaidViewer) window.__openMermaidViewer(src);
-        }
-      `);
-      return;
-    }
-
-    // Forward context menu actions to focused window's renderer
+    // Forward all context menu actions to focused window's renderer
     // @ts-ignore
     focusedWindow?.win.webview.rpc.send.menuAction({ action });
   });

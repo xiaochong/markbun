@@ -1187,16 +1187,6 @@ function App() {
     registerAITools(editorRef);
   }, []);
 
-  // Register Mermaid viewer bridge (window.__openMermaidViewer) for context menu integration
-  useEffect(() => {
-    (window as unknown as Record<string, unknown>).__openMermaidViewer = (source: string) => {
-      setMermaidViewerSource(source);
-    };
-    return () => {
-      delete (window as unknown as Record<string, unknown>).__openMermaidViewer;
-    };
-  }, []);
-
   // Register unified command handlers with the dispatcher
   useEffect(() => {
     const ctx: HandlerContext = {
@@ -1224,6 +1214,17 @@ function App() {
   useEffect(() => {
     return electrobun.on('menuAction', async (data) => {
       const { action } = data as { action: string };
+
+      // Handle Mermaid viewer open via window global (set by useContextMenu before native menu shows)
+      if (action === 'mermaid-view-diagram') {
+        const source = (window as unknown as Record<string, unknown>).__pendingMermaidSource as string | null;
+        (window as unknown as Record<string, unknown>).__pendingMermaidSource = null;
+        if (source) {
+          setMermaidViewerSource(source);
+        }
+        return;
+      }
+
       dispatcher.execute(action);
     });
   }, []);
