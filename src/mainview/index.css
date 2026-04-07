@@ -957,6 +957,13 @@ body {
   box-sizing: border-box;
 }
 
+/* Inline images (e.g. badges) inside paragraphs should stay inline, like Typora */
+.milkdown-crepe-container .milkdown .ProseMirror p img {
+  display: inline-block;
+  margin: 0;
+  vertical-align: middle;
+}
+
 /* Image block container styles - prevent sizing issues on file switch */
 .milkdown-crepe-container .milkdown-image-block,
 .milkdown-crepe-container .milkdown-image-block * {
