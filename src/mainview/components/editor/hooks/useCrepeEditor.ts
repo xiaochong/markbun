@@ -84,8 +84,20 @@ function splitAtCodeBlockBoundaries(lines: string[], chunkSize: number): string[
 
     // Only split when we are outside a code block
     if (current.length >= chunkSize && !inCodeBlock) {
-      chunks.push(current);
-      current = [];
+      // Shift trailing blank lines down to the next chunk.
+      // If a chunk ends with blank lines, remark-parse creates a spurious
+      // empty paragraph at the boundary. By moving those blanks to the next
+      // chunk they act as natural separators instead.
+      let splitIndex = current.length;
+      while (splitIndex > 0 && current[splitIndex - 1].trim() === '') {
+        splitIndex--;
+      }
+      if (splitIndex === 0) {
+        // The whole chunk is blank; keep at least one line to avoid an empty chunk.
+        splitIndex = 1;
+      }
+      chunks.push(current.slice(0, splitIndex));
+      current = current.slice(splitIndex);
     }
   }
 
