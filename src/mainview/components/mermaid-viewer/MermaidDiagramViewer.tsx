@@ -50,14 +50,30 @@ export function MermaidDiagramViewer({ isOpen, onClose, mermaidSource }: Mermaid
           startOnLoad: false,
           theme: isDark ? 'dark' : 'default',
           suppressErrorRendering: true,
+          htmlLabels: false,
         });
 
         const id = `mermaid-viewer-${Date.now()}`;
         const { svg } = await mermaid.render(id, mermaidSource);
 
         if (!cancelled) {
-          // Remove width="100%" for consistent sizing
-          const fixedSvg = svg.replace(/\swidth="100%"/, '');
+          // Force explicit width/height so the container div gets a real layout size in WebKit
+          const viewBoxMatch = svg.match(/viewBox="([\d.\s]+)"/);
+          const maxWidthMatch = svg.match(/style="max-width:\s*([\d.]+)px;"/);
+          let fixedSvg = svg;
+          if (viewBoxMatch && maxWidthMatch) {
+            const vbParts = viewBoxMatch[1].split(/[\s,]+/);
+            const vw = parseFloat(vbParts[2]);
+            const vh = parseFloat(vbParts[3]);
+            const maxW = parseFloat(maxWidthMatch[1]);
+            if (vw > 0 && vh > 0 && maxW > 0) {
+              const h = (maxW / vw) * vh;
+              fixedSvg = svg.replace(
+                /style="max-width:\s*([\d.]+)px;"/,
+                `width="${maxW}" height="${h}" style="max-width: ${maxW}px;"`
+              );
+            }
+          }
           setSvgContent(fixedSvg);
           setIsLoading(false);
         }
