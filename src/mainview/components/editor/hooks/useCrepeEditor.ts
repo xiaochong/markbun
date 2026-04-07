@@ -381,7 +381,7 @@ export function useCrepeEditor(
     return convertCodeBlockToFrontmatter(content);
   }, []);
 
-  const CHUNK_LOAD_LINE_THRESHOLD = 500; // Lines
+  const CHUNK_LOAD_LINE_THRESHOLD = 10000; // Lines
   const CHUNK_SIZE_LINES = 100; // Lines per chunk
 
   const setMarkdown = useCallback((markdown: string, options?: { onContentSet?: () => void }) => {
