@@ -4,9 +4,12 @@ import type { ElectrobunConfig } from "electrobun";
 const isBuild = process.argv.some(arg => arg === "build");
 
 export default {
+	name: "MarkBun",
+	version: "0.1.0",
+	author: "MarkBun",
 	app: {
 		name: "MarkBun",
-		identifier: "dev.markbun.app",
+		identifier: "com.markbun.app",
 		version: "0.1.0",
 		urlSchemes: ["markbun"],
 	},
@@ -30,6 +33,8 @@ export default {
 		win: {
 			bundleCEF: false,
 			icon: "icon.iconset/icon.ico",
+			// @ts-ignore
+			useAsar: false,
 		},
 	},
 	release: {

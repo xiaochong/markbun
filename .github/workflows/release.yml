@@ -38,6 +38,10 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Install NSIS (Windows)
+        if: matrix.platform == 'win'
+        run: choco install nsis -y
+
       - name: Sync version from tag
         shell: bash
         run: |
@@ -107,4 +111,4 @@ jobs:
             --title="MarkBun $TAG" \
             --generate-notes \
             release-artifacts/macos-arm64-MarkBun.dmg \
-            release-artifacts/win-x64-MarkBun-Setup.zip
+            release-artifacts/win-x64-MarkBun-Setup.exe
