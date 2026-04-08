@@ -50,6 +50,8 @@ MarkBun is an open-source, cross-platform markdown editor designed for seamless 
 > - ✅ Session Persistence (v0.5.0)
 > - ✅ Windows Support (v0.5.0)
 > - ✅ AI Chat Assistant (v0.6.0)
+> - ✅ Mermaid Diagrams & HTML Blocks (v0.7.0)
+> - ✅ Frontmatter Support (v0.7.0)
 >
 > See [ROADMAP.md](./ROADMAP.md) for detailed development phases.
 
@@ -85,6 +87,9 @@ When you need them, every UI element can be instantly toggled via the **View men
 - ⌨️ **Keyboard Shortcuts** - Comprehensive shortcuts for formatting and navigation
 - 🔤 **Source Mode** - Toggle between WYSIWYG and source code editing (`Cmd/Ctrl + /`)
 - 🤖 **AI Assistant** - Multi-provider AI chat with document editing tools (OpenAI, Anthropic, Ollama, etc.)
+- 📊 **Mermaid Diagrams** - View Mermaid diagrams with zoom and pan support
+- 🌐 **HTML Blocks** - Render HTML blocks with DOMPurify preview support
+- 📝 **Frontmatter** - Display YAML frontmatter in the editor
 - 🌐 **i18n** - Multi-language support (English, Chinese, Japanese, Korean, etc.)
 
 ![MarkBun Preview](docs/assets/preview1.png)
@@ -457,6 +462,14 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 - [x] Multi-provider support (OpenAI, Anthropic, Google, Ollama, DeepSeek, etc.)
 - [x] Document editing tools (read, edit, write)
 - [x] Session history persistence and management
+
+### v0.7.0 ✅ Completed
+- [x] Mermaid diagram viewer with zoom and pan
+- [x] HTML block rendering with DOMPurify preview support
+- [x] Frontmatter display support
+- [x] Source mode support for undo/redo/copy/cut/select-all
+- [x] AI tools image path conversion
+- [x] Command manifest unification and i18n consolidation
 
 ### v1.0.0
 - Stable release

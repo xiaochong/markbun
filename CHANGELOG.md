@@ -5,6 +5,55 @@ All notable changes to MarkBun will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## \[0.7.0] - 2026-04-08
+
+### Added
+
+* Mermaid diagram viewer with zoom and pan support
+* HTML block rendering with DOMPurify preview support
+* Frontmatter display support in editor
+* Source mode support for undo/redo/copy/cut/select-all
+* AI tools image path conversion (blob URL ↔ local path)
+* Chunked loading for large files with blank-line boundary splitting
+* `sync-version` script for version consistency
+
+### Fixed
+
+* Fix race conditions in file switch, auto-save, and dirty state
+* Fix Mermaid node text rendering in WebKit by disabling `htmlLabels`
+* Fix list spread workaround for `listItem` join operations
+* Prevent spurious blank lines between list items on save
+* Stop image alt from turning into `1.00` and eliminate spurious `<br />` on save
+* Keep inline images inside paragraphs as `inline-block`
+* Improve code block line-height and padding styles
+* Render HTML blocks compactly like Typora
+* Disable spellcheck in editor containers
+* Filter out empty assistant messages between tool calls in AI chat
+* Fix source mode toggle with `requestAnimationFrame` polling pattern
+* Insert single-paragraph text inline at cursor for AI edits
+
+### Changed
+
+* Upgrade Milkdown packages to 7.20.0
+* Unify command manifest and dispatch pipeline
+* Consolidate locale files into shared source of truth
+* Remove `bunfig.toml`
+* Improve AI chat message layout with adaptive width and larger padding
+
+## \[0.6.0] - 2026-04-04
+
+### Added
+
+* AI Chat Assistant with streaming responses
+* Multi-provider AI support (OpenAI, Anthropic, Google, Ollama, DeepSeek, etc.)
+* Document editing tools for AI (read, edit, write)
+* AI session history persistence and management
+* Context-aware system prompt (file name, document language)
+
+### Fixed
+
+* Various AI chat stability improvements
+
 ## \[0.5.0] - 2026-04-02
 
 ### Added

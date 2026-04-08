@@ -13,7 +13,8 @@ This document outlines the development phases for MarkBun, from MVP to v1.0.
 | Phase 4 | v0.4.0 | File Protection & Export | ✅ Complete |
 | Phase 5 | v0.5.0 | Editor Productivity | ✅ Complete |
 | Phase 6 | v0.6.0 | AI Support | ✅ Complete |
-| Phase 7 | - | Backlog (see TODO below) | 📋 Backlog |
+| Phase 7 | v0.7.0 | Editor Enhancements | ✅ Complete |
+| Phase 8 | - | Backlog (see TODO below) | 📋 Backlog |
 
 ---
 
@@ -292,6 +293,36 @@ This document outlines the development phases for MarkBun, from MVP to v1.0.
 
 ---
 
+## ✅ Phase 7: Editor Enhancements (v0.7.0)
+
+**Status:** Complete
+**Target:** Richer editing experience with diagrams, HTML, frontmatter, and large-file support
+
+### Completed Tasks
+
+#### Diagrams & Rich Content
+- [x] Mermaid diagram viewer with zoom and pan
+- [x] HTML block rendering with DOMPurify preview support
+- [x] Frontmatter display support in editor
+
+#### Editor Improvements
+- [x] Source mode support for undo/redo/copy/cut/select-all
+- [x] Chunked loading for large files with blank-line boundary splitting
+- [x] Milkdown packages upgraded to 7.20.0
+- [x] Various editor bug fixes (list items, images, race conditions, stale data)
+
+#### AI Enhancements
+- [x] AI tools image path conversion (blob URL ↔ local path)
+- [x] Filter out empty assistant messages between tool calls
+- [x] Improved AI chat message layout
+
+#### Architecture
+- [x] Unify command manifest and dispatch pipeline
+- [x] Consolidate locale files into shared source of truth
+- [x] Add `sync-version` script
+
+---
+
 ## 📋 TODO (Backlog)
 
 Features under consideration for future releases, no version assignment yet.
@@ -356,4 +387,4 @@ Users retain full control: every UI element can be toggled on demand via the Vie
 
 ---
 
-*Last updated: 2026-04-04*
+*Last updated: 2026-04-08*
