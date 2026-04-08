@@ -1858,10 +1858,19 @@ async function main() {
             const eventStream = piAiStream(aiModel, ctx, {
               ...(apiKey ? { apiKey } : {}),
             });
+            let lastEventType = '';
+            let lastError: string | undefined;
             for await (const event of eventStream) {
+              lastEventType = event.type;
+              if (event.type === 'error') {
+                lastError = (event as any).error?.errorMessage || 'Unknown error';
+              }
               if (event.type === 'done' || event.type === 'error') break;
             }
             const latency = Date.now() - start;
+            if (lastEventType === 'error') {
+              return { success: false, error: lastError };
+            }
             return { success: true, latency };
           } catch (error) {
             return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
