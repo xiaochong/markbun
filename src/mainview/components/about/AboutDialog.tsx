@@ -60,7 +60,7 @@ export function AboutDialog({ isOpen, onClose }: AboutDialogProps) {
           </div>
           <div className="text-center">
             <h2 className="text-xl font-semibold tracking-tight">MarkBun</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Version 0.6.0</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Version 0.7.0</p>
           </div>
           <p className="text-sm text-center text-muted-foreground leading-relaxed">
             {td('about.description')}
