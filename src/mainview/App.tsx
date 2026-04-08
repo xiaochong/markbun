@@ -1182,9 +1182,21 @@ function App() {
     });
   }, []);
 
+  // Ref for AI content changed callback to avoid stale closures
+  const aiContentChangedRef = useRef<(markdown: string) => void>(() => {});
+  aiContentChangedRef.current = (markdown: string) => {
+    if (isSwitchingFileRef.current) return;
+    updateContent(markdown);
+    setEditorContent(markdown);
+    outline.setHeadings(markdown);
+    scheduleSave();
+  };
+
   // Register AI tool calls bridge (window.__markbunAI) for editor integration
   useEffect(() => {
-    registerAITools(editorRef);
+    registerAITools(editorRef, {
+      onContentChanged: (markdown) => aiContentChangedRef.current(markdown),
+    });
   }, []);
 
   // Register unified command handlers with the dispatcher

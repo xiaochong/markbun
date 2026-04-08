@@ -21,11 +21,20 @@ import {
   hasLocalImages,
 } from './image';
 
+export interface AIToolsCallbacks {
+  onContentChanged?: (markdown: string) => void;
+}
+
 /**
  * Register the `window.__markbunAI` bridge.
  * Should be called once after the editor ref is available (useEffect in App).
  */
-export function registerAITools(editorRef: React.RefObject<MilkdownEditorRef | null>) {
+export function registerAITools(
+  editorRef: React.RefObject<MilkdownEditorRef | null>,
+  callbacks?: AIToolsCallbacks,
+) {
+  const { onContentChanged } = callbacks || {};
+
   (window as any).__markbunAI = {
     read: () => {
       const editor = editorRef.current;
@@ -54,6 +63,11 @@ export function registerAITools(editorRef: React.RefObject<MilkdownEditorRef | n
         ? await processMarkdownImages(newContent)
         : newContent;
       editor.setMarkdown(contentToLoad);
+
+      // Sync application state and trigger auto-save
+      const newMarkdown = editor.getMarkdown();
+      onContentChanged?.(newMarkdown);
+
       return { success: true, replacements };
     },
 
@@ -67,6 +81,11 @@ export function registerAITools(editorRef: React.RefObject<MilkdownEditorRef | n
         ? await processMarkdownImages(args.content)
         : args.content;
       editor.setMarkdown(contentToLoad);
+
+      // Sync application state and trigger auto-save
+      const newMarkdown = editor.getMarkdown();
+      onContentChanged?.(newMarkdown);
+
       return { success: true };
     },
   };
