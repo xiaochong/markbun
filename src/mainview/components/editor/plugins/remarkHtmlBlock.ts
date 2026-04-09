@@ -21,7 +21,7 @@ const remarkHtmlBlock: Plugin<[], Root> = function () {
 
       const newNode = {
         type: 'code',
-        lang: 'html',
+        lang: 'html-block',
         value: node.value,
       };
 

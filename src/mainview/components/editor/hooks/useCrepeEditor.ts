@@ -52,6 +52,36 @@ const inlineMarksParsersPlugin: MilkdownPlugin = (ctx) => async () => {
   ]);
 };
 
+// Scan lines and return closed fenced-code-block ranges [start, end].
+function getFenceRanges(lines: string[]): Array<[number, number]> {
+  const ranges: Array<[number, number]> = [];
+  let inFence = false;
+  let fenceChar = '';
+  let fenceLen = 0;
+  let start = -1;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!inFence) {
+      const m = line.match(/^(`{3,}|~{3,})/);
+      if (m) {
+        inFence = true;
+        fenceChar = m[1][0];
+        fenceLen = m[1].length;
+        start = i;
+      }
+    } else {
+      const m = line.match(/^(`+|~+)\s*$/);
+      if (m && m[1][0] === fenceChar && m[1].length >= fenceLen) {
+        ranges.push([start, i]);
+        inFence = false;
+      }
+    }
+  }
+
+  return ranges;
+}
+
 // Split markdown lines into chunks of approximately `chunkSize` lines each,
 // but never break inside a fenced code block (``` or ~~~).
 // Breaking mid-fence causes the chunk parser to mis-interpret the indented
@@ -102,6 +132,17 @@ function splitAtCodeBlockBoundaries(lines: string[], chunkSize: number): string[
         }
         // Hard force split at chunkSize to avoid infinite growth.
         splitIndex = current.length;
+      }
+
+      // Guard: do not split inside a closed fence range. If the split point
+      // falls between the open and close markers, move it to after the close
+      // marker so the fence stays intact in the current chunk.
+      const ranges = getFenceRanges(current);
+      for (const [start, end] of ranges) {
+        if (splitIndex > start && splitIndex <= end) {
+          splitIndex = end + 1;
+          break;
+        }
       }
 
       chunks.push(current.slice(0, splitIndex));
@@ -210,10 +251,16 @@ export function useCrepeEditor(
         [Crepe.Feature.CodeMirror]: {
           renderPreview: (language: string, content: string, applyPreview: (value: null | string | HTMLElement) => void) => {
             const lang = language.toLowerCase();
+            const trimmed = content.trim();
 
-            if (lang === 'html' && content.trim()) {
+            if (lang === 'html-block' && trimmed) {
+              // Skip preview for full HTML documents — DOMParser strips <head> and DOMPurify
+              // + global CSS conflicts make the preview useless/blank anyway.
+              const isFullDocument = /<(html|!doctype|head)\b/i.test(trimmed);
+              if (isFullDocument) return null;
+
               const parser = new DOMParser();
-              const doc = parser.parseFromString(content.trim(), 'text/html');
+              const doc = parser.parseFromString(trimmed, 'text/html');
               const images = Array.from(doc.querySelectorAll('img'));
 
               // Convert width/height attributes to inline styles so they survive CSS resets
@@ -609,8 +656,8 @@ export function useCrepeEditor(
           // Set data-lang attribute for CSS targeting
           (block as HTMLElement).dataset.lang = lang;
 
-          // If language changed from latex/mermaid/html to something else, remove selected class
-          if ((prevLang === 'latex' || prevLang === 'mermaid' || prevLang === 'html') && lang !== prevLang) {
+          // If language changed from latex/mermaid/html-block to something else, remove selected class
+          if ((prevLang === 'latex' || prevLang === 'mermaid' || prevLang === 'html-block') && lang !== prevLang) {
             block.classList.remove('selected');
           }
         }
@@ -618,7 +665,7 @@ export function useCrepeEditor(
     };
 
     const restoreHtmlPreviewImages = () => {
-      const htmlBlocks = container.querySelectorAll('.milkdown-code-block[data-lang="html"]');
+      const htmlBlocks = container.querySelectorAll('.milkdown-code-block[data-lang="html-block"]');
       htmlBlocks.forEach((block) => {
         const imgs = block.querySelectorAll('.preview img[data-src]');
         imgs.forEach((img) => {
@@ -686,7 +733,7 @@ export function useCrepeEditor(
       // Check if we clicked inside a LaTeX code block
       if (codeBlock) {
         const lang = codeBlock.dataset.lang;
-        if (lang !== 'latex' && lang !== 'LaTeX' && lang !== 'mermaid' && lang !== 'html') return;
+        if (lang !== 'latex' && lang !== 'LaTeX' && lang !== 'mermaid' && lang !== 'html-block') return;
 
         // Don't handle clicks on the language button or picker
         if (target.closest('.language-button') || target.closest('.language-picker')) {
@@ -750,12 +797,12 @@ export function useCrepeEditor(
           }
         }
       } else {
-        // Clicked outside any code block - deselect all LaTeX/mermaid/html code blocks
+        // Clicked outside any code block - deselect all LaTeX/mermaid/html-block code blocks
         const selectedLatexBlocks = container.querySelectorAll(
           '.milkdown-code-block[data-lang="latex"].selected, ' +
           '.milkdown-code-block[data-lang="LaTeX"].selected, ' +
           '.milkdown-code-block[data-lang="mermaid"].selected, ' +
-          '.milkdown-code-block[data-lang="html"].selected'
+          '.milkdown-code-block[data-lang="html-block"].selected'
         );
         selectedLatexBlocks.forEach((block) => {
           block.classList.remove('selected');

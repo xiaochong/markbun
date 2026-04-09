@@ -13,7 +13,7 @@ export const blockHtmlSchema = codeBlockSchema.extendSchema((prev) => {
         match: baseSchema.toMarkdown.match,
         runner: (state, node) => {
           const language = node.attrs.language ?? '';
-          if (language.toLowerCase() === 'html') {
+          if (language.toLowerCase() === 'html-block') {
             state.addNode(
               'html',
               undefined,

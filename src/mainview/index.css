@@ -1134,7 +1134,7 @@ body {
    =========================================== */
 
 /* Default state: only show preview, hide source code and PREVIEW label */
-.milkdown-crepe-container .milkdown-code-block[data-lang="html"]:not(.selected) .codemirror-host {
+.milkdown-crepe-container .milkdown-code-block[data-lang="html-block"]:not(.selected) .codemirror-host {
   position: absolute !important;
   opacity: 0 !important;
   pointer-events: none !important;
@@ -1143,13 +1143,13 @@ body {
 }
 
 /* Hide PREVIEW label and divider when not selected */
-.milkdown-crepe-container .milkdown-code-block[data-lang="html"]:not(.selected) .preview-label,
-.milkdown-crepe-container .milkdown-code-block[data-lang="html"]:not(.selected) .preview-divider {
+.milkdown-crepe-container .milkdown-code-block[data-lang="html-block"]:not(.selected) .preview-label,
+.milkdown-crepe-container .milkdown-code-block[data-lang="html-block"]:not(.selected) .preview-divider {
   display: none !important;
 }
 
 /* Selected state: show source code */
-.milkdown-crepe-container .milkdown-code-block[data-lang="html"].selected .codemirror-host {
+.milkdown-crepe-container .milkdown-code-block[data-lang="html-block"].selected .codemirror-host {
   position: relative !important;
   opacity: 1 !important;
   pointer-events: auto !important;
@@ -1157,39 +1157,39 @@ body {
 }
 
 /* Show PREVIEW label when selected */
-.milkdown-crepe-container .milkdown-code-block[data-lang="html"].selected .preview-label,
-.milkdown-crepe-container .milkdown-code-block[data-lang="html"].selected .preview-divider {
+.milkdown-crepe-container .milkdown-code-block[data-lang="html-block"].selected .preview-label,
+.milkdown-crepe-container .milkdown-code-block[data-lang="html-block"].selected .preview-divider {
   display: block !important;
 }
 
 /* Hide the preview toggle button for HTML blocks */
-.milkdown-crepe-container .milkdown-code-block[data-lang="html"] .preview-toggle-button {
+.milkdown-crepe-container .milkdown-code-block[data-lang="html-block"] .preview-toggle-button {
   display: none !important;
 }
 
 /* Remove code-block chrome from HTML blocks when not selected — compact like Typora */
-.milkdown-crepe-container .milkdown-code-block[data-lang="html"]:not(.selected) {
+.milkdown-crepe-container .milkdown-code-block[data-lang="html-block"]:not(.selected) {
   background-color: transparent !important;
   border-radius: 0 !important;
   margin: 0.4em 0 !important;
   cursor: pointer;
 }
 
-.milkdown-crepe-container .milkdown-code-block[data-lang="html"]:not(.selected) .preview-panel {
+.milkdown-crepe-container .milkdown-code-block[data-lang="html-block"]:not(.selected) .preview-panel {
   margin-top: 0 !important;
 }
 
-.milkdown-crepe-container .milkdown-code-block[data-lang="html"]:not(.selected) .preview {
+.milkdown-crepe-container .milkdown-code-block[data-lang="html-block"]:not(.selected) .preview {
   padding: 0 !important;
 }
 
 /* Selected state: restore normal code-block padding */
-.milkdown-crepe-container .milkdown-code-block[data-lang="html"].selected .preview {
+.milkdown-crepe-container .milkdown-code-block[data-lang="html-block"].selected .preview {
   padding-top: 0 !important;
 }
 
 /* Respect inline width/height attributes on images inside HTML preview */
-.milkdown-crepe-container .milkdown-code-block[data-lang="html"] .preview img {
+.milkdown-crepe-container .milkdown-code-block[data-lang="html-block"] .preview img {
   max-width: 100%;
   display: inline-block;
 }
