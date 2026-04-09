@@ -65,7 +65,7 @@ const remarkHtmlBlock: Plugin<[], Root> = function () {
 
       const newNode = {
         type: 'code',
-        lang: 'html',
+        lang: 'html-block',
         value: node.value,
       };
 
@@ -95,7 +95,7 @@ export const blockHtmlSchema = codeBlockSchema.extendSchema((prev) => {
         match: baseSchema.toMarkdown.match,
         runner: (state, node) => {
           const language = node.attrs.language ?? '';
-          if (language.toLowerCase() === 'html') {
+          if (language.toLowerCase() === 'html-block') {
             state.addNode(
               'html',
               undefined,
@@ -217,3 +217,4 @@ observer.observe(container, {
 ## Related Issues
 
 - `docs/solutions/best-practices/milkdown-frontmatter-display-workaround-2026-04-04.md` — employs the same bidirectional code-block transformation pattern in `useCrepeEditor.ts` to display YAML frontmatter as a `yaml` code block.
+- `docs/solutions/logic-errors/milkdown-html-block-code-fence-misidentification-and-chunk-splitting-2026-04-09.md` — follow-up fix that introduced the `html-block` internal language to prevent fenced ` ```html ` code blocks from being misidentified as raw HTML blocks, and repaired chunked-loading split logic for large files.
