@@ -292,8 +292,6 @@ export function useCrepeEditor(
             if (lang !== 'mermaid' || !content.trim()) return null;
 
             const code = content.trim();
-            // SVG text mode does not support <br/>; use \n for line breaks instead
-            const safeCode = code.replace(/<br\s*\/?>/gi, '\n');
             const id = `mermaid-svg-${Math.random().toString(36).slice(2)}`;
 
             import('mermaid').then(({ default: mermaid }) => {
@@ -302,9 +300,8 @@ export function useCrepeEditor(
                 theme: darkModeRef.current ? 'dark' : 'default',
                 suppressErrorRendering: true,
                 htmlLabels: false,
-                flowchart: { htmlLabels: false },
               });
-              mermaid.render(id, safeCode)
+              mermaid.render(id, code)
                 .then(({ svg }) => {
                   // WebKit (Electrobun) cannot auto-compute SVG height when width="100%"
                   // and no explicit height attribute. Fix by removing width="100%" so
@@ -703,6 +700,8 @@ export function useCrepeEditor(
     };
 
     const injectMermaidHoverButtons = () => {
+      const view = crepeRef.current?.editor?.ctx?.get(editorViewCtx);
+
       const blocks = container.querySelectorAll('.milkdown-code-block[data-lang="mermaid"]:not(.selected)');
       blocks.forEach((block) => {
         const previewPanel = block.querySelector('.preview-panel');
@@ -714,16 +713,31 @@ export function useCrepeEditor(
         btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
-          // Prefer reusing the already-rendered SVG from preview so the viewer
-          // matches exactly what the user sees in the editor.
-          const previewSvg = previewPanel.querySelector('svg');
-          if (previewSvg && typeof (window as any).__openMermaidViewer === 'function') {
-            (window as any).__openMermaidViewer(previewSvg.outerHTML);
-            return;
+          let source: string | null = null;
+
+          // Extract from ProseMirror AST (always complete, even when CodeMirror is hidden at height:0)
+          if (view) {
+            view.state.doc.descendants((node, pos) => {
+              if (node.type.name === 'code_block' || node.type.name === 'fence') {
+                try {
+                  const dom = view.nodeDOM(pos);
+                  if (dom && (block === dom || block.contains(dom as Node) || (dom as Element).contains(block))) {
+                    source = node.textContent;
+                    return false;
+                  }
+                } catch {
+                  // nodeDOM may fail, continue
+                }
+              }
+            });
           }
-          // Fallback to source code if preview hasn't rendered yet
-          const lines = Array.from(block.querySelectorAll('.cm-line')).map((el) => el.textContent || '');
-          const source = lines.join('\n');
+
+          // Fallback to CodeMirror lines (may be truncated when container height is 0)
+          if (!source) {
+            const lines = Array.from(block.querySelectorAll('.cm-line')).map((el) => el.textContent || '');
+            source = lines.join('\n');
+          }
+
           if (source && typeof (window as any).__openMermaidViewer === 'function') {
             (window as any).__openMermaidViewer(source);
           }

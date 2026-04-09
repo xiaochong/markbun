@@ -9,7 +9,7 @@ interface MermaidDiagramViewerProps {
 
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 15.0;
-const ZOOM_FACTOR = 1.25;
+const ZOOM_FACTOR = 1.10;
 const PAN_STEP = 50;
 
 export function MermaidDiagramViewer({ isOpen, onClose, mermaidSource }: MermaidDiagramViewerProps) {
@@ -44,34 +44,22 @@ export function MermaidDiagramViewer({ isOpen, onClose, mermaidSource }: Mermaid
     setIsLoading(true);
     setSvgContent(null);
 
-    // If the caller already passed a rendered SVG (e.g. from the editor preview),
-    // reuse it directly so the viewer is pixel-for-pixel identical to the preview.
-    const trimmed = mermaidSource.trim();
-    if (trimmed.startsWith('<svg')) {
-      const fixedSvg = trimmed.replace(/\swidth="100%"/, '');
-      setSvgContent(fixedSvg);
-      setIsLoading(false);
-      return;
-    }
-
     const renderDiagram = async () => {
       try {
         const mermaid = (await import('mermaid')).default;
         const isDark = document.documentElement.classList.contains('dark');
+        // Use Mermaid defaults (htmlLabels: true) in the viewer for maximum
+        // compatibility with all diagram types.
         mermaid.initialize({
           startOnLoad: false,
           theme: isDark ? 'dark' : 'default',
           suppressErrorRendering: true,
-          htmlLabels: false,
-          flowchart: { htmlLabels: false },
         });
 
         const id = `mermaid-viewer-${Date.now()}`;
-        // SVG text mode does not support <br/>; use \n for line breaks instead
-        const safeSource = mermaidSource.replace(/<br\s*\/?>/gi, '\n');
-        const { svg } = await mermaid.render(id, safeSource);
+        const { svg } = await mermaid.render(id, mermaidSource);
 
-        // Match editor preview: strip width="100%" so SVG uses its intrinsic dimensions
+        // Strip width="100%" so SVG uses its intrinsic viewBox dimensions
         const fixedSvg = svg.replace(/\swidth="100%"/, '');
 
         if (!cancelled) {
