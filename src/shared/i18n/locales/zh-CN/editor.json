@@ -32,6 +32,7 @@
     "zoomIn": "放大",
     "zoomOut": "缩小",
     "reset": "重置",
+    "fitToWindow": "适应窗口",
     "rendering": "正在渲染图表...",
     "renderError": "图表渲染失败",
     "close": "关闭"

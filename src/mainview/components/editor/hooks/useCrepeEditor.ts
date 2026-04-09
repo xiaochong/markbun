@@ -292,6 +292,8 @@ export function useCrepeEditor(
             if (lang !== 'mermaid' || !content.trim()) return null;
 
             const code = content.trim();
+            // SVG text mode does not support <br/>; use \n for line breaks instead
+            const safeCode = code.replace(/<br\s*\/?>/gi, '\n');
             const id = `mermaid-svg-${Math.random().toString(36).slice(2)}`;
 
             import('mermaid').then(({ default: mermaid }) => {
@@ -300,8 +302,9 @@ export function useCrepeEditor(
                 theme: darkModeRef.current ? 'dark' : 'default',
                 suppressErrorRendering: true,
                 htmlLabels: false,
+                flowchart: { htmlLabels: false },
               });
-              mermaid.render(id, code)
+              mermaid.render(id, safeCode)
                 .then(({ svg }) => {
                   // WebKit (Electrobun) cannot auto-compute SVG height when width="100%"
                   // and no explicit height attribute. Fix by removing width="100%" so
@@ -699,9 +702,41 @@ export function useCrepeEditor(
       });
     };
 
+    const injectMermaidHoverButtons = () => {
+      const blocks = container.querySelectorAll('.milkdown-code-block[data-lang="mermaid"]:not(.selected)');
+      blocks.forEach((block) => {
+        const previewPanel = block.querySelector('.preview-panel');
+        if (!previewPanel || previewPanel.querySelector('.mermaid-open-viewer-btn')) return;
+
+        const btn = document.createElement('button');
+        btn.className = 'mermaid-open-viewer-btn';
+        btn.title = 'Open in Viewer';
+        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          // Prefer reusing the already-rendered SVG from preview so the viewer
+          // matches exactly what the user sees in the editor.
+          const previewSvg = previewPanel.querySelector('svg');
+          if (previewSvg && typeof (window as any).__openMermaidViewer === 'function') {
+            (window as any).__openMermaidViewer(previewSvg.outerHTML);
+            return;
+          }
+          // Fallback to source code if preview hasn't rendered yet
+          const lines = Array.from(block.querySelectorAll('.cm-line')).map((el) => el.textContent || '');
+          const source = lines.join('\n');
+          if (source && typeof (window as any).__openMermaidViewer === 'function') {
+            (window as any).__openMermaidViewer(source);
+          }
+        });
+
+        previewPanel.appendChild(btn);
+      });
+    };
+
     const updateAll = () => {
       updateLatexCodeBlocks();
       restoreHtmlPreviewImages();
+      injectMermaidHoverButtons();
     };
 
     // Initial update
@@ -729,6 +764,9 @@ export function useCrepeEditor(
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const codeBlock = target.closest('.milkdown-code-block') as HTMLElement | null;
+
+      // Skip if clicking the Mermaid hover button
+      if (target.closest('.mermaid-open-viewer-btn')) return;
 
       // Check if we clicked inside a LaTeX code block
       if (codeBlock) {

@@ -479,6 +479,39 @@ body {
   cursor: pointer;
 }
 
+/* Hover button to open Mermaid diagram in dedicated viewer */
+.milkdown-crepe-container .milkdown-code-block[data-lang="mermaid"]:not(.selected) .preview-panel {
+  position: relative;
+}
+
+.mermaid-open-viewer-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 20;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--background) / 0.95);
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  transition: background 0.15s;
+}
+
+.mermaid-open-viewer-btn:hover {
+  background: hsl(var(--accent));
+}
+
+.milkdown-crepe-container .milkdown-code-block[data-lang="mermaid"]:not(.selected) .preview-panel:hover .mermaid-open-viewer-btn {
+  display: flex;
+}
+
 /* SVG 容器样式 */
 .milkdown-crepe-container .milkdown-code-block[data-lang="mermaid"] .preview svg {
   max-width: 100%;
@@ -1339,6 +1372,29 @@ body {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+}
+
+/* ===========================================
+   Mermaid Diagram Viewer Modal
+   =========================================== */
+
+/* Prevent foreignObject black-background compositing bugs in WebKit */
+.mermaid-viewer-svg foreignObject > div,
+.mermaid-viewer-svg foreignObject .label,
+.mermaid-viewer-svg foreignObject .nodeLabel,
+.mermaid-viewer-svg foreignObject .edgeLabel,
+.mermaid-viewer-svg foreignObject p {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.mermaid-viewer-svg foreignObject .labelBkg,
+.mermaid-viewer-svg .edgeLabels rect,
+.mermaid-viewer-svg g.edgeLabel rect,
+.mermaid-viewer-svg [class*="edgeLabel"] rect {
+  background: transparent !important;
+  background-color: transparent !important;
+  fill: transparent !important;
 }
 
 /* Highlight (==text==), superscript (^text^), subscript (~text~) */

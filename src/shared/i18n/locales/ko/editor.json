@@ -32,6 +32,7 @@
     "zoomIn": "확대",
     "zoomOut": "축소",
     "reset": "초기화",
+    "fitToWindow": "창에 맞추기",
     "rendering": "도표를 렌더링 중...",
     "renderError": "도표 렌더링 실패",
     "close": "닫기"

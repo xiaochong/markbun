@@ -32,6 +32,7 @@
     "zoomIn": "Zoom In",
     "zoomOut": "Zoom Out",
     "reset": "Reset",
+    "fitToWindow": "Fit to Window",
     "rendering": "Rendering diagram...",
     "renderError": "Failed to render diagram",
     "close": "Close"

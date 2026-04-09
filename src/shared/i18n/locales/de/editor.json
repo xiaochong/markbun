@@ -32,6 +32,7 @@
     "zoomIn": "Vergrößern",
     "zoomOut": "Verkleinern",
     "reset": "Zurücksetzen",
+    "fitToWindow": "In Fenster einpassen",
     "rendering": "Diagramm wird gerendert...",
     "renderError": "Diagramm konnte nicht gerendert werden",
     "close": "Schließen"

@@ -8,7 +8,7 @@ interface MermaidDiagramViewerProps {
 }
 
 const MIN_ZOOM = 0.1;
-const MAX_ZOOM = 5.0;
+const MAX_ZOOM = 15.0;
 const ZOOM_FACTOR = 1.25;
 const PAN_STEP = 50;
 
@@ -21,6 +21,7 @@ export function MermaidDiagramViewer({ isOpen, onClose, mermaidSource }: Mermaid
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [canPan, setCanPan] = useState(false);
+  const [svgSize, setSvgSize] = useState({ width: 0, height: 0 });
   const dragStart = useRef({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
@@ -38,9 +39,20 @@ export function MermaidDiagramViewer({ isOpen, onClose, mermaidSource }: Mermaid
     let cancelled = false;
     setZoom(1);
     setPosition({ x: 0, y: 0 });
+    setSvgSize({ width: 0, height: 0 });
     setError(null);
     setIsLoading(true);
     setSvgContent(null);
+
+    // If the caller already passed a rendered SVG (e.g. from the editor preview),
+    // reuse it directly so the viewer is pixel-for-pixel identical to the preview.
+    const trimmed = mermaidSource.trim();
+    if (trimmed.startsWith('<svg')) {
+      const fixedSvg = trimmed.replace(/\swidth="100%"/, '');
+      setSvgContent(fixedSvg);
+      setIsLoading(false);
+      return;
+    }
 
     const renderDiagram = async () => {
       try {
@@ -51,29 +63,18 @@ export function MermaidDiagramViewer({ isOpen, onClose, mermaidSource }: Mermaid
           theme: isDark ? 'dark' : 'default',
           suppressErrorRendering: true,
           htmlLabels: false,
+          flowchart: { htmlLabels: false },
         });
 
         const id = `mermaid-viewer-${Date.now()}`;
-        const { svg } = await mermaid.render(id, mermaidSource);
+        // SVG text mode does not support <br/>; use \n for line breaks instead
+        const safeSource = mermaidSource.replace(/<br\s*\/?>/gi, '\n');
+        const { svg } = await mermaid.render(id, safeSource);
+
+        // Match editor preview: strip width="100%" so SVG uses its intrinsic dimensions
+        const fixedSvg = svg.replace(/\swidth="100%"/, '');
 
         if (!cancelled) {
-          // Force explicit width/height so the container div gets a real layout size in WebKit
-          const viewBoxMatch = svg.match(/viewBox="([\d.\s]+)"/);
-          const maxWidthMatch = svg.match(/style="max-width:\s*([\d.]+)px;"/);
-          let fixedSvg = svg;
-          if (viewBoxMatch && maxWidthMatch) {
-            const vbParts = viewBoxMatch[1].split(/[\s,]+/);
-            const vw = parseFloat(vbParts[2]);
-            const vh = parseFloat(vbParts[3]);
-            const maxW = parseFloat(maxWidthMatch[1]);
-            if (vw > 0 && vh > 0 && maxW > 0) {
-              const h = (maxW / vw) * vh;
-              fixedSvg = svg.replace(
-                /style="max-width:\s*([\d.]+)px;"/,
-                `width="${maxW}" height="${h}" style="max-width: ${maxW}px;"`
-              );
-            }
-          }
           setSvgContent(fixedSvg);
           setIsLoading(false);
         }
@@ -89,75 +90,43 @@ export function MermaidDiagramViewer({ isOpen, onClose, mermaidSource }: Mermaid
     return () => { cancelled = true; };
   }, [isOpen, mermaidSource]);
 
-  // Calculate fit-to-view zoom after SVG renders
+  // Read SVG natural size from viewBox after mount
   useEffect(() => {
-    if (!svgContent || !containerRef.current || !svgContainerRef.current) return;
+    if (!svgContent || !svgContainerRef.current) return;
+    const svg = svgContainerRef.current.querySelector('svg');
+    if (!svg) return;
 
-    const svgEl = svgContainerRef.current.querySelector('svg');
-    if (!svgEl) return;
-
-    const containerRect = containerRef.current.getBoundingClientRect();
-    // Use getBBox for natural dimensions, fall back to viewBox
-    let naturalWidth: number;
-    let naturalHeight: number;
-
-    const viewBox = svgEl.getAttribute('viewBox');
+    const viewBox = svg.getAttribute('viewBox');
     if (viewBox) {
       const parts = viewBox.split(/[\s,]+/);
-      naturalWidth = parseFloat(parts[2]) || svgEl.getBoundingClientRect().width;
-      naturalHeight = parseFloat(parts[3]) || svgEl.getBoundingClientRect().height;
-    } else {
-      const bbox = svgEl.getBBox();
-      naturalWidth = bbox.width;
-      naturalHeight = bbox.height;
-    }
-
-    // Account for SVG's own width/height attributes
-    const attrWidth = svgEl.getAttribute('width');
-    const attrHeight = svgEl.getAttribute('height');
-    if (attrWidth && attrHeight) {
-      const pw = parseFloat(attrWidth);
-      const ph = parseFloat(attrHeight);
-      if (pw > 0 && ph > 0) {
-        naturalWidth = pw;
-        naturalHeight = ph;
+      const w = parseFloat(parts[2]) || 0;
+      const h = parseFloat(parts[3]) || 0;
+      if (w > 0 && h > 0) {
+        setSvgSize({ width: w, height: h });
       }
-    }
-
-    if (naturalWidth > 0 && naturalHeight > 0) {
-      const scaleX = containerRect.width / naturalWidth;
-      const scaleY = containerRect.height / naturalHeight;
-      const fitZoom = Math.min(scaleX, scaleY, 1); // Don't zoom beyond 100% for fit
-      setZoom(fitZoom);
     }
   }, [svgContent]);
 
+  // Apply zoom by mutating SVG width/height styles instead of CSS transform
+  // to avoid WebKit compositing bugs that clip SVG content.
+  useEffect(() => {
+    if (!svgContainerRef.current || svgSize.width <= 0 || svgSize.height <= 0) return;
+    const svg = svgContainerRef.current.querySelector('svg') as SVGSVGElement | null;
+    if (!svg) return;
+
+    svg.style.maxWidth = 'none';
+    svg.style.width = `${svgSize.width * zoom}px`;
+    svg.style.height = `${svgSize.height * zoom}px`;
+  }, [zoom, svgSize]);
+
   // Update canPan based on SVG size vs container
   useEffect(() => {
-    if (!svgContent || !containerRef.current || !svgContainerRef.current) return;
-
-    const svgEl = svgContainerRef.current.querySelector('svg');
-    if (!svgEl) return;
-
+    if (!containerRef.current || svgSize.width <= 0 || svgSize.height <= 0) return;
     const containerRect = containerRef.current.getBoundingClientRect();
-    let naturalWidth: number;
-    let naturalHeight: number;
-
-    const viewBox = svgEl.getAttribute('viewBox');
-    if (viewBox) {
-      const parts = viewBox.split(/[\s,]+/);
-      naturalWidth = parseFloat(parts[2]) || 0;
-      naturalHeight = parseFloat(parts[3]) || 0;
-    } else {
-      const bbox = svgEl.getBBox();
-      naturalWidth = bbox.width;
-      naturalHeight = bbox.height;
-    }
-
-    const renderedWidth = naturalWidth * zoom;
-    const renderedHeight = naturalHeight * zoom;
+    const renderedWidth = svgSize.width * zoom;
+    const renderedHeight = svgSize.height * zoom;
     setCanPan(renderedWidth > containerRect.width || renderedHeight > containerRect.height);
-  }, [svgContent, zoom]);
+  }, [svgSize, zoom]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -212,46 +181,21 @@ export function MermaidDiagramViewer({ isOpen, onClose, mermaidSource }: Mermaid
   }, []);
 
   const handleReset = useCallback(() => {
-    // Re-trigger fit-to-view calculation
-    if (!svgContent || !containerRef.current || !svgContainerRef.current) {
-      setZoom(1);
-    }
+    setZoom(1);
     setPosition({ x: 0, y: 0 });
-    // Re-calculate fit zoom by re-rendering the effect
-    setZoom(prev => prev); // This is a no-op; actual reset happens in the fit-to-view effect
-    // Force re-calculation
-    const svgEl = svgContainerRef.current?.querySelector('svg');
-    const containerRect = containerRef.current?.getBoundingClientRect();
-    if (svgEl && containerRect) {
-      let naturalWidth: number;
-      let naturalHeight: number;
-      const viewBox = svgEl.getAttribute('viewBox');
-      if (viewBox) {
-        const parts = viewBox.split(/[\s,]+/);
-        naturalWidth = parseFloat(parts[2]) || 0;
-        naturalHeight = parseFloat(parts[3]) || 0;
-      } else {
-        const bbox = svgEl.getBBox();
-        naturalWidth = bbox.width;
-        naturalHeight = bbox.height;
-      }
-      const attrWidth = svgEl.getAttribute('width');
-      const attrHeight = svgEl.getAttribute('height');
-      if (attrWidth && attrHeight) {
-        const pw = parseFloat(attrWidth);
-        const ph = parseFloat(attrHeight);
-        if (pw > 0 && ph > 0) {
-          naturalWidth = pw;
-          naturalHeight = ph;
-        }
-      }
-      if (naturalWidth > 0 && naturalHeight > 0) {
-        const scaleX = containerRect.width / naturalWidth;
-        const scaleY = containerRect.height / naturalHeight;
-        setZoom(Math.min(scaleX, scaleY, 1));
-      }
+  }, []);
+
+  const handleFitToWindow = useCallback(() => {
+    if (!containerRef.current || svgSize.width <= 0 || svgSize.height <= 0) {
+      handleReset();
+      return;
     }
-  }, [svgContent]);
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const scaleX = containerRect.width / svgSize.width;
+    const scaleY = containerRect.height / svgSize.height;
+    setZoom(Math.min(scaleX, scaleY, MAX_ZOOM));
+    setPosition({ x: 0, y: 0 });
+  }, [svgSize, handleReset]);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     if (isLoading) return;
@@ -325,6 +269,15 @@ export function MermaidDiagramViewer({ isOpen, onClose, mermaidSource }: Mermaid
             </button>
             <div className="w-px h-4 bg-border mx-2" />
             <button
+              onClick={handleFitToWindow}
+              disabled={isLoading}
+              className="p-1.5 rounded hover:bg-accent transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              title={t('mermaidViewer.fitToWindow')}
+            >
+              <FitIcon className="w-4 h-4" />
+            </button>
+            <div className="w-px h-4 bg-border mx-2" />
+            <button
               onClick={handleReset}
               disabled={isLoading}
               className="p-1.5 rounded hover:bg-accent transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
@@ -372,10 +325,11 @@ export function MermaidDiagramViewer({ isOpen, onClose, mermaidSource }: Mermaid
           {svgContent && !error && (
             <div
               ref={svgContainerRef}
-              className="transition-transform duration-75"
+              className="absolute mermaid-viewer-svg"
               style={{
-                transform: `translate(${position.x}px, ${position.y}px) scale(${zoom})`,
-                transformOrigin: 'center center',
+                left: `calc(50% + ${position.x}px)`,
+                top: `calc(50% + ${position.y}px)`,
+                transform: 'translate(-50%, -50%)',
               }}
               dangerouslySetInnerHTML={{ __html: svgContent }}
             />
@@ -411,6 +365,14 @@ function ResetIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
       <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+    </svg>
+  );
+}
+
+function FitIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+      <path d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
     </svg>
   );
 }

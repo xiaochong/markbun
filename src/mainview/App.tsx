@@ -1208,6 +1208,18 @@ function App() {
     });
   }, []);
 
+  // Register Mermaid viewer open bridge for hover button in editor preview
+  useEffect(() => {
+    (window as any).__openMermaidViewer = (source: string) => {
+      if (source) {
+        setMermaidViewerSource(source);
+      }
+    };
+    return () => {
+      delete (window as any).__openMermaidViewer;
+    };
+  }, []);
+
   // Register unified command handlers with the dispatcher
   useEffect(() => {
     const ctx: HandlerContext = {

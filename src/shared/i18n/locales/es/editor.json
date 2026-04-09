@@ -32,6 +32,7 @@
     "zoomIn": "Acercar",
     "zoomOut": "Alejar",
     "reset": "Restablecer",
+    "fitToWindow": "Ajustar a la ventana",
     "rendering": "Renderizando diagrama...",
     "renderError": "Error al renderizar el diagrama",
     "close": "Cerrar"

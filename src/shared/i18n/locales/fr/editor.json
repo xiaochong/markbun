@@ -32,6 +32,7 @@
     "zoomIn": "Zoom avant",
     "zoomOut": "Zoom arrière",
     "reset": "Réinitialiser",
+    "fitToWindow": "Adapter à la fenêtre",
     "rendering": "Rendu du diagramme...",
     "renderError": "Échec du rendu du diagramme",
     "close": "Fermer"
