@@ -1,5 +1,6 @@
 ---
 title: Mermaid 11.x Flowcharts Render Blank Nodes in WebKit
+last_updated: 2026-04-10
 date: 2026-04-08
 category: ui-bugs
 module: MarkBun Editor
@@ -7,7 +8,8 @@ problem_type: ui_bug
 component: frontend_stimulus
 symptoms:
   - Mermaid flowchart nodes render as blank boxes with no text inside
-  - Standalone Mermaid viewer SVG collapses to 0×0 after htmlLabels fix
+  - Sequence diagrams show "Mermaid syntax error" in preview or viewer
+  - Hover button opens viewer with missing flowchart elements (subgraphs, styled nodes)
 root_cause: config_error
 resolution_type: code_fix
 severity: medium
@@ -19,6 +21,8 @@ tags:
   - electrobun
   - milkdown
   - crepe
+  - prosemirror
+  - codemirror
 ---
 
 # Mermaid 11.x Flowcharts Render Blank Nodes in WebKit
@@ -27,14 +31,17 @@ tags:
 
 Mermaid 11.x flowcharts rendered with completely empty node labels (blank boxes, no text) inside the MarkBun application. MarkBun uses Electrobun (Bun + WebKit WebView), and the issue affected both the inline Milkdown/Crepe editor preview and the standalone "View Diagram" modal viewer. The root cause was Mermaid 11.x's default `htmlLabels: true`, which generates SVG `<foreignObject>` elements containing HTML `<div>` labels. WebKit in Electrobun fails to render these HTML labels at all, resulting in blank nodes.
 
+After the initial fix (disabling `htmlLabels` globally), two follow-up issues appeared: sequence diagrams began showing syntax errors due to a `<br/>` → `\n` source replacement that broke indentation parsing, and the hover button opened an incomplete viewer because it reused the `htmlLabels: false` preview SVG instead of re-rendering from source with Mermaid defaults.
+
 ## Symptoms
 
 - Flowchart nodes appeared as empty rectangles with no text.
 - The issue occurred in two places:
   1. Inline diagram preview inside the Milkdown/Crepe editor.
   2. The standalone Mermaid diagram viewer modal.
-- Other diagram types (e.g., sequence diagrams) were not necessarily affected, but flowcharts were consistently broken.
-- No console errors were emitted by Mermaid; the SVG simply contained empty `<foreignObject>` content in the WebView.
+- After disabling `htmlLabels`, sequence diagrams reported syntax errors instead of rendering.
+- Complex flowcharts opened via the hover button lost elements (subgraphs, styled nodes) compared to the right-click context-menu viewer.
+- No console errors were emitted by Mermaid for the blank-node issue; the SVG simply contained empty `<foreignObject>` content in the WebView.
 
 ## What Didn't Work
 
@@ -47,16 +54,24 @@ Mermaid 11.x flowcharts rendered with completely empty node labels (blank boxes,
 3. **MutationObserver hack (`restoreMermaidPreviews`)**
    Tried patching the preview DOM after render by observing mutations and re-injecting label content. This failed because the HTML labels were already emptied by sanitization *before* the SVG was mounted into the DOM, so there was no content to restore.
 
-4. **`htmlLabels: false` alone in the standalone viewer (with `width="100%"` removed)**
-   Disabling HTML labels fixed the label content, but in the standalone `MermaidDiagramViewer.tsx` the SVG collapsed to `0×0` because removing `width="100%"` left the SVG without an explicit size in a flex container. The wrapping `div` then had no layout size in WebKit.
+4. **`<br/>` → `\n` replacement in preview/viewer**
+   An earlier attempt normalized line breaks before `mermaid.render()` by replacing `<br/>` tags with `\n`. This broke indentation-sensitive `sequenceDiagram` syntax (e.g., indented `participant` or `note` lines), causing parse errors.
+
+5. **Reusing `previewSvg.outerHTML` for the hover button viewer**
+   Passing the already-rendered preview SVG to the viewer seemed efficient, but the preview was rendered with `htmlLabels: false` and produced a flattened SVG that lost complex flowchart elements.
+
+6. **`flowchart: { htmlLabels: false }` in global `mermaid.initialize()`**
+   Adding a nested `flowchart` config object to the preview initialization leaked into Mermaid's global singleton state and caused unexpected parse errors in the viewer.
+
+7. **Fallback to `.cm-line` DOM extraction for hover button source**
+   Querying `.cm-line` elements inside the code block failed because CodeMirror 6 virtual-scrolls inside a `height: 0` preview container, so only on-screen lines were present in the DOM.
 
 ## Solution
 
-The fix had two parts: disable HTML labels globally for all Mermaid initialization paths, and explicitly set `width`/`height` attributes on the generated SVG for the standalone viewer.
+The final fix has three parts: (1) keep `htmlLabels: false` **only** for the inline preview to avoid WebKit blank nodes, (2) let the standalone viewer use Mermaid defaults (`htmlLabels: true`) and always re-render from complete original source, and (3) remove all source mutations and global config leaks.
 
-### 1. Disable `htmlLabels` in all `mermaid.initialize()` calls
+### 1. Inline preview config (`useCrepeEditor.ts`)
 
-`src/mainview/components/editor/hooks/useCrepeEditor.ts`:
 ```typescript
 mermaid.initialize({
   startOnLoad: false,
@@ -64,53 +79,52 @@ mermaid.initialize({
   suppressErrorRendering: true,
   htmlLabels: false,
 });
+mermaid.render(id, code)  // pass original code, no <br/> replacement
 ```
 
-`src/mainview/hooks/useExport.ts` (both `mermaid.initialize` calls):
+### 2. Standalone viewer config (`MermaidDiagramViewer.tsx`)
+
 ```typescript
 mermaid.initialize({
   startOnLoad: false,
   theme: isDark ? 'dark' : 'default',
   suppressErrorRendering: true,
-  htmlLabels: false,
-});
-```
-
-`src/mainview/components/mermaid-viewer/MermaidDiagramViewer.tsx`:
-```typescript
-mermaid.initialize({
-  startOnLoad: false,
-  theme: isDark ? 'dark' : 'default',
-  suppressErrorRendering: true,
-  htmlLabels: false,
+  // Use Mermaid defaults (htmlLabels: true) for maximum compatibility
 });
 const { svg } = await mermaid.render(id, mermaidSource);
 ```
 
-### 2. Inject explicit `width` and `height` into the standalone viewer SVG
-
-In `src/mainview/components/mermaid-viewer/MermaidDiagramViewer.tsx`, after `mermaid.render()`:
+### 3. Hover button extracts source from ProseMirror AST (`useCrepeEditor.ts`)
 
 ```typescript
-const { svg } = await mermaid.render(id, mermaidSource);
+let source: string | null = null;
+const view = crepeRef.current?.editor?.ctx?.get(editorViewCtx);
 
-const viewBoxMatch = svg.match(/viewBox="([\d.\s]+)"/);
-const maxWidthMatch = svg.match(/style="max-width:\s*([\d.]+)px;"/);
-let fixedSvg = svg;
-if (viewBoxMatch && maxWidthMatch) {
-  const vbParts = viewBoxMatch[1].split(/[\s,]+/);
-  const vw = parseFloat(vbParts[2]);
-  const vh = parseFloat(vbParts[3]);
-  const maxW = parseFloat(maxWidthMatch[1]);
-  if (vw > 0 && vh > 0 && maxW > 0) {
-    const h = (maxW / vw) * vh;
-    fixedSvg = svg.replace(
-      /style="max-width:\s*([\d.]+)px;"/,
-      `width="${maxW}" height="${h}" style="max-width: ${maxW}px;"`
-    );
-  }
+if (view) {
+  view.state.doc.descendants((node, pos) => {
+    if (node.type.name === 'code_block' || node.type.name === 'fence') {
+      try {
+        const dom = view.nodeDOM(pos);
+        if (dom && (block === dom || block.contains(dom as Node) || (dom as Element).contains(block))) {
+          source = node.textContent;
+          return false;
+        }
+      } catch {
+        // nodeDOM may fail, continue
+      }
+    }
+  });
 }
-setSvgContent(fixedSvg);
+
+// Fallback to CodeMirror lines (may be truncated when container height is 0)
+if (!source) {
+  const lines = Array.from(block.querySelectorAll('.cm-line')).map((el) => el.textContent || '');
+  source = lines.join('\n');
+}
+
+if (source && typeof (window as any).__openMermaidViewer === 'function') {
+  (window as any).__openMermaidViewer(source);
+}
 ```
 
 Also removed the stale, ineffective DOMPurify hook from `src/mainview/main.tsx`.
@@ -118,13 +132,17 @@ Also removed the stale, ineffective DOMPurify hook from `src/mainview/main.tsx`.
 ## Why This Works
 
 - **`htmlLabels: false` forces Mermaid to render text as native SVG `<text>` elements** instead of HTML `<div>` inside `<foreignObject>`. WebKit in Electrobun renders SVG `<text>` correctly, while it silently fails on the HTML-in-SVG foreignObject approach used by Mermaid 11.x flowcharts.
-- **Explicit `width` and `height` attributes prevent the SVG from collapsing to zero size** in a flex container when `width="100%"` is no longer present. The `max-width` style is preserved for responsiveness, but WebKit now has concrete intrinsic dimensions to lay out the wrapper `div`.
-- **Removing the DOMPurify hook cleans up dead code** that never had any effect because Milkdown's bundled sanitizer ran independently.
+- **Passing original `code` (no `<br/>` replacement)** preserves whitespace-sensitive Mermaid syntax such as indented sequence diagram lines. The `<br/>` tags were a false problem; Mermaid's SVG text mode handles them correctly.
+- **Extracting source from the ProseMirror AST** bypasses CodeMirror 6 virtual scrolling. The AST always contains the complete document, so the hover button receives the full, unmodified Mermaid source even when the DOM only shows a subset of lines.
+- **Re-rendering the viewer from source with `htmlLabels: true`** produces full-fidelity diagrams (including complex flowchart subgraphs) because the standalone viewer is not constrained by WebKit inline-preview issues. The preview and viewer are treated as distinct render contexts.
+- **Removing `flowchart: { htmlLabels: false }`** eliminates global singleton pollution. Mermaid 11.x's `initialize()` mutates shared state; nested config objects can leak across renders and cause parse errors for unrelated diagram types.
 
 ## Prevention
 
-- **Avoid relying on HTML-in-SVG (`<foreignObject>`) in WebKit-based contexts.** If the stack includes a WebView (especially on macOS/iOS where WebKit is mandatory), prefer plain SVG rendering for Mermaid diagrams.
-- **Centralize Mermaid config.** Instead of scattering `mermaid.initialize()` calls across hooks and components, consider a single shared initialization helper (e.g., `initMermaid(isDark)`) so defaults like `htmlLabels: false` are applied consistently and future upgrades do not accidentally revert the fix.
+- **Separate preview and viewer render contexts.** The inline preview and standalone viewer should not share the same DOM output or config. Always render the viewer from original source rather than reusing preview DOM.
+- **Avoid mutating Mermaid source before `render()`.** Do not perform string substitutions (e.g., `<br/>` → `\n`) unless the syntax genuinely requires it. Mermaid parsers are whitespace-sensitive.
+- **Prefer editor document models over DOM queries for source extraction.** CodeMirror 6 (and similar virtualized editors) intentionally omit off-screen nodes from the DOM. Use `view.state.doc` or equivalent AST APIs when retrieving code-block content.
+- **Avoid non-universal keys in global `mermaid.initialize()`.** Nested objects like `flowchart: { ... }` can pollute Mermaid's singleton. Keep global init minimal and render-specific configs close to the `render()` call if the API supports it.
 - **Test SVG viewer sizing explicitly after any change to Mermaid rendering or wrapper CSS.** The `0×0` collapse was a secondary bug triggered only by the combination of `htmlLabels: false` and the existing flex layout in the viewer modal.
 
 ## Related Issues
