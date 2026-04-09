@@ -223,12 +223,12 @@ export function MermaidDiagramViewer({ isOpen, onClose, mermaidSource }: Mermaid
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-50 bg-black/50"
       onClick={handleBackdropClick}
     >
       <div
         ref={panelRef}
-        className="w-[90vw] h-[85vh] bg-background rounded-lg shadow-xl overflow-hidden border flex flex-col outline-none"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[85vh] bg-background rounded-lg shadow-xl overflow-hidden border flex flex-col outline-none"
         tabIndex={0}
         onClick={(e) => e.stopPropagation()}
       >
