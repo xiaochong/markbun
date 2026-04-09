@@ -200,6 +200,15 @@ function App() {
         return; // Pending file takes priority — skip session restore
       }
 
+      // Step 2b: Check for pending folder (when folder is opened in a new window)
+      const folderResult = await electrobun.getPendingFolder() as { path: string } | null;
+      if (folderResult) {
+        workspaceManager.setWorkspaceRoot(folderResult.path);
+        fileExplorer.setRootPath(folderResult.path);
+        fileExplorer.selectFile(null);
+        return;
+      }
+
       // Step 3: Check crash recovery (priority 2)
       const recoveryResult = await electrobun.checkRecovery() as { success: boolean; recoveries?: RecoveryInfo[] };
       if (recoveryResult.success && recoveryResult.recoveries && recoveryResult.recoveries.length > 0) {

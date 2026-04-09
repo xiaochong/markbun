@@ -117,6 +117,10 @@ export const electrobun = {
     return await electroview.rpc.request.openFile({});
   },
 
+  async openFileInNewWindow(params: { path: string }) {
+    return await electroview.rpc.request.openFileInNewWindow(params) as { success: boolean; error?: string };
+  },
+
   async openFolder() {
     return await electroview.rpc.request.openFolder({});
   },
@@ -135,6 +139,10 @@ export const electrobun = {
 
   async getPendingFile() {
     return await electroview.rpc.request.getPendingFile({});
+  },
+
+  async getPendingFolder() {
+    return await electroview.rpc.request.getPendingFolder({}) as { path: string } | null;
   },
 
   async readImageAsBase64(path: string) {

@@ -129,6 +129,8 @@ const PENDING_FILE_PATH = `${PENDING_DIR}/pending.txt`;
 
 // File path pending open (from CLI argv or open-url event)
 let pendingOpenFilePath: string | null = null;
+// Folder path pending open (from file-open-folder when creating a new window)
+let pendingOpenFolderPath: string | null = null;
 // Options for the next window created via pendingOpenFilePath
 let pendingCloseSidebar: boolean = false;
 let pendingSkipRecentFile: boolean = false;
@@ -517,6 +519,18 @@ async function main() {
             return { success: false, error: String(err) };
           }
         },
+        openFileInNewWindow: async ({ path }: { path: string }) => {
+          try {
+            pendingOpenFilePath = path;
+            pendingCloseSidebar = false;
+            pendingSkipRecentFile = false;
+            await createAppWindow();
+            return { success: true };
+          } catch (err) {
+            console.error('RPC openFileInNewWindow error:', err);
+            return { success: false, error: String(err) };
+          }
+        },
         openFolder: async () => {
           try {
             return await openFolder();
@@ -549,6 +563,13 @@ async function main() {
             return { path: result.path, content: result.content, closeSidebar };
           }
           return null;
+        },
+        getPendingFolder: async () => {
+          if (!pendingOpenFolderPath) return null;
+          const path = pendingOpenFolderPath;
+          pendingOpenFolderPath = null;
+          state.workspaceRoot = path;
+          return { path };
         },
         readImageAsBase64: async ({ path }: { path: string }) => {
           try {
@@ -1681,9 +1702,14 @@ async function main() {
               try {
                 const result = await openFolder();
                 if (result?.success === true && result.path) {
-                  fw.state.workspaceRoot = result.path;
-                  // @ts-ignore
-                  fw.win.webview.rpc.send.folderOpened({ path: result.path });
+                  if (fw.state.filePath) {
+                    pendingOpenFolderPath = result.path;
+                    await createAppWindow();
+                  } else {
+                    fw.state.workspaceRoot = result.path;
+                    // @ts-ignore
+                    fw.win.webview.rpc.send.folderOpened({ path: result.path });
+                  }
                 }
               } catch (err) {
                 console.error('Error in file-open-folder handler:', err);
@@ -2335,9 +2361,14 @@ async function main() {
       try {
         const result = await openFolder();
         if (result?.success === true && result.path) {
-          fw.state.workspaceRoot = result.path;
-          // @ts-ignore
-          fw.win.webview.rpc.send.folderOpened({ path: result.path });
+          if (fw.state.filePath) {
+            pendingOpenFolderPath = result.path;
+            await createAppWindow();
+          } else {
+            fw.state.workspaceRoot = result.path;
+            // @ts-ignore
+            fw.win.webview.rpc.send.folderOpened({ path: result.path });
+          }
         }
       } catch (err) {
         console.error('Error in file-open-folder handler:', err);

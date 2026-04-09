@@ -267,11 +267,13 @@ export type MarkBunRPC = {
     requests: {
       // File operations (Phase 1)
       openFile: { params: {}; response: { success: boolean; path?: string; content?: string; error?: string } };
+      openFileInNewWindow: { params: { path: string }; response: { success: boolean; error?: string } };
       openFolder: { params: {}; response: { success: boolean; path?: string; error?: string } };
       saveFile: { params: { content: string; path?: string }; response: { success: boolean; path?: string; error?: string } };
       saveFileAs: { params: { content: string }; response: { success: boolean; path?: string; error?: string } };
       getCurrentFile: { params: {}; response: string | null };
       getPendingFile: { params: {}; response: { path: string; content: string; closeSidebar?: boolean } | null };
+      getPendingFolder: { params: {}; response: { path: string } | null };
       readImageAsBase64: { params: { path: string }; response: { success: boolean; dataUrl?: string; error?: string } };
       showTableContextMenu: { params: {}; response: { success: boolean } };
       showDefaultContextMenu: { params: {}; response: { success: boolean } };

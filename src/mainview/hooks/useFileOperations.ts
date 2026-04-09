@@ -305,23 +305,33 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
       // Open mode
       const openResult = result as OpenDialogResult;
       if (openResult.filePaths.length > 0) {
-        try {
-          const fileResult = await electrobun.readFile({ path: openResult.filePaths[0] }) as { success: boolean; path?: string; content?: string; error?: string };
-          if (fileResult.success && fileResult.content !== undefined) {
-            setFileState({
-              path: fileResult.path || null,
-              content: fileResult.content,
-              isDirty: false,
-            });
-
-            // Emit event for App.tsx to update editor
-            const listeners = (window as any).__electrobunListeners?.['file-opened'] || [];
-            listeners.forEach((cb: (data: unknown) => void) => {
-              cb({ path: fileResult.path, content: fileResult.content });
-            });
+        const selectedPath = openResult.filePaths[0];
+        if (fileStateRef.current.path) {
+          // A file is already open in this window: open in a new window instead
+          try {
+            await electrobun.openFileInNewWindow({ path: selectedPath });
+          } catch (error) {
+            console.error('Failed to open file in new window:', error);
           }
-        } catch (error) {
-          console.error('Failed to open file:', error);
+        } else {
+          try {
+            const fileResult = await electrobun.readFile({ path: selectedPath }) as { success: boolean; path?: string; content?: string; error?: string };
+            if (fileResult.success && fileResult.content !== undefined) {
+              setFileState({
+                path: fileResult.path || null,
+                content: fileResult.content,
+                isDirty: false,
+              });
+
+              // Emit event for App.tsx to update editor
+              const listeners = (window as any).__electrobunListeners?.['file-opened'] || [];
+              listeners.forEach((cb: (data: unknown) => void) => {
+                cb({ path: fileResult.path, content: fileResult.content });
+              });
+            }
+          } catch (error) {
+            console.error('Failed to open file:', error);
+          }
         }
       }
     } else {

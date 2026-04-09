@@ -78,15 +78,6 @@ export function useFileExplorer(options: UseFileExplorerOptions = {}): UseFileEx
       return;
     }
 
-    // If we already have a rootPath, check if the new path is within the current workspace
-    if (rootPath) {
-      // If the new path starts with rootPath, it's within the current workspace
-      // Don't switch root, just update the selected file
-      if (path.startsWith(rootPath)) {
-        return;
-      }
-    }
-
     // Skip if path hasn't changed
     if (rootPath === path) {
       return;
