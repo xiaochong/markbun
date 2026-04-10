@@ -17,6 +17,7 @@ export interface SessionState {
   scrollTop: number;
   expandedPaths: string[];
   sourceMode?: boolean;
+  rootPath?: string | null;
 }
 
 const CONFIG_DIR = join(homedir(), '.config', 'markbun');

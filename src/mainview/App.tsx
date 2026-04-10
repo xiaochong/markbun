@@ -241,8 +241,11 @@ function App() {
             const parentDir = getDirectoryPath(session.filePath);
             workspaceManager.setWorkspaceRoot(parentDir);
 
-            // Set file explorer root
-            fileExplorer.setRootPath(parentDir);
+            // Restore file explorer root from session, fallback to file parent dir
+            const sessionRoot = session.rootPath ?? parentDir;
+            if (sessionRoot) {
+              fileExplorer.setRootPath(sessionRoot);
+            }
 
             // Restore expanded paths (if any)
             if (session.expandedPaths.length > 0) {
@@ -423,16 +426,14 @@ function App() {
     backupEnabled: settings?.backup?.enabled ?? true,
     recoveryInterval: settings?.backup?.recoveryInterval ?? 30000,
     onSaveSuccess: (savedPath) => {
-      // Set root path to the file's parent directory (so new files appear in file explorer)
+      // Only change file explorer root if the file is outside the current workspace
       const parentDir = getDirectoryPath(savedPath);
-      // Check current rootPath using ref to avoid stale closure
       const currentRoot = fileExplorerRef.current.rootPath;
-      if (currentRoot === parentDir) {
-        // Same directory: setRootPath would skip, so force refresh with specific path
-        fileExplorerRef.current.refresh(true, parentDir);
-      } else {
-        // Different directory or null: setRootPath will load the new directory
+      if (!currentRoot || !savedPath.startsWith(currentRoot + '/')) {
         fileExplorerRef.current.setRootPath(parentDir);
+      } else {
+        // Same workspace: just refresh to show the new file
+        fileExplorerRef.current.refresh(true, currentRoot);
       }
       // Select the saved file in file explorer
       fileExplorerRef.current.selectFile(savedPath);
@@ -446,6 +447,7 @@ function App() {
     sourceEditorRef,
     sourceMode,
     expandedPaths: fileExplorer.expandedPaths,
+    rootPath: fileExplorer.rootPath,
     isReady: editorRef.current?.isReady ?? false,
   });
 
@@ -685,8 +687,10 @@ function App() {
         // Update workspace and file state
         workspaceManager.setCurrentFile(result.path);
 
-        // Auto-set file explorer root to the file's parent directory
-        fileExplorer.setRootPath(getDirectoryPath(result.path));
+        // Only change file explorer root if the file is outside the current workspace
+        if (!fileExplorer.rootPath || !result.path.startsWith(fileExplorer.rootPath + '/')) {
+          fileExplorer.setRootPath(getDirectoryPath(result.path));
+        }
 
         // Update selected file in file explorer (highlight current file)
         fileExplorer.selectFile(result.path);
@@ -902,8 +906,10 @@ function App() {
       workspaceManager.setCurrentFile(filePath);
       setCurrentFilePath(filePath);
 
-      // Auto-set file explorer root to the file's parent directory
-      fileExplorer.setRootPath(getDirectoryPath(filePath));
+      // Only change file explorer root if the file is outside the current workspace
+      if (!fileExplorer.rootPath || !filePath.startsWith(fileExplorer.rootPath + '/')) {
+        fileExplorer.setRootPath(getDirectoryPath(filePath));
+      }
 
       // Update selected file in file explorer (highlight current file)
       fileExplorer.selectFile(filePath);

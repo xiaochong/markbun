@@ -222,6 +222,7 @@ export interface SessionState {
   scrollTop: number;
   expandedPaths: string[];
   sourceMode?: boolean;
+  rootPath?: string | null;
 }
 
 // ============================================================================

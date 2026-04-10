@@ -16,6 +16,7 @@ interface UseSessionSaveOptions {
   sourceEditorRef: React.RefObject<SourceEditorRef | null>;
   sourceMode: boolean;
   expandedPaths: Set<string>;
+  rootPath: string | null;
   isReady: boolean;
 }
 
@@ -25,6 +26,7 @@ export function useSessionSave({
   sourceEditorRef,
   sourceMode,
   expandedPaths,
+  rootPath,
   isReady,
 }: UseSessionSaveOptions) {
   // Keep latest values in refs to avoid stale closures
@@ -34,6 +36,8 @@ export function useSessionSave({
   sourceModeRef.current = sourceMode;
   const expandedPathsRef = useRef(expandedPaths);
   expandedPathsRef.current = expandedPaths;
+  const rootPathRef = useRef(rootPath);
+  rootPathRef.current = rootPath;
   const isReadyRef = useRef(isReady);
   isReadyRef.current = isReady;
 
@@ -46,6 +50,7 @@ export function useSessionSave({
 
     const currentSourceMode = sourceModeRef.current;
     const currentExpandedPaths = Array.from(expandedPathsRef.current);
+    const currentRootPath = rootPathRef.current;
 
     // Read cursor and scroll from active editor
     let cursor: { line: number; column: number } | null = null;
@@ -68,6 +73,7 @@ export function useSessionSave({
         scrollTop,
         expandedPaths: currentExpandedPaths,
         sourceMode: currentSourceMode,
+        rootPath: currentRootPath,
       });
     } catch {
       // Silent failure — will retry on next trigger
@@ -97,6 +103,11 @@ export function useSessionSave({
   useEffect(() => {
     saveNow();
   }, [filePath, saveNow]);
+
+  // Save when workspace root changes
+  useEffect(() => {
+    saveNow();
+  }, [rootPath, saveNow]);
 
   // Flush on beforeunload
   useEffect(() => {
