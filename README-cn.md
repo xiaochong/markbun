@@ -103,6 +103,8 @@ MarkBun 遵循**无界面编辑理念**，灵感来自 [iA Writer](https://ia.ne
 
 ![MarkBun Preview](docs/assets/preview3.png)
 
+![MarkBun Preview](docs/assets/preview4.png)
+
 ## 🚀 快速开始
 
 ### 前置条件

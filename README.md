@@ -101,6 +101,8 @@ When you need them, every UI element can be instantly toggled via the **View men
 
 ![MarkBun Preview](docs/assets/preview3.png)
 
+![MarkBun Preview](docs/assets/preview4.png)
+
 ## 🚀 Quick Start
 
 ### Prerequisites
