@@ -2,7 +2,7 @@
    MarkBun Website — Main JS
    Theme Toggle + i18n (EN / ZH)
    ========================================== */
-const APP_VERSION = "v0.7.0";
+const APP_VERSION = "v0.8.0";
 
 // ==========================================
 // Translations
