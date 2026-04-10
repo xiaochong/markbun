@@ -45,6 +45,14 @@ export function insertText(crepeRef: CrepeRef, text: string): boolean {
   try {
     const view = editor.ctx.get(editorViewCtx);
     const { from, to } = view.state.selection;
+    const { $from } = view.state.selection;
+
+    // Inside a code block, always insert as plain text to avoid breaking the block.
+    if ($from.parent.type.name === 'code_block' || $from.parent.type.name === 'fence') {
+      const tr = view.state.tr.replaceWith(from, to, view.state.schema.text(text));
+      view.dispatch(tr);
+      return true;
+    }
 
     // Check if text contains markdown
     if (containsMarkdown(text)) {

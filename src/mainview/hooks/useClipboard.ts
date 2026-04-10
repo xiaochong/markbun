@@ -145,12 +145,31 @@ export function useClipboard(
     return getSelectedText(editorRefStable.current, isSourceModeRef.current) !== null;
   }, []);
 
+  function isInCodeBlock(ref: React.RefObject<MilkdownEditorRef | null>): boolean {
+    const editor = ref.current;
+    if (!editor) return false;
+    const view = editor.getEditorView?.();
+    if (!view) return false;
+    const { $from } = view.state.selection;
+    return $from.parent.type.name === 'code_block' || $from.parent.type.name === 'fence';
+  }
+
   /**
    * Try to insert content into the editor with fallback chain:
    * insertMarkdown → insertText → document.execCommand
    */
   const insertIntoEditor = useCallback((content: string): boolean => {
     const editor = editorRefStable.current;
+    // If cursor is inside a code block, bypass markdown parsing: it would create
+    // new paragraphs and break the code block. Use plain text insertion instead.
+    if (isInCodeBlock(editor)) {
+      if (editor?.current?.insertText) {
+        editor.current.insertText(content);
+        return true;
+      }
+      document.execCommand('insertText', false, content);
+      return true;
+    }
     // Try insertMarkdown first (parses markdown to ProseMirror nodes)
     if (editor?.current?.insertMarkdown) {
       const ok = editor.current.insertMarkdown(content);

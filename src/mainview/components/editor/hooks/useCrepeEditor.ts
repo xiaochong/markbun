@@ -17,7 +17,7 @@ import { clipboard } from '@milkdown/plugin-clipboard';
 import { history } from '@milkdown/plugin-history';
 import { gfm, remarkGFMPlugin } from '@milkdown/preset-gfm';
 import { remarkPreserveEmptyLinePlugin } from '@milkdown/preset-commonmark';
-import { clipboardBlobConverter } from '../plugins/clipboardBlobConverter';
+import { clipboardBlobConverter, isPureText } from '../plugins/clipboardBlobConverter';
 import { createSearchPlugin } from '../plugins/searchPlugin';
 import { electrobun } from '@/lib/electrobun';
 import { workspaceManager, loadLocalImage, imageCache } from '@/lib/image';
@@ -628,6 +628,13 @@ export function useCrepeEditor(
 
       // Create a temporary document with the selected content
       const slice = view.state.selection.content();
+
+      // If the selection is pure text (e.g. partial selection inside a code block),
+      // return plain text so it doesn't get wrapped in markdown fences.
+      if (isPureText(slice.content.toJSON())) {
+        return (slice.content as any).textBetween(0, slice.content.size, '\n\n');
+      }
+
       const doc = schema.topNodeType.createAndFill(undefined, slice.content);
 
       if (!doc) return null;
