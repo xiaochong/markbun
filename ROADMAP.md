@@ -14,7 +14,8 @@ This document outlines the development phases for MarkBun, from MVP to v1.0.
 | Phase 5 | v0.5.0 | Editor Productivity | ✅ Complete |
 | Phase 6 | v0.6.0 | AI Support | ✅ Complete |
 | Phase 7 | v0.7.0 | Editor Enhancements | ✅ Complete |
-| Phase 8 | - | Backlog (see TODO below) | 📋 Backlog |
+| Phase 8 | v0.8.0 | Editor Polish & Bug Fixes | ✅ Complete |
+| Phase 9 | - | Backlog (see TODO below) | 📋 Backlog |
 
 ---
 
@@ -320,6 +321,39 @@ This document outlines the development phases for MarkBun, from MVP to v1.0.
 - [x] Unify command manifest and dispatch pipeline
 - [x] Consolidate locale files into shared source of truth
 - [x] Add `sync-version` script
+
+---
+
+## ✅ Phase 8: Editor Polish & Bug Fixes (v0.8.0)
+
+**Status:** Complete
+**Target:** Refine editor experience, fix edge-case bugs, and improve distribution
+
+### Completed Tasks
+
+#### Mermaid Refinements
+- [x] Hover button on Mermaid preview to open standalone viewer
+- [x] Fit-to-window button in Mermaid viewer toolbar
+- [x] Fix sequence diagram syntax errors caused by `\u003cbr/\u003e` replacement
+- [x] Fix viewer element loss and ensure modal is always centered
+
+#### Editor Fixes
+- [x] Copy code blocks without fence markers; paste without breaking block structure
+- [x] Use internal `html-block` language for raw HTML blocks to avoid fenced `html` code misidentification
+- [x] Prevent chunked loading from slicing through closed fenced code blocks
+- [x] Skip HTML preview for full HTML documents to avoid DOMParser head-stripping issues
+
+#### Session & Window Behavior
+- [x] Persist and restore file explorer root path between sessions
+- [x] Open files and folders in a new window when one is already open
+
+#### AI Fixes
+- [x] Sync app state and trigger auto-save after AI edit/write
+- [x] Handle stream error events in AI latency test
+
+#### Build & Distribution
+- [x] Replace Windows zip packaging with NSIS installer (shortcuts, uninstaller, registry entries)
+- [x] Reduce SVG padding and regenerate all app icons plus favicon
 
 ---
 

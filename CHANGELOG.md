@@ -5,6 +5,28 @@ All notable changes to MarkBun will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## \[0.8.0] - 2026-04-10
+
+### Added
+
+* Mermaid diagram hover button to open standalone viewer
+* Mermaid viewer fit-to-window toolbar button
+* File explorer root path persistence and restore on launch
+* Open files and folders in new window when one is already open
+* Windows NSIS installer with shortcuts, uninstaller, and Add/Remove Programs support
+
+### Fixed
+
+* Fix Mermaid sequence diagram syntax errors caused by `<br/>` replacement
+* Fix Mermaid viewer element loss and ensure modal is always centered
+* Copy code blocks without fence markers; paste without breaking block structure
+* Use internal `html-block` language for raw HTML blocks to avoid fenced `html` code misidentification
+* Prevent chunked loading from slicing through closed fenced code blocks
+* Skip HTML preview for full HTML documents to avoid DOMParser head-stripping issues
+* Sync app state and trigger auto-save after AI edit/write
+* Handle stream error events in AI latency test
+* Reduce SVG padding and regenerate all app icons plus favicon
+
 ## \[0.7.0] - 2026-04-08
 
 ### Added

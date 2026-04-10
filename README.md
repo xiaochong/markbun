@@ -52,6 +52,7 @@ MarkBun is an open-source, cross-platform markdown editor designed for seamless 
 > - ✅ AI Chat Assistant (v0.6.0)
 > - ✅ Mermaid Diagrams & HTML Blocks (v0.7.0)
 > - ✅ Frontmatter Support (v0.7.0)
+> - ✅ Editor Polish & Bug Fixes (v0.8.0)
 >
 > See [ROADMAP.md](./ROADMAP.md) for detailed development phases.
 
@@ -91,10 +92,14 @@ When you need them, every UI element can be instantly toggled via the **View men
 - 🌐 **HTML Blocks** - Render HTML blocks with DOMPurify preview support
 - 📝 **Frontmatter** - Display YAML frontmatter in the editor
 - 🌐 **i18n** - Multi-language support (English, Chinese, Japanese, Korean, etc.)
+- 🗂️ **Workspace Persistence** - File explorer root path restored between sessions
+- 🪟 **Smart Window Behavior** - Open files and folders in new windows when needed
 
 ![MarkBun Preview](docs/assets/preview1.png)
 
 ![MarkBun Preview](docs/assets/preview2.png)
+
+![MarkBun Preview](docs/assets/preview3.png)
 
 ## 🚀 Quick Start
 
@@ -470,6 +475,16 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 - [x] Source mode support for undo/redo/copy/cut/select-all
 - [x] AI tools image path conversion
 - [x] Command manifest unification and i18n consolidation
+
+### v0.8.0 ✅ Completed
+- [x] Mermaid hover-to-viewer and fit-to-window
+- [x] Editor code block copy/paste fixes
+- [x] HTML block fenced code misidentification fix
+- [x] Chunked loading boundary fix for fenced code blocks
+- [x] File explorer root path persistence
+- [x] New-window file/folder open behavior
+- [x] AI edit/write auto-save sync
+- [x] Windows NSIS installer
 
 ### v1.0.0
 - Stable release
