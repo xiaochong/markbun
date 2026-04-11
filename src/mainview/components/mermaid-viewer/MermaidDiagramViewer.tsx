@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { mermaidCache } from '@/lib/mermaid/cache';
 
 interface MermaidDiagramViewerProps {
   isOpen: boolean;
@@ -46,21 +47,30 @@ export function MermaidDiagramViewer({ isOpen, onClose, mermaidSource }: Mermaid
 
     const renderDiagram = async () => {
       try {
-        const mermaid = (await import('mermaid')).default;
         const isDark = document.documentElement.classList.contains('dark');
+        const theme = isDark ? 'dark' : 'default';
+        const config = { startOnLoad: false, theme, suppressErrorRendering: true };
+
+        const cachedSvg = mermaidCache.get(mermaidSource, theme, config);
+        if (cachedSvg) {
+          if (!cancelled) {
+            setSvgContent(cachedSvg.replace(/\swidth="100%"/, ''));
+            setIsLoading(false);
+          }
+          return;
+        }
+
+        const mermaid = (await import('mermaid')).default;
         // Use Mermaid defaults (htmlLabels: true) in the viewer for maximum
         // compatibility with all diagram types.
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: isDark ? 'dark' : 'default',
-          suppressErrorRendering: true,
-        });
+        mermaid.initialize(config as any);
 
         const id = `mermaid-viewer-${Date.now()}`;
         const { svg } = await mermaid.render(id, mermaidSource);
 
         // Strip width="100%" so SVG uses its intrinsic viewBox dimensions
         const fixedSvg = svg.replace(/\swidth="100%"/, '');
+        mermaidCache.set(mermaidSource, theme, config, fixedSvg);
 
         if (!cancelled) {
           setSvgContent(fixedSvg);

@@ -21,6 +21,7 @@ import { clipboardBlobConverter, isPureText } from '../plugins/clipboardBlobConv
 import { createSearchPlugin } from '../plugins/searchPlugin';
 import { electrobun } from '@/lib/electrobun';
 import { workspaceManager, loadLocalImage, imageCache } from '@/lib/image';
+import { mermaidCache } from '@/lib/mermaid/cache';
 import { convertFrontmatterToCodeBlock, convertCodeBlockToFrontmatter } from '@/lib/frontmatter';
 import type { MilkdownEditorProps } from '../types';
 
@@ -286,21 +287,26 @@ export function useCrepeEditor(
             if (lang !== 'mermaid' || !content.trim()) return null;
 
             const code = content.trim();
+            const theme = darkModeRef.current ? 'dark' : 'default';
+            const config = { startOnLoad: false, theme, suppressErrorRendering: true, htmlLabels: false };
+
+            const cachedSvg = mermaidCache.get(code, theme, config);
+            if (cachedSvg) {
+              applyPreview(cachedSvg.replace(/\swidth="100%"/, ''));
+              return null;
+            }
+
             const id = `mermaid-svg-${Math.random().toString(36).slice(2)}`;
 
             import('mermaid').then(({ default: mermaid }) => {
-              mermaid.initialize({
-                startOnLoad: false,
-                theme: darkModeRef.current ? 'dark' : 'default',
-                suppressErrorRendering: true,
-                htmlLabels: false,
-              });
+              mermaid.initialize(config as any);
               mermaid.render(id, code)
                 .then(({ svg }) => {
                   // WebKit (Electrobun) cannot auto-compute SVG height when width="100%"
                   // and no explicit height attribute. Fix by removing width="100%" so
                   // the SVG uses its intrinsic viewBox dimensions instead.
                   const fixedSvg = svg.replace(/\swidth="100%"/, '');
+                  mermaidCache.set(code, theme, config, fixedSvg);
                   applyPreview(fixedSvg);
                 })
                 .catch((err) => {

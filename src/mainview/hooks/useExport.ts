@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { processMarkdownImages, getFileName } from '../lib/image';
+import { mermaidCache } from '../lib/mermaid/cache';
 
 function getDefaultFileName(filePath: string | null): string {
   if (!filePath) return 'export';
@@ -301,15 +302,35 @@ ${html}
 
       // Render mermaid diagrams
       if (win && win.mermaid) {
-        win.mermaid.initialize({
-          startOnLoad: false,
-          theme: isDark ? 'dark' : 'default',
-          htmlLabels: false,
+        const mermaidTheme = isDark ? 'dark' : 'default';
+        const mermaidConfig = { startOnLoad: false, theme: mermaidTheme, htmlLabels: false };
+        win.mermaid.initialize(mermaidConfig);
+
+        const mermaidElements = Array.from(iframeDoc.querySelectorAll('.language-mermaid, .mermaid'));
+        const uncachedSources: { el: Element; source: string }[] = [];
+
+        mermaidElements.forEach((el) => {
+          const source = el.textContent || '';
+          const cachedSvg = mermaidCache.get(source, mermaidTheme, mermaidConfig);
+          if (cachedSvg) {
+            el.innerHTML = cachedSvg;
+          } else {
+            uncachedSources.push({ el, source });
+          }
         });
+
         try {
-          await win.mermaid.run({
-            querySelector: '.language-mermaid, .mermaid',
-          });
+          if (uncachedSources.length > 0) {
+            const uncachedElements = uncachedSources.map((item) => item.el);
+            await win.mermaid.run({
+              nodes: uncachedElements,
+            });
+            // Cache newly rendered diagrams
+            uncachedSources.forEach(({ el, source }) => {
+              const svg = el.innerHTML;
+              mermaidCache.set(source, mermaidTheme, mermaidConfig, svg);
+            });
+          }
         } catch {
           // Ignore mermaid errors
         }
