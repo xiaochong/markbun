@@ -292,8 +292,7 @@ export function useCrepeEditor(
 
             const cachedSvg = mermaidCache.get(code, theme, config);
             if (cachedSvg) {
-              applyPreview(cachedSvg.replace(/\swidth="100%"/, ''));
-              return null;
+              return cachedSvg.replace(/\swidth="100%"/, '');
             }
 
             const id = `mermaid-svg-${Math.random().toString(36).slice(2)}`;
