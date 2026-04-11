@@ -33,7 +33,13 @@ describe('insertText', () => {
           ctx: {
             get: () => ({
               state: {
-                selection: { from: 10, to: 10 },
+                selection: {
+                  from: 10,
+                  to: 10,
+                  $from: {
+                    parent: { type: { name: 'paragraph' } },
+                  },
+                },
                 schema: { text: (content: string) => ({ content }) },
                 tr: {
                   replaceWith: mockReplaceWith,
@@ -66,6 +72,7 @@ describe('insertText', () => {
                       from: 10,
                       to: 10,
                       $from: {
+                        parent: { type: { name: 'paragraph' } },
                         depth: 1,
                         node: () => ({
                           type: { name: 'paragraph' },
@@ -111,7 +118,13 @@ describe('insertText', () => {
           ctx: {
             get: () => ({
               state: {
-                selection: { from: 10, to: 10 },
+                selection: {
+                  from: 10,
+                  to: 10,
+                  $from: {
+                    parent: { type: { name: 'paragraph' } },
+                  },
+                },
                 schema: { text: () => ({}) },
                 tr: { replaceWith: mockReplaceWith },
               },
@@ -142,6 +155,7 @@ describe('insertText', () => {
                       from: 10,
                       to: 10,
                       $from: {
+                        parent: { type: { name: 'paragraph' } },
                         depth: 1,
                         node: () => ({
                           type: { name: 'paragraph' },
@@ -191,6 +205,7 @@ describe('insertText', () => {
                       from: 10,
                       to: 10,
                       $from: {
+                        parent: { type: { name: 'paragraph' } },
                         depth: 1,
                         node: () => ({
                           type: { name: 'paragraph' },
@@ -240,6 +255,7 @@ describe('insertText', () => {
                       from: 10,
                       to: 10,
                       $from: {
+                        parent: { type: { name: 'paragraph' } },
                         depth: 1,
                         node: () => ({
                           type: { name: 'paragraph' },
@@ -289,6 +305,7 @@ describe('insertText', () => {
                       from: 10,
                       to: 10,
                       $from: {
+                        parent: { type: { name: 'paragraph' } },
                         depth: 1,
                         node: () => ({
                           type: { name: 'paragraph' },
@@ -338,6 +355,7 @@ describe('insertText', () => {
                       from: 10,
                       to: 10,
                       $from: {
+                        parent: { type: { name: 'paragraph' } },
                         depth: 1,
                         node: () => ({
                           type: { name: 'paragraph' },
@@ -387,6 +405,7 @@ describe('insertText', () => {
                       from: 10,
                       to: 10,
                       $from: {
+                        parent: { type: { name: 'paragraph' } },
                         depth: 1,
                         node: () => ({
                           type: { name: 'paragraph' },
@@ -436,6 +455,7 @@ describe('insertText', () => {
                       from: 10,
                       to: 10,
                       $from: {
+                        parent: { type: { name: 'paragraph' } },
                         depth: 1,
                         node: () => ({
                           type: { name: 'paragraph' },
@@ -485,6 +505,7 @@ describe('insertText', () => {
                       from: 10,
                       to: 10,
                       $from: {
+                        parent: { type: { name: 'paragraph' } },
                         depth: 1,
                         node: () => ({
                           type: { name: 'paragraph' },
@@ -534,6 +555,7 @@ describe('insertText', () => {
                       from: 10,
                       to: 10,
                       $from: {
+                        parent: { type: { name: 'paragraph' } },
                         depth: 1,
                         node: () => ({
                           type: { name: 'paragraph' },
@@ -583,6 +605,7 @@ describe('insertText', () => {
                       from: 10,
                       to: 10,
                       $from: {
+                        parent: { type: { name: 'paragraph' } },
                         depth: 1,
                         node: () => ({
                           type: { name: 'paragraph' },
@@ -632,6 +655,7 @@ describe('insertText', () => {
                       from: 10,
                       to: 10,
                       $from: {
+                        parent: { type: { name: 'paragraph' } },
                         depth: 1,
                         node: () => ({
                           type: { name: 'paragraph' },
@@ -681,6 +705,7 @@ describe('insertText', () => {
                       from: 10,
                       to: 10,
                       $from: {
+                        parent: { type: { name: 'paragraph' } },
                         depth: 1,
                         node: () => ({
                           type: { name: 'paragraph' },
@@ -730,6 +755,7 @@ describe('insertText', () => {
                       from: 10,
                       to: 10,
                       $from: {
+                        parent: { type: { name: 'paragraph' } },
                         depth: 1,
                         node: () => ({
                           type: { name: 'paragraph' },
@@ -779,6 +805,7 @@ describe('insertText', () => {
                       from: 10,
                       to: 10,
                       $from: {
+                        parent: { type: { name: 'paragraph' } },
                         depth: 1,
                         node: () => ({
                           type: { name: 'paragraph' },
@@ -831,6 +858,7 @@ describe('insertText', () => {
                       from: 10,
                       to: 10,
                       $from: {
+                        parent: { type: { name: 'paragraph' } },
                         depth: 1,
                         node: () => ({
                           type: { name: 'paragraph' },
@@ -880,6 +908,7 @@ describe('insertText', () => {
                       from: 10,
                       to: 10,
                       $from: {
+                        parent: { type: { name: 'paragraph' } },
                         depth: 1,
                         node: () => ({
                           type: { name: 'paragraph' },
