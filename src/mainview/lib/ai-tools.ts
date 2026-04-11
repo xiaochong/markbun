@@ -62,11 +62,12 @@ export function registerAITools(
       const contentToLoad = hasLocalImages(newContent)
         ? await processMarkdownImages(newContent)
         : newContent;
-      editor.setMarkdown(contentToLoad);
-
-      // Sync application state and trigger auto-save
-      const newMarkdown = editor.getMarkdown();
-      onContentChanged?.(newMarkdown);
+      editor.setMarkdown(contentToLoad, {
+        onContentSet: () => {
+          const newMarkdown = editor.getMarkdown();
+          onContentChanged?.(newMarkdown);
+        },
+      });
 
       return { success: true, replacements };
     },
@@ -80,11 +81,12 @@ export function registerAITools(
       const contentToLoad = hasLocalImages(args.content)
         ? await processMarkdownImages(args.content)
         : args.content;
-      editor.setMarkdown(contentToLoad);
-
-      // Sync application state and trigger auto-save
-      const newMarkdown = editor.getMarkdown();
-      onContentChanged?.(newMarkdown);
+      editor.setMarkdown(contentToLoad, {
+        onContentSet: () => {
+          const newMarkdown = editor.getMarkdown();
+          onContentChanged?.(newMarkdown);
+        },
+      });
 
       return { success: true };
     },

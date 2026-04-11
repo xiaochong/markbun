@@ -32,7 +32,7 @@ export interface HandlerContext {
   setShowAIPanel: (updater: any) => void;
 
   // Content
-  contentRef: React.RefObject<string>;
+  getContent: () => string;
   filePath: string | null;
 }
 
@@ -165,7 +165,7 @@ export function setupRendererHandlers(ctx: HandlerContext): void {
 
   // ── Export commands (renderer-only) ─────────────────────────────────────
   dispatcher.registerHandler('file-export-html', async () => {
-    const result = await ctx.generateHTML(ctx.contentRef.current, ctx.filePath);
+    const result = await ctx.generateHTML(ctx.getContent(), ctx.filePath);
     if (result) {
       ctx.setExportDialogState({
         isOpen: true,
@@ -178,7 +178,7 @@ export function setupRendererHandlers(ctx: HandlerContext): void {
     }
   });
   dispatcher.registerHandler('file-export-image', async () => {
-    const result = await ctx.generateImage(ctx.contentRef.current, ctx.filePath);
+    const result = await ctx.generateImage(ctx.getContent(), ctx.filePath);
     if (result) {
       ctx.setExportDialogState({
         isOpen: true,

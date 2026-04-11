@@ -7,7 +7,7 @@
 
 import { useRef, useCallback, useEffect, useState, useMemo } from 'react';
 import { flushSync } from 'react-dom';
-import { cn } from '@/lib/utils';
+import { cn, debounce } from '@/lib/utils';
 import { MilkdownEditor, MilkdownEditorRef, SourceEditor, SourceEditorRef } from './components/editor';
 import { Toolbar, StatusBar, TitleBar, Sidebar } from './components/layout';
 import { FileExplorer, isImageFile } from './components/file-explorer';
@@ -425,6 +425,12 @@ function App() {
     autoSaveInterval: settings?.autoSaveInterval ?? 2000,
     backupEnabled: settings?.backup?.enabled ?? true,
     recoveryInterval: settings?.backup?.recoveryInterval ?? 30000,
+    getContent: () => {
+      if (sourceModeRef.current) {
+        return sourceEditorRef.current?.getValue() ?? '';
+      }
+      return editorRef.current?.getMarkdown() ?? '';
+    },
     onSaveSuccess: (savedPath) => {
       // Only change file explorer root if the file is outside the current workspace
       const parentDir = getDirectoryPath(savedPath);
@@ -459,6 +465,36 @@ function App() {
   const filePathRef2 = useRef(path);
   filePathRef2.current = path;
 
+  // Debounced markdown sync for WYSIWYG editor changes
+  const debouncedMarkdownSync = useMemo(() => {
+    return debounce(() => {
+      if (isSwitchingFileRef.current || sourceModeRef.current) return;
+      try {
+        const markdown = editorRef.current?.getMarkdown() ?? '';
+        updateContent(markdown);
+        setEditorContent(markdown);
+        outline.setHeadings(markdown);
+        scheduleSave();
+      } catch (e) {
+        console.error('[DebouncedSync] Failed to sync markdown:', e);
+      }
+    }, 200);
+  }, [updateContent, outline.setHeadings, scheduleSave]);
+
+  const flushDebouncedSync = useCallback(() => {
+    debouncedMarkdownSync.cancel();
+    if (isSwitchingFileRef.current || sourceModeRef.current) return;
+    try {
+      const markdown = editorRef.current?.getMarkdown() ?? '';
+      updateContent(markdown);
+      setEditorContent(markdown);
+      outline.setHeadings(markdown);
+      scheduleSave();
+    } catch (e) {
+      console.error('[FlushSync] Failed to sync markdown:', e);
+    }
+  }, [debouncedMarkdownSync, updateContent, outline.setHeadings, scheduleSave]);
+
   // Check for unsaved changes before switching files or closing.
   // Returns true = proceed, false = user cancelled the action.
   const checkUnsavedChanges = useCallback(async (): Promise<boolean> => {
@@ -466,6 +502,7 @@ function App() {
 
     if (autoSaveEnabledRef.current) {
       // Auto-save is on: save immediately and proceed
+      flushDebouncedSync();
       await handleSave();
       return true;
     }
@@ -478,7 +515,7 @@ function App() {
     if (result.action === 'cancel') return false;
     if (result.action === 'save') await handleSave();
     return true;
-  }, [handleSave]);
+  }, [handleSave, flushDebouncedSync]);
 
   // Show native "unsaved changes" warning on exit when auto-save is disabled
   useEffect(() => {
@@ -502,6 +539,7 @@ function App() {
   const resetWorkspace = useCallback((options?: { skipEditorClear?: boolean }) => {
     // Cancel any pending operations first
     cancelPendingSave();
+    flushDebouncedSync();
 
     // Clear editor content
     if (!options?.skipEditorClear) {
@@ -558,10 +596,6 @@ function App() {
   // Clipboard operations with blob URL handling
   const clipboard = useClipboard(editorRef, sourceEditorRef, currentFilePath, sourceMode);
 
-  // Ref to latest content so export handlers don't need content in their dep array
-  const contentRef = useRef(content);
-  contentRef.current = content;
-
   // Export operations
   const { generateHTML, generateImage } = useExport();
 
@@ -598,16 +632,12 @@ function App() {
     setExportDialogState(null);
   }, []);
 
-
   // Handle editor content changes from Milkdown
-  const handleEditorChange = useCallback((markdown: string) => {
+  const handleEditorChange = useCallback(() => {
     // Ignore changes during file switching to prevent race conditions
     if (isSwitchingFileRef.current) return;
-    updateContent(markdown);
-    setEditorContent(markdown);
-    outline.setHeadings(markdown);
-    scheduleSave();
-  }, [updateContent, outline.setHeadings, scheduleSave]);
+    debouncedMarkdownSync();
+  }, [debouncedMarkdownSync]);
 
   // Handle editor content changes from SourceEditor
   const handleSourceEditorChange = useCallback((markdown: string) => {
@@ -654,6 +684,7 @@ function App() {
 
     // Cancel any pending auto-save to prevent saving to wrong file
     cancelPendingSave();
+    flushDebouncedSync();
 
     // Cancel any ongoing file loading to prevent race conditions
     if (loadingCancelTokenRef.current) {
@@ -827,6 +858,7 @@ function App() {
   }, [toggleTheme]);
 
   const handleToggleSourceMode = useCallback(() => {
+    flushDebouncedSync();
     const newMode = !sourceModeRef.current;
 
     if (newMode) {
@@ -889,6 +921,7 @@ function App() {
 
       // Cancel any pending auto-save
       cancelPendingSave();
+      flushDebouncedSync();
 
       // Cancel any ongoing file loading
       if (loadingCancelTokenRef.current) {
@@ -1050,6 +1083,7 @@ function App() {
 
       // Cancel any pending operations
       cancelPendingSave();
+      flushDebouncedSync();
 
       // Clear editor content based on current mode
       if (sourceMode) {
@@ -1106,6 +1140,7 @@ function App() {
 
   // Handle recovery restore — load the recovered content into the editor
   const handleRecover = useCallback(async (content: string, recoveredPath: string) => {
+    flushDebouncedSync();
     resetFileState(recoveredPath, content);
     // Set workspace before processMarkdownImages resolves relative paths
     workspaceManager.setCurrentFile(recoveredPath);
@@ -1132,6 +1167,7 @@ function App() {
   // Dirty state is updated naturally when the editor fires markdownUpdated after setMarkdown.
   const handleRestoreVersion = useCallback(async (content: string) => {
     if (!path) return;
+    flushDebouncedSync();
     // workspaceManager is already synced to `path` via useEffect — no need to re-set
 
     if (sourceMode) {
@@ -1243,7 +1279,12 @@ function App() {
       setSearchShowReplace,
       setExportDialogState,
       setShowAIPanel,
-      contentRef,
+      getContent: () => {
+        if (sourceModeRef.current) {
+          return sourceEditorRef.current?.getValue() ?? '';
+        }
+        return editorRef.current?.getMarkdown() ?? '';
+      },
       filePath: currentFilePath,
     };
     setupRendererHandlers(ctx);
@@ -1321,7 +1362,8 @@ function App() {
           if (e.shiftKey) {
             handleSaveAs();
           } else {
-            handleSave();
+            flushDebouncedSync();
+            void handleSave();
           }
           break;
         case 'o':
@@ -1337,6 +1379,7 @@ function App() {
           e.preventDefault();
           // Reset to initial state (same as File -> New menu)
           cancelPendingSave();
+          flushDebouncedSync();
           updateContent('');
           setEditorContent('');
           outline.setHeadings('');
@@ -1459,7 +1502,7 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown, true);
     return () => window.removeEventListener('keydown', handleKeyDown, true);
-  }, [handleSave, handleSaveAs, handleOpen, handleOpenFolder, updateContent, quickOpen.open, sidebar.toggle, clipboard, sourceMode, cancelPendingSave, outline.setHeadings, fileExplorer.setRootPath, fileExplorer.selectFile, searchVisible, searchShowReplace]);
+  }, [handleSave, handleSaveAs, handleOpen, handleOpenFolder, updateContent, quickOpen.open, sidebar.toggle, clipboard, sourceMode, cancelPendingSave, outline.setHeadings, fileExplorer.setRootPath, fileExplorer.selectFile, searchVisible, searchShowReplace, flushDebouncedSync]);
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">

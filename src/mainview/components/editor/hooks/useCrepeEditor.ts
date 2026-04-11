@@ -172,7 +172,7 @@ export interface UseCrepeEditorReturn {
 
 export function useCrepeEditor(
   defaultValue: string,
-  onChange: ((markdown: string) => void) | undefined,
+  onChange: (() => void) | undefined,
   setIsReady: (ready: boolean) => void,
   darkMode: boolean = false
 ): UseCrepeEditorReturn {
@@ -192,12 +192,6 @@ export function useCrepeEditor(
   // immediately after. No setTimeout/RAF needed — the guard only needs to
   // be active for the duration of the synchronous dispatch call.
   const isSettingContentRef = useRef(false);
-
-  // Ref for the last serialized markdown baseline, shared between the change
-  // listener and setMarkdown. After loading content, setMarkdown updates this
-  // baseline so the dedup check in the change listener will correctly skip
-  // the programmatic load.
-  const lastSerializedRef = useRef('');
 
   // Time-based guard: after setMarkdown completes (especially on app startup
   // during session restore), ProseMirror plugins may dispatch asynchronous
@@ -390,35 +384,22 @@ export function useCrepeEditor(
     });
 
     // Listen for content changes via ProseMirror plugin (Crepe's markdownUpdated is unreliable)
-    // Deduplicate change notifications: ProseMirror may dispatch multiple transactions
-    // (e.g., normalization) that produce the same serialized markdown. Only notify
-    // when the serialized content actually changes to prevent spurious isDirty resets.
-    const changeListenerPlugin = $prose((ctx) => {
+    // Emit a lightweight signal with no payload. Heavy serialization and UI sync are
+    // debounced in App.tsx so typing stays responsive in large documents.
+    const changeListenerPlugin = $prose(() => {
       return new Plugin({
         key: new PluginKey('markbun-change-listener'),
         view: () => ({
           update: (view, prevState) => {
             if (!view.state.doc.eq(prevState.doc)) {
-              try {
-                const serializer = ctx.get(serializerCtx);
-                const markdown = serializer(view.state.doc);
-                // During programmatic content loading (setMarkdown), just update
-                // the baseline without notifying onChange. The flag is set/cleared
-                // synchronously around view.dispatch() in setMarkdown.
-                // Additionally, suppress changes for 500ms after loading completes
-                // to catch asynchronous ProseMirror normalization (e.g. on startup).
-                if (isSettingContentRef.current || Date.now() < suppressChangesUntilRef.current) {
-                  lastSerializedRef.current = markdown;
-                  return;
-                }
-                if (markdown !== lastSerializedRef.current) {
-                  lastSerializedRef.current = markdown;
-                  // Convert yaml code block back to frontmatter format for onChange callback
-                  onChangeRef.current?.(convertCodeBlockToFrontmatter(markdown));
-                }
-              } catch (e) {
-                console.error('[ChangeListener] Serialization failed:', e);
+              // During programmatic content loading (setMarkdown), the flag is set/cleared
+              // synchronously around view.dispatch() in setMarkdown.
+              // Additionally, suppress changes for 500ms after loading completes
+              // to catch asynchronous ProseMirror normalization (e.g. on startup).
+              if (isSettingContentRef.current || Date.now() < suppressChangesUntilRef.current) {
+                return;
               }
+              onChangeRef.current?.();
             }
           },
         }),
@@ -465,13 +446,9 @@ export function useCrepeEditor(
     }
 
     try {
-      // Common finish logic: update baseline, clear guard, set suppression window,
+      // Common finish logic: clear guard, set suppression window,
       // and schedule the onContentSet callback.
       const finishLoad = () => {
-        try {
-          const serializer = editor.ctx.get(serializerCtx);
-          lastSerializedRef.current = serializer(view.state.doc);
-        } catch { /* best effort */ }
         isSettingContentRef.current = false;
         suppressChangesUntilRef.current = Date.now() + 2000;
         if (onContentSet) {
@@ -533,12 +510,6 @@ export function useCrepeEditor(
       const tr = view.state.tr.replaceWith(0, view.state.doc.content.size, firstDoc.content);
       tr.setMeta("addToHistory", false);
       view.dispatch(tr);
-
-      // Update baseline after first chunk
-      try {
-        const serializer = editor.ctx.get(serializerCtx);
-        lastSerializedRef.current = serializer(view.state.doc);
-      } catch { /* best effort */ }
 
       // Then load remaining chunks
       let currentChunkIndex = 1;

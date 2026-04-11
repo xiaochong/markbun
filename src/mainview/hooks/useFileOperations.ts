@@ -16,6 +16,7 @@ interface UseFileOperationsOptions {
   onSaveSuccess?: (path: string) => void;
   backupEnabled?: boolean;
   recoveryInterval?: number; // ms between periodic recovery writes (default 30 000)
+  getContent?: () => string; // Live content fetcher for save paths
 }
 
 interface FileDialogState {
@@ -32,6 +33,7 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
     onSaveSuccess,
     backupEnabled = true,
     recoveryInterval = 30000,
+    getContent,
   } = options;
 
   // Use ref to store callback to avoid dependency issues
@@ -42,6 +44,8 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
   const recoveryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const backupEnabledRef = useRef(backupEnabled);
   backupEnabledRef.current = backupEnabled;
+  const getContentRef = useRef(getContent);
+  getContentRef.current = getContent;
 
   const [fileState, setFileState] = useState<FileState>({
     path: null,
@@ -108,7 +112,7 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
         setSaveStatus(null);
         return;
       }
-      const contentToSave = restoreOriginalImagePaths(latestState.content);
+      const contentToSave = restoreOriginalImagePaths(getContentRef.current?.() ?? latestState.content);
 
       const result = await electrobun.saveFile(contentToSave, targetPath) as { success: boolean; error?: string };
 
@@ -220,7 +224,7 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
         return;
       }
 
-      const contentToSave = restoreOriginalImagePaths(latestState.content);
+      const contentToSave = restoreOriginalImagePaths(getContentRef.current?.() ?? latestState.content);
       const result = await electrobun.saveFile(contentToSave, latestState.path) as { success: boolean; error?: string };
 
       if (result.success) {
@@ -339,7 +343,7 @@ export function useFileOperations(options: UseFileOperationsOptions = {}) {
       const saveResult = result as SaveDialogResult;
       if (saveResult.filePath) {
         const state = fileStateRef.current;
-        const contentToSave = restoreOriginalImagePaths(state.content);
+        const contentToSave = restoreOriginalImagePaths(getContentRef.current?.() ?? state.content);
 
         setSaveStatus('saving');
         try {

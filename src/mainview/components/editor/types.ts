@@ -5,7 +5,7 @@
 
 export interface MilkdownEditorProps {
   defaultValue?: string;
-  onChange?: (markdown: string) => void;
+  onChange?: () => void;
   className?: string;
   darkMode?: boolean;
 }
