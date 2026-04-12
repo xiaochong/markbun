@@ -208,4 +208,17 @@ describe("editor operations", () => {
       expect(content).toContain("**bold me**");
     });
   }, 30000);
+
+  it("applies italic formatting via menu action", async () => {
+    await withTrace("editor-italic", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("italic me");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("format-emphasis");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("*italic me*");
+    });
+  }, 30000);
 });
