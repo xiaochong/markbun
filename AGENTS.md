@@ -178,7 +178,8 @@ bun run lint
 **Commands:**
 - `bun run typecheck` - TypeScript type checking (`tsc --noEmit`)
 - `bun run lint` - Full validation: type check + run tests
-- `bun test` - Run unit tests only
+- `bun run test:unit` - Run unit tests only
+- `bun test` - Run all tests (unit + e2e)
 
 **What to check:**
 - ✓ `bun run typecheck` - Should show "No errors in src directory"
@@ -295,8 +296,9 @@ MarkBun uses **Bun's built-in test runner** for all unit tests.
 
 **Run Tests:**
 ```bash
-bun test              # Run all unit tests once
-bun run test          # Same as above
+bun run test:unit     # Run unit tests only
+bun test              # Run all tests (unit + e2e)
+bun run test          # Same as bun test
 bun run test:watch    # Run tests in watch mode
 bun run test:coverage # Run tests with coverage report
 bun run test:e2e      # Run end-to-end tests (spawns real app)
