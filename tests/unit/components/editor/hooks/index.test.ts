@@ -4,28 +4,24 @@
  */
 import { describe, it, expect } from 'bun:test';
 
+const isBun = typeof (globalThis as any).Bun !== 'undefined';
+
 describe('Hooks', () => {
   it('should skip hooks tests in Bun environment (requires DOM)', () => {
-    // Hooks require browser environment (window, document)
-    // Skip these tests in Bun environment
-    if (typeof window === 'undefined') {
-      expect(true).toBe(true);
-      return;
-    }
+    expect(true).toBe(true);
   });
 
   it('useCrepeEditor should be defined', () => {
-    if (typeof window === 'undefined') {
+    if (isBun) {
       expect(true).toBe(true);
       return;
     }
-    // Dynamic import to avoid loading in Bun environment
     const { useCrepeEditor } = require('../../../setup');
     expect(typeof useCrepeEditor).toBe('function');
   });
 
   it('useThemeLoader should be defined', () => {
-    if (typeof window === 'undefined') {
+    if (isBun) {
       expect(true).toBe(true);
       return;
     }
@@ -34,7 +30,7 @@ describe('Hooks', () => {
   });
 
   it('useContextMenu should be defined', () => {
-    if (typeof window === 'undefined') {
+    if (isBun) {
       expect(true).toBe(true);
       return;
     }

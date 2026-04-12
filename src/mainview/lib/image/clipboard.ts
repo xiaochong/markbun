@@ -38,6 +38,8 @@ export function prepareForClipboard(markdown: string): string {
  * @returns Processed content ready for insertion
  */
 export async function processFromClipboard(markdown: string): Promise<string> {
+  // NOTE: Intentionally not wrapped with the TaskQueue — clipboard paste is a
+  // short, user-initiated operation and does not race with file switches.
   return await processMarkdownImages(markdown);
 }
 

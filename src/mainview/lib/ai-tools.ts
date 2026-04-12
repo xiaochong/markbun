@@ -58,7 +58,9 @@ export function registerAITools(
       const replacements = content.split(args.old_text).length - 1;
       const newContent = content.split(args.old_text).join(args.new_text);
 
-      // Convert local paths to blob URLs for editor display
+      // Convert local paths to blob URLs for editor display.
+      // NOTE: Intentionally not wrapped with the TaskQueue — AI tool calls are
+      // short, user-initiated operations and do not race with file switches.
       const contentToLoad = hasLocalImages(newContent)
         ? await processMarkdownImages(newContent)
         : newContent;
@@ -78,6 +80,8 @@ export function registerAITools(
       if (args?.content === undefined || args?.content === null) {
         return { error: 'content is required' };
       }
+      // NOTE: Intentionally not wrapped with the TaskQueue — AI tool calls are
+      // short, user-initiated operations and do not race with file switches.
       const contentToLoad = hasLocalImages(args.content)
         ? await processMarkdownImages(args.content)
         : args.content;

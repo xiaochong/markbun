@@ -68,11 +68,23 @@ export function hasLocalImages(markdown: string): boolean {
  * @param originalPath - 可选的原始路径（用户输入的路径，用于恢复）
  * @returns Blob URL or null if failed
  */
-export async function loadLocalImage(imagePath: string, originalPath?: string): Promise<string | null> {
+export async function loadLocalImage(
+  imagePath: string,
+  originalPath?: string,
+  signal?: AbortSignal
+): Promise<string | null> {
+  if (signal?.aborted) {
+    return null;
+  }
+
   // Check cache first
   const cached = imageCache.get(imagePath);
   if (cached) {
     return cached;
+  }
+
+  if (signal?.aborted) {
+    return null;
   }
 
   try {
@@ -83,6 +95,10 @@ export async function loadLocalImage(imagePath: string, originalPath?: string): 
     };
 
     if (response.success && response.dataUrl) {
+      if (signal?.aborted) {
+        return null;
+      }
+
       if (originalPath) {
         const blobUrl = imageCache.setFromBase64WithOriginalPath(imagePath, response.dataUrl, originalPath);
         return blobUrl;
@@ -107,7 +123,7 @@ export async function loadLocalImage(imagePath: string, originalPath?: string): 
  * @param markdown - The markdown content
  * @returns Processed markdown with blob URLs
  */
-export async function processMarkdownImages(markdown: string): Promise<string> {
+export async function processMarkdownImages(markdown: string, signal?: AbortSignal): Promise<string> {
   const images = parseImageReferences(markdown);
 
   if (images.length === 0) {
@@ -124,7 +140,7 @@ export async function processMarkdownImages(markdown: string): Promise<string> {
   const loadResults = await Promise.all(
     resolvedImages.map(async (img) => {
       // 使用绝对路径加载图片，但传递原始路径用于缓存
-      const blobUrl = await loadLocalImage(img.resolvedPath, img.path);
+      const blobUrl = await loadLocalImage(img.resolvedPath, img.path, signal);
       return {
         originalMatch: img.fullMatch,
         alt: img.alt,
@@ -132,6 +148,10 @@ export async function processMarkdownImages(markdown: string): Promise<string> {
       };
     })
   );
+
+  if (signal?.aborted) {
+    return markdown;
+  }
 
   // Apply replacements in reverse order to maintain indices
   let result = markdown;
@@ -233,14 +253,21 @@ export async function createImageMarkdown(
  *
  * @param markdown - Markdown content to preload images from
  */
-export async function preloadImages(markdown: string): Promise<void> {
+export async function preloadImages(markdown: string, signal?: AbortSignal): Promise<void> {
   const images = parseImageReferences(markdown);
+
+  if (signal?.aborted) {
+    return;
+  }
 
   // Load all images in parallel (don't wait for results)
   Promise.all(
     images.map(async (img) => {
+      if (signal?.aborted) {
+        return;
+      }
       const resolvedPath = workspaceManager.resolvePath(img.path);
-      await loadLocalImage(resolvedPath);
+      await loadLocalImage(resolvedPath, undefined, signal);
     })
   ).catch(console.error);
 }

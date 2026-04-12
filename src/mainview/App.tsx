@@ -39,6 +39,7 @@ import { setupRendererHandlers, dispatcher } from './lib/commandHandlers';
 import type { HandlerContext } from './lib/commandHandlers';
 import { getCommand } from '../shared/commandRegistry';
 import i18n from './i18n';
+import { taskQueue } from './lib/taskQueue';
 import {
   workspaceManager,
   processMarkdownImages,
@@ -269,7 +270,7 @@ function App() {
               // Process images if needed
               const needsImageProcessing = hasLocalImages(readResult.content);
               const contentToLoad = needsImageProcessing
-                ? await processMarkdownImages(readResult.content)
+                ? (await processImagesWithQueue(readResult.content)) ?? readResult.content
                 : readResult.content;
 
               // Load content into editor based on sourceMode from uiState
@@ -587,6 +588,18 @@ function App() {
   // File loading cancel token to prevent race conditions
   const loadingCancelTokenRef = useRef<{ cancelled: boolean; path: string } | null>(null);
 
+  // Helper to wrap image processing in the cancellable task queue
+  const processImagesWithQueue = useCallback(async (content: string): Promise<string | null> => {
+    try {
+      return await taskQueue.enqueue('image-load', signal => processMarkdownImages(content, signal));
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return null;
+      }
+      throw err;
+    }
+  }, []);
+
   // Sync path from useFileOperations to local state and workspace manager
   useEffect(() => {
     setCurrentFilePath(path);
@@ -740,7 +753,7 @@ function App() {
         }
 
         const contentToLoad = needsImageProcessing
-          ? await processMarkdownImages(result.content)
+          ? (await processImagesWithQueue(result.content)) ?? result.content
           : result.content;
 
         // Check again if cancelled after async image processing
@@ -888,17 +901,24 @@ function App() {
       setSourceMode(false);
 
       // Process images to convert local paths to blob URLs
-      void processMarkdownImages(markdown).then((processedMarkdown) => {
-        const trySetContent = () => {
-          if (editorRef.current?.isReady) {
-            editorRef.current.setMarkdown(processedMarkdown);
-            editorRef.current.focus();
-          } else {
-            requestAnimationFrame(trySetContent);
+      taskQueue.enqueue('image-load', signal => processMarkdownImages(markdown, signal))
+        .then((processedMarkdown) => {
+          const trySetContent = () => {
+            if (editorRef.current?.isReady) {
+              editorRef.current.setMarkdown(processedMarkdown);
+              editorRef.current.focus();
+            } else {
+              requestAnimationFrame(trySetContent);
+            }
+          };
+          requestAnimationFrame(trySetContent);
+        })
+        .catch((err) => {
+          if (err instanceof DOMException && err.name === 'AbortError') {
+            return;
           }
-        };
-        requestAnimationFrame(trySetContent);
-      });
+          throw err;
+        });
     }
   }, []);
 
@@ -965,7 +985,7 @@ function App() {
           }
 
           const contentToLoad = needsImageProcessing
-            ? await processMarkdownImages(fileContent)
+            ? (await processImagesWithQueue(fileContent)) ?? fileContent
             : fileContent;
 
           // Check if cancelled after async image processing
@@ -1153,7 +1173,7 @@ function App() {
       // Clear first to force ImageBlock components to fully re-render
       if (editorRef.current?.isReady) editorRef.current.setMarkdown('');
       const contentToLoad = hasLocalImages(content)
-        ? await processMarkdownImages(content)
+        ? (await processImagesWithQueue(content)) ?? content
         : content;
       requestAnimationFrame(() => {
         editorRef.current?.setMarkdown(contentToLoad);
@@ -1179,7 +1199,7 @@ function App() {
       // Clear first to force ImageBlock components to fully re-render
       if (editorRef.current?.isReady) editorRef.current.setMarkdown('');
       const contentToLoad = hasLocalImages(content)
-        ? await processMarkdownImages(content)
+        ? (await processImagesWithQueue(content)) ?? content
         : content;
       requestAnimationFrame(() => {
         editorRef.current?.setMarkdown(contentToLoad);
