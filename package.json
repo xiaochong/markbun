@@ -1,6 +1,6 @@
 {
 	"name": "markbun",
-	"version": "0.8.0",
+	"version": "0.9.0",
 	"description": "A fast, beautiful, Typora-like markdown desktop editor built with Electrobun and Milkdown (Mark + Bun)",
 	"scripts": {
 		"start": "vite build && electrobun dev",
