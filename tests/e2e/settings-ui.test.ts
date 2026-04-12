@@ -485,4 +485,72 @@ describe("settings ui", () => {
       await settings.close();
     });
   }, 60000);
+
+  it("resets line height to default in editor tab", async () => {
+    await withTrace("settings-reset-line-height", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+      await settings.switchTab("Editor");
+
+      await settings.setLineHeightValue(2.5);
+      expect(await settings.getLineHeightValue()).toBe(2.5);
+
+      await settings.clickResetDefaults();
+      expect(await settings.getLineHeightValue()).toBe(1.65);
+
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+    });
+  }, 60000);
+
+  it("resets max versions to default in backup tab", async () => {
+    await withTrace("settings-reset-max-versions", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+      await settings.switchTab("Backup");
+
+      await settings.setMaxVersionsValue(50);
+      expect(await settings.getMaxVersionsValue()).toBe(50);
+
+      await settings.clickResetDefaults();
+      expect(await settings.getMaxVersionsValue()).toBe(20);
+
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+    });
+  }, 60000);
+
+  it("resets retention days to default in backup tab", async () => {
+    await withTrace("settings-reset-retention-days", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+      await settings.switchTab("Backup");
+
+      await settings.setRetentionDaysValue(90);
+      expect(await settings.getRetentionDaysValue()).toBe(90);
+
+      await settings.clickResetDefaults();
+      expect(await settings.getRetentionDaysValue()).toBe(30);
+
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+    });
+  }, 60000);
+
+  it("resets recovery interval to default in backup tab", async () => {
+    await withTrace("settings-reset-recovery-interval", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+      await settings.switchTab("Backup");
+
+      await settings.setRecoveryIntervalValue(60000);
+      expect(await settings.getRecoveryIntervalValue()).toBe(60000);
+
+      await settings.clickResetDefaults();
+      expect(await settings.getRecoveryIntervalValue()).toBe(30000);
+
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+    });
+  }, 60000);
 });
