@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import { processMarkdownImages, getFileName } from '../lib/image';
 import { mermaidCache } from '../lib/mermaid/cache';
-import { taskQueue } from '../lib/taskQueue';
 
 function getDefaultFileName(filePath: string | null): string {
   if (!filePath) return 'export';
@@ -94,14 +93,43 @@ export interface ExportResult {
   extension: string;
 }
 
+function postProcessMathBlocks(html: string): string {
+  if (typeof DOMParser === 'undefined') return html;
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    doc.querySelectorAll('p').forEach((p) => {
+      const text = p.textContent?.trim() ?? '';
+      if (text.startsWith('$$') && text.endsWith('$$')) {
+        const div = doc.createElement('div');
+        div.className = 'math-block';
+        while (p.firstChild) {
+          div.appendChild(p.firstChild);
+        }
+        p.replaceWith(div);
+      }
+    });
+    return doc.body.innerHTML;
+  } catch {
+    return html;
+  }
+}
+
+function waitForLoad(el: HTMLLinkElement | HTMLScriptElement): Promise<void> {
+  return new Promise((resolve) => {
+    el.onload = () => resolve();
+    el.onerror = () => resolve();
+  });
+}
+
 export function useExport() {
   const generateHTML = useCallback(async (content: string, filePath: string | null): Promise<ExportResult | null> => {
-    return taskQueue.enqueue('export-html', async () => {
-      try {
-        const { marked } = await import('marked');
-        const html = await marked.parse(content);
-        const fileName = getDefaultFileName(filePath);
-        const fullHtml = `<!DOCTYPE html>
+    try {
+      const { marked } = await import('marked');
+      const rawHtml = await marked.parse(content);
+      const processedHtml = postProcessMathBlocks(rawHtml);
+      const fileName = getDefaultFileName(filePath);
+      const fullHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -111,7 +139,7 @@ export function useExport() {
   <style>${HTML_STYLE}</style>
 </head>
 <body>
-${html}
+${processedHtml}
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
@@ -139,280 +167,269 @@ ${html}
 </body>
 </html>`;
 
-        return {
-          content: fullHtml,
-          isBase64: false,
-          defaultName: fileName,
-          extension: 'html',
-        };
-      } catch (error) {
-        console.error('HTML export generation failed:', error);
-        return null;
-      }
-    });
+      return {
+        content: fullHtml,
+        isBase64: false,
+        defaultName: fileName,
+        extension: 'html',
+      };
+    } catch (error) {
+      console.error('HTML export generation failed:', error);
+      return null;
+    }
   }, []);
 
   const generateImage = useCallback(async (content: string, filePath: string | null): Promise<ExportResult | null> => {
-    return taskQueue.enqueue('export-png', async () => {
-      // Create isolated iframe for rendering - must be cleaned up in finally
-      const iframe = document.createElement('iframe');
+    // Create isolated iframe for rendering - must be cleaned up in finally
+    const iframe = document.createElement('iframe');
 
-      try {
-        const { default: html2canvas } = await import('html2canvas');
-        const { marked } = await import('marked');
+    try {
+      const { default: html2canvas } = await import('html2canvas');
+      const { marked } = await import('marked');
 
-        // Process markdown: convert to HTML with image processing
-        const processedContent = await processMarkdownImages(content);
-        const html = await marked.parse(processedContent);
+      // Process markdown: convert to HTML with image processing
+      const processedContent = await processMarkdownImages(content);
+      const html = await marked.parse(processedContent);
 
-        const isDark = document.documentElement.classList.contains('dark');
-        const bgColor = isDark ? '#0d1117' : '#ffffff';
+      const isDark = document.documentElement.classList.contains('dark');
+      const bgColor = isDark ? '#0d1117' : '#ffffff';
 
-        // Setup iframe
-        iframe.style.position = 'fixed';
-        iframe.style.top = '-9999px';
-        iframe.style.left = '-9999px';
-        iframe.style.width = '1200px';
-        iframe.style.height = 'auto';
-        iframe.style.border = 'none';
-        document.body.appendChild(iframe);
+      // Setup iframe
+      iframe.style.position = 'fixed';
+      iframe.style.top = '-9999px';
+      iframe.style.left = '-9999px';
+      iframe.style.width = '1200px';
+      iframe.style.height = 'auto';
+      iframe.style.border = 'none';
+      document.body.appendChild(iframe);
 
-        const iframeDoc = iframe.contentDocument;
-        if (!iframeDoc) {
-          return null;
-        }
+      const iframeDoc = iframe.contentDocument;
+      if (!iframeDoc) {
+        return null;
+      }
 
-        // Add doctype to prevent quirks mode (required for KaTeX)
-        iframeDoc.open();
-        iframeDoc.write('<!DOCTYPE html><html><head></head><body></body></html>');
-        iframeDoc.close();
+      // Add doctype to prevent quirks mode (required for KaTeX)
+      iframeDoc.open();
+      iframeDoc.write('<!DOCTYPE html><html><head></head><body></body></html>');
+      iframeDoc.close();
 
-        // Add styles
-        const styleEl = iframeDoc.createElement('style');
-        styleEl.textContent = HTML_STYLE;
-        iframeDoc.head.appendChild(styleEl);
+      // Add styles
+      const styleEl = iframeDoc.createElement('style');
+      styleEl.textContent = HTML_STYLE;
+      iframeDoc.head.appendChild(styleEl);
 
-        // Add KaTeX CSS
-        const katexCss = iframeDoc.createElement('link');
-        katexCss.rel = 'stylesheet';
-        katexCss.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css';
-        iframeDoc.head.appendChild(katexCss);
+      // Add KaTeX CSS
+      const katexCss = iframeDoc.createElement('link');
+      katexCss.rel = 'stylesheet';
+      const cssPromise = waitForLoad(katexCss);
+      katexCss.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css';
+      iframeDoc.head.appendChild(katexCss);
 
-        // Add KaTeX JS
-        const katexScript = iframeDoc.createElement('script');
-        katexScript.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js';
-        iframeDoc.head.appendChild(katexScript);
+      // Add KaTeX JS
+      const katexScript = iframeDoc.createElement('script');
+      const katexPromise = waitForLoad(katexScript);
+      katexScript.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js';
+      iframeDoc.head.appendChild(katexScript);
 
-        // Add KaTeX auto-render extension
-        const katexAutoScript = iframeDoc.createElement('script');
-        katexAutoScript.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js';
-        iframeDoc.head.appendChild(katexAutoScript);
+      // Add KaTeX auto-render extension
+      const katexAutoScript = iframeDoc.createElement('script');
+      const autoPromise = waitForLoad(katexAutoScript);
+      katexAutoScript.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js';
+      iframeDoc.head.appendChild(katexAutoScript);
 
-        // Add mermaid
-        const mermaidScript = iframeDoc.createElement('script');
-        mermaidScript.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js';
-        iframeDoc.head.appendChild(mermaidScript);
+      // Add mermaid
+      const mermaidScript = iframeDoc.createElement('script');
+      const mermaidPromise = waitForLoad(mermaidScript);
+      mermaidScript.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js';
+      iframeDoc.head.appendChild(mermaidScript);
 
-        // Create content container
-        const contentDiv = iframeDoc.createElement('div');
-        contentDiv.style.padding = '60px';
-        contentDiv.style.maxWidth = '1000px';
-        contentDiv.style.margin = '0 auto';
-        contentDiv.innerHTML = html;
-        iframeDoc.body.appendChild(contentDiv);
+      // Create content container
+      const contentDiv = iframeDoc.createElement('div');
+      contentDiv.style.padding = '60px';
+      contentDiv.style.maxWidth = '1000px';
+      contentDiv.style.margin = '0 auto';
+      contentDiv.innerHTML = html;
+      iframeDoc.body.appendChild(contentDiv);
 
-        // Wait for all scripts to load
-        await new Promise<void>((resolve) => {
-          let loaded = 0;
-          const timeoutId = setTimeout(resolve, 10000);
+      // Wait for all resources to load (CSS + scripts)
+      await Promise.all([cssPromise, katexPromise, autoPromise, mermaidPromise]);
 
-          const checkDone = () => {
-            loaded++;
-            if (loaded >= 3) {
-              clearTimeout(timeoutId);
-              resolve();
+      const win = iframe.contentWindow as any;
+
+      // Manual math rendering - scan all text nodes for $...$ and $$...$$
+      if (win && win.katex) {
+        const katex = win.katex;
+        const walkTextNodes = (node: Node) => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.textContent || '';
+            // Check if this text node contains math delimiters
+            if (text.includes('$')) {
+              const parent = node.parentNode;
+              if (!parent) return;
+
+              // Skip if inside code/pre
+              let el: Element | null = parent as Element;
+              while (el) {
+                if (el.tagName === 'CODE' || el.tagName === 'PRE') return;
+                el = el.parentElement;
+              }
+
+              // Split by math delimiters
+              const parts = text.split(/(\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$)/g);
+              if (parts.length > 1) {
+                const fragment = iframeDoc.createDocumentFragment();
+                parts.forEach((part: string) => {
+                  if (part.startsWith('$$') && part.endsWith('$$')) {
+                    // Block math
+                    const latex = part.slice(2, -2).trim();
+                    const div = iframeDoc.createElement('div');
+                    div.className = 'katex-display';
+                    try {
+                      katex.render(latex, div, { throwOnError: false, displayMode: true });
+                    } catch {
+                      div.textContent = part;
+                    }
+                    fragment.appendChild(div);
+                  } else if (part.startsWith('$') && part.endsWith('$')) {
+                    // Inline math
+                    const latex = part.slice(1, -1).trim();
+                    const span = iframeDoc.createElement('span');
+                    try {
+                      katex.render(latex, span, { throwOnError: false, displayMode: false });
+                    } catch {
+                      span.textContent = part;
+                    }
+                    fragment.appendChild(span);
+                  } else if (part) {
+                    fragment.appendChild(iframeDoc.createTextNode(part));
+                  }
+                });
+                parent.replaceChild(fragment, node);
+              }
             }
-          };
+          } else if (node.nodeType === Node.ELEMENT_NODE) {
+            // Skip code blocks and pre elements
+            const el = node as Element;
+            if (el.tagName !== 'CODE' && el.tagName !== 'PRE') {
+              Array.from(node.childNodes).forEach(walkTextNodes);
+            }
+          }
+        };
+        walkTextNodes(contentDiv);
+      }
 
-          katexScript.onload = checkDone;
-          katexAutoScript.onload = checkDone;
-          mermaidScript.onload = checkDone;
+      // Render mermaid diagrams
+      if (win && win.mermaid) {
+        const mermaidTheme = isDark ? 'dark' : 'default';
+        const mermaidConfig = { startOnLoad: false, theme: mermaidTheme, htmlLabels: false };
+        win.mermaid.initialize(mermaidConfig);
 
-          katexScript.onerror = () => {
-            console.warn('Failed to load KaTeX script:', katexScript.src);
-            checkDone();
-          };
-          katexAutoScript.onerror = () => {
-            console.warn('Failed to load KaTeX auto-render script:', katexAutoScript.src);
-            checkDone();
-          };
-          mermaidScript.onerror = () => {
-            console.warn('Failed to load Mermaid script:', mermaidScript.src);
-            checkDone();
-          };
+        const mermaidElements = Array.from(iframeDoc.querySelectorAll('.language-mermaid, .mermaid'));
+        const uncachedSources: { el: Element; source: string }[] = [];
+
+        mermaidElements.forEach((el) => {
+          const source = el.textContent || '';
+          const cachedSvg = mermaidCache.get(source, mermaidTheme, mermaidConfig);
+          if (cachedSvg) {
+            el.innerHTML = cachedSvg;
+          } else {
+            uncachedSources.push({ el, source });
+          }
         });
 
-        const win = iframe.contentWindow as any;
-
-        // Manual math rendering - scan all text nodes for $...$ and $$...$$
-        if (win && win.katex) {
-          const katex = win.katex;
-          const walkTextNodes = (node: Node) => {
-            if (node.nodeType === Node.TEXT_NODE) {
-              const text = node.textContent || '';
-              // Check if this text node contains math delimiters
-              if (text.includes('$')) {
-                const parent = node.parentNode;
-                if (!parent) return;
-
-                // Skip if inside code/pre
-                let el: Element | null = parent as Element;
-                while (el) {
-                  if (el.tagName === 'CODE' || el.tagName === 'PRE') return;
-                  el = el.parentElement;
-                }
-
-                // Split by math delimiters
-                const parts = text.split(/(\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$)/g);
-                if (parts.length > 1) {
-                  const fragment = iframeDoc.createDocumentFragment();
-                  parts.forEach((part: string) => {
-                    if (part.startsWith('$$') && part.endsWith('$$')) {
-                      // Block math
-                      const latex = part.slice(2, -2).trim();
-                      const div = iframeDoc.createElement('div');
-                      div.className = 'katex-display';
-                      try {
-                        katex.render(latex, div, { throwOnError: false, displayMode: true });
-                      } catch {
-                        div.textContent = part;
-                      }
-                      fragment.appendChild(div);
-                    } else if (part.startsWith('$') && part.endsWith('$')) {
-                      // Inline math
-                      const latex = part.slice(1, -1).trim();
-                      const span = iframeDoc.createElement('span');
-                      try {
-                        katex.render(latex, span, { throwOnError: false, displayMode: false });
-                      } catch {
-                        span.textContent = part;
-                      }
-                      fragment.appendChild(span);
-                    } else if (part) {
-                      fragment.appendChild(iframeDoc.createTextNode(part));
-                    }
-                  });
-                  parent.replaceChild(fragment, node);
-                }
-              }
-            } else if (node.nodeType === Node.ELEMENT_NODE) {
-              // Skip code blocks and pre elements
-              const el = node as Element;
-              if (el.tagName !== 'CODE' && el.tagName !== 'PRE') {
-                Array.from(node.childNodes).forEach(walkTextNodes);
-              }
-            }
-          };
-          walkTextNodes(contentDiv);
-        }
-
-        // Render mermaid diagrams
-        if (win && win.mermaid) {
-          const mermaidTheme = isDark ? 'dark' : 'default';
-          const mermaidConfig = { startOnLoad: false, theme: mermaidTheme, htmlLabels: false };
-          win.mermaid.initialize(mermaidConfig);
-
-          const mermaidElements = Array.from(iframeDoc.querySelectorAll('.language-mermaid, .mermaid'));
-          const uncachedSources: { el: Element; source: string }[] = [];
-
-          mermaidElements.forEach((el) => {
-            const source = el.textContent || '';
-            const cachedSvg = mermaidCache.get(source, mermaidTheme, mermaidConfig);
-            if (cachedSvg) {
-              el.innerHTML = cachedSvg;
-            } else {
-              uncachedSources.push({ el, source });
-            }
-          });
-
+        // Render uncached diagrams individually — more stable than mermaid.run({ nodes })
+        // for large documents with many diagrams.
+        for (const { el, source } of uncachedSources) {
           try {
-            if (uncachedSources.length > 0) {
-              const uncachedElements = uncachedSources.map((item) => item.el);
-              await win.mermaid.run({
-                nodes: uncachedElements,
-              });
-              // Cache newly rendered diagrams
-              uncachedSources.forEach(({ el, source }) => {
-                const svg = el.innerHTML;
-                mermaidCache.set(source, mermaidTheme, mermaidConfig, svg);
-              });
-            }
+            const id = `mermaid-export-${Math.random().toString(36).slice(2)}`;
+            const { svg } = await win.mermaid.render(id, source);
+            el.innerHTML = svg;
+            mermaidCache.set(source, mermaidTheme, mermaidConfig, svg);
           } catch {
-            // Ignore mermaid errors
+            // Ignore individual mermaid errors so one bad diagram doesn't break the export
           }
         }
+      }
 
-        // Wait for images
-        const images = Array.from(iframeDoc.querySelectorAll('img'));
-        await Promise.all(
-          images.map(
-            (img) =>
-              new Promise<void>((resolve) => {
-                if (img.complete) resolve();
-                else {
-                  img.onload = () => resolve();
-                  img.onerror = () => resolve();
-                  setTimeout(resolve, 1000);
-                }
-              })
-          )
-        );
+      // Wait for KaTeX fonts to load before capture so math renders correctly
+      if ('fonts' in iframeDoc) {
+        await iframeDoc.fonts.ready;
+      }
 
-        // Force layout recalculation to ensure all styles are applied before capture
-        void iframeDoc.body.offsetHeight;
-
-        // Calculate dimensions
-        const rect = contentDiv.getBoundingClientRect();
-        const width = Math.max(rect.width, 800);
-        const height = rect.height;
-
-        iframe.style.width = `${width}px`;
-        iframe.style.height = `${height}px`;
-
-        // Capture
-        const canvas = await html2canvas(contentDiv, {
-          backgroundColor: bgColor,
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          width: width,
-          height: height,
-        });
-
-        const base64 = canvas.toDataURL('image/png').split(',')[1];
-        const fileName = getDefaultFileName(filePath);
-
-        return {
-          content: base64,
-          isBase64: true,
-          defaultName: fileName,
-          extension: 'png',
-        };
-      } catch (error) {
-        console.error('Image export generation failed:', error);
-        return null;
-      } finally {
-        // Always cleanup iframe
-        if (iframe.parentNode) {
-          document.body.removeChild(iframe);
+      // Yield so WebKit can finish layout / paint before capture.
+      // Use the iframe's own window to ensure its layout cycle is flushed.
+      await new Promise<void>((resolve) => {
+        const win = iframe.contentWindow;
+        if (win && typeof win.requestAnimationFrame === 'function') {
+          win.requestAnimationFrame(() => win.requestAnimationFrame(() => resolve()));
+        } else {
+          setTimeout(resolve, 100);
         }
+      });
+
+      // Wait for images
+      const images = Array.from(iframeDoc.querySelectorAll('img'));
+      await Promise.all(
+        images.map(
+          (img) =>
+            new Promise<void>((resolve) => {
+              if (img.complete) resolve();
+              else {
+                img.onload = () => resolve();
+                img.onerror = () => resolve();
+                setTimeout(resolve, 1000);
+              }
+            })
+        )
+      );
+
+      // Force layout recalculation to ensure all styles are applied before capture
+      void iframeDoc.body.offsetHeight;
+
+      // Calculate dimensions
+      const rect = contentDiv.getBoundingClientRect();
+      const width = Math.max(rect.width, 800);
+      const height = rect.height;
+
+      iframe.style.width = `${width}px`;
+      iframe.style.height = `${height}px`;
+
+      // Guard against WebKit canvas size limits (~16384 px). For very tall
+      // documents scale:2 can exceed the limit and produce a blank image.
+      let scale = 2;
+      const MAX_CANVAS_PIXELS = 14000;
+      if (height * scale > MAX_CANVAS_PIXELS) {
+        scale = Math.max(1, MAX_CANVAS_PIXELS / height);
       }
-    }).catch((err) => {
-      if (err instanceof DOMException && err.name === 'AbortError') {
-        return null;
+
+      // Capture
+      const canvas = await html2canvas(contentDiv, {
+        backgroundColor: bgColor,
+        scale,
+        useCORS: true,
+        logging: false,
+        width: width,
+        height: height,
+      });
+
+      const base64 = canvas.toDataURL('image/png').split(',')[1];
+      const fileName = getDefaultFileName(filePath);
+
+      return {
+        content: base64,
+        isBase64: true,
+        defaultName: fileName,
+        extension: 'png',
+      };
+    } catch (error) {
+      console.error('Image export generation failed:', error);
+      return null;
+    } finally {
+      // Always cleanup iframe
+      if (iframe.parentNode) {
+        document.body.removeChild(iframe);
       }
-      throw err;
-    });
+    }
   }, []);
 
   return { generateHTML, generateImage };
