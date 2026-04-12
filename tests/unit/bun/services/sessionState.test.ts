@@ -6,19 +6,15 @@
  * 使用 top-level await import 确保 mock 在模块加载前生效
  */
 
-import { mock, describe, it, expect, beforeAll } from 'bun:test';
+import { describe, it, expect, beforeAll } from 'bun:test';
 import { mkdirSync, unlinkSync, existsSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 
-// Same TEST_HOME pattern as backup.test.ts to avoid mock conflict
+// Use MARKBUN_E2E_HOME to redirect homedir without fragile os mock
 const TEST_HOME = join(tmpdir(), `markbun-backup-test-${process.pid}`);
 mkdirSync(TEST_HOME, { recursive: true });
-
-mock.module('os', () => ({
-  homedir: () => TEST_HOME,
-  tmpdir,
-}));
+process.env.MARKBUN_E2E_HOME = TEST_HOME;
 
 const SESSION_STATE_PATH = join(TEST_HOME, '.config', 'markbun', 'session-state.json');
 

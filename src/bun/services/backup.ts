@@ -25,9 +25,9 @@ import type { BackupEntry, BackupSettings, RecoveryInfo } from '../../shared/typ
 
 // ── Storage paths ────────────────────────────────────────────────────────────
 
-const CONFIG_DIR = join(homedir(), '.config', 'markbun');
-const RECOVERY_DIR = join(CONFIG_DIR, 'recovery');
-const BACKUP_DIR = join(CONFIG_DIR, 'backups');
+function configDir(): string { return join(homedir(), '.config', 'markbun'); }
+function recoveryDir(): string { return join(configDir(), 'recovery'); }
+function backupDir(): string { return join(configDir(), 'backups'); }
 
 // Files larger than this are not version-backed up (still atomically written)
 const MAX_BACKUP_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -47,11 +47,11 @@ async function ensureDir(dir: string): Promise<void> {
 }
 
 function getRecoveryPath(filePath: string): string {
-  return join(RECOVERY_DIR, `${getPathHash(filePath)}.recovery`);
+  return join(recoveryDir(), `${getPathHash(filePath)}.recovery`);
 }
 
 function getVersionBackupDir(filePath: string): string {
-  return join(BACKUP_DIR, getPathHash(filePath));
+  return join(backupDir(), getPathHash(filePath));
 }
 
 // ── Recovery file format ─────────────────────────────────────────────────────
@@ -92,7 +92,7 @@ export async function atomicWrite(filePath: string, content: string): Promise<vo
 export async function writeRecoveryFile(filePath: string, content: string): Promise<void> {
   if (!filePath) return;
   try {
-    await ensureDir(RECOVERY_DIR);
+    await ensureDir(recoveryDir());
     const data: RecoveryFile = {
       originalPath: filePath,
       timestamp: Date.now(),
@@ -128,14 +128,14 @@ export async function scanRecoveries(): Promise<RecoveryInfo[]> {
   const results: RecoveryInfo[] = [];
 
   try {
-    await ensureDir(RECOVERY_DIR);
-    const entries = await readdir(RECOVERY_DIR);
+    await ensureDir(recoveryDir());
+    const entries = await readdir(recoveryDir());
     const now = Date.now();
     const maxAge = 30 * 24 * 60 * 60 * 1000;
 
     for (const entry of entries) {
       if (!entry.endsWith('.recovery')) continue;
-      const recoveryPath = join(RECOVERY_DIR, entry);
+      const recoveryPath = join(recoveryDir(), entry);
 
       try {
         const raw = await readFile(recoveryPath, 'utf-8');

@@ -1,4 +1,4 @@
-import { homedir as osHomedir } from 'os';
+import * as os from 'os';
 export function homedir(): string {
-  return process.env.MARKBUN_E2E_HOME || osHomedir();
+  return process.env.MARKBUN_E2E_HOME || os.homedir();
 }

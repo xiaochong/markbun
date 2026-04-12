@@ -22,13 +22,9 @@ import { join } from 'path';
 // ── 重定向 homedir → 临时目录（必须在 backup.ts 首次加载前执行）────────────
 const TEST_HOME = join(tmpdir(), `markbun-backup-test-${process.pid}`);
 mkdirSync(TEST_HOME, { recursive: true });
+process.env.MARKBUN_E2E_HOME = TEST_HOME;
 
-mock.module('os', () => ({
-  homedir: () => TEST_HOME,
-  tmpdir,
-}));
-
-// ── 加载 backup 模块（已使用 mock 后的 os）──────────────────────────────────
+// ── 加载 backup 模块（已使用 MARKBUN_E2E_HOME 后的 os）──────────────────────
 const {
   atomicWrite,
   writeRecoveryFile,

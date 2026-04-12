@@ -20,8 +20,12 @@ export interface SessionState {
   rootPath?: string | null;
 }
 
-const CONFIG_DIR = join(homedir(), '.config', 'markbun');
-const SESSION_STATE_PATH = join(CONFIG_DIR, 'session-state.json');
+function getConfigDir(): string {
+  return join(homedir(), '.config', 'markbun');
+}
+function getSessionStatePath(): string {
+  return join(getConfigDir(), 'session-state.json');
+}
 
 const defaultSessionState: SessionState = {
   version: 1,
@@ -33,9 +37,9 @@ const defaultSessionState: SessionState = {
 
 async function ensureConfigDir(): Promise<void> {
   try {
-    await access(CONFIG_DIR);
+    await access(getConfigDir());
   } catch {
-    await mkdir(CONFIG_DIR, { recursive: true });
+    await mkdir(getConfigDir(), { recursive: true });
   }
 }
 
@@ -46,7 +50,7 @@ async function ensureConfigDir(): Promise<void> {
 export async function loadSessionState(): Promise<SessionState> {
   try {
     await ensureConfigDir();
-    const data = await readFile(SESSION_STATE_PATH, 'utf-8');
+    const data = await readFile(getSessionStatePath(), 'utf-8');
     if (!data.trim()) return { ...defaultSessionState };
     const parsed = JSON.parse(data) as Partial<SessionState>;
     return {
@@ -64,7 +68,7 @@ export async function loadSessionState(): Promise<SessionState> {
 export async function saveSessionState(state: SessionState): Promise<{ success: boolean; error?: string }> {
   try {
     await ensureConfigDir();
-    await writeFile(SESSION_STATE_PATH, JSON.stringify(state, null, 2), 'utf-8');
+    await writeFile(getSessionStatePath(), JSON.stringify(state, null, 2), 'utf-8');
     return { success: true };
   } catch (error) {
     console.error('[SessionState] Failed to save:', error);
