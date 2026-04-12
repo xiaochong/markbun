@@ -326,4 +326,16 @@ describe("editor operations", () => {
       expect(content).toContain("---");
     });
   }, 30000);
+
+  it("inserts code block via menu action", async () => {
+    await withTrace("editor-code-block", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("");
+      await editor.menuAction("para-code-block");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("```");
+    });
+  }, 30000);
 });
