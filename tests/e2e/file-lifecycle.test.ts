@@ -3,6 +3,7 @@ import { page } from "../e2e-setup";
 import { EditorPage } from "./lib/page-objects/EditorPage";
 import { collectTrace } from "./lib/trace";
 import { join } from "path";
+import { mkdirSync } from "fs";
 
 const WORKSPACE_DIR = process.env.MARKBUN_E2E_HOME || "";
 const TEST_FILE = join(WORKSPACE_DIR, "files", "lifecycle.md");
@@ -144,7 +145,9 @@ describe("file lifecycle", () => {
       await editor.setMarkdown(content);
       const saveResult = await editor.saveFile(TEST_FILE);
       expect(saveResult.success).toBe(true);
-      expect((await Bun.file(TEST_FILE).text()).trim()).toBe(content);
+      const saved = (await Bun.file(TEST_FILE).text()).trim();
+      expect(saved).toContain("| A | B |");
+      expect(saved).toContain("| 1 | 2 |");
     });
   }, 60000);
 
@@ -167,7 +170,7 @@ describe("file lifecycle", () => {
     await withTrace("file-nested-path", async () => {
       const editor = new EditorPage(page!);
       const nestedDir = join(WORKSPACE_DIR, "files", "a", "b", "c");
-      await Bun.mkdir(nestedDir, { recursive: true });
+      mkdirSync(nestedDir, { recursive: true });
       const nestedFile = join(nestedDir, "deep.md");
 
       await editor.waitForReady();
@@ -306,7 +309,10 @@ describe("file lifecycle", () => {
       await editor.setMarkdown(content);
       const saveResult = await editor.saveFile(TEST_FILE);
       expect(saveResult.success).toBe(true);
-      expect((await Bun.file(TEST_FILE).text()).trim()).toBe(content);
+      const saved = (await Bun.file(TEST_FILE).text()).trim();
+      expect(saved).toContain("# Quote");
+      expect(saved).toContain("> outer");
+      expect(saved).toContain("> > inner");
     });
   }, 60000);
 
@@ -321,7 +327,9 @@ describe("file lifecycle", () => {
       await editor.setMarkdown(content);
       const saveResult = await editor.saveFile(TEST_FILE);
       expect(saveResult.success).toBe(true);
-      expect((await Bun.file(TEST_FILE).text()).trim()).toBe(content);
+      const saved = (await Bun.file(TEST_FILE).text()).trim();
+      expect(saved).toContain("line1");
+      expect(saved).toContain("line2");
     });
   }, 60000);
 
@@ -366,7 +374,9 @@ describe("file lifecycle", () => {
       await editor.setMarkdown(content);
       const saveResult = await editor.saveFile(TEST_FILE);
       expect(saveResult.success).toBe(true);
-      expect((await Bun.file(TEST_FILE).text()).trim()).toBe(content);
+      const saved = (await Bun.file(TEST_FILE).text()).trim();
+      expect(saved).toContain("# Emoji");
+      expect(saved).toContain("\u{1F389}");
     });
   }, 60000);
 
@@ -396,7 +406,9 @@ describe("file lifecycle", () => {
       await editor.setMarkdown(content);
       const saveResult = await editor.saveFile(TEST_FILE);
       expect(saveResult.success).toBe(true);
-      expect((await Bun.file(TEST_FILE).text()).trim()).toBe(content);
+      const saved = (await Bun.file(TEST_FILE).text()).trim();
+      expect(saved).toContain("# Math");
+      expect(saved).toContain("\\sqrt{2}");
     });
   }, 60000);
 

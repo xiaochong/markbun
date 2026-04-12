@@ -79,7 +79,8 @@
     "insertAbove": "上に段落を挿入",
     "insertBelow": "下に段落を挿入",
     "horizontalRule": "水平線",
-    "viewDiagram": "図を表示"
+    "viewDiagram": "図を表示",
+    "mermaidBlock": "Mermaid ダイアグラム"
   },
   "view": {
     "title": "表示",

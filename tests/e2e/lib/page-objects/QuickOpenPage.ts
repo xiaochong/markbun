@@ -1,6 +1,9 @@
 import type { Page } from "../page";
 import { sleep } from "../utils";
 
+const QUICK_OPEN_ROOT = ".z-50.flex.items-start.justify-center";
+const QUICK_OPEN_INPUT = `${QUICK_OPEN_ROOT} input[placeholder]`;
+
 export class QuickOpenPage {
   constructor(private page: Page) {}
 
@@ -13,7 +16,7 @@ export class QuickOpenPage {
   }
 
   async waitForOpen(timeout = 5000): Promise<void> {
-    await this.page.waitForSelector("input[placeholder]", { timeout });
+    await this.page.waitForSelector(QUICK_OPEN_INPUT, { timeout });
   }
 
   async close(): Promise<void> {
@@ -25,11 +28,19 @@ export class QuickOpenPage {
   }
 
   async typeQuery(query: string): Promise<void> {
-    const input = await this.page.waitForSelector("input[placeholder]", { timeout: 5000 });
-    await input!.click();
-    await this.page.key("Control+a");
-    await this.page.type(query);
-    await sleep(150);
+    await this.page.waitForSelector(QUICK_OPEN_INPUT, { timeout: 5000 });
+    await this.page.evaluate(`(() => {
+      const input = document.querySelector(${JSON.stringify(QUICK_OPEN_INPUT)});
+      if (input) {
+        input.focus();
+        input.select();
+        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+        setter.call(input, ${JSON.stringify(query)});
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    })()`);
+    await sleep(300);
   }
 
   async selectIndex(index: number): Promise<void> {
@@ -45,7 +56,8 @@ export class QuickOpenPage {
     const buttons = await this.page.evaluate<
       { index: number; text: string }[]
     >(`(() => {
-      const buttons = Array.from(document.querySelectorAll('[data-palette-index]'));
+      const qo = document.querySelector(${JSON.stringify(QUICK_OPEN_ROOT)});
+      const buttons = qo ? Array.from(qo.querySelectorAll('[data-palette-index]')) : [];
       return buttons.map(function(b, i) {
         return {
           index: i,
@@ -62,7 +74,10 @@ export class QuickOpenPage {
 
   async getResultCount(): Promise<number> {
     const count = await this.page.evaluate<number>(
-      "document.querySelectorAll('[data-palette-index]').length"
+      `(() => {
+        const qo = document.querySelector(${JSON.stringify(QUICK_OPEN_ROOT)});
+        return qo ? qo.querySelectorAll('[data-palette-index]').length : 0;
+      })()`
     );
     return count;
   }

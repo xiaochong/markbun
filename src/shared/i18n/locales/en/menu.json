@@ -79,7 +79,8 @@
     "insertAbove": "Insert Paragraph Above",
     "insertBelow": "Insert Paragraph Below",
     "horizontalRule": "Horizontal Rule",
-    "viewDiagram": "View Diagram"
+    "viewDiagram": "View Diagram",
+    "mermaidBlock": "Mermaid Diagram"
   },
   "view": {
     "title": "View",

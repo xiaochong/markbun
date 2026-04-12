@@ -226,6 +226,7 @@ if (import.meta.main) {
     try {
       result = await runApp({ env: { MARKBUN_E2E_HOME: workspace.dir } });
       console.log(`[runner] App ready (pid=${result.child.pid}, pages=${result.pages.length})`);
+      await sleep(2000);
 
       exitCode = await runTests(args);
       console.log(`[runner] Tests finished with exit code ${exitCode}`);

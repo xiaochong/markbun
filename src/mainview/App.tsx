@@ -40,6 +40,7 @@ import type { HandlerContext } from './lib/commandHandlers';
 import { getCommand } from '../shared/commandRegistry';
 import i18n from './i18n';
 import { taskQueue } from './lib/taskQueue';
+import { TextSelection } from '@milkdown/prose/state';
 import {
   workspaceManager,
   processMarkdownImages,
@@ -73,7 +74,9 @@ function App() {
   useEffect(() => {
     electrobun.getSettings().then(result => {
       if ((result as { success?: boolean })?.success && (result as { settings?: AppSettings }).settings) {
-        setSettings((result as { settings: AppSettings }).settings);
+        const loaded = (result as { settings: AppSettings }).settings;
+        setSettings(loaded);
+        setTheme(loaded.theme);
       }
     }).catch(console.error);
   }, []);
@@ -81,7 +84,7 @@ function App() {
   const [showAboutDialog, setShowAboutDialog] = useState(false);
   const [mermaidViewerSource, setMermaidViewerSource] = useState<string | null>(null);
 
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, setTheme } = useTheme();
 
   // Windows frontend menu (config only, state is derived below)
   const [menuConfig, setMenuConfig] = useState<MenuConfig[]>([]);
@@ -108,6 +111,38 @@ function App() {
       menuAction: (action) => {
         const listeners = (window as any).__electrobunListeners?.['menuAction'] || [];
         listeners.forEach((cb: (data: unknown) => void) => cb({ action }));
+      },
+      focusTableFirstCell: () => {
+        const editor = editorRef.current;
+        if (!editor?.getEditorView) return false;
+        const view = editor.getEditorView();
+        if (!view) return false;
+
+        let tablePos = -1;
+        view.state.doc.descendants((node: any, pos: number) => {
+          if (node.type.name === 'table') {
+            tablePos = pos;
+            return false;
+          }
+          return true;
+        });
+
+        if (tablePos < 0) return false;
+        const table = view.state.doc.nodeAt(tablePos);
+        if (!table || table.childCount === 0) return false;
+
+        const firstRow = table.child(0);
+        if (firstRow.childCount === 0) return false;
+
+        // cellPos = tablePos + 1 (table content) + 1 (row) + 1 (cell wrapper) = tablePos + 3
+        const cellPos = tablePos + 3;
+        view.dispatch(view.state.tr.setSelection(TextSelection.near(view.state.doc.resolve(cellPos))));
+        view.focus();
+        return true;
+      },
+      getEditorView: () => {
+        const editor = editorRef.current;
+        return editor?.getEditorView ? editor.getEditorView() : null;
       },
     };
     (window as any).__markbunTestAPI = testApi;
@@ -1232,6 +1267,7 @@ function App() {
   // Handle settings save
   const handleSettingsSave = useCallback(async (newSettings: AppSettings) => {
     setSettings(newSettings);
+    setTheme(newSettings.theme);
     // Notify main process about language change (for menu rebuild)
     if (newSettings.language !== settings?.language) {
       const result = await electrobun.setLanguage(newSettings.language);

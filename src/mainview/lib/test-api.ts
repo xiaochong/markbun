@@ -9,6 +9,8 @@ export interface MarkbunTestAPI {
   setEditorMarkdown: (text: string) => void;
   menuAction: (action: string) => void;
   focusEditor: () => void;
+  focusTableFirstCell: () => boolean;
+  getEditorView: () => any;
 }
 
 declare global {

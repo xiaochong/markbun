@@ -67,6 +67,7 @@ export function setupRendererHandlers(ctx: HandlerContext): void {
   dispatcher.registerHandler('para-increase-heading', () => editorRef.current?.increaseHeadingLevel());
   dispatcher.registerHandler('para-decrease-heading', () => editorRef.current?.decreaseHeadingLevel());
   dispatcher.registerHandler('para-math-block', () => editorRef.current?.insertMathBlock());
+  dispatcher.registerHandler('para-mermaid-block', () => editorRef.current?.insertMermaidBlock());
   dispatcher.registerHandler('para-code-block', () => editorRef.current?.insertCodeBlock());
   dispatcher.registerHandler('para-quote', () => editorRef.current?.toggleQuote());
   dispatcher.registerHandler('para-ordered-list', () => editorRef.current?.toggleOrderedList());

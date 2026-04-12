@@ -79,7 +79,8 @@
     "insertAbove": "Absatz darüber einfügen",
     "insertBelow": "Absatz darunter einfügen",
     "horizontalRule": "Horizontale Linie",
-    "viewDiagram": "Diagramm anzeigen"
+    "viewDiagram": "Diagramm anzeigen",
+    "mermaidBlock": "Mermaid-Diagramm"
   },
   "view": {
     "title": "Ansicht",

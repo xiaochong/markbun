@@ -37,12 +37,36 @@ export class EditorPage {
   }
 
   async menuAction(action: string): Promise<void> {
+    // Use the test RPC that correctly routes cross-process actions through Bun
     await this.page.evaluate(
-      `window.__markbunTestAPI && window.__markbunTestAPI.menuAction && window.__markbunTestAPI.menuAction(${JSON.stringify(action)})`
+      `window.electrobun._testMenuAction(${JSON.stringify(action)})`
     );
   }
 
   async focus(): Promise<void> {
     await this.page.evaluate("window.__markbunTestAPI && window.__markbunTestAPI.focusEditor && window.__markbunTestAPI.focusEditor()");
+  }
+
+  async focusTableFirstCell(): Promise<boolean> {
+    return await this.page.evaluate<boolean>(
+      "window.__markbunTestAPI && window.__markbunTestAPI.focusTableFirstCell ? window.__markbunTestAPI.focusTableFirstCell() : false"
+    );
+  }
+
+  async clickTableCellByText(text: string): Promise<void> {
+    await this.page.evaluate(
+      `(() => {
+        const cells = Array.from(document.querySelectorAll('table td, table th'));
+        const target = cells.find((c) => (c.textContent || '').includes(${JSON.stringify(text)}));
+        if (target) {
+          const rect = target.getBoundingClientRect();
+          const x = rect.left + rect.width / 2;
+          const y = rect.top + rect.height / 2;
+          target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: x, clientY: y }));
+          target.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, clientX: x, clientY: y }));
+        }
+      })()`
+    );
+    await sleep(300);
   }
 }

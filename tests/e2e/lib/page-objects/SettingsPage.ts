@@ -10,12 +10,19 @@ export class SettingsPage {
   }
 
   async waitForOpen(timeout = 5000): Promise<void> {
-    await this.page.waitForSelector("div.z-50 button", { timeout });
+    await this.page.waitForSelector(".z-50 nav button", { timeout });
   }
 
   async close(): Promise<void> {
     try {
-      await this.page.key("Escape");
+      await this.page.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('div.z-50 button'));
+        const cancelBtn = buttons.find(function(b) {
+          return (b.textContent || '').trim() === 'Cancel';
+        });
+        if (cancelBtn) cancelBtn.click();
+      })()`);
+      await sleep(300);
     } catch {
       // ignore
     }
@@ -27,11 +34,7 @@ export class SettingsPage {
       const btn = buttons.find(function(b) {
         return (b.textContent || '').includes(${JSON.stringify(tabLabel)});
       });
-      if (btn) {
-        var ev = document.createEvent('MouseEvents');
-        ev.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-        btn.dispatchEvent(ev);
-      }
+      if (btn) btn.click();
     })()`);
     await sleep(500);
   }
@@ -46,6 +49,7 @@ export class SettingsPage {
       const checkbox = container && container.querySelector('input[type="checkbox"]');
       if (checkbox) checkbox.click();
     })()`);
+    await sleep(200);
   }
 
   async save(): Promise<void> {
@@ -117,7 +121,8 @@ export class SettingsPage {
       const dialog = document.querySelector('.z-50');
       const input = dialog && dialog.querySelector('input[type="range"][min="10"]');
       if (input) {
-        input.value = ${JSON.stringify(value)};
+        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+        setter.call(input, ${JSON.stringify(value)});
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
       }
@@ -138,7 +143,8 @@ export class SettingsPage {
       const dialog = document.querySelector('.z-50');
       const input = dialog && dialog.querySelector('input[type="range"][min="1"][max="3"]');
       if (input) {
-        input.value = ${JSON.stringify(value)};
+        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+        setter.call(input, ${JSON.stringify(value)});
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
       }
@@ -159,7 +165,8 @@ export class SettingsPage {
       const dialog = document.querySelector('.z-50');
       const input = dialog && dialog.querySelector('input[type="range"][min="5"][max="100"]');
       if (input) {
-        input.value = ${JSON.stringify(value)};
+        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+        setter.call(input, ${JSON.stringify(value)});
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
       }
@@ -180,7 +187,8 @@ export class SettingsPage {
       const dialog = document.querySelector('.z-50');
       const input = dialog && dialog.querySelector('input[type="range"][min="1"][max="365"]');
       if (input) {
-        input.value = ${JSON.stringify(value)};
+        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+        setter.call(input, ${JSON.stringify(value)});
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
       }
@@ -201,7 +209,8 @@ export class SettingsPage {
       const dialog = document.querySelector('.z-50');
       const input = dialog && dialog.querySelector('input[type="range"][min="5000"][max="120000"]');
       if (input) {
-        input.value = ${JSON.stringify(value)};
+        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+        setter.call(input, ${JSON.stringify(value)});
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
       }

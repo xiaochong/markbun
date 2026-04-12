@@ -33,10 +33,7 @@ describe("menu dispatch", () => {
       expect(await dialog.isDialogOpen()).toBe(true);
       await dialog.clickButton("OK");
       await new Promise((r) => setTimeout(r, 300));
-      const stillOpen = await page!.evaluate<boolean>(
-        "Boolean(document.querySelector('.fixed.inset-0.z-50'))"
-      );
-      expect(stillOpen).toBe(false);
+      expect(await dialog.isDialogOpen()).toBe(false);
     });
   }, 30000);
 
@@ -51,8 +48,8 @@ describe("menu dispatch", () => {
       expect(await dialog.isDialogOpen()).toBe(true);
 
       await page!.evaluate(`(() => {
-        const backdrop = document.querySelector('.fixed.inset-0.z-50.flex.items-center.justify-center.bg-black\\/50');
-        if (backdrop) backdrop.click();
+        const backdrop = document.querySelector('.fixed.inset-0.z-50.flex.items-center.justify-center');
+        if (backdrop && backdrop.classList.contains('bg-black/50')) backdrop.click();
       })()`);
       await new Promise((r) => setTimeout(r, 300));
       expect(await dialog.isDialogOpen()).toBe(false);
@@ -103,7 +100,18 @@ describe("menu dispatch", () => {
       await dialog.waitForDialogContaining("MarkBun");
       await dialog.clickButton("OK");
       await new Promise((r) => setTimeout(r, 300));
-      expect(await dialog.isDialogOpen()).toBe(false);
+      const isOpen = await dialog.isDialogOpen();
+      if (isOpen) {
+        const debug = await page!.evaluate<string>(`(() => {
+          return Array.from(document.querySelectorAll('.z-50')).filter(function(el) {
+            return !el.querySelector('input[placeholder]');
+          }).map(function(el) {
+            return el.className + " | " + (el.textContent || '').slice(0, 100);
+          }).join('\\n');
+        })()`);
+        console.log('[DEBUG] Dialogs still open after OK:', debug);
+      }
+      expect(isOpen).toBe(false);
 
       await page!.evaluate(`(() => {
         const listeners = window.__electrobunListeners && window.__electrobunListeners['show-about'] || [];
@@ -224,10 +232,10 @@ describe("menu dispatch", () => {
       const quickOpen = new QuickOpenPage(page!);
       const settings = new SettingsPage(page!);
       await quickOpen.open();
-      await quickOpen.typeQuery("Settings");
+      await quickOpen.typeQuery("Preferences");
       await page!.evaluate(`(() => {
         const buttons = Array.from(document.querySelectorAll('[data-palette-index]'));
-        const settingsBtn = buttons.find((b) => (b.textContent || '').includes('Settings'));
+        const settingsBtn = buttons.find((b) => (b.textContent || '').includes('Preferences'));
         if (settingsBtn) settingsBtn.click();
       })()`);
       await new Promise((r) => setTimeout(r, 300));
@@ -329,10 +337,10 @@ describe("menu dispatch", () => {
       const quickOpen = new QuickOpenPage(page!);
       const dialog = new DialogPage(page!);
       await quickOpen.open();
-      await quickOpen.typeQuery("File History");
+      await quickOpen.typeQuery("History");
       await page!.evaluate(`(() => {
         const buttons = Array.from(document.querySelectorAll('[data-palette-index]'));
-        const historyBtn = buttons.find((b) => (b.textContent || '').includes('File History'));
+        const historyBtn = buttons.find((b) => (b.textContent || '').includes('History'));
         if (historyBtn) historyBtn.click();
       })()`);
       await new Promise((r) => setTimeout(r, 300));
@@ -355,8 +363,8 @@ describe("menu dispatch", () => {
       expect(await dialog.isDialogOpen()).toBe(true);
 
       await page!.evaluate(`(() => {
-        const backdrop = document.querySelector('.fixed.inset-0.z-50.flex.items-center.justify-center.bg-black\\/50');
-        if (backdrop) backdrop.click();
+        const backdrop = document.querySelector('.fixed.inset-0.z-50.flex.items-center.justify-center');
+        if (backdrop && backdrop.classList.contains('bg-black/50')) backdrop.click();
       })()`);
       await new Promise((r) => setTimeout(r, 300));
       expect(await dialog.isDialogOpen()).toBe(false);
@@ -402,6 +410,26 @@ describe("menu dispatch", () => {
   it("toggles sidebar via quick open command", async () => {
     await withTrace("menu-quick-open-sidebar", async () => {
       const quickOpen = new QuickOpenPage(page!);
+
+      // UI state is persisted, so the sidebar may already be open.
+      // Ensure a consistent starting state (closed) before verifying toggles.
+      const startsOpen = await page!.evaluate<boolean>(
+        `(() => {
+          const sidebar = document.querySelector('.flex.h-full.flex-shrink-0.transition-all');
+          return sidebar ? sidebar.offsetWidth > 0 : false;
+        })()`
+      );
+      if (startsOpen) {
+        await quickOpen.open();
+        await quickOpen.typeQuery("Sidebar");
+        await page!.evaluate(`(() => {
+          const buttons = Array.from(document.querySelectorAll('[data-palette-index]'));
+          const btn = buttons.find((b) => (b.textContent || '').includes('Sidebar'));
+          if (btn) btn.click();
+        })()`);
+        await new Promise((r) => setTimeout(r, 500));
+      }
+
       await quickOpen.open();
       await quickOpen.typeQuery("Sidebar");
       await page!.evaluate(`(() => {
@@ -413,7 +441,7 @@ describe("menu dispatch", () => {
       const hasSidebar = await page!.evaluate<boolean>(
         `(() => {
           const sidebar = document.querySelector('.flex.h-full.flex-shrink-0.transition-all');
-          return sidebar ? (sidebar as HTMLElement).offsetWidth > 0 : false;
+          return sidebar ? sidebar.offsetWidth > 0 : false;
         })()`
       );
       expect(hasSidebar).toBe(true);
@@ -429,7 +457,7 @@ describe("menu dispatch", () => {
       const gone = await page!.evaluate<boolean>(
         `(() => {
           const sidebar = document.querySelector('.flex.h-full.flex-shrink-0.transition-all');
-          return sidebar ? (sidebar as HTMLElement).offsetWidth > 0 : false;
+          return sidebar ? sidebar.offsetWidth > 0 : false;
         })()`
       );
       expect(gone).toBe(false);

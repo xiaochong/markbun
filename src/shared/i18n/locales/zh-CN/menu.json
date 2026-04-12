@@ -79,7 +79,8 @@
     "insertAbove": "在上方插入段落",
     "insertBelow": "在下方插入段落",
     "horizontalRule": "分隔线",
-    "viewDiagram": "查看图表"
+    "viewDiagram": "查看图表",
+    "mermaidBlock": "Mermaid 图表"
   },
   "view": {
     "title": "视图",

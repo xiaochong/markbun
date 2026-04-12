@@ -6,7 +6,9 @@ export class DialogPage {
 
   async waitForDialogContaining(text: string, timeout = 5000): Promise<void> {
     const expression = `(() => {
-      const dialogs = Array.from(document.querySelectorAll('.z-50, [role="dialog"]'));
+      const dialogs = Array.from(document.querySelectorAll('.z-50, [role="dialog"]')).filter(function(el) {
+        return !el.querySelector('input[placeholder]');
+      });
       return dialogs.some(function(el) {
         return (el.textContent || '').includes(${JSON.stringify(text)});
       });
@@ -26,9 +28,14 @@ export class DialogPage {
       const btn = buttons.find(function(b) {
         return (b.textContent || '').trim() === ${JSON.stringify(label)};
       });
-      if (btn) btn.click();
+      if (btn) {
+        btn.focus();
+        btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+        btn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+        btn.click();
+      }
     })()`);
-    await sleep(200);
+    await sleep(500);
   }
 
   async close(): Promise<void> {
@@ -42,7 +49,9 @@ export class DialogPage {
 
   async isDialogOpen(): Promise<boolean> {
     return await this.page.evaluate<boolean>(
-      "Boolean(document.querySelector('.z-50, [role=\"dialog\"]'))"
+      `Array.from(document.querySelectorAll('.z-50, [role="dialog"]')).some(function(el) {
+        return !el.querySelector('input[placeholder]');
+      })`
     );
   }
 }

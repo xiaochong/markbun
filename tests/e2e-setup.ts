@@ -3,7 +3,7 @@
  * Preloaded by the runner via `bun test --preload tests/e2e-setup.ts`.
  */
 
-import { beforeAll, afterAll, setDefaultTimeout } from "bun:test";
+import { beforeAll, afterAll, beforeEach, setDefaultTimeout } from "bun:test";
 import { Page } from "./e2e/lib/page.ts";
 import { getProcessCounts } from "./e2e/lib/runner";
 
@@ -35,6 +35,18 @@ beforeAll(async () => {
     await new Promise((r) => setTimeout(r, 200));
   }
   console.log("[e2e-setup] React mount ready.");
+});
+
+beforeEach(async () => {
+  // Dismiss any lingering overlays (QuickOpen, dialogs, etc.) between tests
+  try {
+    await page?.key("Escape");
+    await new Promise((r) => setTimeout(r, 200));
+    await page?.key("Escape");
+    await new Promise((r) => setTimeout(r, 200));
+  } catch {
+    // ignore
+  }
 });
 
 afterAll(async () => {

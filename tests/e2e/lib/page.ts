@@ -134,24 +134,31 @@ export class Page {
   }
 
   async key(keyName: string): Promise<void> {
-    const keyMap: Record<string, string> = {
-      Enter: "\r",
-      Escape: "\u001b",
-      Tab: "\t",
-      Backspace: "\u0008",
-      Delete: "\u007f",
-      ArrowUp: "",
-      ArrowDown: "",
-      ArrowLeft: "",
-      ArrowRight: "",
+    const keyMap: Record<string, { text: string; code: number }> = {
+      Enter: { text: "\r", code: 13 },
+      Escape: { text: "\u001b", code: 27 },
+      Tab: { text: "\t", code: 9 },
+      Backspace: { text: "\u0008", code: 8 },
+      Delete: { text: "\u007f", code: 46 },
+      ArrowUp: { text: "", code: 38 },
+      ArrowDown: { text: "", code: 40 },
+      ArrowLeft: { text: "", code: 37 },
+      ArrowRight: { text: "", code: 39 },
     };
+    const mapped = keyMap[keyName] || { text: keyName.length === 1 ? keyName : "", code: 0 };
     await this.send("Input.dispatchKeyEvent", {
       type: "keyDown",
       key: keyName,
-      text: keyMap[keyName] || "",
-      windowsVirtualKeyCode: 0,
+      text: mapped.text,
+      windowsVirtualKeyCode: mapped.code,
+      nativeVirtualKeyCode: mapped.code,
     });
-    await this.send("Input.dispatchKeyEvent", { type: "keyUp", key: keyName });
+    await this.send("Input.dispatchKeyEvent", {
+      type: "keyUp",
+      key: keyName,
+      windowsVirtualKeyCode: mapped.code,
+      nativeVirtualKeyCode: mapped.code,
+    });
   }
 
   async waitForSelector(
@@ -161,7 +168,7 @@ export class Page {
     const timeout = options.timeout ?? 5000;
     const interval = options.interval ?? 200;
     const start = Date.now();
-    while (Date.now() - start < timeout) {
+    do {
       const found = await this.evaluate<boolean>(
         `Boolean(document.querySelector(${JSON.stringify(selector)}))`
       );
@@ -169,7 +176,7 @@ export class Page {
         return;
       }
       await new Promise((r) => setTimeout(r, interval));
-    }
+    } while (Date.now() - start < timeout);
     throw new Error(`waitForSelector timeout (${timeout}ms): "${selector}"`);
   }
 

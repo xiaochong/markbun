@@ -79,7 +79,8 @@
     "insertAbove": "Inserir Parágrafo Acima",
     "insertBelow": "Inserir Parágrafo Abaixo",
     "horizontalRule": "Linha Horizontal",
-    "viewDiagram": "Ver Diagrama"
+    "viewDiagram": "Ver Diagrama",
+    "mermaidBlock": "Diagrama Mermaid"
   },
   "view": {
     "title": "Visualizar",

@@ -79,7 +79,8 @@
     "insertAbove": "위에 단락 삽입",
     "insertBelow": "아래에 단락 삽입",
     "horizontalRule": "수평선",
-    "viewDiagram": "도표 보기"
+    "viewDiagram": "도표 보기",
+    "mermaidBlock": "Mermaid 다이어그램"
   },
   "view": {
     "title": "보기",
