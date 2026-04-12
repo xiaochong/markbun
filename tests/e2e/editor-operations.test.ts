@@ -128,4 +128,51 @@ describe("editor operations", () => {
       expect(content.trim()).toBe("");
     });
   }, 30000);
+
+  it("toggles status bar via menu action", async () => {
+    await withTrace("editor-toggle-statusbar", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.menuAction("view-toggle-statusbar");
+      await new Promise((r) => setTimeout(r, 500));
+      const hasStatusBar = await page!.evaluate<boolean>(
+        "Boolean(document.querySelector('.flex.items-center.justify-between.px-4.py-1.border-t.bg-background'))"
+      );
+      expect(hasStatusBar).toBe(true);
+
+      await editor.menuAction("view-toggle-statusbar");
+      await new Promise((r) => setTimeout(r, 500));
+      const gone = await page!.evaluate<boolean>(
+        "Boolean(document.querySelector('.flex.items-center.justify-between.px-4.py-1.border-t.bg-background'))"
+      );
+      expect(gone).toBe(false);
+    });
+  }, 30000);
+
+  it("toggles source mode via menu action", async () => {
+    await withTrace("editor-source-mode", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      const hasMilkdown = await page!.evaluate<boolean>(
+        "Boolean(document.querySelector('.ProseMirror'))"
+      );
+      expect(hasMilkdown).toBe(true);
+
+      await editor.menuAction("view-toggle-source-mode");
+      await new Promise((r) => setTimeout(r, 500));
+
+      const hasSourceEditor = await page!.evaluate<boolean>(
+        "Boolean(document.querySelector('.cm-editor'))"
+      );
+      expect(hasSourceEditor).toBe(true);
+
+      await editor.menuAction("view-toggle-source-mode");
+      await new Promise((r) => setTimeout(r, 500));
+
+      const backToMilkdown = await page!.evaluate<boolean>(
+        "Boolean(document.querySelector('.ProseMirror'))"
+      );
+      expect(backToMilkdown).toBe(true);
+    });
+  }, 30000);
 });
