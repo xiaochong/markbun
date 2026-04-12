@@ -98,4 +98,23 @@ describe("file lifecycle", () => {
       expect((await file.text()).trim()).toBe("");
     });
   }, 60000);
+
+  it("overwrites existing file with new content", async () => {
+    await withTrace("file-overwrite", async () => {
+      const editor = new EditorPage(page!);
+      const filesDir = join(WORKSPACE_DIR, "files");
+      await Bun.write(join(filesDir, ".keep"), "");
+      await editor.waitForReady();
+
+      await editor.setMarkdown("first content");
+      const save1 = await editor.saveFile(TEST_FILE);
+      expect(save1.success).toBe(true);
+      expect((await Bun.file(TEST_FILE).text()).trim()).toBe("first content");
+
+      await editor.setMarkdown("second content");
+      const save2 = await editor.saveFile(TEST_FILE);
+      expect(save2.success).toBe(true);
+      expect((await Bun.file(TEST_FILE).text()).trim()).toBe("second content");
+    });
+  }, 60000);
 });
