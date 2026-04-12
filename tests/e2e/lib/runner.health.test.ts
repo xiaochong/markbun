@@ -21,4 +21,15 @@ describe("runner health", () => {
     expect(counts.electrobun).toBeGreaterThanOrEqual(0);
     expect(counts.cef).toBeGreaterThanOrEqual(0);
   });
+
+  it("discovers a MarkBun CDP page", async () => {
+    const { child, pages, baselinePids } = await runApp();
+
+    const markbunPage = pages.find((p: any) => p.title && p.title.includes("MarkBun"));
+    expect(markbunPage).toBeDefined();
+    expect(markbunPage.url).toContain("localhost");
+
+    await stopApp(child);
+    await cleanupZombies(baselinePids);
+  }, 120000);
 });
