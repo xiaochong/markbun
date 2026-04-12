@@ -79,4 +79,28 @@ export class SettingsPage {
       return checkbox ? checkbox.checked : false;
     })()`);
   }
+
+  async toggleBackupEnabled(): Promise<void> {
+    await this.page.evaluate(`(() => {
+      const labels = Array.from(document.querySelectorAll('label'));
+      const label = labels.find(function(l) {
+        return (l.textContent || '').includes('Version History');
+      });
+      const container = label && label.parentElement && label.parentElement.parentElement;
+      const checkbox = container && container.querySelector('input[type="checkbox"]');
+      if (checkbox) checkbox.click();
+    })()`);
+  }
+
+  async getBackupEnabledValue(): Promise<boolean> {
+    return await this.page.evaluate<boolean>(`(() => {
+      const labels = Array.from(document.querySelectorAll('label'));
+      const label = labels.find(function(l) {
+        return (l.textContent || '').includes('Version History');
+      });
+      const container = label && label.parentElement && label.parentElement.parentElement;
+      const checkbox = container && container.querySelector('input[type="checkbox"]');
+      return checkbox ? checkbox.checked : false;
+    })()`);
+  }
 }

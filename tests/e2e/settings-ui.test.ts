@@ -134,4 +134,32 @@ describe("settings ui", () => {
       await settings.close();
     });
   }, 30000);
+
+  it("toggles version history and persists the change", async () => {
+    await withTrace("settings-version-history", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+      await settings.switchTab("Backup");
+      const initialValue = await settings.getBackupEnabledValue();
+
+      await settings.toggleBackupEnabled();
+      const toggledValue = await settings.getBackupEnabledValue();
+      expect(toggledValue).toBe(!initialValue);
+
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+      expect(await settings.isOpen()).toBe(false);
+
+      await settings.open();
+      await settings.switchTab("Backup");
+      const persistedValue = await settings.getBackupEnabledValue();
+      expect(persistedValue).toBe(!initialValue);
+
+      if (persistedValue !== initialValue) {
+        await settings.toggleBackupEnabled();
+        await settings.save();
+        await new Promise((r) => setTimeout(r, 500));
+      }
+    });
+  }, 60000);
 });
