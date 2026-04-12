@@ -162,6 +162,19 @@ ${processedHtml}
       mermaid.initialize({ startOnLoad: false, htmlLabels: false });
       mermaid.run({ querySelector: '.language-mermaid, .mermaid' });
     }
+    // Render latex code blocks (display math)
+    document.querySelectorAll('pre code.language-latex').forEach((code) => {
+      if (typeof katex === 'undefined') return;
+      const latex = code.textContent || '';
+      const pre = code.parentElement;
+      if (!pre) return;
+      const div = document.createElement('div');
+      div.className = 'katex-display';
+      try {
+        katex.render(latex, div, { throwOnError: false, displayMode: true });
+        pre.replaceWith(div);
+      } catch {}
+    });
   });
 </script>
 </body>
@@ -316,6 +329,22 @@ ${processedHtml}
           }
         };
         walkTextNodes(contentDiv);
+
+        // Render latex code blocks (display math)
+        const latexBlocks = Array.from(contentDiv.querySelectorAll('pre code.language-latex'));
+        latexBlocks.forEach((code) => {
+          const latex = code.textContent || '';
+          const pre = code.parentElement;
+          if (!pre) return;
+          const div = iframeDoc.createElement('div');
+          div.className = 'katex-display';
+          try {
+            katex.render(latex, div, { throwOnError: false, displayMode: true });
+            pre.replaceWith(div);
+          } catch {
+            // Ignore render errors so one bad block doesn't break the export
+          }
+        });
       }
 
       // Render mermaid diagrams
