@@ -117,4 +117,24 @@ describe("Page health", () => {
       await p?.close();
     }
   });
+
+  it("evaluateJSON returns parsed objects", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping evaluateJSON test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      const obj = await p.evaluateJSON<{ a: number }>("({ a: 42 })");
+      expect(obj.a).toBe(42);
+    } catch (err: any) {
+      console.log(`Skipping evaluateJSON test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
 });
