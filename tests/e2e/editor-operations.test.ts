@@ -515,4 +515,27 @@ describe("editor operations", () => {
       expect(content).toContain("###### heading text");
     });
   }, 30000);
+
+  it("toggles find and replace via menu action", async () => {
+    await withTrace("editor-find-replace", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.menuAction("edit-find-and-replace");
+      await new Promise((r) => setTimeout(r, 300));
+      const hasReplace = await page!.evaluate<boolean>(
+        `Boolean(document.querySelector('input[placeholder="Replace"]'))`
+      );
+      expect(hasReplace).toBe(true);
+
+      await page!.evaluate(`(() => {
+        const btn = document.querySelector('.flex.flex-col.border-b.border-border.bg-background.px-3.py-2.text-sm button:last-child');
+        if (btn) (btn as HTMLElement).click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+      const gone = await page!.evaluate<boolean>(
+        `Boolean(document.querySelector('input[placeholder="Replace"]'))`
+      );
+      expect(gone).toBe(false);
+    });
+  }, 30000);
 });
