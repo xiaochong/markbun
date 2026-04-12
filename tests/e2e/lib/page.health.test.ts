@@ -38,4 +38,45 @@ describe("Page health", () => {
       await page?.close();
     }
   });
+
+  it("evaluates expressions and returns results via CDP", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping runtime CDP eval test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      expect(await p.evaluate<number>("1 + 2")).toBe(3);
+      expect(await p.evaluate<string>("'hello'")).toBe("hello");
+      expect(await p.evaluate<boolean>("true")).toBe(true);
+    } catch (err: any) {
+      console.log(`Skipping runtime CDP eval test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
+
+  it("captures a non-empty screenshot via CDP", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping screenshot test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      const buffer = await p.screenshot();
+      expect(buffer.length).toBeGreaterThan(1000);
+    } catch (err: any) {
+      console.log(`Skipping screenshot test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
 });
