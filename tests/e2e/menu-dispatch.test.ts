@@ -118,4 +118,35 @@ describe("menu dispatch", () => {
       await new Promise((r) => setTimeout(r, 300));
     });
   }, 30000);
+
+  it("reopens settings dialog after closing", async () => {
+    await withTrace("menu-settings-reopen", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+      expect(await settings.isOpen()).toBe(true);
+
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('div.z-50 button'));
+        const cancelBtn = buttons.find(function(b) {
+          return (b.textContent || '').trim() === 'Cancel';
+        });
+        if (cancelBtn) cancelBtn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await settings.isOpen()).toBe(false);
+
+      await settings.open();
+      expect(await settings.isOpen()).toBe(true);
+
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('div.z-50 button'));
+        const cancelBtn = buttons.find(function(b) {
+          return (b.textContent || '').trim() === 'Cancel';
+        });
+        if (cancelBtn) cancelBtn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await settings.isOpen()).toBe(false);
+    });
+  }, 30000);
 });
