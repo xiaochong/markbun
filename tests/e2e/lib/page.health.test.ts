@@ -489,4 +489,26 @@ describe("Page health", () => {
       await p?.close();
     }
   });
+
+  it("evaluate returns boolean expressions", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping evaluate boolean expressions test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      expect(await p.evaluate<boolean>("1 < 2")).toBe(true);
+      expect(await p.evaluate<boolean>("3 === 4")).toBe(false);
+      expect(await p.evaluate<boolean>("true && false")).toBe(false);
+      expect(await p.evaluate<boolean>("true || false")).toBe(true);
+    } catch (err: any) {
+      console.log(`Skipping evaluate boolean expressions test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
 });

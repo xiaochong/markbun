@@ -380,4 +380,22 @@ describe("menu dispatch", () => {
       expect(hasSearchBar).toBe(true);
     });
   }, 30000);
+
+  it("opens find and replace via quick open command", async () => {
+    await withTrace("menu-quick-open-find-replace", async () => {
+      const quickOpen = new QuickOpenPage(page!);
+      await quickOpen.open();
+      await quickOpen.typeQuery("Replace");
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('[data-palette-index]'));
+        const replaceBtn = buttons.find((b) => (b.textContent || '').includes('Replace'));
+        if (replaceBtn) replaceBtn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+      const hasReplaceInput = await page!.evaluate<boolean>(
+        `Boolean(document.querySelector('input[placeholder="Replace"]'))`
+      );
+      expect(hasReplaceInput).toBe(true);
+    });
+  }, 30000);
 });

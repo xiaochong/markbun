@@ -1356,4 +1356,32 @@ describe("editor operations", () => {
       expect(content).toContain("[ ] b");
     });
   }, 30000);
+
+  it("applies superscript formatting to multi-line content", async () => {
+    await withTrace("editor-superscript-multiline", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("line1\n\nline2");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("format-superscript");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("^line1^");
+      expect(content).toContain("^line2^");
+    });
+  }, 30000);
+
+  it("applies subscript formatting to multi-line content", async () => {
+    await withTrace("editor-subscript-multiline", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("line1\n\nline2");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("format-subscript");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("~line1~");
+      expect(content).toContain("~line2~");
+    });
+  }, 30000);
 });
