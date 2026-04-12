@@ -350,4 +350,21 @@ describe("editor operations", () => {
       expect(content).toContain("|");
     });
   }, 30000);
+
+  it("undo reverts formatting change", async () => {
+    await withTrace("editor-undo", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("undo me");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("format-strong");
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await editor.getMarkdown()).toContain("**undo me**");
+
+      await editor.menuAction("editor-undo");
+      await new Promise((r) => setTimeout(r, 300));
+      const afterUndo = await editor.getMarkdown();
+      expect(afterUndo).not.toContain("**undo me**");
+    });
+  }, 30000);
 });
