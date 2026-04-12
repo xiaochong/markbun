@@ -162,4 +162,57 @@ describe("settings ui", () => {
       }
     });
   }, 60000);
+
+  it("switches to general tab in settings dialog", async () => {
+    await withTrace("settings-general-tab", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+      await settings.switchTab("General");
+      await page!.evaluate(`(() => {
+        const dialog = document.querySelector('.z-50');
+        const text = dialog && dialog.textContent ? dialog.textContent : '';
+        if (!text.includes('Auto Save')) {
+          throw new Error('General tab content not found');
+        }
+      })()`);
+      await settings.close();
+    });
+  }, 30000);
+
+  it("switches theme via settings dialog appearance tab", async () => {
+    await withTrace("settings-theme-switch", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+      await settings.switchTab("Appearance");
+
+      const before = await page!.evaluate<string>(
+        "document.documentElement.classList.contains('dark') ? 'dark' : 'light'"
+      );
+      const target = before === 'dark' ? 'Light' : 'Dark';
+
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('.z-50 button'));
+        const btn = buttons.find((b) => (b.textContent || '').trim() === ${JSON.stringify(target)});
+        if (btn) (btn as HTMLElement).click();
+      })()`);
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+
+      const after = await page!.evaluate<string>(
+        "document.documentElement.classList.contains('dark') ? 'dark' : 'light'"
+      );
+      expect(after).not.toBe(before);
+
+      // Restore original theme
+      await settings.open();
+      await settings.switchTab("Appearance");
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('.z-50 button'));
+        const btn = buttons.find((b) => (b.textContent || '').trim() === ${JSON.stringify(before === 'dark' ? 'Dark' : 'Light')});
+        if (btn) (btn as HTMLElement).click();
+      })()`);
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+    });
+  }, 60000);
 });

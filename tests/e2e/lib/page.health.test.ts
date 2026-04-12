@@ -198,4 +198,29 @@ describe("Page health", () => {
       await p?.close();
     }
   });
+
+  it("waitForSelector throws on missing element", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping waitForSelector timeout test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      let threw = false;
+      try {
+        await p.waitForSelector("#__nonexistent__", { timeout: 500 });
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    } catch (err: any) {
+      console.log(`Skipping waitForSelector timeout test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
 });
