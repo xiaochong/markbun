@@ -209,6 +209,65 @@ export class SettingsPage {
     await sleep(300);
   }
 
+  async toggleAIEnabled(): Promise<void> {
+    await this.page.evaluate(`(() => {
+      const labels = Array.from(document.querySelectorAll('label'));
+      const label = labels.find(function(l) {
+        return (l.textContent || '').includes('Enable AI');
+      });
+      const container = label && label.parentElement && label.parentElement.parentElement;
+      const checkbox = container && container.querySelector('input[type="checkbox"]');
+      if (checkbox) checkbox.click();
+    })()`);
+  }
+
+  async getAIEnabledValue(): Promise<boolean> {
+    return await this.page.evaluate<boolean>(`(() => {
+      const labels = Array.from(document.querySelectorAll('label'));
+      const label = labels.find(function(l) {
+        return (l.textContent || '').includes('Enable AI');
+      });
+      const container = label && label.parentElement && label.parentElement.parentElement;
+      const checkbox = container && container.querySelector('input[type="checkbox"]');
+      return checkbox ? checkbox.checked : false;
+    })()`);
+  }
+
+  async toggleAILocalOnly(): Promise<void> {
+    await this.page.evaluate(`(() => {
+      const labels = Array.from(document.querySelectorAll('label'));
+      const label = labels.find(function(l) {
+        return (l.textContent || '').includes('Local Only Mode');
+      });
+      const container = label && label.parentElement && label.parentElement.parentElement;
+      const checkbox = container && container.querySelector('input[type="checkbox"]');
+      if (checkbox) checkbox.click();
+    })()`);
+  }
+
+  async getAILocalOnlyValue(): Promise<boolean> {
+    return await this.page.evaluate<boolean>(`(() => {
+      const labels = Array.from(document.querySelectorAll('label'));
+      const label = labels.find(function(l) {
+        return (l.textContent || '').includes('Local Only Mode');
+      });
+      const container = label && label.parentElement && label.parentElement.parentElement;
+      const checkbox = container && container.querySelector('input[type="checkbox"]');
+      return checkbox ? checkbox.checked : false;
+    })()`);
+  }
+
+  async clickResetDefaults(): Promise<void> {
+    await this.page.evaluate(`(() => {
+      const buttons = Array.from(document.querySelectorAll('.z-50 button'));
+      const btn = buttons.find(function(b) {
+        return (b.textContent || '').includes('Reset to Default');
+      });
+      if (btn) btn.click();
+    })()`);
+    await sleep(300);
+  }
+
   async switchLanguage(langLabel: string): Promise<void> {
     await this.page.evaluate(`(() => {
       const dialog = document.querySelector('.z-50');

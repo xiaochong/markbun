@@ -162,4 +162,37 @@ describe("file lifecycle", () => {
       expect((await Bun.file(TEST_FILE).text()).trim()).toBe(content);
     });
   }, 60000);
+
+  it("saves markdown to a deeply nested path", async () => {
+    await withTrace("file-nested-path", async () => {
+      const editor = new EditorPage(page!);
+      const nestedDir = join(WORKSPACE_DIR, "files", "a", "b", "c");
+      await Bun.mkdir(nestedDir, { recursive: true });
+      const nestedFile = join(nestedDir, "deep.md");
+
+      await editor.waitForReady();
+      await editor.setMarkdown("# Deep");
+      const saveResult = await editor.saveFile(nestedFile);
+      expect(saveResult.success).toBe(true);
+      expect((await Bun.file(nestedFile).text()).trim()).toBe("# Deep");
+    });
+  }, 60000);
+
+  it("saves a large markdown file", async () => {
+    await withTrace("file-large", async () => {
+      const editor = new EditorPage(page!);
+      const filesDir = join(WORKSPACE_DIR, "files");
+      await Bun.write(join(filesDir, ".keep"), "");
+      await editor.waitForReady();
+
+      const paragraphs = Array.from({ length: 200 }, (_, i) => `Paragraph ${i + 1} with some content.`);
+      const content = "# Large Document\n\n" + paragraphs.join("\n\n");
+      await editor.setMarkdown(content);
+      const saveResult = await editor.saveFile(TEST_FILE);
+      expect(saveResult.success).toBe(true);
+      const saved = await Bun.file(TEST_FILE).text();
+      expect(saved.length).toBeGreaterThan(5000);
+      expect(saved).toContain("Paragraph 200");
+    });
+  }, 60000);
 });

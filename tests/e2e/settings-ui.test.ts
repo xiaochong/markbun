@@ -363,4 +363,84 @@ describe("settings ui", () => {
       await new Promise((r) => setTimeout(r, 500));
     });
   }, 60000);
+
+  it("toggles ai enabled and persists the change", async () => {
+    await withTrace("settings-ai-enabled", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+      await settings.switchTab("AI");
+      const initialValue = await settings.getAIEnabledValue();
+      const targetValue = !initialValue;
+
+      await settings.toggleAIEnabled();
+      expect(await settings.getAIEnabledValue()).toBe(targetValue);
+
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+
+      await settings.open();
+      await settings.switchTab("AI");
+      expect(await settings.getAIEnabledValue()).toBe(targetValue);
+
+      if ((await settings.getAIEnabledValue()) !== initialValue) {
+        await settings.toggleAIEnabled();
+        await settings.save();
+        await new Promise((r) => setTimeout(r, 500));
+      }
+    });
+  }, 60000);
+
+  it("toggles ai local only and persists the change", async () => {
+    await withTrace("settings-ai-local-only", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+      await settings.switchTab("AI");
+
+      // Ensure AI is enabled so local-only checkbox is visible
+      if (!(await settings.getAIEnabledValue())) {
+        await settings.toggleAIEnabled();
+      }
+
+      const initialValue = await settings.getAILocalOnlyValue();
+      const targetValue = !initialValue;
+
+      await settings.toggleAILocalOnly();
+      expect(await settings.getAILocalOnlyValue()).toBe(targetValue);
+
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+
+      await settings.open();
+      await settings.switchTab("AI");
+      expect(await settings.getAILocalOnlyValue()).toBe(targetValue);
+
+      if ((await settings.getAILocalOnlyValue()) !== initialValue) {
+        await settings.toggleAILocalOnly();
+      }
+      // Restore AI enabled state if it was originally off
+      if (!initialValue && !(await settings.getAIEnabledValue())) {
+        await settings.toggleAIEnabled();
+      }
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+    });
+  }, 60000);
+
+  it("resets font size to default in editor tab", async () => {
+    await withTrace("settings-reset-font", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+      await settings.switchTab("Editor");
+
+      await settings.setFontSizeValue(20);
+      expect(await settings.getFontSizeValue()).toBe(20);
+
+      await settings.clickResetDefaults();
+      expect(await settings.getFontSizeValue()).toBe(15);
+      expect(await settings.getLineHeightValue()).toBe(1.65);
+
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+    });
+  }, 60000);
 });
