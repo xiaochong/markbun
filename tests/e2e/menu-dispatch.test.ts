@@ -362,4 +362,22 @@ describe("menu dispatch", () => {
       expect(await dialog.isDialogOpen()).toBe(false);
     });
   }, 30000);
+
+  it("opens search bar via quick open command", async () => {
+    await withTrace("menu-quick-open-search", async () => {
+      const quickOpen = new QuickOpenPage(page!);
+      await quickOpen.open();
+      await quickOpen.typeQuery("Find");
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('[data-palette-index]'));
+        const findBtn = buttons.find((b) => (b.textContent || '').includes('Find'));
+        if (findBtn) findBtn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+      const hasSearchBar = await page!.evaluate<boolean>(
+        `Boolean(document.querySelector('input[placeholder="Find"]'))`
+      );
+      expect(hasSearchBar).toBe(true);
+    });
+  }, 30000);
 });

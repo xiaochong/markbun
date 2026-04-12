@@ -1328,4 +1328,32 @@ describe("editor operations", () => {
       expect(content).toMatch(/\d+\.\s*b/);
     });
   }, 30000);
+
+  it("applies unordered list to multi-line content", async () => {
+    await withTrace("editor-unordered-list-multiline", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("a\n\nb");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("para-unordered-list");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("- a");
+      expect(content).toContain("- b");
+    });
+  }, 30000);
+
+  it("applies task list to multi-line content", async () => {
+    await withTrace("editor-task-list-multiline", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("a\n\nb");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("para-task-list");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("[ ] a");
+      expect(content).toContain("[ ] b");
+    });
+  }, 30000);
 });
