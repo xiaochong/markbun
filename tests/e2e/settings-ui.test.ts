@@ -315,4 +315,52 @@ describe("settings ui", () => {
       await new Promise((r) => setTimeout(r, 500));
     });
   }, 60000);
+
+  it("changes retention days and persists the change", async () => {
+    await withTrace("settings-retention-days", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+      await settings.switchTab("Backup");
+      const initialValue = await settings.getRetentionDaysValue();
+      const targetValue = initialValue === 30 ? 25 : 30;
+
+      await settings.setRetentionDaysValue(targetValue);
+      expect(await settings.getRetentionDaysValue()).toBe(targetValue);
+
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+
+      await settings.open();
+      await settings.switchTab("Backup");
+      expect(await settings.getRetentionDaysValue()).toBe(targetValue);
+
+      await settings.setRetentionDaysValue(initialValue);
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+    });
+  }, 60000);
+
+  it("changes recovery interval and persists the change", async () => {
+    await withTrace("settings-recovery-interval", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+      await settings.switchTab("Backup");
+      const initialValue = await settings.getRecoveryIntervalValue();
+      const targetValue = initialValue === 30000 ? 25000 : 30000;
+
+      await settings.setRecoveryIntervalValue(targetValue);
+      expect(await settings.getRecoveryIntervalValue()).toBe(targetValue);
+
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+
+      await settings.open();
+      await settings.switchTab("Backup");
+      expect(await settings.getRecoveryIntervalValue()).toBe(targetValue);
+
+      await settings.setRecoveryIntervalValue(initialValue);
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+    });
+  }, 60000);
 });

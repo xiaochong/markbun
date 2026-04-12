@@ -167,6 +167,48 @@ export class SettingsPage {
     await sleep(300);
   }
 
+  async getRetentionDaysValue(): Promise<number> {
+    return await this.page.evaluate<number>(`(() => {
+      const dialog = document.querySelector('.z-50');
+      const input = dialog && dialog.querySelector('input[type="range"][min="1"][max="365"]');
+      return input ? Number(input.value) : 0;
+    })()`);
+  }
+
+  async setRetentionDaysValue(value: number): Promise<void> {
+    await this.page.evaluate(`(() => {
+      const dialog = document.querySelector('.z-50');
+      const input = dialog && dialog.querySelector('input[type="range"][min="1"][max="365"]');
+      if (input) {
+        input.value = ${JSON.stringify(value)};
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    })()`);
+    await sleep(300);
+  }
+
+  async getRecoveryIntervalValue(): Promise<number> {
+    return await this.page.evaluate<number>(`(() => {
+      const dialog = document.querySelector('.z-50');
+      const input = dialog && dialog.querySelector('input[type="range"][min="5000"][max="120000"]');
+      return input ? Number(input.value) : 0;
+    })()`);
+  }
+
+  async setRecoveryIntervalValue(value: number): Promise<void> {
+    await this.page.evaluate(`(() => {
+      const dialog = document.querySelector('.z-50');
+      const input = dialog && dialog.querySelector('input[type="range"][min="5000"][max="120000"]');
+      if (input) {
+        input.value = ${JSON.stringify(value)};
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    })()`);
+    await sleep(300);
+  }
+
   async switchLanguage(langLabel: string): Promise<void> {
     await this.page.evaluate(`(() => {
       const dialog = document.querySelector('.z-50');

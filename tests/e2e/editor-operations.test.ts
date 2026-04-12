@@ -845,4 +845,68 @@ describe("editor operations", () => {
       expect(after.split("|").length).toBeLessThan(before.split("|").length);
     });
   }, 30000);
+
+  it("applies superscript formatting via menu action", async () => {
+    await withTrace("editor-superscript", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("superscript me");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("format-superscript");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("^superscript me^");
+    });
+  }, 30000);
+
+  it("applies subscript formatting via menu action", async () => {
+    await withTrace("editor-subscript", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("subscript me");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("format-subscript");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("~subscript me~");
+    });
+  }, 30000);
+
+  it("inserts paragraph above via menu action", async () => {
+    await withTrace("editor-para-above", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("hello");
+      await editor.menuAction("editor-select-all");
+      await new Promise((r) => setTimeout(r, 300));
+      const beforeCount = await page!.evaluate<number>(
+        "document.querySelectorAll('.ProseMirror p').length"
+      );
+      await editor.menuAction("para-insert-above");
+      await new Promise((r) => setTimeout(r, 300));
+      const afterCount = await page!.evaluate<number>(
+        "document.querySelectorAll('.ProseMirror p').length"
+      );
+      expect(afterCount).toBeGreaterThan(beforeCount);
+    });
+  }, 30000);
+
+  it("inserts paragraph below via menu action", async () => {
+    await withTrace("editor-para-below", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("hello");
+      await editor.menuAction("editor-select-all");
+      await new Promise((r) => setTimeout(r, 300));
+      const beforeCount = await page!.evaluate<number>(
+        "document.querySelectorAll('.ProseMirror p').length"
+      );
+      await editor.menuAction("para-insert-below");
+      await new Promise((r) => setTimeout(r, 300));
+      const afterCount = await page!.evaluate<number>(
+        "document.querySelectorAll('.ProseMirror p').length"
+      );
+      expect(afterCount).toBeGreaterThan(beforeCount);
+    });
+  }, 30000);
 });
