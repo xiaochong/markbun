@@ -145,28 +145,13 @@ export class Page {
       ArrowLeft: "",
       ArrowRight: "",
     };
-    const vkMap: Record<string, number> = {
-      Enter: 13,
-      Escape: 27,
-      Tab: 9,
-      Backspace: 8,
-      Delete: 46,
-      ArrowUp: 38,
-      ArrowDown: 40,
-      ArrowLeft: 37,
-      ArrowRight: 39,
-    };
     await this.send("Input.dispatchKeyEvent", {
       type: "keyDown",
       key: keyName,
       text: keyMap[keyName] || "",
-      windowsVirtualKeyCode: vkMap[keyName] ?? 0,
+      windowsVirtualKeyCode: 0,
     });
-    await this.send("Input.dispatchKeyEvent", {
-      type: "keyUp",
-      key: keyName,
-      windowsVirtualKeyCode: vkMap[keyName] ?? 0,
-    });
+    await this.send("Input.dispatchKeyEvent", { type: "keyUp", key: keyName });
   }
 
   async waitForSelector(

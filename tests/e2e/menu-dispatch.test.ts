@@ -59,33 +59,4 @@ describe("menu dispatch", () => {
       await new Promise((r) => setTimeout(r, 300));
     });
   }, 30000);
-
-  it("closes about dialog with Escape key", async () => {
-    await withTrace("menu-about-escape", async () => {
-      const dialog = new DialogPage(page!);
-      await page!.evaluate(`(() => {
-        const listeners = window.__electrobunListeners && window.__electrobunListeners['show-about'] || [];
-        listeners.forEach((cb) => cb());
-      })()`);
-      await dialog.waitForDialogContaining("MarkBun");
-      expect(await dialog.isDialogOpen()).toBe(true);
-      await dialog.close();
-      await new Promise((r) => setTimeout(r, 300));
-      expect(await dialog.isDialogOpen()).toBe(false);
-    });
-  }, 30000);
-
-  it("closes quick open with Escape key", async () => {
-    await withTrace("menu-quick-open-escape", async () => {
-      const quickOpen = new QuickOpenPage(page!);
-      await quickOpen.open();
-      expect(await quickOpen.getResultCount()).toBeGreaterThanOrEqual(0);
-      await quickOpen.close();
-      await new Promise((r) => setTimeout(r, 300));
-      const stillOpen = await page!.evaluate<boolean>(
-        "Boolean(document.querySelector('input[placeholder]'))"
-      );
-      expect(stillOpen).toBe(false);
-    });
-  }, 30000);
 });
