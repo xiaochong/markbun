@@ -187,9 +187,6 @@ export function useCrepeEditor(
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const dragCounterRef = useRef(0);
 
-  // AbortController for cancelling stale in-flight Mermaid renders
-  const mermaidAbortControllerRef = useRef<AbortController | null>(null);
-
   // Guard: synchronous flag set during programmatic content loading.
   // ProseMirror calls the change-listener's update() synchronously inside
   // view.dispatch(), so we set this flag before dispatch and clear it
@@ -298,19 +295,12 @@ export function useCrepeEditor(
               return cachedSvg.replace(/\swidth="100%"/, '');
             }
 
-            // Abort stale in-flight Mermaid render for this editor instance
-            mermaidAbortControllerRef.current?.abort();
-            const controller = new AbortController();
-            mermaidAbortControllerRef.current = controller;
-
             const id = `mermaid-svg-${Math.random().toString(36).slice(2)}`;
 
             import('mermaid').then(({ default: mermaid }) => {
-              if (controller.signal.aborted) return;
               mermaid.initialize(config as any);
               mermaid.render(id, code)
                 .then(({ svg }) => {
-                  if (controller.signal.aborted) return;
                   // WebKit (Electrobun) cannot auto-compute SVG height when width="100%"
                   // and no explicit height attribute. Fix by removing width="100%" so
                   // the SVG uses its intrinsic viewBox dimensions instead.
@@ -319,7 +309,6 @@ export function useCrepeEditor(
                   applyPreview(fixedSvg);
                 })
                 .catch((err) => {
-                  if (controller.signal.aborted) return;
                   console.error('[Mermaid] render error:', err);
                   applyPreview('<div class="mermaid-error">Mermaid syntax error</div>');
                 });
@@ -1058,13 +1047,6 @@ export function useCrepeEditor(
       console.error('[insertMarkdown] Failed to insert:', e);
       return false;
     }
-  }, []);
-
-  // Abort stale Mermaid renders when this editor instance unmounts or the file changes
-  useEffect(() => {
-    return () => {
-      mermaidAbortControllerRef.current?.abort();
-    };
   }, []);
 
   return {
