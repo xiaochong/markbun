@@ -414,4 +414,30 @@ describe("editor operations", () => {
       expect(afterRedo).toContain("**redo me**");
     });
   }, 30000);
+
+  it("toggles AI panel via menu action", async () => {
+    await withTrace("editor-toggle-ai-panel", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.menuAction("toggle-ai-panel");
+      await new Promise((r) => setTimeout(r, 500));
+      const hasPanel = await page!.evaluate<boolean>(
+        `(() => {
+          const body = document.body.innerText || '';
+          return body.includes('AI Not Configured') || body.includes('Open AI Settings');
+        })()`
+      );
+      expect(hasPanel).toBe(true);
+
+      await editor.menuAction("toggle-ai-panel");
+      await new Promise((r) => setTimeout(r, 500));
+      const gone = await page!.evaluate<boolean>(
+        `(() => {
+          const body = document.body.innerText || '';
+          return body.includes('AI Not Configured') || body.includes('Open AI Settings');
+        })()`
+      );
+      expect(gone).toBe(false);
+    });
+  }, 30000);
 });
