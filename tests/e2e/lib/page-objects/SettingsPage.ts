@@ -103,4 +103,92 @@ export class SettingsPage {
       return checkbox ? checkbox.checked : false;
     })()`);
   }
+
+  async getFontSizeValue(): Promise<number> {
+    return await this.page.evaluate<number>(`(() => {
+      const dialog = document.querySelector('.z-50');
+      const input = dialog && dialog.querySelector('input[type="range"][min="10"]');
+      return input ? Number(input.value) : 0;
+    })()`);
+  }
+
+  async setFontSizeValue(value: number): Promise<void> {
+    await this.page.evaluate(`(() => {
+      const dialog = document.querySelector('.z-50');
+      const input = dialog && dialog.querySelector('input[type="range"][min="10"]');
+      if (input) {
+        input.value = ${JSON.stringify(value)};
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    })()`);
+    await sleep(300);
+  }
+
+  async getLineHeightValue(): Promise<number> {
+    return await this.page.evaluate<number>(`(() => {
+      const dialog = document.querySelector('.z-50');
+      const input = dialog && dialog.querySelector('input[type="range"][min="1"][max="3"]');
+      return input ? Number(input.value) : 0;
+    })()`);
+  }
+
+  async setLineHeightValue(value: number): Promise<void> {
+    await this.page.evaluate(`(() => {
+      const dialog = document.querySelector('.z-50');
+      const input = dialog && dialog.querySelector('input[type="range"][min="1"][max="3"]');
+      if (input) {
+        input.value = ${JSON.stringify(value)};
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    })()`);
+    await sleep(300);
+  }
+
+  async getMaxVersionsValue(): Promise<number> {
+    return await this.page.evaluate<number>(`(() => {
+      const dialog = document.querySelector('.z-50');
+      const input = dialog && dialog.querySelector('input[type="range"][min="5"][max="100"]');
+      return input ? Number(input.value) : 0;
+    })()`);
+  }
+
+  async setMaxVersionsValue(value: number): Promise<void> {
+    await this.page.evaluate(`(() => {
+      const dialog = document.querySelector('.z-50');
+      const input = dialog && dialog.querySelector('input[type="range"][min="5"][max="100"]');
+      if (input) {
+        input.value = ${JSON.stringify(value)};
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    })()`);
+    await sleep(300);
+  }
+
+  async switchLanguage(langLabel: string): Promise<void> {
+    await this.page.evaluate(`(() => {
+      const dialog = document.querySelector('.z-50');
+      const buttons = dialog ? Array.from(dialog.querySelectorAll('button')) : [];
+      const btn = buttons.find(function(b) {
+        return (b.textContent || '').includes(${JSON.stringify(langLabel)});
+      });
+      if (btn) btn.click();
+    })()`);
+    await sleep(300);
+  }
+
+  async getCurrentLanguage(): Promise<string> {
+    return await this.page.evaluate<string>(`(() => {
+      const dialog = document.querySelector('.z-50');
+      const selected = dialog && dialog.querySelector('button.bg-primary');
+      if (!selected) return '';
+      const spans = Array.from(selected.querySelectorAll('span'));
+      const codeSpan = spans.find(function(s) {
+        return /^[a-z]{2}(-[A-Z]{2})?$/.test((s.textContent || '').trim());
+      });
+      return codeSpan ? (codeSpan.textContent || '').trim() : '';
+    })()`);
+  }
 }

@@ -215,4 +215,104 @@ describe("settings ui", () => {
       await new Promise((r) => setTimeout(r, 500));
     });
   }, 60000);
+
+  it("changes font size and persists the change", async () => {
+    await withTrace("settings-font-size", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+      await settings.switchTab("Editor");
+      const initialValue = await settings.getFontSizeValue();
+      const targetValue = initialValue === 20 ? 18 : 20;
+
+      await settings.setFontSizeValue(targetValue);
+      expect(await settings.getFontSizeValue()).toBe(targetValue);
+
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+
+      await settings.open();
+      await settings.switchTab("Editor");
+      expect(await settings.getFontSizeValue()).toBe(targetValue);
+
+      await settings.setFontSizeValue(initialValue);
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+    });
+  }, 60000);
+
+  it("changes line height and persists the change", async () => {
+    await withTrace("settings-line-height", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+      await settings.switchTab("Editor");
+      const initialValue = await settings.getLineHeightValue();
+      const targetValue = initialValue === 2.0 ? 1.8 : 2.0;
+
+      await settings.setLineHeightValue(targetValue);
+      expect(await settings.getLineHeightValue()).toBe(targetValue);
+
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+
+      await settings.open();
+      await settings.switchTab("Editor");
+      expect(await settings.getLineHeightValue()).toBe(targetValue);
+
+      await settings.setLineHeightValue(initialValue);
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+    });
+  }, 60000);
+
+  it("switches language and persists the change", async () => {
+    await withTrace("settings-language", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+      await settings.switchTab("Language");
+      const initialLang = await settings.getCurrentLanguage();
+      const targetLang = initialLang === 'zh-CN' ? 'en' : 'zh-CN';
+      const targetLabel = targetLang === 'zh-CN' ? '简体中文' : 'English';
+
+      await settings.switchLanguage(targetLabel);
+      expect(await settings.getCurrentLanguage()).toBe(targetLang);
+
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+
+      // Re-open and verify persisted
+      await settings.open();
+      await settings.switchTab("Language");
+      expect(await settings.getCurrentLanguage()).toBe(targetLang);
+
+      // Restore original
+      const restoreLabel = initialLang === 'zh-CN' ? '简体中文' : 'English';
+      await settings.switchLanguage(restoreLabel);
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+    });
+  }, 60000);
+
+  it("changes max versions and persists the change", async () => {
+    await withTrace("settings-max-versions", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+      await settings.switchTab("Backup");
+      const initialValue = await settings.getMaxVersionsValue();
+      const targetValue = initialValue === 30 ? 25 : 30;
+
+      await settings.setMaxVersionsValue(targetValue);
+      expect(await settings.getMaxVersionsValue()).toBe(targetValue);
+
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+
+      await settings.open();
+      await settings.switchTab("Backup");
+      expect(await settings.getMaxVersionsValue()).toBe(targetValue);
+
+      await settings.setMaxVersionsValue(initialValue);
+      await settings.save();
+      await new Promise((r) => setTimeout(r, 500));
+    });
+  }, 60000);
 });
