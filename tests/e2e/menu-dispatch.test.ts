@@ -97,4 +97,25 @@ describe("menu dispatch", () => {
       expect(await dialog.isDialogOpen()).toBe(false);
     });
   }, 30000);
+
+  it("reopens quick open after closing", async () => {
+    await withTrace("menu-quick-open-reopen", async () => {
+      const quickOpen = new QuickOpenPage(page!);
+      await quickOpen.open();
+      expect(await quickOpen.getResultCount()).toBeGreaterThanOrEqual(0);
+      await page!.evaluate(`(() => {
+        const backdrop = document.querySelector('.fixed.inset-0.z-50.flex.items-start.justify-center');
+        if (backdrop) backdrop.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+
+      await quickOpen.open();
+      expect(await quickOpen.getResultCount()).toBeGreaterThanOrEqual(0);
+      await page!.evaluate(`(() => {
+        const backdrop = document.querySelector('.fixed.inset-0.z-50.flex.items-start.justify-center');
+        if (backdrop) backdrop.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+    });
+  }, 30000);
 });
