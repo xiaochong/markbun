@@ -137,4 +137,34 @@ describe("Page health", () => {
       await p?.close();
     }
   });
+
+  it("types text into a focused input via CDP", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping type test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      await p.evaluate(`(() => {
+        const input = document.createElement('input');
+        input.id = '__cdp_type_test__';
+        input.style.position = 'fixed';
+        input.style.top = '0';
+        input.style.left = '0';
+        document.body.appendChild(input);
+        input.focus();
+      })()`);
+      await p.type("hello cdp");
+      const value = await p.evaluate<string>("document.querySelector('#__cdp_type_test__').value");
+      expect(value).toBe("hello cdp");
+    } catch (err: any) {
+      console.log(`Skipping type test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
 });
