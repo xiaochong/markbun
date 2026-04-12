@@ -274,6 +274,19 @@ describe("editor operations", () => {
     });
   }, 30000);
 
+  it("applies link formatting via menu action", async () => {
+    await withTrace("editor-link", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("link me");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("format-link");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("[link me]");
+    });
+  }, 30000);
+
   it("applies blockquote via menu action", async () => {
     await withTrace("editor-blockquote", async () => {
       const editor = new EditorPage(page!);
