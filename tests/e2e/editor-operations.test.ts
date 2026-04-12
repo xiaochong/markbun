@@ -175,4 +175,24 @@ describe("editor operations", () => {
       expect(backToMilkdown).toBe(true);
     });
   }, 30000);
+
+  it("toggles title bar via menu action", async () => {
+    await withTrace("editor-toggle-titlebar", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.menuAction("view-toggle-titlebar");
+      await new Promise((r) => setTimeout(r, 500));
+      const hasTitleBar = await page!.evaluate<boolean>(
+        "Boolean(document.querySelector('.flex.items-center.justify-center.h-8.px-4.bg-background.border-b.text-sm.select-none'))"
+      );
+      expect(hasTitleBar).toBe(true);
+
+      await editor.menuAction("view-toggle-titlebar");
+      await new Promise((r) => setTimeout(r, 500));
+      const gone = await page!.evaluate<boolean>(
+        "Boolean(document.querySelector('.flex.items-center.justify-center.h-8.px-4.bg-background.border-b.text-sm.select-none'))"
+      );
+      expect(gone).toBe(false);
+    });
+  }, 30000);
 });

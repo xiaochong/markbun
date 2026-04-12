@@ -15,4 +15,10 @@ describe("runner health", () => {
     expect(after.electrobun).toBeLessThanOrEqual(baselinePids.electrobun.length);
     expect(after.cef).toBeLessThanOrEqual(baselinePids.cef.length);
   }, 120000);
+
+  it("reports non-negative process counts", async () => {
+    const counts = await getProcessCounts();
+    expect(counts.electrobun).toBeGreaterThanOrEqual(0);
+    expect(counts.cef).toBeGreaterThanOrEqual(0);
+  });
 });
