@@ -1125,4 +1125,26 @@ describe("editor operations", () => {
       expect(content).not.toContain("# plain text");
     });
   }, 30000);
+
+  it("survives rapid source mode toggles", async () => {
+    await withTrace("editor-rapid-source-toggle", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("# Rapid\n\nToggle");
+
+      await editor.menuAction("view-toggle-source-mode");
+      await new Promise((r) => setTimeout(r, 200));
+      await editor.menuAction("view-toggle-source-mode");
+      await new Promise((r) => setTimeout(r, 200));
+      await editor.menuAction("view-toggle-source-mode");
+      await new Promise((r) => setTimeout(r, 200));
+      await editor.menuAction("view-toggle-source-mode");
+      await new Promise((r) => setTimeout(r, 500));
+
+      const hasMilkdown = await page!.evaluate<boolean>(
+        "Boolean(document.querySelector('.ProseMirror'))"
+      );
+      expect(hasMilkdown).toBe(true);
+    });
+  }, 30000);
 });

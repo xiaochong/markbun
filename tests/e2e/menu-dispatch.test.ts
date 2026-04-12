@@ -262,4 +262,19 @@ describe("menu dispatch", () => {
       await new Promise((r) => setTimeout(r, 300));
     });
   }, 30000);
+
+  it("quick open yields no results for nonsense query", async () => {
+    await withTrace("menu-quick-open-empty", async () => {
+      const quickOpen = new QuickOpenPage(page!);
+      await quickOpen.open();
+      await quickOpen.typeQuery("xyznotfound12345");
+      const count = await quickOpen.getResultCount();
+      expect(count).toBe(0);
+      await page!.evaluate(`(() => {
+        const backdrop = document.querySelector('.fixed.inset-0.z-50.flex.items-start.justify-center');
+        if (backdrop) backdrop.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+    });
+  }, 30000);
 });

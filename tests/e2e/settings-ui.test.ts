@@ -458,4 +458,31 @@ describe("settings ui", () => {
       await new Promise((r) => setTimeout(r, 500));
     });
   }, 60000);
+
+  it("cancelling settings discards unsaved changes", async () => {
+    await withTrace("settings-cancel-discard", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+      const originalValue = await settings.getAutoSaveValue();
+
+      await settings.toggleAutoSave();
+      const toggledValue = await settings.getAutoSaveValue();
+      expect(toggledValue).toBe(!originalValue);
+
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('div.z-50 button'));
+        const cancelBtn = buttons.find(function(b) {
+          return (b.textContent || '').trim() === 'Cancel';
+        });
+        if (cancelBtn) cancelBtn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await settings.isOpen()).toBe(false);
+
+      await settings.open();
+      const revertedValue = await settings.getAutoSaveValue();
+      expect(revertedValue).toBe(originalValue);
+      await settings.close();
+    });
+  }, 60000);
 });

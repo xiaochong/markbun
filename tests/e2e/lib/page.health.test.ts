@@ -291,6 +291,26 @@ describe("Page health", () => {
     }
   });
 
+  it("evaluate returns undefined for undefined expression", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping evaluate undefined test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      const result = await p.evaluate<undefined>("undefined");
+      expect(result).toBe(undefined);
+    } catch (err: any) {
+      console.log(`Skipping evaluate undefined test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
+
   it("evaluateJSON returns nested objects", async () => {
     const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
     const runnerExists = await Bun.file(runnerPath).exists();
