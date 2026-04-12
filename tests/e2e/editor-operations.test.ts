@@ -1147,4 +1147,55 @@ describe("editor operations", () => {
       expect(hasMilkdown).toBe(true);
     });
   }, 30000);
+
+  it("multiple undo operations revert successive formatting changes", async () => {
+    await withTrace("editor-multi-undo", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("original");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("format-strong");
+      await new Promise((r) => setTimeout(r, 300));
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("format-emphasis");
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await editor.getMarkdown()).toContain("***original***");
+
+      await editor.menuAction("editor-undo");
+      await new Promise((r) => setTimeout(r, 300));
+      await editor.menuAction("editor-undo");
+      await new Promise((r) => setTimeout(r, 300));
+      const afterUndos = await editor.getMarkdown();
+      expect(afterUndos).not.toContain("***original***");
+      expect(afterUndos).not.toContain("**original**");
+    });
+  }, 30000);
+
+  it("multiple redo operations restore successive formatting changes", async () => {
+    await withTrace("editor-multi-redo", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("original");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("format-strong");
+      await new Promise((r) => setTimeout(r, 300));
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("format-emphasis");
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await editor.getMarkdown()).toContain("***original***");
+
+      await editor.menuAction("editor-undo");
+      await new Promise((r) => setTimeout(r, 300));
+      await editor.menuAction("editor-undo");
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await editor.getMarkdown()).not.toContain("***original***");
+
+      await editor.menuAction("editor-redo");
+      await new Promise((r) => setTimeout(r, 300));
+      await editor.menuAction("editor-redo");
+      await new Promise((r) => setTimeout(r, 300));
+      const afterRedos = await editor.getMarkdown();
+      expect(afterRedos).toContain("***original***");
+    });
+  }, 30000);
 });

@@ -277,4 +277,24 @@ describe("menu dispatch", () => {
       await new Promise((r) => setTimeout(r, 300));
     });
   }, 30000);
+
+  it("opens file history via quick open command", async () => {
+    await withTrace("menu-quick-open-file-history", async () => {
+      const quickOpen = new QuickOpenPage(page!);
+      const dialog = new DialogPage(page!);
+      await quickOpen.open();
+      await quickOpen.typeQuery("File History");
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('[data-palette-index]'));
+        const historyBtn = buttons.find((b) => (b.textContent || '').includes('File History'));
+        if (historyBtn) historyBtn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+      await dialog.waitForDialogContaining("File History");
+      expect(await dialog.isDialogOpen()).toBe(true);
+      await dialog.clickButton("Close");
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await dialog.isDialogOpen()).toBe(false);
+    });
+  }, 30000);
 });

@@ -264,4 +264,19 @@ describe("file lifecycle", () => {
       expect((await Bun.file(TEST_FILE).text()).trim()).toBe(content);
     });
   }, 60000);
+
+  it("saves markdown with inline html", async () => {
+    await withTrace("file-inline-html", async () => {
+      const editor = new EditorPage(page!);
+      const filesDir = join(WORKSPACE_DIR, "files");
+      await Bun.write(join(filesDir, ".keep"), "");
+      await editor.waitForReady();
+
+      const content = "# HTML\n\n<u>underlined</u>";
+      await editor.setMarkdown(content);
+      const saveResult = await editor.saveFile(TEST_FILE);
+      expect(saveResult.success).toBe(true);
+      expect((await Bun.file(TEST_FILE).text()).trim()).toBe(content);
+    });
+  }, 60000);
 });

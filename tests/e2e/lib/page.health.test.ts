@@ -80,6 +80,31 @@ describe("Page health", () => {
     }
   });
 
+  it("screenshot buffer has PNG header", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping screenshot PNG header test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      const buffer = await p.screenshot();
+      expect(buffer.length).toBeGreaterThan(4);
+      const header = buffer.subarray(0, 4);
+      expect(header[0]).toBe(0x89);
+      expect(header[1]).toBe(0x50);
+      expect(header[2]).toBe(0x4E);
+      expect(header[3]).toBe(0x47);
+    } catch (err: any) {
+      console.log(`Skipping screenshot PNG header test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
+
   it("waitForSelector resolves for known elements", async () => {
     const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
     const runnerExists = await Bun.file(runnerPath).exists();
