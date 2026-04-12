@@ -489,4 +489,30 @@ describe("editor operations", () => {
       expect(content).toContain("#### heading text");
     });
   }, 30000);
+
+  it("applies heading 5 via menu action", async () => {
+    await withTrace("editor-heading5", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("heading text");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("para-heading-5");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("##### heading text");
+    });
+  }, 30000);
+
+  it("applies heading 6 via menu action", async () => {
+    await withTrace("editor-heading6", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("heading text");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("para-heading-6");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("###### heading text");
+    });
+  }, 30000);
 });
