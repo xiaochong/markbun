@@ -260,4 +260,17 @@ describe("editor operations", () => {
       expect(content).toContain("~~strike me~~");
     });
   }, 30000);
+
+  it("applies blockquote via menu action", async () => {
+    await withTrace("editor-blockquote", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("quote me");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("para-quote");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("> quote me");
+    });
+  }, 30000);
 });
