@@ -338,4 +338,16 @@ describe("editor operations", () => {
       expect(content).toContain("```");
     });
   }, 30000);
+
+  it("inserts table via menu action", async () => {
+    await withTrace("editor-table", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("");
+      await editor.menuAction("table-insert");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("|");
+    });
+  }, 30000);
 });
