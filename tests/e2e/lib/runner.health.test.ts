@@ -48,4 +48,20 @@ describe("runner health", () => {
     expect(after.electrobun).toBeGreaterThanOrEqual(0);
     expect(after.cef).toBeGreaterThanOrEqual(0);
   }, 240000);
+
+  it("stopApp terminates the child process", async () => {
+    const { child, baselinePids } = await runApp();
+    expect(child.pid).toBeDefined();
+    await stopApp(child);
+    await cleanupZombies(baselinePids);
+
+    let alive = false;
+    try {
+      process.kill(child.pid!, 0);
+      alive = true;
+    } catch {
+      alive = false;
+    }
+    expect(alive).toBe(false);
+  }, 120000);
 });

@@ -278,6 +278,22 @@ describe("menu dispatch", () => {
     });
   }, 30000);
 
+  it("closes quick open by clicking backdrop", async () => {
+    await withTrace("menu-quick-open-backdrop", async () => {
+      const quickOpen = new QuickOpenPage(page!);
+      await quickOpen.open();
+      expect(await quickOpen.getResultCount()).toBeGreaterThan(0);
+
+      await page!.evaluate(`(() => {
+        const backdrop = document.querySelector('.fixed.inset-0.z-50.flex.items-start.justify-center');
+        if (backdrop) backdrop.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+      const count = await quickOpen.getResultCount();
+      expect(count).toBe(0);
+    });
+  }, 30000);
+
   it("opens file history via quick open command", async () => {
     await withTrace("menu-quick-open-file-history", async () => {
       const quickOpen = new QuickOpenPage(page!);

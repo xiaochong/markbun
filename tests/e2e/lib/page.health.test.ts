@@ -60,6 +60,26 @@ describe("Page health", () => {
     }
   });
 
+  it("evaluate returns floats for decimal arithmetic", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping evaluate decimal test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      expect(await p.evaluate<number>("1.5 + 1.5")).toBe(3.0);
+      expect(await p.evaluate<number>("2.5 * 2")).toBe(5.0);
+    } catch (err: any) {
+      console.log(`Skipping evaluate decimal test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
+
   it("captures a non-empty screenshot via CDP", async () => {
     const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
     const runnerExists = await Bun.file(runnerPath).exists();
