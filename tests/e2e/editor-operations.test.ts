@@ -300,4 +300,18 @@ describe("editor operations", () => {
       expect(content).toMatch(/\d+\. list me/);
     });
   }, 30000);
+
+  it("applies task list via menu action", async () => {
+    await withTrace("editor-task-list", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("task me");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("para-task-list");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("task me");
+      expect(content).toMatch(/[-*] \[ ] task me/);
+    });
+  }, 30000);
 });
