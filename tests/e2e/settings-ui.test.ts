@@ -80,4 +80,22 @@ describe("settings ui", () => {
       await settings.close();
     });
   }, 30000);
+
+  it("switches to backup tab in settings dialog", async () => {
+    await withTrace("settings-backup-tab", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+
+      await settings.switchTab("Backup");
+      await page!.evaluate(`(() => {
+        const dialog = document.querySelector('.z-50');
+        const text = dialog && dialog.textContent ? dialog.textContent : '';
+        if (!text.includes('Version History')) {
+          throw new Error('Backup tab content not found');
+        }
+      })()`);
+
+      await settings.close();
+    });
+  }, 30000);
 });
