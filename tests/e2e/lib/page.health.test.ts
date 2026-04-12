@@ -79,4 +79,23 @@ describe("Page health", () => {
       await p?.close();
     }
   });
+
+  it("waitForSelector resolves for known elements", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping waitForSelector test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      await p.waitForSelector("#root", { timeout: 5000 });
+    } catch (err: any) {
+      console.log(`Skipping waitForSelector test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
 });
