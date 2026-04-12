@@ -116,4 +116,22 @@ describe("settings ui", () => {
       await settings.close();
     });
   }, 30000);
+
+  it("switches to language tab in settings dialog", async () => {
+    await withTrace("settings-language-tab", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+
+      await settings.switchTab("Language");
+      await page!.evaluate(`(() => {
+        const dialog = document.querySelector('.z-50');
+        const text = dialog && dialog.textContent ? dialog.textContent : '';
+        if (!text.includes('Choose the display language')) {
+          throw new Error('Language tab content not found');
+        }
+      })()`);
+
+      await settings.close();
+    });
+  }, 30000);
 });
