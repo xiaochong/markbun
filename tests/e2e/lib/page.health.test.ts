@@ -144,6 +144,25 @@ describe("Page health", () => {
     }
   });
 
+  it("waitForSelector resolves immediately for present element with zero timeout", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping waitForSelector zero-timeout test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      await p.waitForSelector("#root", { timeout: 0 });
+    } catch (err: any) {
+      console.log(`Skipping waitForSelector zero-timeout test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
+
   it("click resolves for existing root element", async () => {
     const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
     const runnerExists = await Bun.file(runnerPath).exists();

@@ -1244,4 +1244,32 @@ describe("editor operations", () => {
       expect(content).toContain("**line2**");
     });
   }, 30000);
+
+  it("applies italic formatting to multi-line content", async () => {
+    await withTrace("editor-italic-multiline", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("line1\n\nline2");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("format-emphasis");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("*line1*");
+      expect(content).toContain("*line2*");
+    });
+  }, 30000);
+
+  it("applies blockquote to multi-line content", async () => {
+    await withTrace("editor-blockquote-multiline", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("a\n\nb");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("para-quote");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("> a");
+      expect(content).toContain("> b");
+    });
+  }, 30000);
 });
