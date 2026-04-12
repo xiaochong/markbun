@@ -95,4 +95,37 @@ describe("editor operations", () => {
       await new Promise((r) => setTimeout(r, 500));
     });
   }, 30000);
+
+  it("toggles toolbar via menu action", async () => {
+    await withTrace("editor-toggle-toolbar", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.menuAction("view-toggle-toolbar");
+      await new Promise((r) => setTimeout(r, 500));
+      const hasToolbar = await page!.evaluate<boolean>(
+        "Boolean(document.querySelector('.border-b.bg-background.select-none'))"
+      );
+      expect(hasToolbar).toBe(true);
+
+      await editor.menuAction("view-toggle-toolbar");
+      await new Promise((r) => setTimeout(r, 500));
+      const gone = await page!.evaluate<boolean>(
+        "Boolean(document.querySelector('.border-b.bg-background.select-none'))"
+      );
+      expect(gone).toBe(false);
+    });
+  }, 30000);
+
+  it("creates a new file via menu action", async () => {
+    await withTrace("editor-file-new", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("# Existing");
+      expect(await editor.getMarkdown()).toContain("Existing");
+      await editor.menuAction("file-new");
+      await new Promise((r) => setTimeout(r, 500));
+      const content = await editor.getMarkdown();
+      expect(content.trim()).toBe("");
+    });
+  }, 30000);
 });
