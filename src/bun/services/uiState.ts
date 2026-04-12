@@ -1,6 +1,6 @@
 import { readFile, writeFile, access, mkdir } from 'fs/promises';
 import { join } from 'path';
-import { homedir } from 'os';
+import { homedir } from './homedir';
 import type { SidebarTab } from '../../shared/types';
 
 export interface UIState {

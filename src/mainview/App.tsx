@@ -52,6 +52,7 @@ import {
 import type { FileNode, AppSettings, UIState, RecoveryInfo, MenuConfig, MenuItemConfig, SessionState } from '@/shared/types';
 import { AppMenuBar } from './components/menu';
 import type { AppMenuState } from './components/menu';
+import type { MarkbunTestAPI } from './lib/test-api';
 
 // Platform detection (constant at module level to avoid recomputation)
 const isWindows = navigator.platform.toLowerCase().includes('win');
@@ -96,6 +97,24 @@ function App() {
   useEffect(() => {
     sourceModeRef.current = sourceMode;
   }, [sourceMode]);
+
+  // Mount test API for E2E tests
+  useEffect(() => {
+    const testApi: MarkbunTestAPI = {
+      isEditorReady: () => Boolean(editorRef.current?.isReady),
+      getEditorMarkdown: () => editorRef.current?.getMarkdown() ?? '',
+      setEditorMarkdown: (text) => editorRef.current?.setMarkdown(text),
+      focusEditor: () => editorRef.current?.focus(),
+      menuAction: (action) => {
+        const listeners = (window as any).__electrobunListeners?.['menuAction'] || [];
+        listeners.forEach((cb: (data: unknown) => void) => cb({ action }));
+      },
+    };
+    (window as any).__markbunTestAPI = testApi;
+    return () => {
+      delete (window as any).__markbunTestAPI;
+    };
+  }, []);
 
   // Search bar state
   const [searchVisible, setSearchVisible] = useState(false);

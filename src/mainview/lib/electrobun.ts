@@ -21,6 +21,30 @@ const rpc = Electroview.defineRPC<MarkBunRPC>({
           return { success: false, error: err.message || String(err) };
         }
       },
+      getEditorMarkdown: async () => {
+        const testApi = (window as any).__markbunTestAPI;
+        if (!testApi?.getEditorMarkdown) {
+          return { success: false, error: 'Editor not ready' };
+        }
+        try {
+          const content = testApi.getEditorMarkdown();
+          return { success: true, content };
+        } catch (err: any) {
+          return { success: false, error: err.message || String(err) };
+        }
+      },
+      setEditorMarkdown: async ({ content }: { content: string }) => {
+        const testApi = (window as any).__markbunTestAPI;
+        if (!testApi?.setEditorMarkdown) {
+          return { success: false, error: 'Editor not ready' };
+        }
+        try {
+          testApi.setEditorMarkdown(content);
+          return { success: true };
+        } catch (err: any) {
+          return { success: false, error: err.message || String(err) };
+        }
+      },
     },
     messages: {
       fileOpened: ({ path, content }) => {
@@ -450,6 +474,47 @@ export const electrobun = {
       { success: boolean; session?: import('@/shared/types').AISessionData; error?: string };
   },
 
+  // Test-only RPCs (gated by MARKBUN_TEST=1 on the Bun side)
+  async _testMenuAction(action: string) {
+    return await electroview.rpc.request._testMenuAction({ action }) as
+      { success: boolean; error?: string };
+  },
+
+  async _testGetEditorMarkdown() {
+    return await electroview.rpc.request._testGetEditorMarkdown({}) as
+      { success: boolean; content?: string; error?: string };
+  },
+
+  async _testSetEditorMarkdown(content: string) {
+    return await electroview.rpc.request._testSetEditorMarkdown({ content }) as
+      { success: boolean; error?: string };
+  },
+
+  async _testInjectSettings(settings: AppSettings) {
+    return await electroview.rpc.request._testInjectSettings({ settings }) as
+      { success: boolean; error?: string };
+  },
+
+  async _testResetSettings() {
+    return await electroview.rpc.request._testResetSettings({}) as
+      { success: boolean; error?: string };
+  },
+
+  async _testClearRecovery() {
+    return await electroview.rpc.request._testClearRecovery({}) as
+      { success: boolean; error?: string };
+  },
+
+  async _testSimulateCrash(content: string, filePath?: string) {
+    return await electroview.rpc.request._testSimulateCrash({ content, filePath }) as
+      { success: boolean; error?: string };
+  },
+
+  async _testOpenFileByPath(path: string) {
+    return await electroview.rpc.request._testOpenFileByPath({ path }) as
+      { success: boolean; path?: string; content?: string; error?: string };
+  },
+
   // Subscribe to messages from main process
   on(event: string, callback: (data?: unknown) => void): () => void {
     const win = window as any;
@@ -467,3 +532,6 @@ export const electrobun = {
     };
   },
 };
+
+// Expose on window for E2E CDP tests
+(window as any).electrobun = electrobun;

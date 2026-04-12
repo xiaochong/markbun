@@ -7,7 +7,7 @@
 
 import { readFile, writeFile, access, mkdir, chmod } from 'fs/promises';
 import { join } from 'path';
-import { homedir } from 'os';
+import { homedir } from './homedir';
 
 const CONFIG_DIR = join(homedir(), '.config', 'markbun');
 const AI_KEYS_PATH = join(CONFIG_DIR, 'ai-keys.json');

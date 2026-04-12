@@ -2,7 +2,7 @@
 import { Utils } from 'electrobun/bun';
 import { readFile, writeFile, stat } from 'fs/promises';
 import { join } from 'path';
-import { homedir } from 'os';
+import { homedir } from '../services/homedir';
 
 export interface FileOpenResult {
   success: boolean;

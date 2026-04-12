@@ -12,6 +12,7 @@
 		"test": "bun test",
 		"test:watch": "bun test --watch",
 		"test:coverage": "bun test --coverage",
+		"test:e2e": "bun tests/e2e/lib/runner.ts",
 		"typecheck": "bash scripts/typecheck.sh",
 		"lint": "bun run typecheck && bun test && bun run scripts/validate-i18n.ts"
 	},

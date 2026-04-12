@@ -1,7 +1,7 @@
 // Recent files management for Phase 2
 import { readFile, writeFile, access, mkdir } from 'fs/promises';
 import { join, basename } from 'path';
-import { homedir } from 'os';
+import { homedir } from '../services/homedir';
 import type { RecentFile } from '../../shared/types';
 
 const MAX_RECENT_FILES = 20;

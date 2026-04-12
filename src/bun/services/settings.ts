@@ -1,6 +1,6 @@
 import { readFile, writeFile, access, mkdir } from 'fs/promises';
 import { join } from 'path';
-import { homedir } from 'os';
+import { homedir } from './homedir';
 import { settingsSchema, defaultSettings } from '../../shared/settings/schema';
 import type { Settings } from '../../shared/settings/schema';
 

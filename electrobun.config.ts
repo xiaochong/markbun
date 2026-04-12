@@ -13,6 +13,9 @@ export default {
 		version: "0.1.0",
 		urlSchemes: ["markbun"],
 	},
+	bun: {
+		entrypoint: 'src/bun/index.ts',
+	},
 	build: {
 		// Vite builds to dist/, we copy from there
 		copy: {

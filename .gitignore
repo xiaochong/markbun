@@ -8,3 +8,5 @@ CLAUDE.md
 .claude
 .DS_Store
 autoresearch-results.tsv
+tests/e2e/__traces__/
+files/

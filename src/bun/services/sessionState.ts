@@ -8,7 +8,7 @@
 
 import { readFile, writeFile, access, mkdir } from 'fs/promises';
 import { join } from 'path';
-import { homedir } from 'os';
+import { homedir } from './homedir';
 
 export interface SessionState {
   version: number;

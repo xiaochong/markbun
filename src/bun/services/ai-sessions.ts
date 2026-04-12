@@ -7,7 +7,7 @@
 
 import { readFile, writeFile, access, mkdir, unlink } from 'fs/promises';
 import { join } from 'path';
-import { homedir } from 'os';
+import { homedir } from './homedir';
 import { randomUUID } from 'crypto';
 
 // Re-use the frontend AIMessage shape (subset needed for persistence)

@@ -18,7 +18,7 @@ import {
   copyFile,
 } from 'fs/promises';
 import { join, dirname } from 'path';
-import { homedir } from 'os';
+import { homedir } from './homedir';
 import { createHash } from 'crypto';
 import { existsSync } from 'fs';
 import type { BackupEntry, BackupSettings, RecoveryInfo } from '../../shared/types';

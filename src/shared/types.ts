@@ -369,6 +369,16 @@ export type MarkBunRPC = {
       saveAISession: { params: { session: AISessionData }; response: { success: boolean; error?: string } };
       deleteAISession: { params: { id: string }; response: { success: boolean; error?: string } };
       getLatestAISession: { params: {}; response: { success: boolean; session?: AISessionData; error?: string } };
+
+      // Test-only RPCs (gated by MARKBUN_TEST=1)
+      _testMenuAction: { params: { action: string }; response: { success: boolean; error?: string } };
+      _testGetEditorMarkdown: { params: {}; response: { success: boolean; content?: string; error?: string } };
+      _testSetEditorMarkdown: { params: { content: string }; response: { success: boolean; error?: string } };
+      _testInjectSettings: { params: { settings: AppSettings }; response: { success: boolean; error?: string } };
+      _testResetSettings: { params: {}; response: { success: boolean; error?: string } };
+      _testClearRecovery: { params: {}; response: { success: boolean; error?: string } };
+      _testSimulateCrash: { params: { content: string; filePath?: string }; response: { success: boolean; error?: string } };
+      _testOpenFileByPath: { params: { path: string }; response: { success: boolean; path?: string; content?: string; error?: string } };
     };
     messages: {
       fileOpened: { path: string; content: string };
@@ -414,6 +424,8 @@ export type MarkBunRPC = {
   webview: RPCSchema<{
     requests: {
       executeAITool: { params: { tool: string; args?: string }; response: { success: boolean; result?: string; error?: string } };
+      getEditorMarkdown: { params: {}; response: { success: boolean; content?: string; error?: string } };
+      setEditorMarkdown: { params: { content: string }; response: { success: boolean; error?: string } };
     };
     messages: {};
   }>;

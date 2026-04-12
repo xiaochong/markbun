@@ -155,8 +155,7 @@ export async function expandFolder(folderPath: string): Promise<{ success: boole
  */
 export async function getWorkspaceRoot(): Promise<{ success: boolean; path?: string; error?: string }> {
   try {
-    const { homedir } = await import('os');
-    const { join } = await import('path');
+    const { homedir } = await import('../services/homedir');
     const path = join(homedir(), 'Documents');
     return { success: true, path };
   } catch (error) {

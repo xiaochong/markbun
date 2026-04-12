@@ -1,7 +1,7 @@
 // Command usage history persistence for the command palette
 import { readFile, writeFile, access, mkdir } from 'fs/promises';
 import { join } from 'path';
-import { homedir } from 'os';
+import { homedir } from '../services/homedir';
 
 const MAX_COMMAND_HISTORY = 30;
 const COMMAND_HISTORY_PATH = join(homedir(), '.config', 'markbun', 'command-history.json');
