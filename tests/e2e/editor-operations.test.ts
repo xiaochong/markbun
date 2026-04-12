@@ -1426,4 +1426,17 @@ describe("editor operations", () => {
       expect(content).not.toContain("## heading text");
     });
   }, 30000);
+
+  it("increases heading level on heading 6 stays at heading 6", async () => {
+    await withTrace("editor-increase-heading-h6", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("###### heading text");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("para-increase-heading");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("###### heading text");
+    });
+  }, 30000);
 });

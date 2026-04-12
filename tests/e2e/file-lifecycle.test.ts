@@ -414,4 +414,49 @@ describe("file lifecycle", () => {
       expect((await Bun.file(TEST_FILE).text()).trim()).toBe(content);
     });
   }, 60000);
+
+  it("saves markdown with bold content", async () => {
+    await withTrace("file-bold-save", async () => {
+      const editor = new EditorPage(page!);
+      const filesDir = join(WORKSPACE_DIR, "files");
+      await Bun.write(join(filesDir, ".keep"), "");
+      await editor.waitForReady();
+
+      const content = "# Bold\n\n**strong text**";
+      await editor.setMarkdown(content);
+      const saveResult = await editor.saveFile(TEST_FILE);
+      expect(saveResult.success).toBe(true);
+      expect((await Bun.file(TEST_FILE).text()).trim()).toBe(content);
+    });
+  }, 60000);
+
+  it("saves markdown with italic content", async () => {
+    await withTrace("file-italic-save", async () => {
+      const editor = new EditorPage(page!);
+      const filesDir = join(WORKSPACE_DIR, "files");
+      await Bun.write(join(filesDir, ".keep"), "");
+      await editor.waitForReady();
+
+      const content = "# Italic\n\n*emphasized text*";
+      await editor.setMarkdown(content);
+      const saveResult = await editor.saveFile(TEST_FILE);
+      expect(saveResult.success).toBe(true);
+      expect((await Bun.file(TEST_FILE).text()).trim()).toBe(content);
+    });
+  }, 60000);
+
+  it("saves markdown with blockquote content", async () => {
+    await withTrace("file-blockquote-save", async () => {
+      const editor = new EditorPage(page!);
+      const filesDir = join(WORKSPACE_DIR, "files");
+      await Bun.write(join(filesDir, ".keep"), "");
+      await editor.waitForReady();
+
+      const content = "# Quote\n\n> quoted text";
+      await editor.setMarkdown(content);
+      const saveResult = await editor.saveFile(TEST_FILE);
+      expect(saveResult.success).toBe(true);
+      expect((await Bun.file(TEST_FILE).text()).trim()).toBe(content);
+    });
+  }, 60000);
 });
