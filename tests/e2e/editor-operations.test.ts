@@ -367,4 +367,25 @@ describe("editor operations", () => {
       expect(afterUndo).not.toContain("**undo me**");
     });
   }, 30000);
+
+  it("redo restores undone formatting change", async () => {
+    await withTrace("editor-redo", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("redo me");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("format-strong");
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await editor.getMarkdown()).toContain("**redo me**");
+
+      await editor.menuAction("editor-undo");
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await editor.getMarkdown()).not.toContain("**redo me**");
+
+      await editor.menuAction("editor-redo");
+      await new Promise((r) => setTimeout(r, 300));
+      const afterRedo = await editor.getMarkdown();
+      expect(afterRedo).toContain("**redo me**");
+    });
+  }, 30000);
 });
