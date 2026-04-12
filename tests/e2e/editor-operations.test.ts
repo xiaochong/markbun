@@ -476,4 +476,17 @@ describe("editor operations", () => {
       expect(gone).toBe(false);
     });
   }, 30000);
+
+  it("applies heading 4 via menu action", async () => {
+    await withTrace("editor-heading4", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("heading text");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("para-heading-4");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("#### heading text");
+    });
+  }, 30000);
 });
