@@ -73,4 +73,26 @@ describe("editor operations", () => {
       expect(closed).toBe(true);
     });
   }, 30000);
+
+  it("toggles theme via menu action", async () => {
+    await withTrace("editor-toggle-theme", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      const before = await page!.evaluate<string>(
+        "document.documentElement.classList.contains('dark') ? 'dark' : 'light'"
+      );
+
+      await editor.menuAction("view-toggle-theme");
+      await new Promise((r) => setTimeout(r, 500));
+
+      const after = await page!.evaluate<string>(
+        "document.documentElement.classList.contains('dark') ? 'dark' : 'light'"
+      );
+      expect(after).not.toBe(before);
+
+      // Toggle back to restore original theme
+      await editor.menuAction("view-toggle-theme");
+      await new Promise((r) => setTimeout(r, 500));
+    });
+  }, 30000);
 });
