@@ -590,4 +590,61 @@ describe("editor operations", () => {
       expect(content.trim()).toBe("heading text");
     });
   }, 30000);
+
+  it("opens image insert dialog via menu action", async () => {
+    await withTrace("editor-image-dialog", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.menuAction("format-image");
+      await new Promise((r) => setTimeout(r, 300));
+      const hasDialog = await page!.evaluate<boolean>(
+        `(() => {
+          const body = document.body.innerText || '';
+          return body.includes('Insert Image');
+        })()`
+      );
+      expect(hasDialog).toBe(true);
+
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('button'));
+        const cancelBtn = buttons.find((b) => (b.textContent || '').trim() === 'Cancel');
+        if (cancelBtn) cancelBtn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+      const gone = await page!.evaluate<boolean>(
+        `(() => {
+          const body = document.body.innerText || '';
+          return body.includes('Insert Image');
+        })()`
+      );
+      expect(gone).toBe(false);
+    });
+  }, 30000);
+
+  it("increases heading level via menu action", async () => {
+    await withTrace("editor-increase-heading", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("## heading text");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("para-increase-heading");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("# heading text");
+      expect(content).not.toContain("## heading text");
+    });
+  }, 30000);
+
+  it("decreases heading level via menu action", async () => {
+    await withTrace("editor-decrease-heading", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("# heading text");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("para-decrease-heading");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("## heading text");
+    });
+  }, 30000);
 });
