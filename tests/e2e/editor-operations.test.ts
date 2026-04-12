@@ -247,4 +247,17 @@ describe("editor operations", () => {
       expect(content).toContain("`code me`");
     });
   }, 30000);
+
+  it("applies strikethrough formatting via menu action", async () => {
+    await withTrace("editor-strikethrough", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("strike me");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("format-strikethrough");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("~~strike me~~");
+    });
+  }, 30000);
 });
