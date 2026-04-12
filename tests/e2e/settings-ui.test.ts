@@ -98,4 +98,22 @@ describe("settings ui", () => {
       await settings.close();
     });
   }, 30000);
+
+  it("switches to AI tab in settings dialog", async () => {
+    await withTrace("settings-ai-tab", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+
+      await settings.switchTab("AI");
+      await page!.evaluate(`(() => {
+        const dialog = document.querySelector('.z-50');
+        const text = dialog && dialog.textContent ? dialog.textContent : '';
+        if (!text.includes('AI Assistant')) {
+          throw new Error('AI tab content not found');
+        }
+      })()`);
+
+      await settings.close();
+    });
+  }, 30000);
 });
