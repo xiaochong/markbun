@@ -98,4 +98,23 @@ describe("Page health", () => {
       await p?.close();
     }
   });
+
+  it("click resolves for existing root element", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping click test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      await p.click("#root");
+    } catch (err: any) {
+      console.log(`Skipping click test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
 });

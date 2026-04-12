@@ -83,4 +83,19 @@ describe("file lifecycle", () => {
       expect((await file.text()).trim()).toBe(unicodeContent);
     });
   }, 60000);
+
+  it("saves empty markdown file", async () => {
+    await withTrace("file-empty-save", async () => {
+      const editor = new EditorPage(page!);
+      const filesDir = join(WORKSPACE_DIR, "files");
+      await Bun.write(join(filesDir, ".keep"), "");
+      await editor.waitForReady();
+      await editor.setMarkdown("");
+      const saveResult = await editor.saveFile(TEST_FILE);
+      expect(saveResult.success).toBe(true);
+      const file = Bun.file(TEST_FILE);
+      expect(await file.exists()).toBe(true);
+      expect((await file.text()).trim()).toBe("");
+    });
+  }, 60000);
 });
