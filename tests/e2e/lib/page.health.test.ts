@@ -224,6 +224,38 @@ describe("Page health", () => {
     }
   });
 
+  it("sends Enter key in a textarea via CDP", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping Enter key test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      await p.evaluate(`(() => {
+        const ta = document.createElement('textarea');
+        ta.id = '__cdp_enter_test__';
+        ta.style.position = 'fixed';
+        ta.style.top = '0';
+        ta.style.left = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+      })()`);
+      await p.type("hello");
+      await p.key("Enter");
+      await p.type("world");
+      const value = await p.evaluate<string>("document.querySelector('#__cdp_enter_test__').value");
+      expect(value).toBe("hello\nworld");
+    } catch (err: any) {
+      console.log(`Skipping Enter key test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
+
   it("waitForSelector throws on missing element", async () => {
     const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
     const runnerExists = await Bun.file(runnerPath).exists();

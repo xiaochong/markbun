@@ -1198,4 +1198,36 @@ describe("editor operations", () => {
       expect(afterRedos).toContain("***original***");
     });
   }, 30000);
+
+  it("handles setting empty markdown after formatting", async () => {
+    await withTrace("editor-empty-after-format", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("formatted");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("format-strong");
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await editor.getMarkdown()).toContain("**formatted**");
+
+      await editor.setMarkdown("");
+      const content = await editor.getMarkdown();
+      expect(content.trim()).toBe("");
+    });
+  }, 30000);
+
+  it("handles setting whitespace markdown after formatting", async () => {
+    await withTrace("editor-whitespace-after-format", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("formatted");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("format-strong");
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await editor.getMarkdown()).toContain("**formatted**");
+
+      await editor.setMarkdown("   \n  ");
+      const content = await editor.getMarkdown();
+      expect(content.trim()).toBe("");
+    });
+  }, 30000);
 });
