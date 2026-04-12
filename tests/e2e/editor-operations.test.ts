@@ -1439,4 +1439,17 @@ describe("editor operations", () => {
       expect(content).toContain("###### heading text");
     });
   }, 30000);
+
+  it("increases heading level on paragraph converts to heading 1", async () => {
+    await withTrace("editor-increase-heading-paragraph", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("paragraph text");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("para-increase-heading");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("# paragraph text");
+    });
+  }, 30000);
 });

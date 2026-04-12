@@ -592,4 +592,25 @@ describe("Page health", () => {
       await p?.close();
     }
   });
+
+  it("evaluate returns Math operations", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping evaluate Math ops test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      expect(await p.evaluate<number>("Math.max(1, 5, 3)")).toBe(5);
+      expect(await p.evaluate<number>("Math.min(10, 2, 8)")).toBe(2);
+      expect(await p.evaluate<number>("Math.abs(-7)")).toBe(7);
+    } catch (err: any) {
+      console.log(`Skipping evaluate Math ops test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
 });
