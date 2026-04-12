@@ -65,4 +65,22 @@ describe("file lifecycle", () => {
       expect(restoredContent.trim()).toBe("# Hello MarkBun");
     });
   }, 120000);
+
+  it("saves unicode markdown content to disk", async () => {
+    await withTrace("file-unicode-save", async () => {
+      const editor = new EditorPage(page!);
+      const filesDir = join(WORKSPACE_DIR, "files");
+      await Bun.write(join(filesDir, ".keep"), "");
+      await editor.waitForReady();
+
+      const unicodeContent = "# 你好世界 \uD83C\uDF0D";
+      await editor.setMarkdown(unicodeContent);
+      const saveResult = await editor.saveFile(TEST_FILE);
+      expect(saveResult.success).toBe(true);
+
+      const file = Bun.file(TEST_FILE);
+      expect(await file.exists()).toBe(true);
+      expect((await file.text()).trim()).toBe(unicodeContent);
+    });
+  }, 60000);
 });
