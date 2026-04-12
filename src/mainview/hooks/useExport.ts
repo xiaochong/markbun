@@ -109,6 +109,17 @@ function postProcessMathBlocks(html: string): string {
         p.replaceWith(div);
       }
     });
+    // Also turn fenced latex blocks into math-block wrappers so renderMathInElement handles them
+    doc.querySelectorAll('pre code').forEach((code) => {
+      if (!/language-(latex|tex)/i.test((code as Element).className)) return;
+      const pre = code.parentElement;
+      if (!pre) return;
+      const latex = (code.textContent || '').trim();
+      const div = doc.createElement('div');
+      div.className = 'math-block';
+      div.textContent = '$$' + latex + '$$';
+      pre.replaceWith(div);
+    });
     return doc.body.innerHTML;
   } catch {
     return html;
@@ -162,9 +173,10 @@ ${processedHtml}
       mermaid.initialize({ startOnLoad: false, htmlLabels: false });
       mermaid.run({ querySelector: '.language-mermaid, .mermaid' });
     }
-    // Render latex code blocks (display math)
-    document.querySelectorAll('pre code.language-latex').forEach((code) => {
+    // Render latex code blocks (display math) – case-insensitive match for language-latex / language-LaTeX / language-tex
+    document.querySelectorAll('pre code').forEach((code) => {
       if (typeof katex === 'undefined') return;
+      if (!/language-(latex|tex)/i.test(code.className)) return;
       const latex = code.textContent || '';
       const pre = code.parentElement;
       if (!pre) return;
@@ -330,8 +342,10 @@ ${processedHtml}
         };
         walkTextNodes(contentDiv);
 
-        // Render latex code blocks (display math)
-        const latexBlocks = Array.from(contentDiv.querySelectorAll('pre code.language-latex'));
+        // Render fenced latex code blocks (display math) – case-insensitive match
+        const latexBlocks = Array.from(contentDiv.querySelectorAll('pre code')).filter(
+          (code) => /language-(latex|tex)/i.test((code as Element).className)
+        );
         latexBlocks.forEach((code) => {
           const latex = code.textContent || '';
           const pre = code.parentElement;
@@ -343,6 +357,22 @@ ${processedHtml}
             pre.replaceWith(div);
           } catch {
             // Ignore render errors so one bad block doesn't break the export
+          }
+        });
+
+        // Fallback: render <p>$$...$$</p> that walkTextNodes may have missed
+        Array.from(contentDiv.querySelectorAll('p')).forEach((p) => {
+          const text = p.textContent?.trim() ?? '';
+          if (text.startsWith('$$') && text.endsWith('$$')) {
+            const latex = text.slice(2, -2).trim();
+            const div = iframeDoc.createElement('div');
+            div.className = 'katex-display';
+            try {
+              katex.render(latex, div, { throwOnError: false, displayMode: true });
+              p.replaceWith(div);
+            } catch {
+              // Ignore render errors
+            }
           }
         });
       }
