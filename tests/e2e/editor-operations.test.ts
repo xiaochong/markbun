@@ -273,4 +273,18 @@ describe("editor operations", () => {
       expect(content).toContain("> quote me");
     });
   }, 30000);
+
+  it("applies unordered list via menu action", async () => {
+    await withTrace("editor-unordered-list", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("list me");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("para-unordered-list");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("list me");
+      expect(content).toMatch(/[-*] list me/);
+    });
+  }, 30000);
 });
