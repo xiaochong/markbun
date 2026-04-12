@@ -343,4 +343,23 @@ describe("menu dispatch", () => {
       expect(await dialog.isDialogOpen()).toBe(false);
     });
   }, 30000);
+
+  it("closes file history dialog by clicking backdrop", async () => {
+    await withTrace("menu-file-history-backdrop", async () => {
+      const dialog = new DialogPage(page!);
+      await page!.evaluate(`(() => {
+        const listeners = window.__electrobunListeners && window.__electrobunListeners['open-file-history'] || [];
+        listeners.forEach((cb) => cb());
+      })()`);
+      await dialog.waitForDialogContaining("File History");
+      expect(await dialog.isDialogOpen()).toBe(true);
+
+      await page!.evaluate(`(() => {
+        const backdrop = document.querySelector('.fixed.inset-0.z-50.flex.items-center.justify-center.bg-black\\/50');
+        if (backdrop) backdrop.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await dialog.isDialogOpen()).toBe(false);
+    });
+  }, 30000);
 });

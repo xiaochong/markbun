@@ -339,4 +339,19 @@ describe("file lifecycle", () => {
       expect((await Bun.file(TEST_FILE).text()).trim()).toBe(content);
     });
   }, 60000);
+
+  it("saves markdown with task list", async () => {
+    await withTrace("file-task-list", async () => {
+      const editor = new EditorPage(page!);
+      const filesDir = join(WORKSPACE_DIR, "files");
+      await Bun.write(join(filesDir, ".keep"), "");
+      await editor.waitForReady();
+
+      const content = "# Tasks\n\n- [ ] todo\n- [x] done";
+      await editor.setMarkdown(content);
+      const saveResult = await editor.saveFile(TEST_FILE);
+      expect(saveResult.success).toBe(true);
+      expect((await Bun.file(TEST_FILE).text()).trim()).toBe(content);
+    });
+  }, 60000);
 });

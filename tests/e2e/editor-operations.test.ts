@@ -1300,4 +1300,32 @@ describe("editor operations", () => {
       expect(content).toContain("==line2==");
     });
   }, 30000);
+
+  it("applies inline code formatting to multi-line content", async () => {
+    await withTrace("editor-inline-code-multiline", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("line1\n\nline2");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("format-code");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("`line1`");
+      expect(content).toContain("`line2`");
+    });
+  }, 30000);
+
+  it("applies ordered list to multi-line content", async () => {
+    await withTrace("editor-ordered-list-multiline", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("a\n\nb");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("para-ordered-list");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toMatch(/\d+\.\s*a/);
+      expect(content).toMatch(/\d+\.\s*b/);
+    });
+  }, 30000);
 });

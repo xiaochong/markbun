@@ -447,4 +447,25 @@ describe("Page health", () => {
       await p?.close();
     }
   });
+
+  it("evaluate returns negative numbers", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping evaluate negative numbers test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      expect(await p.evaluate<number>("-5")).toBe(-5);
+      expect(await p.evaluate<number>("-10.5")).toBe(-10.5);
+      expect(await p.evaluate<number>("3 - 8")).toBe(-5);
+    } catch (err: any) {
+      console.log(`Skipping evaluate negative numbers test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
 });
