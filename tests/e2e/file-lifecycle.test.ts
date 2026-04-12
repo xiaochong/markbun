@@ -231,4 +231,22 @@ describe("file lifecycle", () => {
       await new Promise((r) => setTimeout(r, 500));
     });
   }, 60000);
+
+  it("saves whitespace-only markdown file", async () => {
+    await withTrace("file-whitespace-save", async () => {
+      const editor = new EditorPage(page!);
+      const filesDir = join(WORKSPACE_DIR, "files");
+      await Bun.write(join(filesDir, ".keep"), "");
+      await editor.waitForReady();
+
+      await editor.setMarkdown("   \n\n   ");
+      const saveResult = await editor.saveFile(TEST_FILE);
+      expect(saveResult.success).toBe(true);
+
+      const file = Bun.file(TEST_FILE);
+      expect(await file.exists()).toBe(true);
+      const saved = await file.text();
+      expect(saved.trim()).toBe("");
+    });
+  }, 60000);
 });

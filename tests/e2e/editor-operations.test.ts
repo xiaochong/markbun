@@ -1080,4 +1080,49 @@ describe("editor operations", () => {
       await new Promise((r) => setTimeout(r, 300));
     });
   }, 30000);
+
+  it("select-all in source mode does not break editor", async () => {
+    await withTrace("editor-source-select-all", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.menuAction("view-toggle-source-mode");
+      await new Promise((r) => setTimeout(r, 500));
+      await editor.menuAction("editor-select-all");
+      await new Promise((r) => setTimeout(r, 300));
+      await editor.menuAction("view-toggle-source-mode");
+      await new Promise((r) => setTimeout(r, 500));
+      const hasMilkdown = await page!.evaluate<boolean>(
+        "Boolean(document.querySelector('.ProseMirror'))"
+      );
+      expect(hasMilkdown).toBe(true);
+    });
+  }, 30000);
+
+  it("increase heading at h1 stays at h1", async () => {
+    await withTrace("editor-increase-heading-h1-cap", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("# heading text");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("para-increase-heading");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("# heading text");
+      expect(content).not.toContain("## heading text");
+    });
+  }, 30000);
+
+  it("decrease heading on paragraph keeps paragraph", async () => {
+    await withTrace("editor-decrease-heading-paragraph-floor", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("plain text");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("para-decrease-heading");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content.trim()).toBe("plain text");
+      expect(content).not.toContain("# plain text");
+    });
+  }, 30000);
 });

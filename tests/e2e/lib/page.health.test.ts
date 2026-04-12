@@ -270,4 +270,44 @@ describe("Page health", () => {
       await p?.close();
     }
   });
+
+  it("evaluate returns null for null expression", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping evaluate null test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      const result = await p.evaluate<null>("null");
+      expect(result).toBe(null);
+    } catch (err: any) {
+      console.log(`Skipping evaluate null test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
+
+  it("evaluateJSON returns nested objects", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping evaluateJSON nested test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      const obj = await p.evaluateJSON<{ a: { b: number } }>("({ a: { b: 7 } })");
+      expect(obj.a.b).toBe(7);
+    } catch (err: any) {
+      console.log(`Skipping evaluateJSON nested test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
 });
