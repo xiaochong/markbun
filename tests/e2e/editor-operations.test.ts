@@ -287,4 +287,17 @@ describe("editor operations", () => {
       expect(content).toMatch(/[-*] list me/);
     });
   }, 30000);
+
+  it("applies ordered list via menu action", async () => {
+    await withTrace("editor-ordered-list", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("list me");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("para-ordered-list");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toMatch(/\d+\. list me/);
+    });
+  }, 30000);
 });
