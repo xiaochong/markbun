@@ -59,4 +59,18 @@ describe("menu dispatch", () => {
       await new Promise((r) => setTimeout(r, 300));
     });
   }, 30000);
+
+  it("quick open shows recommended commands by default", async () => {
+    await withTrace("menu-quick-open-defaults", async () => {
+      const quickOpen = new QuickOpenPage(page!);
+      await quickOpen.open();
+      const count = await quickOpen.getResultCount();
+      expect(count).toBeGreaterThan(0);
+      await page!.evaluate(`(() => {
+        const backdrop = document.querySelector('.fixed.inset-0.z-50.flex.items-start.justify-center');
+        if (backdrop) backdrop.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+    });
+  }, 30000);
 });

@@ -47,4 +47,30 @@ describe("editor operations", () => {
       expect(content.trim()).toBe("");
     });
   }, 30000);
+
+  it("toggles sidebar via menu action", async () => {
+    await withTrace("editor-toggle-sidebar", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.menuAction("view-toggle-sidebar");
+      await new Promise((r) => setTimeout(r, 500));
+      const hasSidebar = await page!.evaluate<boolean>(
+        `(() => {
+          const sidebar = document.querySelector('.flex.h-full.flex-shrink-0.transition-all');
+          return sidebar ? (sidebar as HTMLElement).offsetWidth > 0 : false;
+        })()`
+      );
+      expect(hasSidebar).toBe(true);
+
+      await editor.menuAction("view-toggle-sidebar");
+      await new Promise((r) => setTimeout(r, 500));
+      const closed = await page!.evaluate<boolean>(
+        `(() => {
+          const sidebar = document.querySelector('.flex.h-full.flex-shrink-0.transition-all');
+          return sidebar ? (sidebar as HTMLElement).offsetWidth === 0 : true;
+        })()`
+      );
+      expect(closed).toBe(true);
+    });
+  }, 30000);
 });
