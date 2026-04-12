@@ -791,4 +791,58 @@ describe("editor operations", () => {
       expect(after).not.toContain("|");
     });
   }, 30000);
+
+  it("inserts table row above via menu action", async () => {
+    await withTrace("editor-table-row-above", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("");
+      await editor.menuAction("table-insert");
+      await new Promise((r) => setTimeout(r, 500));
+      const before = await editor.getMarkdown();
+
+      await page!.click("table td");
+      await new Promise((r) => setTimeout(r, 200));
+      await editor.menuAction("table-insert-row-above");
+      await new Promise((r) => setTimeout(r, 300));
+      const after = await editor.getMarkdown();
+      expect(after.split("|").length).toBeGreaterThan(before.split("|").length);
+    });
+  }, 30000);
+
+  it("inserts table column left via menu action", async () => {
+    await withTrace("editor-table-col-left", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("");
+      await editor.menuAction("table-insert");
+      await new Promise((r) => setTimeout(r, 500));
+      const before = await editor.getMarkdown();
+
+      await page!.click("table td");
+      await new Promise((r) => setTimeout(r, 200));
+      await editor.menuAction("table-insert-col-left");
+      await new Promise((r) => setTimeout(r, 300));
+      const after = await editor.getMarkdown();
+      expect(after.split("|").length).toBeGreaterThan(before.split("|").length);
+    });
+  }, 30000);
+
+  it("deletes table column via menu action", async () => {
+    await withTrace("editor-table-delete-col", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("");
+      await editor.menuAction("table-insert");
+      await new Promise((r) => setTimeout(r, 500));
+      const before = await editor.getMarkdown();
+
+      await page!.click("table td");
+      await new Promise((r) => setTimeout(r, 200));
+      await editor.menuAction("table-delete-col");
+      await new Promise((r) => setTimeout(r, 300));
+      const after = await editor.getMarkdown();
+      expect(after.split("|").length).toBeLessThan(before.split("|").length);
+    });
+  }, 30000);
 });

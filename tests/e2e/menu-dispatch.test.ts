@@ -164,4 +164,19 @@ describe("menu dispatch", () => {
       await new Promise((r) => setTimeout(r, 300));
     });
   }, 30000);
+
+  it("opens file history dialog via menu action", async () => {
+    await withTrace("menu-file-history", async () => {
+      const dialog = new DialogPage(page!);
+      await page!.evaluate(`(() => {
+        const listeners = window.__electrobunListeners && window.__electrobunListeners['open-file-history'] || [];
+        listeners.forEach((cb) => cb());
+      })()`);
+      await dialog.waitForDialogContaining("File History");
+      expect(await dialog.isDialogOpen()).toBe(true);
+      await dialog.clickButton("Close");
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await dialog.isDialogOpen()).toBe(false);
+    });
+  }, 30000);
 });
