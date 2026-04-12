@@ -314,4 +314,16 @@ describe("editor operations", () => {
       expect(content).toMatch(/[-*] \[ ] task me/);
     });
   }, 30000);
+
+  it("inserts horizontal rule via menu action", async () => {
+    await withTrace("editor-hr", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("before");
+      await editor.menuAction("para-horizontal-rule");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("---");
+    });
+  }, 30000);
 });
