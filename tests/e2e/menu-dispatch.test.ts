@@ -73,4 +73,28 @@ describe("menu dispatch", () => {
       await new Promise((r) => setTimeout(r, 300));
     });
   }, 30000);
+
+  it("reopens about dialog after closing", async () => {
+    await withTrace("menu-about-reopen", async () => {
+      const dialog = new DialogPage(page!);
+      await page!.evaluate(`(() => {
+        const listeners = window.__electrobunListeners && window.__electrobunListeners['show-about'] || [];
+        listeners.forEach((cb) => cb());
+      })()`);
+      await dialog.waitForDialogContaining("MarkBun");
+      await dialog.clickButton("OK");
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await dialog.isDialogOpen()).toBe(false);
+
+      await page!.evaluate(`(() => {
+        const listeners = window.__electrobunListeners && window.__electrobunListeners['show-about'] || [];
+        listeners.forEach((cb) => cb());
+      })()`);
+      await dialog.waitForDialogContaining("MarkBun");
+      expect(await dialog.isDialogOpen()).toBe(true);
+      await dialog.clickButton("OK");
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await dialog.isDialogOpen()).toBe(false);
+    });
+  }, 30000);
 });
