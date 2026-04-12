@@ -453,4 +453,27 @@ describe("editor operations", () => {
       expect(content).toContain("### heading text");
     });
   }, 30000);
+
+  it("toggles search bar via menu action", async () => {
+    await withTrace("editor-toggle-searchbar", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.menuAction("edit-find");
+      await new Promise((r) => setTimeout(r, 300));
+      const hasSearchBar = await page!.evaluate<boolean>(
+        `Boolean(document.querySelector('input[placeholder="Find"]'))`
+      );
+      expect(hasSearchBar).toBe(true);
+
+      await page!.evaluate(`(() => {
+        const btn = document.querySelector('.flex.flex-col.border-b.border-border.bg-background.px-3.py-2.text-sm button:last-child');
+        if (btn) (btn as HTMLElement).click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+      const gone = await page!.evaluate<boolean>(
+        `Boolean(document.querySelector('input[placeholder="Find"]'))`
+      );
+      expect(gone).toBe(false);
+    });
+  }, 30000);
 });
