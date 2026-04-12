@@ -195,4 +195,17 @@ describe("editor operations", () => {
       expect(gone).toBe(false);
     });
   }, 30000);
+
+  it("applies bold formatting via menu action", async () => {
+    await withTrace("editor-bold", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("bold me");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("format-strong");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("**bold me**");
+    });
+  }, 30000);
 });
