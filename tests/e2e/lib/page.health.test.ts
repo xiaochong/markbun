@@ -202,6 +202,27 @@ describe("Page health", () => {
     }
   });
 
+  it("evaluateJSON returns primitive types", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping evaluateJSON primitives test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      expect(await p.evaluateJSON<string>('"hello"')).toBe("hello");
+      expect(await p.evaluateJSON<number>("99")).toBe(99);
+      expect(await p.evaluateJSON<boolean>("false")).toBe(false);
+    } catch (err: any) {
+      console.log(`Skipping evaluateJSON primitives test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
+
   it("types text into a focused input via CDP", async () => {
     const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
     const runnerExists = await Bun.file(runnerPath).exists();

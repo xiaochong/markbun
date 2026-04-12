@@ -324,4 +324,19 @@ describe("file lifecycle", () => {
       expect((await Bun.file(TEST_FILE).text()).trim()).toBe(content);
     });
   }, 60000);
+
+  it("saves markdown with multiple headings", async () => {
+    await withTrace("file-multiple-headings", async () => {
+      const editor = new EditorPage(page!);
+      const filesDir = join(WORKSPACE_DIR, "files");
+      await Bun.write(join(filesDir, ".keep"), "");
+      await editor.waitForReady();
+
+      const content = "# H1\n\n## H2\n\n### H3";
+      await editor.setMarkdown(content);
+      const saveResult = await editor.saveFile(TEST_FILE);
+      expect(saveResult.success).toBe(true);
+      expect((await Bun.file(TEST_FILE).text()).trim()).toBe(content);
+    });
+  }, 60000);
 });

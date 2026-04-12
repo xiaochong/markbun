@@ -309,6 +309,21 @@ describe("menu dispatch", () => {
     });
   }, 30000);
 
+  it("quick open returns zero results for unmatched partial query", async () => {
+    await withTrace("menu-quick-open-unmatched-partial", async () => {
+      const quickOpen = new QuickOpenPage(page!);
+      await quickOpen.open();
+      await quickOpen.typeQuery("Xyz");
+      const count = await quickOpen.getResultCount();
+      expect(count).toBe(0);
+      await page!.evaluate(`(() => {
+        const backdrop = document.querySelector('.fixed.inset-0.z-50.flex.items-start.justify-center');
+        if (backdrop) backdrop.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+    });
+  }, 30000);
+
   it("opens file history via quick open command", async () => {
     await withTrace("menu-quick-open-file-history", async () => {
       const quickOpen = new QuickOpenPage(page!);
