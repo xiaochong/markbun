@@ -295,10 +295,67 @@ MarkBun uses **Bun's built-in test runner** for all unit tests.
 
 **Run Tests:**
 ```bash
-bun test              # Run all tests once
+bun test              # Run all unit tests once
 bun run test          # Same as above
 bun run test:watch    # Run tests in watch mode
 bun run test:coverage # Run tests with coverage report
+bun run test:e2e      # Run end-to-end tests (spawns real app)
+```
+
+### E2E Testing
+
+MarkBun uses CDP (Chrome DevTools Protocol) to drive a real Electrobun instance for end-to-end tests.
+
+**Quick start:**
+```bash
+bun run test:e2e
+```
+
+**Key files:**
+- `tests/e2e/lib/runner.ts` — App lifecycle (spawn, CDP polling, teardown)
+- `tests/e2e/lib/page.ts` — Playwright-like CDP API (`evaluate`, `click`, `type`, `waitForSelector`, `screenshot`)
+- `tests/e2e/lib/page-objects/` — Reusable page objects (`EditorPage`, `SettingsPage`, `DialogPage`, `QuickOpenPage`)
+- `tests/e2e-setup.ts` — Global `beforeAll` / `afterAll`
+
+**How to add a new E2E test:**
+
+The best practice example is `tests/e2e/file-lifecycle.test.ts`. Follow this pattern:
+
+1. **Use `withTrace`** to wrap the test body — failures automatically collect screenshots + DOM snapshots.
+2. **Use Page Objects** instead of raw CDP selectors.
+3. **Wait for editor ready** before editor assertions (`await editor.waitForReady()`).
+4. **Avoid `?.` optional chaining** inside `evaluate()` strings — CEF's Chromium doesn't support it. Use `&&` short-circuit instead.
+5. **Use `_testMenuAction`** or `__electrobunListeners` to trigger native menu actions that can't be clicked via CDP.
+6. **Use `process.env.MARKBUN_E2E_HOME`** for any filesystem paths — the runner provides an isolated temp workspace.
+
+Skeleton:
+```typescript
+import { describe, it, expect } from "bun:test";
+import { page } from "../e2e-setup";
+import { EditorPage } from "./lib/page-objects/EditorPage";
+import { collectTrace } from "./lib/trace";
+
+const WORKSPACE_DIR = process.env.MARKBUN_E2E_HOME || "";
+
+async function withTrace<T>(testName: string, fn: () => Promise<T>): Promise<T> {
+  try { return await fn(); }
+  catch (err) {
+    const traceDir = await collectTrace(testName, { page: page!, workspaceDir: WORKSPACE_DIR });
+    console.log(`[trace] Saved to ${traceDir}`);
+    throw err;
+  }
+}
+
+describe("my feature", () => {
+  it("does something end-to-end", async () => {
+    await withTrace("my-feature", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("# Hello");
+      // assert, interact, etc.
+    });
+  }, 60000);
+});
 ```
 
 ### Test File Organization
