@@ -398,4 +398,140 @@ describe("menu dispatch", () => {
       expect(hasReplaceInput).toBe(true);
     });
   }, 30000);
+
+  it("toggles sidebar via quick open command", async () => {
+    await withTrace("menu-quick-open-sidebar", async () => {
+      const quickOpen = new QuickOpenPage(page!);
+      await quickOpen.open();
+      await quickOpen.typeQuery("Sidebar");
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('[data-palette-index]'));
+        const btn = buttons.find((b) => (b.textContent || '').includes('Sidebar'));
+        if (btn) btn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 500));
+      const hasSidebar = await page!.evaluate<boolean>(
+        `(() => {
+          const sidebar = document.querySelector('.flex.h-full.flex-shrink-0.transition-all');
+          return sidebar ? (sidebar as HTMLElement).offsetWidth > 0 : false;
+        })()`
+      );
+      expect(hasSidebar).toBe(true);
+
+      await quickOpen.open();
+      await quickOpen.typeQuery("Sidebar");
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('[data-palette-index]'));
+        const btn = buttons.find((b) => (b.textContent || '').includes('Sidebar'));
+        if (btn) btn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 500));
+      const gone = await page!.evaluate<boolean>(
+        `(() => {
+          const sidebar = document.querySelector('.flex.h-full.flex-shrink-0.transition-all');
+          return sidebar ? (sidebar as HTMLElement).offsetWidth > 0 : false;
+        })()`
+      );
+      expect(gone).toBe(false);
+    });
+  }, 30000);
+
+  it("toggles toolbar via quick open command", async () => {
+    await withTrace("menu-quick-open-toolbar", async () => {
+      const quickOpen = new QuickOpenPage(page!);
+      await quickOpen.open();
+      await quickOpen.typeQuery("Tool Bar");
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('[data-palette-index]'));
+        const btn = buttons.find((b) => (b.textContent || '').includes('Tool Bar'));
+        if (btn) btn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 500));
+      const hasToolbar = await page!.evaluate<boolean>(
+        `Boolean(document.querySelector('.border-b.bg-background.select-none'))`
+      );
+      expect(hasToolbar).toBe(true);
+
+      await quickOpen.open();
+      await quickOpen.typeQuery("Tool Bar");
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('[data-palette-index]'));
+        const btn = buttons.find((b) => (b.textContent || '').includes('Tool Bar'));
+        if (btn) btn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 500));
+      const gone = await page!.evaluate<boolean>(
+        `Boolean(document.querySelector('.border-b.bg-background.select-none'))`
+      );
+      expect(gone).toBe(false);
+    });
+  }, 30000);
+
+  it("toggles status bar via quick open command", async () => {
+    await withTrace("menu-quick-open-statusbar", async () => {
+      const quickOpen = new QuickOpenPage(page!);
+      await quickOpen.open();
+      await quickOpen.typeQuery("Status Bar");
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('[data-palette-index]'));
+        const btn = buttons.find((b) => (b.textContent || '').includes('Status Bar'));
+        if (btn) btn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 500));
+      const hasStatusBar = await page!.evaluate<boolean>(
+        `Boolean(document.querySelector('.flex.items-center.justify-between.px-4.py-1.border-t.bg-background'))`
+      );
+      expect(hasStatusBar).toBe(true);
+
+      await quickOpen.open();
+      await quickOpen.typeQuery("Status Bar");
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('[data-palette-index]'));
+        const btn = buttons.find((b) => (b.textContent || '').includes('Status Bar'));
+        if (btn) btn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 500));
+      const gone = await page!.evaluate<boolean>(
+        `Boolean(document.querySelector('.flex.items-center.justify-between.px-4.py-1.border-t.bg-background'))`
+      );
+      expect(gone).toBe(false);
+    });
+  }, 30000);
+
+  it("toggles AI panel via quick open command", async () => {
+    await withTrace("menu-quick-open-ai-panel", async () => {
+      const quickOpen = new QuickOpenPage(page!);
+      await quickOpen.open();
+      await quickOpen.typeQuery("AI Panel");
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('[data-palette-index]'));
+        const btn = buttons.find((b) => (b.textContent || '').includes('AI Panel'));
+        if (btn) btn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 500));
+      const hasPanel = await page!.evaluate<boolean>(
+        `(() => {
+          const body = document.body.innerText || '';
+          return body.includes('AI Not Configured') || body.includes('Open AI Settings');
+        })()`
+      );
+      expect(hasPanel).toBe(true);
+
+      await quickOpen.open();
+      await quickOpen.typeQuery("AI Panel");
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('[data-palette-index]'));
+        const btn = buttons.find((b) => (b.textContent || '').includes('AI Panel'));
+        if (btn) btn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 500));
+      const gone = await page!.evaluate<boolean>(
+        `(() => {
+          const body = document.body.innerText || '';
+          return body.includes('AI Not Configured') || body.includes('Open AI Settings');
+        })()`
+      );
+      expect(gone).toBe(false);
+    });
+  }, 30000);
 });
