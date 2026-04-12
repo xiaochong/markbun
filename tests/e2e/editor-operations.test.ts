@@ -235,6 +235,19 @@ describe("editor operations", () => {
     });
   }, 30000);
 
+  it("applies heading 2 via menu action", async () => {
+    await withTrace("editor-heading2", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("heading text");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("para-heading-2");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("## heading text");
+    });
+  }, 30000);
+
   it("applies inline code formatting via menu action", async () => {
     await withTrace("editor-code", async () => {
       const editor = new EditorPage(page!);
