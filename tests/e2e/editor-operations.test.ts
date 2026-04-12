@@ -1017,4 +1017,50 @@ describe("editor operations", () => {
       expect(content.indexOf('B1')).toBeLessThan(content.indexOf('A1'));
     });
   }, 30000);
+
+  it("pastes copied text into editor", async () => {
+    await withTrace("editor-paste", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("paste me");
+      await editor.menuAction("editor-select-all");
+      await new Promise((r) => setTimeout(r, 300));
+      await editor.menuAction("editor-copy");
+      await editor.setMarkdown("");
+      await editor.focus();
+      await new Promise((r) => setTimeout(r, 300));
+      await editor.menuAction("editor-paste");
+      await new Promise((r) => setTimeout(r, 500));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("paste me");
+    });
+  }, 30000);
+
+  it("switches to URL tab in image insert dialog", async () => {
+    await withTrace("editor-image-url-tab", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.menuAction("format-image");
+      await new Promise((r) => setTimeout(r, 300));
+
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('button'));
+        const urlTab = buttons.find((b) => (b.textContent || '').trim() === 'URL');
+        if (urlTab) urlTab.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+
+      const hasUrlInput = await page!.evaluate<boolean>(
+        `Boolean(document.querySelector('input[placeholder="https://example.com/image.png"]'))`
+      );
+      expect(hasUrlInput).toBe(true);
+
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('button'));
+        const cancelBtn = buttons.find((b) => (b.textContent || '').trim() === 'Cancel');
+        if (cancelBtn) cancelBtn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+    });
+  }, 30000);
 });

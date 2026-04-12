@@ -179,4 +179,49 @@ describe("menu dispatch", () => {
       expect(await dialog.isDialogOpen()).toBe(false);
     });
   }, 30000);
+
+  it("opens about dialog via quick open command", async () => {
+    await withTrace("menu-quick-open-about", async () => {
+      const quickOpen = new QuickOpenPage(page!);
+      const dialog = new DialogPage(page!);
+      await quickOpen.open();
+      await quickOpen.typeQuery("About");
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('[data-palette-index]'));
+        const aboutBtn = buttons.find((b) => (b.textContent || '').includes('About'));
+        if (aboutBtn) aboutBtn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+      await dialog.waitForDialogContaining("MarkBun");
+      expect(await dialog.isDialogOpen()).toBe(true);
+      await dialog.clickButton("OK");
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await dialog.isDialogOpen()).toBe(false);
+    });
+  }, 30000);
+
+  it("opens settings via quick open command", async () => {
+    await withTrace("menu-quick-open-settings", async () => {
+      const quickOpen = new QuickOpenPage(page!);
+      const settings = new SettingsPage(page!);
+      await quickOpen.open();
+      await quickOpen.typeQuery("Settings");
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('[data-palette-index]'));
+        const settingsBtn = buttons.find((b) => (b.textContent || '').includes('Settings'));
+        if (settingsBtn) settingsBtn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await settings.isOpen()).toBe(true);
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('div.z-50 button'));
+        const cancelBtn = buttons.find(function(b) {
+          return (b.textContent || '').trim() === 'Cancel';
+        });
+        if (cancelBtn) cancelBtn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await settings.isOpen()).toBe(false);
+    });
+  }, 30000);
 });
