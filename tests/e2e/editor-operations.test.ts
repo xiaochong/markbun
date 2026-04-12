@@ -1412,4 +1412,18 @@ describe("editor operations", () => {
       expect(content).toContain("$b$");
     });
   }, 30000);
+
+  it("decreases heading level on heading 2 to heading 1", async () => {
+    await withTrace("editor-decrease-heading-h2", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("## heading text");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("para-decrease-heading");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("# heading text");
+      expect(content).not.toContain("## heading text");
+    });
+  }, 30000);
 });

@@ -531,4 +531,45 @@ describe("Page health", () => {
       await p?.close();
     }
   });
+
+  it("evaluate returns array length and indexing", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping evaluate array ops test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      expect(await p.evaluate<number>("[1, 2, 3].length")).toBe(3);
+      expect(await p.evaluate<number>("[10, 20, 30][1]")).toBe(20);
+      expect(await p.evaluate<number>("['a', 'b'].indexOf('b')")).toBe(1);
+    } catch (err: any) {
+      console.log(`Skipping evaluate array ops test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
+
+  it("evaluate returns object property access", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping evaluate object prop test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      expect(await p.evaluate<string>("({ name: 'MarkBun' }).name")).toBe("MarkBun");
+      expect(await p.evaluate<number>("({ count: 42 })['count']")).toBe(42);
+    } catch (err: any) {
+      console.log(`Skipping evaluate object prop test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
 });

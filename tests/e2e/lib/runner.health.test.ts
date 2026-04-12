@@ -64,4 +64,15 @@ describe("runner health", () => {
     }
     expect(alive).toBe(false);
   }, 120000);
+
+  it("cleanupZombies handles empty baseline without throwing", async () => {
+    await expect(cleanupZombies({ electrobun: [], cef: [] })).resolves.toBeUndefined();
+  });
+
+  it("getProcessCounts returns consistent values across repeated calls", async () => {
+    const first = await getProcessCounts();
+    const second = await getProcessCounts();
+    expect(second.electrobun).toBe(first.electrobun);
+    expect(second.cef).toBe(first.cef);
+  });
 });
