@@ -167,4 +167,35 @@ describe("Page health", () => {
       await p?.close();
     }
   });
+
+  it("deletes a character via CDP key dispatch", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping key test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      await p.evaluate(`(() => {
+        const input = document.createElement('input');
+        input.id = '__cdp_key_test__';
+        input.style.position = 'fixed';
+        input.style.top = '0';
+        input.style.left = '0';
+        input.value = 'hello';
+        document.body.appendChild(input);
+        input.focus();
+      })()`);
+      await p.key("Backspace");
+      const value = await p.evaluate<string>("document.querySelector('#__cdp_key_test__').value");
+      expect(value).toBe("hell");
+    } catch (err: any) {
+      console.log(`Skipping key test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
 });

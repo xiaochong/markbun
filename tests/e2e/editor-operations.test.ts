@@ -647,4 +647,77 @@ describe("editor operations", () => {
       expect(content).toContain("## heading text");
     });
   }, 30000);
+
+  it("inserts mermaid block via menu action", async () => {
+    await withTrace("editor-mermaid-block", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("");
+      await editor.menuAction("para-mermaid-block");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("mermaid");
+      expect(content).toContain("graph TD");
+    });
+  }, 30000);
+
+  it("opens export html dialog via menu action", async () => {
+    await withTrace("editor-export-html", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.menuAction("file-export-html");
+      await new Promise((r) => setTimeout(r, 500));
+      const hasDialog = await page!.evaluate<boolean>(
+        `(() => {
+          const body = document.body.innerText || '';
+          return body.includes('Export as HTML');
+        })()`
+      );
+      expect(hasDialog).toBe(true);
+
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('button'));
+        const cancelBtn = buttons.find((b) => (b.textContent || '').trim() === 'Cancel');
+        if (cancelBtn) cancelBtn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+      const gone = await page!.evaluate<boolean>(
+        `(() => {
+          const body = document.body.innerText || '';
+          return body.includes('Export as HTML');
+        })()`
+      );
+      expect(gone).toBe(false);
+    });
+  }, 30000);
+
+  it("opens export image dialog via menu action", async () => {
+    await withTrace("editor-export-image", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.menuAction("file-export-image");
+      await new Promise((r) => setTimeout(r, 500));
+      const hasDialog = await page!.evaluate<boolean>(
+        `(() => {
+          const body = document.body.innerText || '';
+          return body.includes('Export as Image');
+        })()`
+      );
+      expect(hasDialog).toBe(true);
+
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('button'));
+        const cancelBtn = buttons.find((b) => (b.textContent || '').trim() === 'Cancel');
+        if (cancelBtn) cancelBtn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+      const gone = await page!.evaluate<boolean>(
+        `(() => {
+          const body = document.body.innerText || '';
+          return body.includes('Export as Image');
+        })()`
+      );
+      expect(gone).toBe(false);
+    });
+  }, 30000);
 });
