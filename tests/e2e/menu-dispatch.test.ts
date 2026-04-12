@@ -534,4 +534,66 @@ describe("menu dispatch", () => {
       expect(gone).toBe(false);
     });
   }, 30000);
+
+  it("toggles title bar via quick open command", async () => {
+    await withTrace("menu-quick-open-titlebar", async () => {
+      const quickOpen = new QuickOpenPage(page!);
+      await quickOpen.open();
+      await quickOpen.typeQuery("Title Bar");
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('[data-palette-index]'));
+        const btn = buttons.find((b) => (b.textContent || '').includes('Title Bar'));
+        if (btn) btn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 500));
+      const hasTitleBar = await page!.evaluate<boolean>(
+        `Boolean(document.querySelector('.flex.items-center.justify-center.h-8.px-4.bg-background.border-b.text-sm.select-none'))`
+      );
+      expect(hasTitleBar).toBe(true);
+
+      await quickOpen.open();
+      await quickOpen.typeQuery("Title Bar");
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('[data-palette-index]'));
+        const btn = buttons.find((b) => (b.textContent || '').includes('Title Bar'));
+        if (btn) btn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 500));
+      const gone = await page!.evaluate<boolean>(
+        `Boolean(document.querySelector('.flex.items-center.justify-center.h-8.px-4.bg-background.border-b.text-sm.select-none'))`
+      );
+      expect(gone).toBe(false);
+    });
+  }, 30000);
+
+  it("toggles source mode via quick open command", async () => {
+    await withTrace("menu-quick-open-source-mode", async () => {
+      const quickOpen = new QuickOpenPage(page!);
+      await quickOpen.open();
+      await quickOpen.typeQuery("Source Mode");
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('[data-palette-index]'));
+        const btn = buttons.find((b) => (b.textContent || '').includes('Source Mode'));
+        if (btn) btn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 500));
+      const hasSourceEditor = await page!.evaluate<boolean>(
+        `Boolean(document.querySelector('.source-editor-container'))`
+      );
+      expect(hasSourceEditor).toBe(true);
+
+      await quickOpen.open();
+      await quickOpen.typeQuery("Source Mode");
+      await page!.evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll('[data-palette-index]'));
+        const btn = buttons.find((b) => (b.textContent || '').includes('Source Mode'));
+        if (btn) btn.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 500));
+      const gone = await page!.evaluate<boolean>(
+        `Boolean(document.querySelector('.source-editor-container'))`
+      );
+      expect(gone).toBe(false);
+    });
+  }, 30000);
 });

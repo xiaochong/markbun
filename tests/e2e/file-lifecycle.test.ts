@@ -399,4 +399,19 @@ describe("file lifecycle", () => {
       expect((await Bun.file(TEST_FILE).text()).trim()).toBe(content);
     });
   }, 60000);
+
+  it("saves markdown with image reference", async () => {
+    await withTrace("file-image-ref-save", async () => {
+      const editor = new EditorPage(page!);
+      const filesDir = join(WORKSPACE_DIR, "files");
+      await Bun.write(join(filesDir, ".keep"), "");
+      await editor.waitForReady();
+
+      const content = "# Image\n\n![Alt text](https://example.com/image.png)";
+      await editor.setMarkdown(content);
+      const saveResult = await editor.saveFile(TEST_FILE);
+      expect(saveResult.success).toBe(true);
+      expect((await Bun.file(TEST_FILE).text()).trim()).toBe(content);
+    });
+  }, 60000);
 });
