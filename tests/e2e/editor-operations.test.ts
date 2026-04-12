@@ -538,4 +538,56 @@ describe("editor operations", () => {
       expect(gone).toBe(false);
     });
   }, 30000);
+
+  it("inserts math block via menu action", async () => {
+    await withTrace("editor-math-block", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("");
+      await editor.menuAction("para-math-block");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("$$");
+      expect(content).toContain("E=mc^2");
+    });
+  }, 30000);
+
+  it("applies inline math formatting via menu action", async () => {
+    await withTrace("editor-inline-math", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("math");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("format-inline-math");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("$math$");
+    });
+  }, 30000);
+
+  it("applies highlight formatting via menu action", async () => {
+    await withTrace("editor-highlight", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("highlight me");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("format-highlight");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("==highlight me==");
+    });
+  }, 30000);
+
+  it("sets paragraph via menu action", async () => {
+    await withTrace("editor-paragraph", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("# heading text");
+      await editor.menuAction("editor-select-all");
+      await editor.menuAction("para-paragraph");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content.trim()).toBe("heading text");
+    });
+  }, 30000);
 });
