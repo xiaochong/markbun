@@ -390,6 +390,21 @@ describe("settings ui", () => {
     });
   }, 60000);
 
+  it("closes settings dialog by clicking backdrop", async () => {
+    await withTrace("settings-backdrop-close", async () => {
+      const settings = new SettingsPage(page!);
+      await settings.open();
+      expect(await settings.isOpen()).toBe(true);
+
+      await page!.evaluate(`(() => {
+        const backdrop = document.querySelector('.fixed.inset-0.z-50.flex.items-center.justify-center.bg-black\\/50');
+        if (backdrop) backdrop.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await settings.isOpen()).toBe(false);
+    });
+  }, 30000);
+
   it("toggles ai local only and persists the change", async () => {
     await withTrace("settings-ai-local-only", async () => {
       const settings = new SettingsPage(page!);

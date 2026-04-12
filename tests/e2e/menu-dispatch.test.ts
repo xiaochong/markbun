@@ -40,6 +40,25 @@ describe("menu dispatch", () => {
     });
   }, 30000);
 
+  it("closes about dialog by clicking backdrop", async () => {
+    await withTrace("menu-about-backdrop", async () => {
+      const dialog = new DialogPage(page!);
+      await page!.evaluate(`(() => {
+        const listeners = window.__electrobunListeners && window.__electrobunListeners['show-about'] || [];
+        listeners.forEach((cb) => cb());
+      })()`);
+      await dialog.waitForDialogContaining("MarkBun");
+      expect(await dialog.isDialogOpen()).toBe(true);
+
+      await page!.evaluate(`(() => {
+        const backdrop = document.querySelector('.fixed.inset-0.z-50.flex.items-center.justify-center.bg-black\\/50');
+        if (backdrop) backdrop.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(await dialog.isDialogOpen()).toBe(false);
+    });
+  }, 30000);
+
   it("opens quick open via menu action", async () => {
     await withTrace("menu-quick-open", async () => {
       const quickOpen = new QuickOpenPage(page!);
@@ -222,6 +241,25 @@ describe("menu dispatch", () => {
       })()`);
       await new Promise((r) => setTimeout(r, 300));
       expect(await settings.isOpen()).toBe(false);
+    });
+  }, 30000);
+
+  it("shows commands group header in quick open", async () => {
+    await withTrace("menu-quick-open-header", async () => {
+      const quickOpen = new QuickOpenPage(page!);
+      await quickOpen.open();
+      const hasHeader = await page!.evaluate<boolean>(
+        `(() => {
+          const text = document.body.innerText || '';
+          return text.includes('Commands');
+        })()`
+      );
+      expect(hasHeader).toBe(true);
+      await page!.evaluate(`(() => {
+        const backdrop = document.querySelector('.fixed.inset-0.z-50.flex.items-start.justify-center');
+        if (backdrop) backdrop.click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 300));
     });
   }, 30000);
 });

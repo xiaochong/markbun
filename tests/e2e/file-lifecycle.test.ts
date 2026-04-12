@@ -195,4 +195,40 @@ describe("file lifecycle", () => {
       expect(saved).toContain("Paragraph 200");
     });
   }, 60000);
+
+  it("shows saved file info in status bar", async () => {
+    await withTrace("file-status-bar", async () => {
+      const editor = new EditorPage(page!);
+      const filesDir = join(WORKSPACE_DIR, "files");
+      await Bun.write(join(filesDir, ".keep"), "");
+      await editor.waitForReady();
+
+      const content = "word1 word2 word3";
+      await editor.setMarkdown(content);
+      const saveResult = await editor.saveFile(TEST_FILE);
+      expect(saveResult.success).toBe(true);
+
+      await editor.menuAction("view-toggle-statusbar");
+      await new Promise((r) => setTimeout(r, 500));
+
+      const hasFileName = await page!.evaluate<boolean>(
+        `(() => {
+          const text = document.body.innerText || '';
+          return text.includes('lifecycle.md');
+        })()`
+      );
+      expect(hasFileName).toBe(true);
+
+      const hasWordCount = await page!.evaluate<boolean>(
+        `(() => {
+          const text = document.body.innerText || '';
+          return text.includes('3') && text.includes('words');
+        })()`
+      );
+      expect(hasWordCount).toBe(true);
+
+      await editor.menuAction("view-toggle-statusbar");
+      await new Promise((r) => setTimeout(r, 500));
+    });
+  }, 60000);
 });

@@ -1036,6 +1036,23 @@ describe("editor operations", () => {
     });
   }, 30000);
 
+  it("preserves markdown when toggling source mode", async () => {
+    await withTrace("editor-source-preserve", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("# Hello\n\nWorld");
+      const before = await editor.getMarkdown();
+
+      await editor.menuAction("view-toggle-source-mode");
+      await new Promise((r) => setTimeout(r, 500));
+      await editor.menuAction("view-toggle-source-mode");
+      await new Promise((r) => setTimeout(r, 500));
+
+      const after = await editor.getMarkdown();
+      expect(after.trim()).toBe(before.trim());
+    });
+  }, 30000);
+
   it("switches to URL tab in image insert dialog", async () => {
     await withTrace("editor-image-url-tab", async () => {
       const editor = new EditorPage(page!);
