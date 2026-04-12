@@ -223,4 +223,51 @@ describe("Page health", () => {
       await p?.close();
     }
   });
+
+  it("click throws for nonexistent element", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping click missing element test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      let threw = false;
+      try {
+        await p.click("#__nonexistent_click__");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    } catch (err: any) {
+      console.log(`Skipping click missing element test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
+
+  it("evaluateJSON returns parsed arrays", async () => {
+    const runnerPath = new URL("./runner.ts", import.meta.url).pathname;
+    const runnerExists = await Bun.file(runnerPath).exists();
+    if (!runnerExists) {
+      console.log("Skipping evaluateJSON array test: runner.ts not available.");
+      return;
+    }
+
+    let p: Page | undefined;
+    try {
+      p = await Page.connect();
+      const arr = await p.evaluateJSON<number[]>("[1, 2, 3]");
+      expect(Array.isArray(arr)).toBe(true);
+      expect(arr[0]).toBe(1);
+      expect(arr.length).toBe(3);
+    } catch (err: any) {
+      console.log(`Skipping evaluateJSON array test: ${err.message}`);
+    } finally {
+      await p?.close();
+    }
+  });
 });

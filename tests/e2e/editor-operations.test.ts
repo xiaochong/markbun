@@ -909,4 +909,32 @@ describe("editor operations", () => {
       expect(afterCount).toBeGreaterThan(beforeCount);
     });
   }, 30000);
+
+  it("copies selected text without removing it", async () => {
+    await withTrace("editor-copy", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("copy me");
+      await editor.menuAction("editor-select-all");
+      await new Promise((r) => setTimeout(r, 300));
+      await editor.menuAction("editor-copy");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).toContain("copy me");
+    });
+  }, 30000);
+
+  it("cuts selected text and removes it", async () => {
+    await withTrace("editor-cut", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("cut me");
+      await editor.menuAction("editor-select-all");
+      await new Promise((r) => setTimeout(r, 300));
+      await editor.menuAction("editor-cut");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content).not.toContain("cut me");
+    });
+  }, 30000);
 });
