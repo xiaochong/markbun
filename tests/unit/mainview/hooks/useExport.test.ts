@@ -13,8 +13,8 @@ let originalSetTimeout: typeof setTimeout;
 function installFastTimers() {
   originalSetTimeout = globalThis.setTimeout;
   (globalThis as any).setTimeout = (fn: any, delay: number, ...args: any[]) => {
-    if (delay === 3000) {
-      // The image export code registers a 3000ms fallback timeout for script loading.
+    if (delay === 10000) {
+      // The image export code registers a 10000ms fallback timeout for script loading.
       // Execute it immediately so the test does not wait for the real timer.
       fn(...args);
       return 0;

@@ -224,20 +224,32 @@ ${html}
         // Wait for all scripts to load
         await new Promise<void>((resolve) => {
           let loaded = 0;
-          const checkLoaded = () => {
+          const timeoutId = setTimeout(resolve, 10000);
+
+          const checkDone = () => {
             loaded++;
-            if (loaded >= 3) resolve();
+            if (loaded >= 3) {
+              clearTimeout(timeoutId);
+              resolve();
+            }
           };
 
-          katexScript.onload = checkLoaded;
-          katexAutoScript.onload = checkLoaded;
-          mermaidScript.onload = checkLoaded;
+          katexScript.onload = checkDone;
+          katexAutoScript.onload = checkDone;
+          mermaidScript.onload = checkDone;
 
-          katexScript.onerror = checkLoaded;
-          katexAutoScript.onerror = checkLoaded;
-          mermaidScript.onerror = checkLoaded;
-
-          setTimeout(resolve, 3000);
+          katexScript.onerror = () => {
+            console.warn('Failed to load KaTeX script:', katexScript.src);
+            checkDone();
+          };
+          katexAutoScript.onerror = () => {
+            console.warn('Failed to load KaTeX auto-render script:', katexAutoScript.src);
+            checkDone();
+          };
+          mermaidScript.onerror = () => {
+            console.warn('Failed to load Mermaid script:', mermaidScript.src);
+            checkDone();
+          };
         });
 
         const win = iframe.contentWindow as any;
