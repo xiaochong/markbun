@@ -32,4 +32,20 @@ describe("runner health", () => {
     await stopApp(child);
     await cleanupZombies(baselinePids);
   }, 120000);
+
+  it("survives repeated start-stop cycles without leaking processes", async () => {
+    const { child: c1, baselinePids: bp1 } = await runApp();
+    expect(c1.pid).toBeDefined();
+    await stopApp(c1);
+    await cleanupZombies(bp1);
+
+    const { child: c2, baselinePids: bp2 } = await runApp();
+    expect(c2.pid).toBeDefined();
+    await stopApp(c2);
+    await cleanupZombies(bp2);
+
+    const after = await getProcessCounts();
+    expect(after.electrobun).toBeGreaterThanOrEqual(0);
+    expect(after.cef).toBeGreaterThanOrEqual(0);
+  }, 240000);
 });

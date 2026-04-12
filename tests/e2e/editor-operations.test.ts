@@ -937,4 +937,84 @@ describe("editor operations", () => {
       expect(content).not.toContain("cut me");
     });
   }, 30000);
+
+  it("moves table row up via menu action", async () => {
+    await withTrace("editor-table-move-row-up", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("| H1 | H2 |\n|----|----|\n| A1 | A2 |\n| B1 | B2 |");
+      await new Promise((r) => setTimeout(r, 500));
+
+      await page!.evaluate(`(() => {
+        const cells = Array.from(document.querySelectorAll('table td'));
+        const target = cells.find((c) => (c.textContent || '').includes('B1'));
+        if (target) (target as HTMLElement).click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 200));
+      await editor.menuAction("table-move-row-up");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content.indexOf('B1')).toBeLessThan(content.indexOf('A1'));
+    });
+  }, 30000);
+
+  it("moves table row down via menu action", async () => {
+    await withTrace("editor-table-move-row-down", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("| H1 | H2 |\n|----|----|\n| A1 | A2 |\n| B1 | B2 |");
+      await new Promise((r) => setTimeout(r, 500));
+
+      await page!.evaluate(`(() => {
+        const cells = Array.from(document.querySelectorAll('table td'));
+        const target = cells.find((c) => (c.textContent || '').includes('A1'));
+        if (target) (target as HTMLElement).click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 200));
+      await editor.menuAction("table-move-row-down");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content.indexOf('B1')).toBeLessThan(content.indexOf('A1'));
+    });
+  }, 30000);
+
+  it("moves table column left via menu action", async () => {
+    await withTrace("editor-table-move-col-left", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("| H1 | H2 | H3 |\n|----|----|----|\n| A1 | B1 | C1 |\n| A2 | B2 | C2 |");
+      await new Promise((r) => setTimeout(r, 500));
+
+      await page!.evaluate(`(() => {
+        const cells = Array.from(document.querySelectorAll('table td'));
+        const target = cells.find((c) => (c.textContent || '').includes('B1'));
+        if (target) (target as HTMLElement).click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 200));
+      await editor.menuAction("table-move-col-left");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content.indexOf('B1')).toBeLessThan(content.indexOf('A1'));
+    });
+  }, 30000);
+
+  it("moves table column right via menu action", async () => {
+    await withTrace("editor-table-move-col-right", async () => {
+      const editor = new EditorPage(page!);
+      await editor.waitForReady();
+      await editor.setMarkdown("| H1 | H2 | H3 |\n|----|----|----|\n| A1 | B1 | C1 |\n| A2 | B2 | C2 |");
+      await new Promise((r) => setTimeout(r, 500));
+
+      await page!.evaluate(`(() => {
+        const cells = Array.from(document.querySelectorAll('table td'));
+        const target = cells.find((c) => (c.textContent || '').includes('A1'));
+        if (target) (target as HTMLElement).click();
+      })()`);
+      await new Promise((r) => setTimeout(r, 200));
+      await editor.menuAction("table-move-col-right");
+      await new Promise((r) => setTimeout(r, 300));
+      const content = await editor.getMarkdown();
+      expect(content.indexOf('B1')).toBeLessThan(content.indexOf('A1'));
+    });
+  }, 30000);
 });
