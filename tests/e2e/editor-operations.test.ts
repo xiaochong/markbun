@@ -683,7 +683,7 @@ describe("editor operations", () => {
     });
   }, 30000);
 
-  // Skipped: dynamic import of marked can fail in E2E WebView environment
+  // Skipped: dynamic import('marked') is unreliable in CEF WebView test environment
   it.skip("opens export html dialog via menu action", async () => {
     await withTrace("editor-export-html", async () => {
       const editor = new EditorPage(page!);

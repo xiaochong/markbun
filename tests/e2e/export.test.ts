@@ -40,6 +40,7 @@ async function dismissExportDialog() {
   await new Promise((r) => setTimeout(r, 300));
 }
 
+// Skipped: dynamic import('marked'/'html2canvas') unreliable in CEF WebView
 describe.skip("export", () => {
   it("opens export HTML dialog and cancels", async () => {
     await withTrace("export-html-dialog", async () => {
