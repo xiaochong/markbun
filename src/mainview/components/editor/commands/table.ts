@@ -160,7 +160,12 @@ export function deleteTableRow(
       }
     }
 
-    if (rows.length === 0) return false;
+    if (rows.length === 0) {
+      const tr = state.tr.delete(tablePos, tablePos + tableNode.nodeSize);
+      view.dispatch(tr);
+      view.focus();
+      return true;
+    }
 
     const newTable = tableNode.type.create(tableNode.attrs, rows);
     const tr = state.tr.replaceWith(tablePos, tablePos + tableNode.nodeSize, newTable);

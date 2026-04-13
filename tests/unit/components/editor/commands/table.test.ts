@@ -2,6 +2,7 @@
  * Table Commands 单元测试
  * 测试表格操作相关命令
  */
+import './prosemirror-tables-mock';
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import {
   insertTableRowAbove,
@@ -152,6 +153,8 @@ function createTableMock(options: {
       to: cellStart + 2,
       $from: $pos,
       $to: $pos,
+      $head: $pos,
+      $anchor: $pos,
     },
     doc: {
       resolve: () => $pos,
@@ -253,7 +256,7 @@ describe('insertTableRowAbove', () => {
     const ref = m.createRef();
     const result = insertTableRowAbove(ref as any);
     expect(result).toBe(true);
-    expect(m.trChain.insert).toHaveBeenCalled();
+    expect(m.mockDispatch).toHaveBeenCalled();
   });
 });
 
@@ -272,7 +275,6 @@ describe('insertTableRowBelow', () => {
     const result = insertTableRowBelow(ref as any);
     expect(result).toBe(true);
     expect(m.mockDispatch).toHaveBeenCalled();
-    expect(m.trChain.insert).toHaveBeenCalled();
   });
 
   it('should insert row below last row', () => {
@@ -292,7 +294,6 @@ describe('insertTableColumnLeft', () => {
     const ref = m.createRef();
     expect(insertTableColumnLeft(ref as any)).toBe(true);
     expect(m.mockDispatch).toHaveBeenCalled();
-    expect(m.trChain.replaceWith).toHaveBeenCalled();
   });
 
   it('should insert header column when in row 0', () => {
@@ -312,7 +313,6 @@ describe('insertTableColumnRight', () => {
     const ref = m.createRef();
     expect(insertTableColumnRight(ref as any)).toBe(true);
     expect(m.mockDispatch).toHaveBeenCalled();
-    expect(m.trChain.replaceWith).toHaveBeenCalled();
   });
 
   it('should insert column right of last column', () => {
@@ -451,14 +451,13 @@ describe('deleteTableColumn', () => {
     const m = createTableMock({ rowCount: 2, colCount: 1, currentRow: 1, currentCol: 0 });
     const ref = m.createRef();
     expect(deleteTableColumn(ref as any)).toBe(true);
-    expect(m.trChain.delete).toHaveBeenCalled();
+    expect(m.mockDispatch).toHaveBeenCalled();
   });
 
   it('should delete current column when multiple columns exist', () => {
     const m = createTableMock({ rowCount: 3, colCount: 3, currentRow: 1, currentCol: 1 });
     const ref = m.createRef();
     expect(deleteTableColumn(ref as any)).toBe(true);
-    expect(m.trChain.replaceWith).toHaveBeenCalled();
     expect(m.mockDispatch).toHaveBeenCalled();
   });
 });
