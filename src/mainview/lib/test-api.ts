@@ -11,6 +11,7 @@ export interface MarkbunTestAPI {
   focusEditor: () => void;
   focusTableFirstCell: () => boolean;
   getEditorView: () => any;
+  getFileState: () => { path: string | null; isDirty: boolean };
 }
 
 declare global {

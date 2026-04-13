@@ -144,6 +144,7 @@ function App() {
         const editor = editorRef.current;
         return editor?.getEditorView ? editor.getEditorView() : null;
       },
+      getFileState: () => ({ path: pathRef.current, isDirty: isDirtyRef.current }),
     };
     (window as any).__markbunTestAPI = testApi;
     return () => {
@@ -515,6 +516,8 @@ function App() {
   // Refs for unsaved-changes guard (avoid stale closures in callbacks)
   const isDirtyRef = useRef(isDirty);
   isDirtyRef.current = isDirty;
+  const pathRef = useRef(path);
+  pathRef.current = path;
   const autoSaveEnabledRef = useRef(settings?.autoSave ?? true);
   autoSaveEnabledRef.current = settings?.autoSave ?? true;
   const filePathRef2 = useRef(path);
