@@ -53,6 +53,16 @@ export class EditorPage {
     );
   }
 
+  async waitForMarkdown(expected: string, timeout = 10000): Promise<void> {
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+      const content = await this.getMarkdown();
+      if (content.trim() === expected.trim()) return;
+      await sleep(200);
+    }
+    throw new Error(`Editor content did not become expected value within timeout`);
+  }
+
   async clickTableCellByText(text: string): Promise<void> {
     await this.page.evaluate(
       `(() => {

@@ -62,6 +62,7 @@ describe("file lifecycle", () => {
 
       // 7. Wait for editor ready and assert restored content
       await editor.waitForReady();
+      await editor.waitForMarkdown("# Hello MarkBun");
       const restoredContent = await editor.getMarkdown();
       expect(restoredContent.trim()).toBe("# Hello MarkBun");
     });

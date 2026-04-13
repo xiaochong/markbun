@@ -59,6 +59,7 @@ describe("file history restore", () => {
       );
       expect(openResult.success).toBe(true);
       await editor.waitForReady();
+      await editor.waitForMarkdown(v1);
 
       // 3. Write v2 and save again — this triggers createVersionBackup for v1
       await editor.setMarkdown(v2);
@@ -71,6 +72,7 @@ describe("file history restore", () => {
       );
       expect(reopenResult.success).toBe(true);
       await editor.waitForReady();
+      await editor.waitForMarkdown(v2);
 
       // 4. Open File History dialog
       await fileHistory.open();
@@ -87,7 +89,7 @@ describe("file history restore", () => {
       // 6. Click Restore
       await fileHistory.clickRestore();
       await editor.waitForReady();
-      await new Promise((r) => setTimeout(r, 300));
+      await editor.waitForMarkdown(v1);
 
       // 7. Assert dialog is closed
       expect(await fileHistory.isDialogOpen()).toBe(false);
