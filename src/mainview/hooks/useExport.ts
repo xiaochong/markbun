@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import { processMarkdownImages, getFileName } from '../lib/image';
 import { mermaidCache } from '../lib/mermaid/cache';
-import markedModuleUrl from 'marked?url';
 
 function getDefaultFileName(filePath: string | null): string {
   if (!filePath) return 'export';
@@ -137,7 +136,7 @@ function waitForLoad(el: HTMLLinkElement | HTMLScriptElement): Promise<void> {
 export function useExport() {
   const generateHTML = useCallback(async (content: string, filePath: string | null): Promise<ExportResult | null> => {
     try {
-      const { marked } = await import(markedModuleUrl);
+      const { marked } = await import('marked');
       const rawHtml = await marked.parse(content);
       const processedHtml = postProcessMathBlocks(rawHtml);
       const fileName = getDefaultFileName(filePath);
@@ -211,7 +210,7 @@ ${processedHtml}
 
     try {
       const { default: html2canvas } = await import('html2canvas');
-      const { marked } = await import(markedModuleUrl);
+      const { marked } = await import('marked');
 
       // Process markdown: convert to HTML with image processing
       const processedContent = await processMarkdownImages(content);
